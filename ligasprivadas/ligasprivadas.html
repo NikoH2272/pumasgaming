@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pumas Gaming | Portal Oficial</title>
+    <!-- Fuentes de Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos CSS personalizados -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Librería html2canvas para la exportación de imágenes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <!-- ==========================================
+         BARRA DE NAVEGACIÓN SUPERIOR
+         ================================---------- -->
+    <header>
+        <div class="logo-container">
+            <img src="imagenes/LOGO PUMAS WEB.png" alt="Logo Pumas Gaming" class="logo-img">
+            <div class="logo">PUMAS GAMING</div>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#equipo">Equipo</a></li>
+                <li><a href="#jersey">Jersey</a></li>
+                <li><a href="#entrenamientos">Entrenamientos</a></li>
+                <li><a href="#comunidad">Comunidad</a></li>
+                <li><a href="#resultados">Resultados FF</a></li>
+                <li><a href="#caidas">Caídas FF</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- ==========================================
+         SECCIÓN HERO / PORTADA
+         ================================---------- -->
+    <section class="hero" style="background: linear-gradient(rgba(10,11,16,0.7), rgba(10,11,16,0.9)), url('imagenes/hero-bg.jpg') center/cover;">
+        <h1>El Dominio de <span>Pumas Gaming</span></h1>
+        <p>Portal oficial de alto rendimiento competitivo. Gestiona torneos y estadísticas con precisión profesional.</p>
+        <a href="#resultados" class="btn-access"><i class="fa-solid fa-lock-open"></i> Acceso a Herramientas</a>
+    </section>
+
+    <!-- ==========================================
+         SECCIÓN 1: PROCESADOR DE RESULTADOS FF
+         ================================---------- -->
+    <section id="resultados" class="tool-section">
+        <h2 class="section-title">Procesador de Resultados Free Fire (Por Salas)</h2>
+        <div class="tool-container">
+            <p class="tool-desc">
+                Sube los archivos de sala o agrega equipos manualmente con sus puntos por sala. El sistema calculará el total automáticamente para 15 equipos.
+            </p>
+
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>MODO DE CÁLCULO / TABLA</label>
+                    <select id="selectModoCalculo" class="dropdown-select" onchange="renderizarResultados()">
+                        <option value="normal" selected>NORMAL (Total Score)</option>
+                        <option value="top">SOLO TOP (Rank Score)</option>
+                        <option value="kill">SOLO KILL (Kill Score)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>MODERADOR / ADMIN</label>
+                    <input type="text" id="inputModerador" placeholder="Ej: Mod · PumasZee" oninput="renderizarResultados()">
+                </div>
+                <div class="form-group">
+                    <label>SELECCIONAR FECHA Y HORA (COLOMBIA)</label>
+                    <input type="datetime-local" id="inputFechaHora" class="dropdown-select" onchange="renderizarResultados()">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label>SUBIR ARCHIVOS LOGS DE SALA (.log, .txt)</label>
+                <input type="file" id="inputFileUpload" class="file-input-custom" multiple accept=".txt,.log" onchange="procesarArchivos()">
+            </div>
+
+            <!-- Panel de adición y edición manual de equipos -->
+            <div id="contenedorEdicionEquipos" style="margin-top: 25px;">
+                <h3 style="color: var(--accent-yellow); font-size: 1.1rem; margin-bottom: 12px;">
+                    <i class="fa-solid fa-pen-to-square"></i> Agregar Equipo y Puntos Manuales (Hasta 6 Salas)
+                </h3>
+                
+                <div class="form-grid" style="align-items: flex-end; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label>NOMBRE DEL EQUIPO</label>
+                        <input type="text" id="inputNombreManual" placeholder="Ej: PUMAS GG">
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; grid-column: span 2;">
+                        <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.75rem">S1</label><input type="number" id="mS1" value="0" style="padding:10px; text-align:center;"></div>
+                        <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.75rem">S2</label><input type="number" id="mS2" value="0" style="padding:10px; text-align:center;"></div>
+                        <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.75rem">S3</label><input type="number" id="mS3" value="0" style="padding:10px; text-align:center;"></div>
+                        <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.75rem">S4</label><input type="number" id="mS4" value="0" style="padding:10px; text-align:center;"></div>
+                        <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.75rem">S5</label><input type="number" id="mS5" value="0" style="padding:10px; text-align:center;"></div>
+                        <div class="form-group" style="margin-bottom:0;"><label style="font-size:0.75rem">S6</label><input type="number" id="mS6" value="0" style="padding:10px; text-align:center;"></div>
+                    </div>
+                    <div>
+                        <button class="btn-access" type="button" onclick="agregarEquipoManualConPuntos()" style="padding: 12px 20px; font-size: 0.85rem; border-radius: 6px; width: 100%;">
+                            <i class="fa-solid fa-plus"></i> Añadir
+                        </button>
+                    </div>
+                </div>
+
+                <div id="tablaEdicionEquipos" class="table-input-container"></div>
+            </div>
+
+            <div class="results-wrapper">
+                <div id="outputTablasLadoALado" class="result-box" style="margin-top: 30px;"></div>
+                
+                <div style="margin-top: 40px; text-align: center;">
+                    <button class="btn-access" id="btnDescargarImagen" onclick="descargarTablaReducida()" style="font-size: 1.1rem; padding: 15px 35px; margin-bottom: 20px; display: inline-block;">
+                        <i class="fa-solid fa-download"></i> Descargar Imagen Plantilla (1920x1080)
+                    </button>
+                </div>
+                <div id="outputTablaReducida" class="result-box" style="margin-top: 10px; display: flex; justify-content: center; overflow-x: auto;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         SECCIÓN 2: CONTROL DE CAÍDAS POR MAPA
+         ================================---------- -->
+    <section id="caidas" class="tool-section" style="border-top: 2px solid var(--secondary);">
+        <h2 class="section-title">Control de Caídas por Mapa</h2>
+        <div class="tool-container">
+            <p class="tool-desc">
+                Ingresa nombres de equipos (uno por línea o separados por comas). El sistema asignará automáticamente ubicaciones aleatorias sin repetir mapa por equipo y resaltará las coincidencias entre equipos.
+            </p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>TÍTULO DEL EVENTO</label>
+                    <input type="text" id="inputTituloCaidas" value="CAIDAS PRIVADO — REGIÓN NORTE" oninput="renderizarCaidas()">
+                </div>
+                <div class="form-group">
+                    <label>FECHA Y HORA DEL EVENTO</label>
+                    <input type="datetime-local" id="inputFechaCaidas" class="dropdown-select" onchange="renderizarCaidas()">
+                </div>
+            </div>
+
+            <!-- Entrada de Texto Rápido para Caídas con Asignación Aleatoria Inteligente -->
+            <div style="margin-top: 20px;">
+                <label style="color: var(--accent-yellow); font-weight: 700; display: block; margin-bottom: 8px; font-size: 0.85rem;">CARGA RÁPIDA DE EQUIPOS (Nombres separados por comas o saltos de línea)</label>
+                <textarea id="pasteAreaCaidas" class="dropdown-select" style="width: 100%; height: 90px; resize: vertical; padding: 10px;" placeholder="PUMAS ESPORTS, GOAT GAMING, HORSES EWC, RISING VORTEX"></textarea>
+                <button class="btn-access" type="button" onclick="procesarTextoCaidasAleatorio()" style="padding: 10px 25px; font-size: 0.9rem; border-radius: 6px; margin-top: 10px;">
+                    <i class="fa-solid fa-dice"></i> Generar Caídas Aleatorias sin Repetir
+                </button>
+            </div>
+
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;">
+                <button class="btn-access" type="button" onclick="agregarFilaCaidaManual()" style="padding: 10px 20px; font-size: 0.9rem; border-radius: 6px;">
+                    <i class="fa-solid fa-plus"></i> Agregar Fila Manual
+                </button>
+                <button class="btn-access" type="button" onclick="limpiarCaidas()" style="padding: 10px 20px; font-size: 0.9rem; border-radius: 6px; background: #ff0055; color: #fff;">
+                    <i class="fa-solid fa-trash"></i> Limpiar Todo
+                </button>
+            </div>
+
+            <div id="tablaEdicionCaidas" class="table-input-container" style="margin-top: 20px;"></div>
+
+            <!-- Contenedor Visual de Plantilla para Caídas -->
+            <div class="results-wrapper" style="margin-top: 30px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <button class="btn-access" id="btnDescargarImgCaidas" onclick="descargarCaidasPlantilla()" style="font-size: 1.1rem; padding: 15px 35px; display: inline-block;">
+                        <i class="fa-solid fa-download"></i> Descargar Imagen Caídas (1920x1080)
+                    </button>
+                </div>
+                <div id="outputCaidasReducida" class="result-box" style="display: flex; justify-content: center; overflow-x: auto;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         PIE DE PÁGINA
+         ================================---------- -->
+    <footer>
+        <p>&copy; 2026 PUMAS GAMING. Todos los derechos reservados. Diseñado para alto rendimiento competitivo.</p>
+    </footer>
+
+    <!-- Archivo de Lógica JavaScript -->
+    <script src="script.js"></script>
+
+        <script>
+        window.onload = function() {
+            const user = JSON.parse(localStorage.getItem('current_user'));
+            // Solo permite ingresar si inició sesión con el rol "ligas privadas" o es "administrador"
+            if (!user || (user.role !== 'ligas privadas' && user.role !== 'administrador')) {
+                alert('Acceso no autorizado. Debe iniciar sesión.');
+                window.location.href = 'login.html';
+            }
+        };
+
+        function cerrarSesion() {
+            localStorage.removeItem('current_user');
+            window.location.href = 'login.html';
+        }
+    </script>
+    
+</body>
+</html>

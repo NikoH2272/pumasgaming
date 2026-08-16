@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión | Pumas Gaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: var(--dark); }
+        .login-card { background: var(--dark-card); border: 1px solid rgba(0,255,204,0.3); padding: 40px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 0 30px rgba(0,0,0,0.8); text-align: center; }
+        .login-card h2 { color: var(--primary); font-family: 'Orbitron'; margin-bottom: 25px; font-size: 1.5rem; }
+        .form-group { text-align: left; margin-bottom: 20px; }
+        .form-group label { display: block; color: var(--primary); font-family: 'Orbitron'; font-size: 0.85rem; margin-bottom: 8px; }
+        .form-group input { width: 100%; padding: 12px; background: #0a0b10; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; outline: none; }
+        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0,255,204,0.3); }
+        .btn-login { width: 100%; background: linear-gradient(45deg, var(--primary), #00bfff); color: var(--dark); padding: 14px; font-family: 'Orbitron'; font-weight: 900; border: none; border-radius: 6px; cursor: pointer; transition: 0.3s; }
+        .btn-login:hover { transform: scale(1.02); box-shadow: 0 0 20px var(--primary); }
+        .error-msg { color: var(--secondary); margin-top: 15px; font-weight: 700; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>Acceso Pumas Gaming</h2>
+        <form id="formLogin">
+            <div class="form-group">
+                <label>Usuario</label>
+                <input type="text" id="userInput" required placeholder="Ingresa tu usuario">
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="passInput" required placeholder="********">
+            </div>
+            <button type="submit" class="btn-login">Entrar</button>
+            <div id="errorMsg" class="error-msg"></div>
+        </form>
+    </div>
+
+    <script>
+        // Credenciales de Supabase integradas directamente
+        const SUPABASE_URL = 'https://modxcowgbbvpkjzuyuuy.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1vZHhjb3dnYmJ2cGtqenV5dXV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NTkzNzcsImV4cCI6MjEwMjAzNTM3N30.OCJXo9tFkTLq71cwCMwv_3Zu2DtDPSyLvszGdlHDlOM';
+
+        console.log("Inicializando Supabase con URL:", SUPABASE_URL);
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        document.getElementById('formLogin').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('userInput').value.trim();
+            const passwordInput = document.getElementById('passInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.innerText = "Conectando con la base de datos...";
+
+            console.log(`Intentando buscar el usuario: "${usernameInput}"`);
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('usuarios')
+                    .select('*')
+                    .eq('username', usernameInput)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error("Error en la consulta de Supabase:", error);
+                    errorMsg.innerText = 'Error de base de datos: ' + error.message;
+                    return;
+                }
+
+                if (!data) {
+                    console.warn("El usuario no fue encontrado en la tabla 'usuarios'.");
+                    errorMsg.innerText = 'El usuario no existe.';
+                    return;
+                }
+
+                console.log("¡Usuario encontrado!", data);
+
+                if (data.password !== passwordInput) {
+                    console.warn("La contraseña no coincide.");
+                    errorMsg.innerText = 'Contraseña incorrecta.';
+                    return;
+                }
+
+                console.log("¡Login exitoso! Rol del usuario:", data.role);
+
+                // Guardar la sesión actual
+                localStorage.setItem('current_user', JSON.stringify({
+                    username: data.username,
+                    role: data.role
+                }));
+
+                // Redirecciones exactas por cada rol solicitado
+                if (data.role === 'administrador') {
+                    window.location.href = 'admin.html';
+                } else if (data.role === 'resultadosascensos') {
+                    window.location.href = 'ascensos/resultadosascensos.html';
+                } else if (data.role === 'quisqueya') {
+                    window.location.href = 'ascensosqfd/quisqueya.html';
+                } else if (data.role === 'nova') {
+                    window.location.href = 'ascensosnova/nova.html';
+                } else if (data.role === 'rusheo') {
+                    window.location.href = 'rusheo/rusheo.html';
+                } else if (data.role === 'ligas privadas') {
+                    window.location.href = 'ligasprivadas/ligasprivadas.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+
+            } catch (err) {
+                console.error("Error crítico de red:", err);
+                errorMsg.innerText = 'Error de conexión con la red.';
+            }
+        });
+    </script>
+</body>
+</html>

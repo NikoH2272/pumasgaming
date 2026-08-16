@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pumas Gaming | Portal Oficial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <img src="imagenes/LOGO PUMAS WEB.png" alt="Logo Pumas Gaming" class="logo-img">
+            <div class="logo">PUMAS GAMING</div>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#equipo">Equipo</a></li>
+                <li><a href="#jersey">Jersey</a></li>
+                <li><a href="#entrenamientos">Entrenamientos</a></li>
+                <li><a href="#comunidad">Comunidad</a></li>
+                <li><a href="#resultados">Resultados FF</a></li>
+                <li><a href="login.html" class="btn-access" style="padding: 8px 18px; font-size: 0.9rem;"><i class="fa-solid fa-user-lock"></i> Iniciar Sesión</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>El Dominio de <span>Pumas Gaming</span></h1>
+        <p>Portal oficial de alto rendimiento competitivo. Gestiona torneos y estadísticas con precisión profesional.</p>
+        <a href="#resultados" class="btn-access"><i class="fa-solid fa-lock-open"></i> Acceso a Herramientas de Resultados</a>
+    </section>
+
+    <section id="jersey">
+        <h2 class="section-title">Skin & Jersey Oficial 2026</h2>
+        <div class="jersey-container">
+            <div class="jersey-img">
+                <video src="videos/jersey.mp4" autoplay muted loop playsinline width="100%">
+                    Tu navegador no soporta el elemento de video.
+                </video>
+            </div>
+            <div class="jersey-details">
+                <h3>Edición Pumas Elite</h3>
+                <p>Confeccionado con microfibra avanzada de alto rendimiento para garantizar frescura y comodidad bajo máxima presión en torneos.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="entrenamientos">
+        <h2 class="section-title">Comunidad & Operaciones</h2>
+        <div class="grid-3">
+            <div class="card-box">
+                <i class="fa-brands fa-whatsapp"></i>
+                <h3>Entrenamientos</h3>
+                <p>Scrims oficiales diarios de lunes a viernes a partir de las 16:00 hrs Mexico.</p>
+                <a href="https://chat.whatsapp.com/BKbU3MgAGre62wbxnRQrIj" class="btn-access" style="padding: 10px 20px; font-size: 1rem; display: inline-block; margin-top: 10px;">Unirse al WhatsApp</a>
+            </div>
+            <div class="card-box" id="comunidad">
+                <i class="fa-brands fa-discord"></i>
+                <h3>Servidor Discord</h3>
+                <p>Únete a nuestra comunidad oficial en Discord e interactúa con el roster.</p>
+                <a href="#" class="btn-access" style="padding: 10px 20px; font-size: 1rem; display: inline-block; margin-top: 10px;">Unirse al Discord</a>
+            </div>
+            <div class="card-box">
+                <i class="fa-solid fa-share-nodes"></i>
+                <h3>Zona de Redes</h3>
+                <p>Sigue nuestras transmisiones en directo y clips destacados.</p>
+                <div class="social-icons">
+                    <a href="https://www.instagram.com/pumas.gaming.oficial"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://www.tiktok.com/@pumasgg.ofc"><i class="fa-brands fa-tiktok"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="resultados" class="tool-section">
+        <h2 class="section-title">Creador de Resultados Free Fire</h2>
+        <div class="tool-container">
+            <p class="tool-desc">
+                Carga tus archivos <code>.log</code>, selecciona el modo de cálculo basado en <code>KillScore</code> y visualiza las estadísticas instantáneamente.
+            </p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>MODO DE CÁLCULO Y ORDENAMIENTO</label>
+<select id="selectModoCalculo" class="dropdown-select" onchange="cambiarModoCalculo()">
+    <option value="1">1. Normal (Score Total Estándar)</option>
+    <option value="2">2. Solo Posición (RankScore)</option>
+    <option value="3">3. Solo Kills (KillScore)</option>
+    <option value="4">4. Más Booyahs (Victorias de Sala)</option>
+    <option value="5">5. Menor Promedio de Rank (Equilibrio)</option>
+    <option value="6">6. Alfabético por Equipo</option>
+</select>
+                </div>
+                <div class="form-group">
+                    <label>MODERADOR / ADMIN</label>
+                    <input type="text" id="inputModerador" placeholder="Ej: Mod · PumasZee" oninput="actualizarDatosEnVivo()">
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>TÍTULO DEL TORNEO</label>
+                    <input type="text" id="inputTitulo" placeholder="Ej: Copa Comunidad — Grupo 1" oninput="actualizarDatosEnVivo()">
+                </div>
+                <div class="form-group">
+                    <label>JORNADA / FECHA</label>
+                    <input type="text" id="inputJornada" placeholder="Ej: Jornada 2 · Bermuda" oninput="actualizarDatosEnVivo()">
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>IMAGEN DE FONDO PARA LA TABLA GENERAL</label>
+                    <input type="file" id="inputFondoTabla" accept="image/*" onchange="actualizarDatosEnVivo()">
+                </div>
+                <div class="form-group">
+                    <label>IMAGEN DE FONDO PARA BOOYAHS</label>
+                    <input type="file" id="inputFondoBooyah" accept="image/*" onchange="actualizarDatosEnVivo()">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label>ARCHIVOS DE REGISTRO (.LOG / .TXT)</label>
+                <input type="file" id="fileInput" accept=".log,.txt,.csv" multiple onchange="procesarArchivosLog()">
+            </div>
+
+            <button class="btn-generar" onclick="procesarArchivosLog()">
+                <i class="fa-solid fa-gears"></i> PROCESAR Y GENERAR RESULTADOS
+            </button>
+
+            <div class="results-wrapper">
+                <div id="outputBooyahs" class="result-box" style="margin-top: 30px;"></div>
+                <div id="outputTablasLadoALado" class="result-box" style="margin-top: 30px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 PUMAS GAMING. Todos los derechos reservados. Diseñado para alto rendimiento competitivo.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

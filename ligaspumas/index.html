@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pumas Gaming | Portal Oficial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <img src="imagenes/LOGO PUMAS WEB.png" alt="Logo Pumas Gaming" class="logo-img">
+            <div class="logo">PUMAS GAMING</div>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#equipo">Equipo</a></li>
+                <li><a href="#jersey">Jersey</a></li>
+                <li><a href="#entrenamientos">Entrenamientos</a></li>
+                <li><a href="#comunidad">Comunidad</a></li>
+                <li><a href="#resultados">Resultados FF</a></li>
+                <li><a href="login.html" class="btn-access" style="padding: 8px 18px; font-size: 0.9rem;"><i class="fa-solid fa-user-lock"></i> Iniciar Sesión</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="resultados" class="tool-section">
+        <h2 class="section-title">Gestión y Resultados de Torneos Free Fire</h2>
+        <div class="tool-container">
+            <p class="tool-desc">Carga tus archivos de registro (.log) para procesar las estadísticas oficiales de las salas.</p>
+
+            <div class="form-group" style="margin-bottom: 25px;">
+                <label>ARCHIVOS DE REGISTRO (.LOG / .TXT)</label>
+                <input type="file" id="fileInput" accept=".log,.txt,.csv" multiple onchange="prepararRenombradoEquipos()">
+            </div>
+
+            <div id="seccionRenombrar" style="display: none; background: rgba(0,0,0,0.7); padding: 25px; border-radius: 8px; border: 1px solid var(--accent-yellow); margin-bottom: 30px;">
+                <h3 style="color: var(--accent-yellow); font-family: 'Orbitron'; margin-bottom: 15px; font-size: 1.1rem;">
+                    <i class="fa-solid fa-pen-to-square"></i> CORRECCIÓN DE NOMBRES DE EQUIPOS
+                </h3>
+                <div id="listaEquiposInputs" style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; padding-right: 5px;">
+                </div>
+                <button class="btn-generar" style="margin-top: 20px;" onclick="procesarConNombresPersonalizados()">
+                    <i class="fa-solid fa-gears"></i> GENERAR TABLA DE RESULTADOS FINAL
+                </button>
+            </div>
+
+            <div class="results-wrapper">
+                <div id="outputTablasLadoALado" class="result-box"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 PUMAS GAMING. Todos los derechos reservados. Diseñado para alto rendimiento competitivo.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
