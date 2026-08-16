@@ -436,3 +436,34 @@ window.onload = function() {
     const activeUser = JSON.parse(localStorage.getItem('current_user'));
     if (activeUser) aplicarAccesoPorRol(activeUser);
 };
+
+// ----------------------------------------------------
+// CONTROL DEL MENÚ HAMBURGUESA EN MÓVIL
+// ----------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navMenu = document.querySelector('nav'); // Selecciona tu etiqueta nav
+
+    if (menuToggle && navMenu) {
+        // Abrir/Cerrar menú al hacer clic en el botón hamburguesa
+        menuToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navMenu.classList.toggle('is-active');
+        });
+
+        // Cerrar automáticamente el menú al hacer clic en cualquier enlace del menú
+        const navLinks = navMenu.querySelectorAll('ul li a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('is-active');
+            });
+        });
+
+        // Cerrar el menú si se hace clic fuera de él en la pantalla
+        document.addEventListener('click', (e) => {
+            if (!navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
+                navMenu.classList.remove('is-active');
+            }
+        });
+    }
+});
