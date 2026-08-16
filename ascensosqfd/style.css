@@ -47,7 +47,6 @@ section { padding: 80px 10%; }
 .form-group label { font-weight: 700; color: var(--accent-yellow); display: block; margin-bottom: 8px; font-size: 0.85rem; }
 .form-group input { width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255,255,255,0.15); color: var(--light); border-radius: 6px; }
 
-/* INPUT FILE CUSTOMIZADO */
 .file-input-custom {
     width: 100%;
     padding: 14px;
@@ -79,7 +78,6 @@ section { padding: 80px 10%; }
     box-shadow: 0 0 10px var(--primary);
 }
 
-/* TABLA DE EDICIÓN DE EQUIPOS */
 .table-input-container { 
     width: 100%; 
     overflow-x: auto; 
@@ -137,186 +135,48 @@ section { padding: 80px 10%; }
 .table-general-box th, .table-general-box td { padding: 10px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.08); color: #fff; font-size: 0.85rem; }
 .table-general-box th { background: rgba(255, 204, 0, 0.15); color: var(--accent-yellow); font-family: 'Orbitron'; }
 
-/* =========================================================
-   RESULTADOS IMAGEN REDUCIDA (DIV REDUCIDO UN 20% ADICIONAL)
-   ========================================================= */
-
 #outputTablaReducida {
     width: 100%;
     max-width: 100%;
     height: auto;
-    min-height: 680px;
+    min-height: 480px;
     margin: 20px auto 0;
     padding: 20px 0;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     position: relative;
-    overflow: hidden; /* Evita desbordamientos o scrollbars indeseadas */
+    overflow: hidden; 
 }
 
-.table-reduced-wrapper {
-    /* Dimensiones fijas e inmutables del Canvas interno */
-    width: 1280px !important;
-    height: 1280px !important;
-    min-width: 1280px !important;
-    min-height: 1280px !important;
-    max-width: 1280px !important;
-    max-height: 1280px !important;
-    
-    padding: 25px 35px !important; 
-    border-radius: 12px;
-    box-shadow: 0 0 30px rgba(0,0,0,0.95);
-    background-size: 100% 100%;
-    background-position: center;
-    background-repeat: no-repeat;
-    
-    /* Mantiene la escala de previsualización estática y centrada */
-    transform: scale(0.5);
-    transform-origin: top center;
-    margin-bottom: -640px; /* Compensa la reducción de altura del scale(0.5) */
-    flex-shrink: 0; /* Previene que Flexbox colapse o deforme el div */
-}
-
-/* Ajuste fino para pantallas pequeñas/móviles para que no se desfase */
-@media (max-width: 768px) {
-    #outputTablaReducida {
-        min-height: 480px;
-    }
-    .table-reduced-wrapper {
-        transform: scale(0.35);
-        margin-bottom: -830px;
-    }
-}
-
-.layout-stack-composite {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 70%;
-    height: 100%;
-    justify-content: flex-end;
-}
-
-.row-tabla-general {
-    width: 100%;
-    flex: 0 0 auto;
-}
-
-.row-panel-inferior {
-    display: flex;
-    gap: 15px;
-    width: 100%;
-    align-items: stretch;
-}
-
-.col-top-killer {
-    flex: 0 0 64%;
-    max-width: 64%;
-}
-
-.col-booyah {
-    flex: 0 0 34%;
-    max-width: 34%;
-}
-
-.box-composite-panel {
-    border-radius: 8px;
-    padding: 10px 12px;
-    background: var(--tema-table-bg);
-    border: 1px solid var(--tema-border);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
-
-.box-composite-panel h3 {
-    font-family: 'Orbitron';
-    font-size: 1.35rem; 
-    text-align: center;
-    margin-bottom: 6px;
-    color: var(--tema-header-text);
-}
-
-.row-tabla-general table,
-.box-composite-panel table {
-    width: 100%;
-    border-collapse: collapse;
-    border-radius: 6px;
-    overflow: hidden;
-    background: var(--tema-table-bg);
-    color: var(--tema-text);
-}
-
-.row-tabla-general th,
-.row-tabla-general td,
-.box-composite-panel th,
-.box-composite-panel td {
-    padding: 6px 8px; /* Celdas más compactas */
-    text-align: center;
-    border-bottom: 1px solid var(--tema-border);
-    font-size: 1.15rem; 
-    font-weight: bold;
-    color: var(--tema-text);
-    background: var(--tema-cell-bg);
-}
-
-.row-tabla-general th,
-.box-composite-panel th {
-    font-family: 'Orbitron';
-    font-size: 1.25rem; 
-    background: var(--tema-header-bg) !important;
-    color: var(--tema-header-text) !important;
-}
-
-.horarios-badge-grande {
-    font-size: 1.2rem !important; 
-    background: rgba(0, 0, 0, 0.6);
-    display: inline-block;
-    padding: 4px 15px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    margin-top: 2px;
-    margin-bottom: 4px;
-    word-spacing: 1px;
-}
-
-.sala-sin-registro i {
-    color: #ff2020 !important;
-    font-size: 1.1rem;
-}
-
-/* TEMAS VISUALES */
+/* TEMAS VISUALES PARA LA IMAGEN */
 .tema-dragonfest { 
-    --tema-table-bg: rgba(10, 25, 60, 0.95); 
-    --tema-cell-bg: rgba(12, 30, 75, 0.90); 
+    --tema-table-bg: transparent; 
+    --tema-cell-bg: transparent; 
     --tema-header-bg: rgba(25, 65, 160, 0.85); 
     --tema-text: #ffffff; 
     --tema-header-text: #66acff; 
     --tema-border: rgba(100, 160, 255, 0.35); 
     background-image: url('imagenes/dragon.png'); 
 }
-.tema-dragonfest .row-tabla-general h3 { color: #66acff !important; }
-
 .tema-dragonfestfem { 
-    --tema-table-bg: rgba(50, 10, 35, 0.95); 
-    --tema-cell-bg: rgba(65, 15, 45, 0.90); 
+    --tema-table-bg: transparent; 
+    --tema-cell-bg: transparent; 
     --tema-header-bg: rgba(180, 30, 110, 0.85); 
     --tema-text: #ffffff; 
     --tema-header-text: #ff99dd; 
     --tema-border: rgba(255, 105, 180, 0.35); 
     background-image: url('imagenes/dragonfem.png'); 
 }
-.tema-dragonfestfem .row-tabla-general h3 { color: #ff99dd !important; }
-
 .tema-fdquisqueya { 
-    --tema-table-bg: rgba(5, 35, 50, 0.95); 
-    --tema-cell-bg: rgba(8, 45, 65, 0.90); 
+    --tema-table-bg: transparent; 
+    --tema-cell-bg: transparent; 
     --tema-header-bg: rgba(0, 140, 200, 0.85); 
     --tema-text: #ffffff; 
     --tema-header-text: #80e5ff; 
     --tema-border: rgba(0, 191, 255, 0.35); 
     background-image: url('imagenes/fd.png'); 
 }
-.tema-fdquisqueya .row-tabla-general h3 { color: #80e5ff !important; }
 
 footer { text-align: center; padding: 30px; background: #050608; color: var(--gray); border-top: 1px solid rgba(255,255,255,0.05); }
 
@@ -326,22 +186,3 @@ footer { text-align: center; padding: 30px; background: #050608; color: var(--gr
     .hero h1 { font-size: 2.3rem; }
     nav { display: none; }
 }
-
-.moderador-reducido {
-    font-family: 'Orbitron', sans-serif !important;
-    font-size: 0.8rem !important; 
-    font-weight: 700 !important;
-    color: #ffffff !important;
-    text-align: center;
-    margin-top: 4px !important;
-    margin-bottom: 4px !important;
-    line-height: 1.1 !important;
-    letter-spacing: 1px !important;
-}
-
-.moderador-reducido strong {
-    font-family: 'Orbitron', sans-serif !important;
-    font-size: 0.8rem !important;
-    font-weight: 900 !important;
-}
-

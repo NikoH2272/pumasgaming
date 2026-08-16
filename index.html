@@ -108,16 +108,32 @@
                 </div>
             </div>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>TÍTULO DEL TORNEO</label>
-                    <input type="text" id="inputTitulo" placeholder="Ej: Copa Comunidad — Grupo 1" oninput="actualizarDatosEnVivo()">
-                </div>
-                <div class="form-group">
-                    <label>JORNADA / FECHA</label>
-                    <input type="text" id="inputJornada" placeholder="Ej: Jornada 2 · Bermuda" oninput="actualizarDatosEnVivo()">
-                </div>
-            </div>
+<div class="form-grid" style="margin-top: 15px;">
+    <div class="form-group">
+        <label>TÍTULO DEL TORNEO (GRANDE)</label>
+        <input type="text" id="inputTituloTorneo" value="LIGA PUMAS GAMING" oninput="renderizarResultadosFromState()">
+    </div>
+    <div class="form-group">
+        <label>JORNADA</label>
+        <input type="text" id="inputJornadaTorneo" value="JORNADA 1" oninput="renderizarResultadosFromState()">
+    </div>
+</div>
+
+<div class="form-grid">
+    <div class="form-group">
+        <label>FECHA</label>
+        <input type="text" id="inputFechaTorneo" value="16 AGO 2026" oninput="renderizarResultadosFromState()">
+    </div>
+    <div class="form-group">
+        <label>COLOR DE FUENTE</label>
+        <select id="selectColorFuente" class="dropdown-select" onchange="renderizarResultadosFromState()">
+            <option value="#ffffff" selected>Blanco Estándar</option>
+            <option value="#00ffcc">Celeste Neón</option>
+            <option value="#ffcc00">Amarillo Oro</option>
+            <option value="#ff99dd">Rosa Claro</option>
+        </select>
+    </div>
+</div>
 
             <div class="form-grid">
                 <div class="form-group">
@@ -131,9 +147,21 @@
             </div>
 
             <div class="form-group" style="margin-top: 15px;">
-                <label>ARCHIVOS DE REGISTRO (.LOG / .TXT)</label>
-                <input type="file" id="fileInput" accept=".log,.txt,.csv" multiple onchange="procesarArchivosLog()">
+                <!-- 1. El input de archivos debe invocar a prepararRenombradoEquipos -->
+<input type="file" id="fileInput" multiple accept=".txt,.log" onchange="prepararRenombradoEquipos()">
+
+<!-- 2. La sección oculta que se despliega automáticamente para editar los nombres -->
+<div id="seccionRenombrar" style="display: none; margin-top: 20px; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 8px;">
+    <h3 style="color: #ffcc00; margin-bottom: 10px; font-family: 'Orbitron';">Editar Nombres de Equipos</h3>
+    <div id="listaEquiposInputs" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;"></div>
+    
+    <!-- Botón para procesar finalmente con los nombres modificados -->
+    <button onclick="procesarConNombresPersonalizados()" class="btn-generar" style="margin-top: 15px; padding: 10px 20px; background: #00ffcc; color: #000; font-weight: bold; border: none; border-radius: 5px; cursor: pointer;">
+        CONFIRMAR NOMBRES Y GENERAR TABLA
+    </button>
+</div>
             </div>
+            
 
             <button class="btn-generar" onclick="procesarArchivosLog()">
                 <i class="fa-solid fa-gears"></i> PROCESAR Y GENERAR RESULTADOS

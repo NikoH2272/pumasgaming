@@ -1,469 +1,351 @@
-let globalParsedData = null;
+let rawFilesData = [];
 
-// Diccionario opcional para corregir nombres variantes entre logs
-const correccionNombresEquipos = {};
-const correccionNombresJugadores = {};
-
-async function procesarArchivosLog() {
+async function prepararRenombradoEquipos() {
     const fileInput = document.getElementById('fileInput');
     let files = Array.from(fileInput.files);
-    
     if (files.length === 0) return;
 
-    files.sort((a, b) => a.name.localeCompare(b.name));
+    rawFilesData = [];
+    let equiposUnicos = new Set();
 
+    for (let file of files) {
+        let text = await file.text();
+        rawFilesData.push(text);
+        let lines = text.split('\n');
+        lines.forEach(line => {
+            const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:/i);
+            if (teamMatch) equiposUnicos.add(teamMatch[1].trim());
+        });
+    }
+
+    const contenedor = document.getElementById('listaEquiposInputs');
+    if (!contenedor) return;
+    
+    contenedor.innerHTML = '';
+    Array.from(equiposUnicos).forEach((eq) => {
+        contenedor.innerHTML += `
+            <div style="display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 6px; margin-bottom: 8px;">
+                <span style="color: var(--gray); font-size: 0.85rem; width: 140px;">Original: <strong>${eq}</strong></span>
+                <input type="text" class="input-nombre-editable" data-original="${eq}" value="${eq}" style="flex: 2; padding: 8px; background: #0a0b10; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
+            </div>
+        `;
+    });
+    
+    document.getElementById('seccionRenombrar').style.display = 'block';
+}
+
+function procesarConNombresPersonalizados() {
+    let diccionarioRenombres = {};
+    document.querySelectorAll('.input-nombre-editable').forEach(input => {
+        diccionarioRenombres[input.getAttribute('data-original')] = input.value.trim() || input.getAttribute('data-original');
+    });
+    procesarLogs(rawFilesData, diccionarioRenombres);
+}
+
+function procesarLogs(textsArray, renombresMap) {
     let equiposMap = {};
-    let playerKillsMap = {};
+    let jugadoresMap = {};
     let roomWinners = [];
-    let numSalas = files.length;
-    let salasDataPorEquipo = {}; // Almacena el puntaje por sala para cada equipo
+    let numSalas = textsArray.length;
 
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const text = await file.text();
-        const lines = text.split('\n');
-
+    textsArray.forEach((text, i) => {
+        let lines = text.split('\n');
         let salaWinnerTeam = null;
+        let salaWinnerTotalScore = 0;
         let salaWinnerKillScore = 0;
 
         lines.forEach(line => {
-            // Lectura de Kills de Jugadores y asociación a su equipo en esta sala
-            const playerMatch = line.match(/NAME:\s*(.+?)\s+ID:\s*\d+.*?KILL:\s*(\d+)/i);
-            if (playerMatch) {
-                let rawName = playerMatch[1].trim();
-                let playerName = correccionNombresJugadores[rawName] || rawName;
-                let kills = parseInt(playerMatch[2], 10);
-                
-                if (!playerKillsMap[playerName]) {
-                    playerKillsMap[playerName] = { name: playerName, kills: 0, equipo: 'Desconocido' };
-                }
-                playerKillsMap[playerName].kills += kills;
-            }
-
-            // Lectura de Puntuación de Equipos por Sala
             const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
             if (teamMatch) {
                 let rawTeam = teamMatch[1].trim();
-                let teamName = correccionNombresEquipos[rawTeam] || rawTeam;
-                
-                let rank = parseInt(teamMatch[2], 10);
-                let killScore = parseInt(teamMatch[3], 10);
-                let rankScore = parseInt(teamMatch[4], 10);
-                let totalScore = parseInt(teamMatch[5], 10);
-
-                if (!equiposMap[teamName]) {
-                    equiposMap[teamName] = {
-                        name: teamName,
-                        totalScore: 0,
-                        rankScore: 0,
-                        killScore: 0,
-                        booyahs: 0,
-                        matchesPlayed: 0,
-                        salasPuntos: {} // Guardará puntos por cada índice de sala
-                    };
+                let name = renombresMap[rawTeam] || rawTeam;
+                if (!equiposMap[name]) {
+                    equiposMap[name] = { name, totalScore: 0, killScore: 0, salasPuntos: {} };
                 }
+                let totalScore = parseInt(teamMatch[5]);
+                let killScore = parseInt(teamMatch[3]);
 
-                equiposMap[teamName].totalScore += totalScore;
-                equiposMap[teamName].rankScore += rankScore;
-                equiposMap[teamName].killScore += killScore;
-                equiposMap[teamName].matchesPlayed += 1;
-                equiposMap[teamName].salasPuntos[i] = totalScore; // Puntos en esta sala específica
+                equiposMap[name].totalScore += totalScore;
+                equiposMap[name].killScore += killScore;
+                equiposMap[name].salasPuntos[i] = totalScore;
 
-                if (rank === 1) {
-                    equiposMap[teamName].booyahs += 1;
-                    if (killScore > salaWinnerKillScore) {
-                        salaWinnerKillScore = killScore;
-                        salaWinnerTeam = teamName;
-                    }
+                if (parseInt(teamMatch[2]) === 1) {
+                    salaWinnerTeam = name;
+                    salaWinnerTotalScore = totalScore;
+                    salaWinnerKillScore = killScore;
                 }
+            }
+            const playerMatch = line.match(/NAME:\s*(.+?)\s+ID:\s*\d+.*?KILL:\s*(\d+)/i);
+            if (playerMatch) {
+                let pName = playerMatch[1].trim();
+                if (!jugadoresMap[pName]) {
+                    jugadoresMap[pName] = { name: pName, kills: 0 };
+                }
+                jugadoresMap[pName].kills += parseInt(playerMatch[2]);
             }
         });
 
         if (salaWinnerTeam) {
-            roomWinners.push({
-                sala: i + 1,
-                team: salaWinnerTeam,
-                kills: salaWinnerKillScore
-            });
+            roomWinners.push({ sala: i + 1, team: salaWinnerTeam, points: salaWinnerTotalScore, kills: salaWinnerKillScore });
         }
-    }
+    });
 
-    let equiposArray = Object.values(equiposMap);
-    let topKillersArray = Object.values(playerKillsMap).sort((a, b) => b.kills - a.kills);
+    let equiposArray = Object.values(equiposMap).sort((a, b) => b.totalScore - a.totalScore);
+    let topKillersArray = Object.values(jugadoresMap).sort((a, b) => b.kills - a.kills).slice(0, 9);
+    renderizarResultados(equiposArray, topKillersArray, roomWinners, numSalas);
+}
 
-    globalParsedData = {
-        equiposArray,
-        topKillersArray,
-        roomWinners,
-        numSalas
+function renderizarResultados(equipos, topKillers, roomWinners, numSalas) {
+    // Obtener valores personalizados por el usuario
+    let tituloCustom = document.getElementById('inputTituloTorneo') ? document.getElementById('inputTituloTorneo').value : "TABLA DE RESULTADOS";
+    let jornadaCustom = document.getElementById('inputJornadaTorneo') ? document.getElementById('inputJornadaTorneo').value : "JORNADA 1";
+    let fechaCustom = document.getElementById('inputFechaTorneo') ? document.getElementById('inputFechaTorneo').value : "";
+    let colorFuente = document.getElementById('selectColorFuente') ? document.getElementById('selectColorFuente').value : "#ffffff";
+    let logoUrl = document.getElementById('inputLogoUrl') ? document.getElementById('inputLogoUrl').value : "imagenes/LOGO PUMAS WEB.png";
+
+    let html = `
+        <div id="tablaCaptura" style="width: 1000px; height: 900px; background: #0a0b10; background-image: url('ligaspumas.png'); background-size: cover; position: relative; font-family: 'Rajdhani', sans-serif; color: ${colorFuente}; padding: 20px;">
+            
+            <!-- LOGO ESQUINA SUPERIOR DERECHA -->
+            <div style="position: absolute; top: 20px; right: 30px;">
+                <img src="${logoUrl}" alt="Logo" style="width: 70px; height: 70px; object-fit: contain; border-radius: 50%; border: 2px solid #ffcc00; background: rgba(0,0,0,0.5);">
+            </div>
+
+            <!-- TÍTULO GRANDE Y CABECERA (CENTRADOS) -->
+            <div style="text-align: center; position: absolute; top: 20px; left: 50px; right: 50px;">
+                <h1 style="font-family: 'Orbitron'; font-size: 2.2rem; color: #ffcc00; margin: 0; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">${tituloCustom}</h1>
+                <div style="font-family: 'Orbitron'; font-size: 1rem; color: ${colorFuente}; margin-top: 5px; font-weight: bold; letter-spacing: 1px;">
+                    ${jornadaCustom} ${fechaCustom ? '— ' + fechaCustom : ''}
+                </div>
+            </div>
+
+            <!-- TABLA DE RESULTADOS VERTICAL (Izquierda) -->
+            <div style="position: absolute; top: 120px; left: 50px; width: 560px;">
+                <div style="color: #ffcc00; font-family: 'Orbitron'; font-size: 1rem; margin-bottom: 8px; font-weight: bold;">TABLA GENERAL</div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; color: ${colorFuente};">
+                    <thead>
+                        <tr style="color: #ffcc00; font-family: 'Orbitron'; border-bottom: 2px solid rgba(255,255,255,0.3); font-size: 0.85rem;">
+                            <th style="text-align:left; padding: 6px;"># / EQUIPO</th>
+                            ${Array.from({length: Math.min(numSalas, 5)}).map((_,i) => `<th style="padding: 6px; text-align:center;">S${i+1}</th>`).join('')}
+                            <th style="padding: 6px; text-align:center;">KILL</th>
+                            <th style="padding: 6px; text-align:center;">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${equipos.map((eq, i) => {
+                            let colorFila = colorFuente;
+                            if (i === 0) colorFila = '#ffd700';
+                            else if (i === 1) colorFila = '#c0c0c0';
+                            else if (i === 2) colorFila = '#cd7f32';
+                            return `
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+                                <td style="padding: 5px; font-weight: bold; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    <span style="color:${colorFila};">#${i+1}</span> <span style="color:${colorFuente};">${eq.name}</span>
+                                </td>
+                                ${Array.from({length: Math.min(numSalas, 5)}).map((_,s) => `<td style="text-align:center; padding: 5px; color:${colorFuente};">${eq.salasPuntos[s] !== undefined ? eq.salasPuntos[s] : '💀'}</td>`).join('')}
+                                <td style="text-align:center; padding: 5px; color:#ff3333; font-weight:bold;">${eq.killScore}</td>
+                                <td style="text-align:center; padding: 5px; color:${colorFila}; font-weight:bold;">${eq.totalScore}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TOP KILLER VERTICAL (Derecha) -->
+            <div style="position: absolute; top: 120px; left: 635px; width: 310px;">
+                <div style="font-family: 'Orbitron'; color: #ffcc00; margin-bottom: 8px; font-size: 1rem; font-weight: bold;">TOP KILLER</div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    ${topKillers.map((tk, i) => {
+                        let colorPos = colorFuente;
+                        if (i === 0) colorPos = '#ffd700';
+                        else if (i === 1) colorPos = '#c0c0c0';
+                        else if (i === 2) colorPos = '#cd7f32';
+                        return `
+                        <div style="font-size: 0.8rem; background: rgba(0,0,0,0.7); padding: 8px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="color: ${colorPos}; font-weight: bold; margin-right: 6px;">#${i+1}</span> 
+                                <span style="color: ${colorFuente}; font-weight: bold;">${tk.name}</span>
+                            </div>
+                            <span style="color: #ff3333; font-weight: bold; font-size: 0.9rem;">${tk.kills} Kills</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+
+        </div>
+        <button onclick="descargar()" class="btn-generar" style="margin-top: 20px;">DESCARGAR IMAGEN</button>
+    `;
+    document.getElementById('outputTablasLadoALado').innerHTML = html;
+}
+
+function descargar() {
+    let elemento = document.getElementById('tablaCaptura');
+    
+    let opciones = {
+        scale: 2, 
+        useCORS: true,
+        backgroundColor: '#0a0b10', // Garantiza fondo completamente negro
+        logging: false
     };
 
-    renderizarResultados(globalParsedData);
-}
-
-function cambiarModoCalculo() {
-    if (globalParsedData) renderizarResultados(globalParsedData);
-}
-
-function actualizarDatosEnVivo() {
-    if (globalParsedData) renderizarResultados(globalParsedData);
-}
-
-function renderizarResultados(data) {
-    let { equiposArray, topKillersArray, roomWinners, numSalas } = data;
-    let modoCalculo = document.getElementById('selectModoCalculo').value;
-    let tituloTorneo = document.getElementById('inputTitulo').value || 'Torneo Oficial Free Fire';
-    let jornadaTorneo = document.getElementById('inputJornada').value || 'Fase General Acumulada';
-    let moderador = document.getElementById('inputModerador').value || 'Staff';
-
-    // 6 MODOS DE ORDENAMIENTO
-    if (modoCalculo === '1') {
-        // 1. Total Score Estándar (Mayor a menor puntos totales)
-        equiposArray.sort((a, b) => b.totalScore - a.totalScore || b.killScore - a.killScore);
-    } else if (modoCalculo === '2') {
-        // 2. Solo Posición / RankScore
-        equiposArray.sort((a, b) => b.rankScore - a.rankScore || b.killScore - a.killScore);
-    } else if (modoCalculo === '3') {
-        // 3. Solo Kills / KillScore
-        equiposArray.sort((a, b) => b.killScore - a.killScore || b.rankScore - a.rankScore);
-    } else if (modoCalculo === '4') {
-        // 4. Booyahs (Más victorias de sala primero)
-        equiposArray.sort((a, b) => b.booyahs - a.booyahs || b.totalScore - a.totalScore);
-    } else if (modoCalculo === '5') {
-        // 5. Promedio / Menor Rank (Equilibrio de rendimiento)
-        equiposArray.sort((a, b) => a.rankScore - b.rankScore);
-    } else if (modoCalculo === '6') {
-        // 6. Alfabético por Equipo
-        equiposArray.sort((a, b) => a.name.localeCompare(b.name));
-    } else {
-        equiposArray.sort((a, b) => b.totalScore - a.totalScore);
-    }
-
-    let fondoTablaFile = document.getElementById('inputFondoTabla').files[0];
-    let fondoTablaUrl = fondoTablaFile ? URL.createObjectURL(fondoTablaFile) : '';
-    let styleBgTabla = fondoTablaUrl ? `background-image: url('${fondoTablaUrl}');` : `background: #121520;`;
-
-    let fondoBooyahFile = document.getElementById('inputFondoBooyah').files[0];
-    let fondoBooyahUrl = fondoBooyahFile ? URL.createObjectURL(fondoBooyahFile) : '';
-
-    // 1. ZONA DE BOOYAH (Parte Superior)
-    let htmlBooyahs = `
-        <div style="background: rgba(18, 21, 32, 0.95); border: 2px solid var(--accent-yellow); border-radius: 10px; padding: 20px; margin-bottom: 25px;">
-            <h3 style="font-size: 1.2rem; color: var(--accent-yellow); margin-bottom: 15px; font-family: 'Orbitron'; text-align: center;">
-                <i class="fa-solid fa-trophy"></i> ZONA DE BOOYAH (GANADORES POR SALA)
-            </h3>
-    `;
-    if (roomWinners.length > 0) {
-        htmlBooyahs += `<div class="booyah-grid">`;
-        roomWinners.forEach(rw => {
-            let styleBgCard = fondoBooyahUrl ? `background-image: url('${fondoBooyahUrl}');` : `background: #181c2e;`;
-            htmlBooyahs += `
-                <div class="booyah-card" style="${styleBgCard}">
-                    <div class="booyah-overlay">
-                        <span style="color: var(--accent-yellow); font-weight: 900; font-family: 'Orbitron'; font-size: 0.85rem;">SALA ${rw.sala}</span>
-                        <h4 style="font-size: 1.1rem; margin: 6px 0; color: #fff;">${rw.team}</h4>
-                        <p style="color: var(--gray); font-size: 0.8rem;"><i class="fa-solid fa-crosshairs" style="color: var(--secondary);"></i> Kills: <strong>${rw.kills}</strong></p>
-                    </div>
-                </div>
-            `;
-        });
-        htmlBooyahs += `</div>`;
-    } else {
-        htmlBooyahs += `<p style="color: var(--gray); text-align: center;">No se registraron ganadores.</p>`;
-    }
-    htmlBooyahs += `</div>`;
-    document.getElementById('outputBooyahs').innerHTML = htmlBooyahs;
-
-    // 2. TABLA DE PUNTUACIÓN GENERAL (Izquierda) con columnas de Sala 1, Sala 2...
-    let htmlTablaGeneral = `
-        <div class="table-general-box">
-            <div style="background: rgba(0,0,0,0.85); padding: 15px; border-bottom: 2px solid var(--accent-yellow);">
-                <h3 style="color: var(--accent-yellow); font-family: 'Orbitron'; font-size: 1rem; margin-bottom: 4px;">${tituloTorneo}</h3>
-                <p style="color: var(--gray); font-size: 0.8rem;">${jornadaTorneo} | Admin: ${moderador}</p>
-            </div>
-            <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
-                <thead>
-                    <tr>
-                        <th style="width: 35px;">#</th>
-                        <th style="text-align: left; padding-left: 10px;">EQUIPO</th>
-    `;
-
-    // Generar columnas dinámicas de salas (S1, S2, S3...)
-    for (let s = 1; s <= numSalas; s++) {
-        htmlTablaGeneral += `<th style="width: 40px; font-size: 0.8rem;">S${s}</th>`;
-    }
-
-    htmlTablaGeneral += `
-                        <th style="width: 40px;">KILL</th>
-                        <th style="width: 55px; color: var(--primary);">PTS</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-
-    equiposArray.forEach((eq, idx) => {
-        let totalItems = equiposArray.length;
-        let estiloFila = "";
-        
-        // Destacar los 3 últimos en rojo
-        if (idx >= totalItems - 3 && totalItems >= 4) {
-            estiloFila = "color: #ff4444; background: rgba(255, 68, 68, 0.08);";
-        }
-
-        htmlTablaGeneral += `
-            <tr style="${estiloFila}">
-                <td style="font-weight: 900; color: ${idx < 3 ? 'var(--accent-yellow)' : 'inherit'};">${idx + 1}</td>
-                <td style="text-align: left; padding-left: 10px; font-weight: 700;">${eq.name}</td>
-        `;
-
-        // Puntos por cada sala
-        for (let s = 0; s < numSalas; s++) {
-            let ptsSala = eq.salasPuntos[s] !== undefined ? eq.salasPuntos[s] : '-';
-            htmlTablaGeneral += `<td>${ptsSala}</td>`;
-        }
-
-        htmlTablaGeneral += `
-                <td>${eq.killScore}</td>
-                <td style="font-weight: 900; color: var(--primary);">${eq.totalScore}</td>
-            </tr>
-        `;
-    });
-    htmlTablaGeneral += `</tbody></table></div></div>`;
-
-    // 3. TOP KILLER / MVP INDIVIDUAL (Derecha) con Destacados (Top 3 especiales)
-    let htmlTopKiller = `
-        <div class="table-killer-box">
-            <div style="background: rgba(0,0,0,0.85); padding: 15px; border-bottom: 2px solid var(--secondary);">
-                <h3 style="color: var(--secondary); font-family: 'Orbitron'; font-size: 1rem; margin-bottom: 4px;">TOP KILLERS</h3>
-                <p style="color: var(--gray); font-size: 0.8rem;">MVP Global</p>
-            </div>
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr>
-                        <th style="width: 35px;">TOP</th>
-                        <th style="text-align: left; padding-left: 10px;">JUGADOR</th>
-                        <th style="width: 55px; color: var(--secondary);">ELIM.</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-
-    if (topKillersArray.length > 0) {
-        topKillersArray.slice(0, 15).forEach((tk, idx) => {
-            let badgeColor = "#fff";
-            let rowStyle = "";
-            if (idx === 0) { badgeColor = "#ffd700"; rowStyle = "background: rgba(255, 215, 0, 0.12); font-weight: bold;"; } // Oro (Top 1)
-            else if (idx === 1) { badgeColor = "#c0c0c0"; rowStyle = "background: rgba(192, 192, 192, 0.12); font-weight: bold;"; } // Plata (Top 2)
-            else if (idx === 2) { badgeColor = "#cd7f32"; rowStyle = "background: rgba(205, 127, 50, 0.12); font-weight: bold;"; } // Bronce (Top 3)
-
-            htmlTopKiller += `
-                <tr style="${rowStyle}">
-                    <td style="font-weight: 900; color: ${badgeColor};">#${idx + 1}</td>
-                    <td style="text-align: left; padding-left: 10px;">${tk.name}</td>
-                    <td style="font-weight: 900; color: var(--secondary);">${tk.kills}</td>
-                </tr>
-            `;
-        });
-    } else {
-        htmlTopKiller += `<tr><td colspan="3" style="padding: 20px; color: var(--gray);">Sin registros.</td></tr>`;
-    }
-    htmlTopKiller += `</tbody></table></div>`;
-
-    // Contenedor Lado a Lado (Tabla de Puntuación General + Top Killer) con Botón de Impresión 4K
-    let htmlLadoALado = `
-        <div style="margin-bottom: 15px; text-align: right;">
-            <button onclick="imprimirTabla4K()" class="btn-access" style="padding: 10px 20px; font-size: 0.9rem; cursor: pointer;">
-                <i class="fa-solid fa-print"></i> IMPRIMIR / EXPORTAR EN 4K
-            </button>
-        </div>
-        <div id="printableArea4K" class="tablas-lado-a-lado" style="${styleBgTabla}">
-            ${htmlTablaGeneral}
-            ${htmlTopKiller}
-        </div>
-    `;
-
-    document.getElementById('outputTablasLadoALado').innerHTML = htmlLadoALado;
-}
-
-// ----------------------------------------------------
-// EXPORTACIÓN COMO IMAGEN (2400x1200 px - FUENTES AMPLIADAS +120%)
-// ----------------------------------------------------
-async function imprimirTabla4K() {
-    const booyahBox = document.getElementById('outputBooyahs');
-    const printableArea = document.getElementById('printableArea4K');
-    
-    if (!printableArea) {
-        alert("Primero procesa los archivos de log para generar los resultados.");
-        return;
-    }
-
-    // Contenedor temporal adaptado a dimensiones de 2400x1200 px
-    const wrapperTemporal = document.createElement('div');
-    wrapperTemporal.style.background = '#0a0b10';
-    wrapperTemporal.style.padding = '40px';
-    wrapperTemporal.style.width = '4800px';   
-    wrapperTemporal.style.minHeight = '2400px'; 
-    wrapperTemporal.style.display = 'flex';
-    wrapperTemporal.style.flexDirection = 'column';
-    wrapperTemporal.style.justifyContent = 'space-between';
-    wrapperTemporal.style.gap = '30px';
-    wrapperTemporal.style.boxSizing = 'border-box';
-    
-    // Clonar los elementos visuales
-    const clonBooyah = booyahBox.cloneNode(true);
-    const clonTabla = printableArea.cloneNode(true);
-
-    clonBooyah.style.width = '100%';
-    clonBooyah.style.flex = '0 0 auto';
-    
-    clonTabla.style.width = '100%';
-    clonTabla.style.flex = '1 1 auto';
-    clonTabla.style.display = 'grid';
-    clonTabla.style.gridTemplateColumns = '65% 35%'; // 65% Tabla General, 35% Top Killer exactos
-    clonTabla.style.gap = '40px';
-    clonTabla.style.height = '100%';
-
-    // Aumento del tamaño de las fuentes un 120% adicional para máxima visibilidad
-    const styleInyectado = document.createElement('style');
-    styleInyectado.innerHTML = `
-        th { font-size: 3.2rem !important; padding: 40px 28px !important; }
-        td { font-size: 3.0rem !important; padding: 38px 28px !important; }
-        h3, h4 { font-size: 3.8rem !important; }
-        p, span { font-size: 2.8rem !important; }
-    `;
-    wrapperTemporal.appendChild(styleInyectado);
-
-    wrapperTemporal.appendChild(clonBooyah);
-    wrapperTemporal.appendChild(clonTabla);
-    
-    // Posicionar temporalmente fuera de pantalla
-    wrapperTemporal.style.position = 'absolute';
-    wrapperTemporal.style.left = '-9999px';
-    wrapperTemporal.style.top = '0';
-    document.body.appendChild(wrapperTemporal);
-
-    let tituloTorneo = document.getElementById('inputTitulo').value || 'Torneo_Free_Fire';
-    let nombreArchivoLimpio = tituloTorneo.replace(/[^a-zA-Z0-9]/g, '_');
-
-    try {
-        // Renderizado a escala completa
-        const canvas = await html2canvas(wrapperTemporal, {
-            scale: 1, 
-            width: 4800,
-            windowWidth: 4800,
-            useCORS: true,
-            backgroundColor: '#0a0b10',
-            logging: false
-        });
-
-        // Redimensionar el resultado final exactamente a la medida solicitada de 2400x1200 px
-        const finalCanvas = document.createElement('canvas');
-        finalCanvas.width = 2400;
-        finalCanvas.height = 1200;
-        const ctx = finalCanvas.getContext('2d');
-        ctx.drawImage(canvas, 0, 0, 2400, 1200);
-
-        // Descarga automática de la imagen PNG optimizada
-        const link = document.createElement('a');
-        link.download = `${nombreArchivoLimpio}_2400x1200.png`;
-        link.href = finalCanvas.toDataURL('image/png', 1.0);
+    html2canvas(elemento, opciones).then(canvas => {
+        let link = document.createElement('a');
+        link.download = 'Tabla_Resultados_Vertical.png';
+        link.href = canvas.toDataURL('image/png');
         link.click();
-    } catch (error) {
-        console.error("Error al generar la imagen:", error);
-        alert("Hubo un problema al exportar la imagen.");
-    } finally {
-        document.body.removeChild(wrapperTemporal);
-    }
-}
-
-// ----------------------------------------------------
-// SISTEMA DE ROLES Y AUTENTICACIÓN
-// ----------------------------------------------------
-if (!localStorage.getItem('esports_users')) {
-    const initialUsers = [
-        { username: 'admin', pass: 'admin123', role: 'administrador' },
-        { username: 'ascensos', pass: '1234', role: 'resultadosascensos' },
-        { username: 'ligas', pass: '1234', role: 'ligas privadas' },
-        { username: 'quisqueya', pass: '1234', role: 'quisqueya' },
-        { username: 'nova', pass: '1234', role: 'nova' },
-        { username: 'rusheo', pass: '1234', role: 'rusheo' }
-    ];
-    localStorage.setItem('esports_users', JSON.stringify(initialUsers));
-}
-
-document.getElementById('loginForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const uInput = document.getElementById('loginUser').value.trim();
-    const pInput = document.getElementById('loginPass').value.trim();
-    const users = JSON.parse(localStorage.getItem('esports_users'));
-    const matchedUser = users.find(u => u.username === uInput && u.pass === pInput);
-
-    if (matchedUser) {
-        localStorage.setItem('current_user', JSON.stringify(matchedUser));
-        aplicarAccesoPorRol(matchedUser);
-    } else {
-        document.getElementById('loginError').innerText = 'Credenciales incorrectas.';
-    }
-});
-
-function aplicarAccesoPorRol(user) {
-    document.getElementById('loginOverlay').style.display = 'none';
-    document.getElementById('logoutBar').style.display = 'block';
-    document.getElementById('currentUserSpan').innerText = `${user.username} (${user.role})`;
-    document.getElementById('adminPanelContainer').style.display = user.role === 'administrador' ? 'block' : 'none';
-    document.getElementById('mainAppContainer').style.display = user.role === 'administrador' ? 'none' : 'block';
-    if(user.role === 'administrador') cargarTablaAdminUsuarios();
-}
-
-function cargarTablaAdminUsuarios() {
-    const users = JSON.parse(localStorage.getItem('esports_users'));
-    const tbody = document.getElementById('usersTableBody');
-    tbody.innerHTML = '';
-    users.forEach(u => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${u.username}</td><td><strong style="color: var(--accent-yellow);">${u.role}</strong></td>`;
-        tbody.appendChild(tr);
     });
 }
 
-function cerrarSesion() {
-    localStorage.removeItem('current_user');
-    location.reload();
+function procesarConNombresPersonalizados() {
+    let diccionarioRenombres = {};
+    document.querySelectorAll('.input-nombre-editable').forEach(input => {
+        diccionarioRenombres[input.getAttribute('data-original')] = input.value.trim() || input.getAttribute('data-original');
+    });
+    procesarLogs(rawFilesData, diccionarioRenombres);
 }
 
-window.onload = function() {
-    const activeUser = JSON.parse(localStorage.getItem('current_user'));
-    if (activeUser) aplicarAccesoPorRol(activeUser);
-};
+function procesarLogs(textsArray, renombresMap) {
+    let equiposMap = {};
+    let jugadoresMap = {};
+    let roomWinners = [];
+    let numSalas = textsArray.length;
 
-// ----------------------------------------------------
-// CONTROL DEL MENÚ HAMBURGUESA EN MÓVIL
-// ----------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
-    const menuToggle = document.querySelector('.menu-toggle');
-    const navMenu = document.querySelector('nav'); // Selecciona tu etiqueta nav
+    textsArray.forEach((text, i) => {
+        let lines = text.split('\n');
+        let salaWinnerTeam = null;
+        let salaWinnerTotalScore = 0;
+        let salaWinnerKillScore = 0;
 
-    if (menuToggle && navMenu) {
-        // Abrir/Cerrar menú al hacer clic en el botón hamburguesa
-        menuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            navMenu.classList.toggle('is-active');
-        });
+        lines.forEach(line => {
+            const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
+            if (teamMatch) {
+                let rawTeam = teamMatch[1].trim();
+                let name = renombresMap[rawTeam] || rawTeam;
+                if (!equiposMap[name]) {
+                    equiposMap[name] = { name, totalScore: 0, killScore: 0, salasPuntos: {} };
+                }
+                let totalScore = parseInt(teamMatch[5]);
+                let killScore = parseInt(teamMatch[3]);
 
-        // Cerrar automáticamente el menú al hacer clic en cualquier enlace del menú
-        const navLinks = navMenu.querySelectorAll('ul li a');
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                navMenu.classList.remove('is-active');
-            });
-        });
+                equiposMap[name].totalScore += totalScore;
+                equiposMap[name].killScore += killScore;
+                equiposMap[name].salasPuntos[i] = totalScore;
 
-        // Cerrar el menú si se hace clic fuera de él en la pantalla
-        document.addEventListener('click', (e) => {
-            if (!navMenu.contains(e.target) && !menuToggle.contains(e.target)) {
-                navMenu.classList.remove('is-active');
+                if (parseInt(teamMatch[2]) === 1) {
+                    salaWinnerTeam = name;
+                    salaWinnerTotalScore = totalScore;
+                    salaWinnerKillScore = killScore;
+                }
+            }
+            const playerMatch = line.match(/NAME:\s*(.+?)\s+ID:\s*\d+.*?KILL:\s*(\d+)/i);
+            if (playerMatch) {
+                let pName = playerMatch[1].trim();
+                if (!jugadoresMap[pName]) {
+                    jugadoresMap[pName] = { name: pName, kills: 0 };
+                }
+                jugadoresMap[pName].kills += parseInt(playerMatch[2]);
             }
         });
-    }
-});
+
+        if (salaWinnerTeam) {
+            roomWinners.push({ sala: i + 1, team: salaWinnerTeam, points: salaWinnerTotalScore, kills: salaWinnerKillScore });
+        }
+    });
+
+    let equiposArray = Object.values(equiposMap).sort((a, b) => b.totalScore - a.totalScore);
+    let topKillersArray = Object.values(jugadoresMap).sort((a, b) => b.kills - a.kills).slice(0, 9);
+    renderizarResultados(equiposArray, topKillersArray, roomWinners, numSalas);
+}
+
+function renderizarResultados(equipos, topKillers, roomWinners, numSalas) {
+    let html = `
+        <div id="tablaCaptura" style="width: 1000px; height: 900px; background-image: url('ligaspumas.png'); background-size: cover; position: relative; font-family: 'Rajdhani', sans-serif; color: #fff; padding: 20px;">
+            
+            <!-- TABLA DE RESULTADOS VERTICAL (Izquierda) -->
+            <div style="position: absolute; top: 120px; left: 50px; width: 560px;">
+                <div style="color: #ffcc00; font-family: 'Orbitron'; font-size: 1rem; margin-bottom: 8px; font-weight: bold;">TABLA GENERAL</div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                    <thead>
+                        <tr style="color: #ffcc00; font-family: 'Orbitron'; border-bottom: 2px solid rgba(255,255,255,0.3); font-size: 0.85rem;">
+                            <th style="text-align:left; padding: 6px;"># / EQUIPO</th>
+                            ${Array.from({length: Math.min(numSalas, 5)}).map((_,i) => `<th style="padding: 6px; text-align:center;">S${i+1}</th>`).join('')}
+                            <th style="padding: 6px; text-align:center;">KILL</th>
+                            <th style="padding: 6px; text-align:center;">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${equipos.map((eq, i) => {
+                            let colorFila = '#fff';
+                            if (i === 0) colorFila = '#ffd700';
+                            else if (i === 1) colorFila = '#c0c0c0';
+                            else if (i === 2) colorFila = '#cd7f32';
+                            return `
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: ${colorFila};">
+                                <td style="padding: 5px; font-weight: bold; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    <span style="color:${colorFila};">#${i+1}</span> ${eq.name}
+                                </td>
+                                ${Array.from({length: Math.min(numSalas, 5)}).map((_,s) => `<td style="text-align:center; padding: 5px;">${eq.salasPuntos[s] !== undefined ? eq.salasPuntos[s] : '💀'}</td>`).join('')}
+                                <td style="text-align:center; padding: 5px; color:#ff3333; font-weight:bold;">${eq.killScore}</td>
+                                <td style="text-align:center; padding: 5px; color:${colorFila === '#fff' ? '#ffd700' : colorFila}; font-weight:bold;">${eq.totalScore}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- TOP KILLER VERTICAL (Derecha, al lado de la tabla general) -->
+            <div style="position: absolute; top: 120px; left: 635px; width: 310px;">
+                <div style="font-family: 'Orbitron'; color: #ffcc00; margin-bottom: 8px; font-size: 1rem; font-weight: bold;">TOP KILLER</div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    ${topKillers.map((tk, i) => {
+                        let colorPos = '#fff';
+                        if (i === 0) colorPos = '#ffd700';
+                        else if (i === 1) colorPos = '#c0c0c0';
+                        else if (i === 2) colorPos = '#cd7f32';
+                        return `
+                        <div style="font-size: 0.8rem; background: rgba(0,0,0,0.7); padding: 8px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="color: ${colorPos}; font-weight: bold; margin-right: 6px;">#${i+1}</span> 
+                                <span style="color: #fff; font-weight: bold;">${tk.name}</span>
+                            </div>
+                            <span style="color: #ff3333; font-weight: bold; font-size: 0.9rem;">${tk.kills} Kills</span>
+                        </div>`;
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- BOOYAH (Abajo) -->
+            <div style="position: absolute; bottom: 30px; left: 50px; width: 900px; display: flex; justify-content: space-around; gap: 8px; flex-wrap: wrap;">
+                ${roomWinners.map(rw => `
+                    <div style="background: rgba(0,0,0,0.8); border: 1px solid #ffd700; padding: 8px 12px; border-radius: 6px; text-align: center; font-size: 0.75rem; min-width: 130px;">
+                        <div style="color: #ffd700; font-weight: bold; font-family: 'Orbitron'; font-size: 0.7rem;">SALA ${rw.sala} (BOOYAH)</div>
+                        <div style="color: #fff; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; margin: 2px 0;">${rw.team}</div>
+                        <div style="font-size: 0.68rem; color: #ddd;">Pts: <span style="color:#ffd700; font-weight:bold;">${rw.points}</span></div>
+                    </div>
+                `).join('')}
+            </div>
+
+        </div>
+        <button onclick="descargar()" class="btn-generar" style="margin-top: 20px;">DESCARGAR IMAGEN</button>
+    `;
+    document.getElementById('outputTablasLadoALado').innerHTML = html;
+}
+
+function descargar() {
+    let elemento = document.getElementById('tablaCaptura');
+    
+    // Opciones para asegurar que capture correctamente el fondo negro
+    let opciones = {
+        scale: 2, 
+        useCORS: true,
+        backgroundColor: '#0a0b10', // Fuerza el fondo negro/oscuro idéntico al de tu diseño
+        logging: false
+    };
+
+    html2canvas(elemento, opciones).then(canvas => {
+        let link = document.createElement('a');
+        link.download = 'Tabla_Resultados_Vertical.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+}

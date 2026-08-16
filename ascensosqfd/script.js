@@ -1,3 +1,5 @@
+// MODIFICACIÓN EN SCRIPT.JS - ACTUALIZACIÓN DINÁMICA DEL NOMBRE DEL MODERADOR EN LA VISTA PREVIA
+
 let salasProcesadas = []; 
 let correccionesNombres = {};
 let equiposEliminados = new Set();
@@ -194,8 +196,30 @@ function renderizarResultados() {
     const modoCalculo = document.getElementById('selectModoCalculo').value;
     const temaVal = document.getElementById('selectTemaVisual').value;
     const inputFechaHora = document.getElementById('inputFechaHora').value;
-    const moderadorVal = document.getElementById('inputModerador').value;
+    
+    // Obtener dinámicamente el valor actual del input de moderador en la interfaz
+    const inputModerador = document.getElementById('inputModerador');
+    let nombreModerador = inputModerador && inputModerador.value.trim() !== "" ? inputModerador.value.trim().toUpperCase() : "ERERRE";
+
     let horasZona = formatearFechaHoraZonas(inputFechaHora);
+
+    let colorFondoBase = "rgba(20, 20, 30, 0.75)";
+    let colorTituloTema = "#ffffff";
+    let colorTextoTabla = "#ffffff";
+
+    if (temaVal === 'fdquisqueya') {
+        colorFondoBase = "rgba(10, 34, 64, 0.75)";
+        colorTituloTema = "#81d4fa";
+        colorTextoTabla = "#ffffff";
+    } else if (temaVal === 'dragonfest') {
+        colorFondoBase = "rgba(15, 23, 42, 0.75)";
+        colorTituloTema = "#93c5fd";
+        colorTextoTabla = "#ffffff";
+    } else if (temaVal === 'dragonfestfem') {
+        colorFondoBase = "rgba(35, 15, 45, 0.75)";
+        colorTituloTema = "#f3e8ff";
+        colorTextoTabla = "#ffffff";
+    }
 
     let mapaConsolidado = new Map();
     let mapaJugadoresKills = new Map();
@@ -273,7 +297,7 @@ function renderizarResultados() {
     let topKillers = Array.from(mapaJugadoresKills.values())
         .filter(k => k.kills > 0)
         .sort((a, b) => b.kills - a.kills)
-        .slice(0, 5);
+        .slice(0, 9);
 
     let cantidadSalas = salasProcesadas.length;
     let tienePuntosAscenso = false;
@@ -304,30 +328,28 @@ function renderizarResultados() {
         tienePuntosAscenso = true;
     }
 
-    let thead = `<tr><th>TOP</th><th>EQUIPO</th>`;
+    let thead = `<tr><th style="color: ${colorTextoTabla} !important;">TOP</th><th style="color: ${colorTextoTabla} !important;">EQUIPO</th>`;
     salasProcesadas.forEach((_, idx) => {
-        thead += `<th>S${idx + 1}</th>`;
+        thead += `<th style="color: ${colorTextoTabla} !important;">S${idx + 1}</th>`;
     });
-    thead += `<th>TOTAL</th></tr>`;
+    thead += `<th style="color: ${colorTextoTabla} !important;">TOTAL</th></tr>`;
 
     let tbody = ``;
     listaConsolidada.forEach((item, index) => {
         tbody += `<tr>
-            <td><strong>#${index + 1}</strong></td>
-            <td><strong>${item.name}</strong></td>`;
+            <td style="color: ${colorTextoTabla};"><strong>#${index + 1}</strong></td>
+            <td style="color: ${colorTextoTabla};"><strong>${item.name}</strong></td>`;
         
         item.salas.forEach(val => {
             if (val === null) {
-                tbody += `<td class="sala-sin-registro"><i class="fa-solid fa-skull"></i></td>`;
+                tbody += `<td class="sala-sin-registro" style="color: ${colorTextoTabla};"><i class="fa-solid fa-skull" style="color: #ff6b6b !important;"></i></td>`;
             } else {
-                tbody += `<td>${val}</td>`;
+                tbody += `<td style="color: ${colorTextoTabla};">${val}</td>`;
             }
         });
 
-        tbody += `<td><strong>${item.total}</strong></td></tr>`;
+        tbody += `<td style="color: ${colorTextoTabla};"><strong>${item.total}</strong></td></tr>`;
     });
-
-    let htmlModerador = moderadorVal ? `<p class="moderador-reducido">MODERADOR: <strong>${moderadorVal}</strong></p>` : '';
 
     let tituloModo = "TABLA GENERAL";
     if (modoCalculo === 'top') tituloModo = "TABLA SOLO TOP";
@@ -340,7 +362,6 @@ function renderizarResultados() {
                 <div class="table-general-overlay">
                     <div style="text-align: center; margin-bottom: 8px;">
                         <p style="color: var(--gray); font-size: 0.8rem;"><strong>${horasZona.fecha}</strong> — ${horasZona.mex} | ${horasZona.col} | ${horasZona.arg}</p>
-                        ${htmlModerador}
                     </div>
                     <table><thead>${thead}</thead><tbody>${tbody}</tbody></table>
                 </div>
@@ -351,38 +372,38 @@ function renderizarResultados() {
 
     let htmlTopKillers = ``;
     if (topKillers.length > 0) {
-        htmlTopKillers = `<table><thead><tr><th>#</th><th>JUGADOR</th><th>EQUIPO</th><th>KILLS</th></tr></thead><tbody>`;
+        htmlTopKillers = `<table style="width:100%; border-collapse:collapse; background:transparent;"><thead><tr><th style="background:transparent !important; color:${colorTextoTabla} !important; padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.2); font-family:'Orbitron'; font-size:0.99rem;">#</th><th style="background:transparent !important; color:${colorTextoTabla} !important; padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.2); font-family:'Orbitron'; font-size:0.99rem;">JUGADOR</th><th style="background:transparent !important; color:${colorTextoTabla} !important; padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.2); font-family:'Orbitron'; font-size:0.99rem;">KILLS</th></tr></thead><tbody>`;
         topKillers.forEach((k, idx) => {
-            htmlTopKillers += `<tr><td>#${idx + 1}</td><td><strong>${k.name}</strong></td><td>${k.team}</td><td><strong>${k.kills}</strong></td></tr>`;
+            htmlTopKillers += `<tr><td style="padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.89rem; font-weight:bold; color:${colorTextoTabla}; background:transparent;">#${idx + 1}</td><td style="padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.89rem; font-weight:bold; color:${colorTextoTabla}; background:transparent;"><strong>${k.name}</strong></td><td style="padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.89rem; font-weight:bold; color:${colorTextoTabla}; background:transparent;"><strong>${k.kills}</strong></td></tr>`;
         });
         htmlTopKillers += `</tbody></table>`;
     } else {
-        htmlTopKillers = `<p style="text-align:center; padding:10px; opacity:0.7;">Sin registro de kills</p>`;
+        htmlTopKillers = `<p style="text-align:center; padding:5px; opacity:0.7; color:${colorTextoTabla}; font-size:0.89rem;">Sin registro de kills</p>`;
     }
 
     let htmlBooyahs = ``;
     if (booyahsPorSala.length > 0) {
-        htmlBooyahs = `<table><thead><tr><th>SALA</th><th>BOOYAH</th></tr></thead><tbody>`;
+        htmlBooyahs = `<table style="width:100%; border-collapse:collapse; background:transparent;"><thead><tr><th style="background:transparent !important; color:${colorTextoTabla} !important; padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.2); font-family:'Orbitron'; font-size:0.99rem;">SALA</th><th style="background:transparent !important; color:${colorTextoTabla} !important; padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.2); font-family:'Orbitron'; font-size:0.99rem;">BOOYAH</th></tr></thead><tbody>`;
         booyahsPorSala.forEach(b => {
-            htmlBooyahs += `<tr><td>Sala ${b.sala}</td><td><strong>${b.equipo} <i class="fa-solid fa-crown" style="color: var(--accent-yellow);"></i></strong></td></tr>`;
+            htmlBooyahs += `<tr><td style="padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.89rem; font-weight:bold; color:${colorTextoTabla}; background:transparent;">Sala ${b.sala}</td><td style="padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.89rem; font-weight:bold; color:${colorTextoTabla}; background:transparent;"><strong>${b.equipo} <i class="fa-solid fa-crown" style="color: #ffd700;"></i></strong></td></tr>`;
         });
         htmlBooyahs += `</tbody></table>`;
     } else {
-        htmlBooyahs = `<p style="text-align:center; padding:10px; opacity:0.7;">Sin registro de Booyahs</p>`;
+        htmlBooyahs = `<p style="text-align:center; padding:5px; opacity:0.7; color:${colorTextoTabla}; font-size:0.89rem;">Sin registro de Booyahs</p>`;
     }
 
     let htmlAscensoPanel = ``;
     if (tienePuntosAscenso) {
         let rowsAscenso = ``;
         equiposAscenso.forEach((eq, idx) => {
-            rowsAscenso += `<tr><td>#${idx + 1}</td><td><strong>${eq.name}</strong> <i class="fa-solid fa-arrow-up" style="color: var(--primary);"></i></td><td><strong>${eq.total}</strong></td></tr>`;
+            rowsAscenso += `<tr><td style="padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.89rem; font-weight:bold; color:${colorTextoTabla}; background:transparent;">#${idx + 1}</td><td style="padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.89rem; font-weight:bold; color:${colorTextoTabla}; background:transparent;"><strong>${eq.name}</strong> <i class="fa-solid fa-arrow-up" style="color: #4ade80;"></i></td><td style="padding:2px 4px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); font-size:0.89rem; font-weight:bold; color:${colorTextoTabla}; background:transparent;"><strong>${eq.total}</strong></td></tr>`;
         });
 
         htmlAscensoPanel = `
-            <div style="margin-top: 15px; border-top: 1px dashed var(--tema-border); padding-top: 10px;">
-                <h4 style="font-family:'Orbitron'; font-size:1.3rem; color:var(--tema-header-text); text-align:center; margin-bottom:8px;"><i class="fa-solid fa-angles-up"></i> ASCENSO DIRECTO</h4>
-                <table>
-                    <thead><tr><th>#</th><th>EQUIPO</th><th>PUNTOS</th></tr></thead>
+            <div style="margin-bottom: 4px; border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 2px;">
+                <h4 style="font-family:'Orbitron'; font-size:0.85rem; color:${colorTituloTema}; text-align:center; margin-bottom:2px;"><i class="fa-solid fa-angles-up"></i> ASCENSO DIRECTO</h4>
+                <table style="width:100%; border-collapse:collapse; background:transparent;">
+                    <thead><tr><th style="background:transparent !important; color:${colorTextoTabla} !important; padding:1px 3px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.2); font-family:'Orbitron'; font-size:0.8rem;">#</th><th style="background:transparent !important; color:${colorTextoTabla} !important; padding:1px 3px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.2); font-family:'Orbitron'; font-size:0.8rem;">EQUIPO</th><th style="background:transparent !important; color:${colorTextoTabla} !important; padding:1px 3px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.2); font-family:'Orbitron'; font-size:0.8rem;">PUNTOS</th></tr></thead>
                     <tbody>${rowsAscenso}</tbody>
                 </table>
             </div>
@@ -390,30 +411,57 @@ function renderizarResultados() {
     }
 
     let htmlTerceraTablaCompleta = `
-        <div id="tablaReducidaCaptura" class="table-reduced-wrapper tema-${temaVal}">
-            <div class="layout-stack-composite">
-                <div class="row-tabla-general box-composite-panel">
-                    <div style="text-align: center; margin-bottom: 10px;">
-                        <h3 style="font-size: 1.8rem; font-family: 'Orbitron'; margin-bottom: 5px;">${tituloModo}</h3>
-                        <div class="horarios-badge-grande">
-                            <span style="background: var(--secondary); color: #fff; padding: 4px 10px; border-radius: 4px; font-weight: bold; margin-right: 8px;">★ HORARIOS</span> 
-                            <strong>${horasZona.fecha}</strong> — ${horasZona.mex} | ${horasZona.col} | ${horasZona.arg}
+        <div style="width: 100%; overflow: hidden; display: flex; justify-content: center;">
+            <div id="tablaReducidaCaptura" class="tema-${temaVal}" style="width: 1280px !important; height: 720px !important; min-width: 1280px !important; min-height: 720px !important; max-width: 1280px !important; max-height: 720px !important; padding: 143px 45px 72px 45px !important; border-radius: 12px; box-sizing: border-box; background-size: 100% 100%; background-position: center; background-repeat: no-repeat; transform: scale(0.65); transform-origin: top center; margin-bottom: -250px; flex-shrink: 0; position: relative; overflow: hidden;">
+                <div style="display: flex; flex-direction: row; gap: 15px; width: 100%; height: 100%; align-items: stretch; justify-content: flex-start; padding-right: 75%; MARGIN-TOP: 5%;">
+                    
+                    <!-- TABLA GENERAL IZQUIERDA -->
+                    <div style="flex: 0 0 690px !important; width: 690px !important; height: 450px !important; max-width: 690px !important; max-height: 450px !important; overflow: hidden; border-radius: 6px; padding: 6px 10px; background: ${colorFondoBase}; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                        <div style="text-align: center; margin-bottom: 3px;">
+                            <h3 style="font-size: 1.155rem; font-family: 'Orbitron'; margin-bottom: 1px; color: ${colorTituloTema};">${tituloModo} - MODERADOR: <strong style="font-size:1.155rem; font-weight:900; color:${colorTituloTema};">${nombreModerador}</strong></h3>
+                            <div style="font-size: 0.89rem !important; background: rgba(0, 0, 0, 0.2); display: inline-block; padding: 2px 8px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.15); margin-top: 1px; margin-bottom: 2px; color: ${colorTextoTabla};">
+                                <span style="background: #111; color: #fff; padding: 1px 6px; border-radius: 3px; font-weight: bold; margin-right: 4px; font-size: 0.79rem;">★ HORARIOS</span> 
+                                <strong>${horasZona.fecha}</strong> — ${horasZona.mex} | ${horasZona.col} | ${horasZona.arg}
+                            </div>
                         </div>
-                        ${htmlModerador}
+                        <table style="width: 100%; border-collapse: collapse; background: transparent; color: ${colorTextoTabla};">
+                            <thead>
+                                <tr>
+                                    <th style="background: transparent !important; color: ${colorTextoTabla} !important; padding: 2px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); font-family: 'Orbitron'; font-size: 0.86rem;">TOP</th>
+                                    <th style="background: transparent !important; color: ${colorTextoTabla} !important; padding: 2px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); font-family: 'Orbitron'; font-size: 0.86rem;">EQUIPO</th>
+                                    ${salasProcesadas.map((_, idx) => `<th style="background: transparent !important; color: ${colorTextoTabla} !important; padding: 2px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); font-family: 'Orbitron'; font-size: 0.86rem;">S${idx + 1}</th>`).join('')}
+                                    <th style="background: transparent !important; color: ${colorTextoTabla} !important; padding: 2px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.2); font-family: 'Orbitron'; font-size: 0.86rem;">TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${listaConsolidada.map((item, index) => `
+                                    <tr>
+                                        <td style="padding: 2px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; font-weight: bold; color: ${colorTextoTabla}; background: transparent;"><strong>#${index + 1}</strong></td>
+                                        <td style="padding: 2px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; font-weight: bold; color: ${colorTextoTabla}; background: transparent;"><strong>${item.name}</strong></td>
+                                        ${item.salas.map(val => val === null ? `<td style="padding: 2px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; font-weight: bold; color: ${colorTextoTabla}; background: transparent;" class="sala-sin-registro"><i class="fa-solid fa-skull" style="color: #ff6b6b !important; font-size: 0.82rem;"></i></td>` : `<td style="padding: 2px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; font-weight: bold; color: ${colorTextoTabla}; background: transparent;">${val}</td>`).join('')}
+                                        <td style="padding: 2px 4px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.82rem; font-weight: bold; color: ${colorTextoTabla}; background: transparent;"><strong>${item.total}</strong></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
                     </div>
-                    <table><thead>${thead}</thead><tbody>${tbody}</tbody></table>
-                </div>
 
-                <div class="row-panel-inferior">
-                    <div class="box-composite-panel col-top-killer">
-                        <h3><i class="fa-solid fa-crosshairs"></i> TOP KILLER</h3>
-                        ${htmlTopKillers}
-                        ${htmlAscensoPanel}
-                    </div>
+                    <!-- PANELES DERECHOS -->
+                    <div style="display: flex; flex-direction: column; gap: 0px; flex: 0 0 342px !important; width: 342px !important; height: 450px !important; max-width: 342px !important; max-height: 450px !important;">
+                        
+                        <!-- TOP KILLER CON ASCENSO DIRECTO ARRIBA -->
+                        <div style="flex: 0 0 270px !important; width: 100% !important; height: 270px !important; max-width: 100% !important; max-height: 270px !important; overflow: hidden; padding: 6px 10px; background: ${colorFondoBase}; border: 1px solid rgba(255,255,255,0.15); box-sizing: border-box; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                            ${htmlAscensoPanel}
+                            <h3 style="font-family: 'Orbitron'; font-size: 0.95rem; text-align: center; margin-bottom: 2px; color: ${colorTituloTema};"><i class="fa-solid fa-crosshairs"></i> TOP KILLER</h3>
+                            ${htmlTopKillers}
+                        </div>
 
-                    <div class="box-composite-panel col-booyah">
-                        <h3><i class="fa-solid fa-trophy"></i> BOOYAH</h3>
-                        ${htmlBooyahs}
+                        <!-- BOOYAH -->
+                        <div style="flex: 0 0 175px !important; width: 100% !important; height: 175px !important; max-width: 100% !important; max-height: 175px !important; overflow: hidden; padding: 6px 10px; background: ${colorFondoBase}; border: 1px solid rgba(255,255,255,0.15); box-sizing: border-box; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                            <h3 style="font-family: 'Orbitron'; font-size: 0.95rem; text-align: center; margin-bottom: 2px; color: ${colorTituloTema};"><i class="fa-solid fa-trophy"></i> BOOYAH</h3>
+                            ${htmlBooyahs}
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -430,7 +478,6 @@ function descargarTablaReducida() {
         return;
     }
 
-    // 1. Guardar estilos y transformaciones originales
     const estiloOriginalTransform = elemento.style.transform;
     const estiloOriginalPosition = elemento.style.position;
     const estiloOriginalLeft = elemento.style.left;
@@ -442,18 +489,17 @@ function descargarTablaReducida() {
         el.style.boxShadow = 'none';
     });
 
-    // 2. REINICIAR TEMPORALMENTE LA ESCALA PARA EVITAR EL BLANCO EN CELULARES
     elemento.style.transform = 'none';
     elemento.style.position = 'fixed';
-    elemento.style.left = '-9999px'; // Lo sacamos de la pantalla mientras toma la foto
+    elemento.style.left = '-9999px';
 
     const opciones = {
-        scale: 2, // Calidad HD en PC y Móvil
+        scale: 2, 
         width: 1280,
-        height: 1280,
+        height: 720,
         useCORS: true,
         allowTaint: false,
-        backgroundColor: '#0a0b10', // Mantiene el fondo oscuro original
+        backgroundColor: '#0a0b10',
         logging: false,
         onclone: function(documentoClonado) {
             const clon = documentoClonado.getElementById('tablaReducidaCaptura');
@@ -484,7 +530,6 @@ function descargarTablaReducida() {
             alert("Ocurrió un error al exportar la imagen.");
         })
         .finally(() => {
-            // 3. RESTAURAR LA VISTA EN PANTALLA
             elemento.style.transform = estiloOriginalTransform;
             elemento.style.position = estiloOriginalPosition;
             elemento.style.left = estiloOriginalLeft;

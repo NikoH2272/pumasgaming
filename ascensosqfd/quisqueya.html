@@ -37,7 +37,7 @@
         <h2 class="section-title">Procesador de Resultados Free Fire (Por Salas)</h2>
         <div class="tool-container">
             <p class="tool-desc">
-                Sube los archivos (<strong>.log</strong> o <strong>.txt</strong>) de cada sala para generar la tabla compuesta (Tabla General Arriba / Top Killer y Booyah Abajo).
+                Sube los archivos (<strong>.log</strong> o <strong>.txt</strong>) de cada sala para generar la tabla compuesta.
             </p>
 
             <div class="form-grid">
@@ -87,7 +87,7 @@
                 
                 <div style="margin-top: 40px; text-align: center;">
                     <button class="btn-access" id="btnDescargarImagen" onclick="descargarTablaReducida()" style="font-size: 1.1rem; padding: 15px 35px; margin-bottom: 20px; display: inline-block;">
-                        <i class="fa-solid fa-download"></i> Descargar Imagen Reducida (2000x2000)
+                        <i class="fa-solid fa-download"></i> Descargar Imagen Reducida (1280x720)
                     </button>
                 </div>
                 <div id="outputTablaReducida" class="result-box" style="margin-top: 10px; display: flex; justify-content: center; overflow-x: auto;"></div>
@@ -100,10 +100,9 @@
     </footer>
 
     <script src="script.js"></script>
-    <script>
+    <!--<script>
         window.onload = function() {
             const user = JSON.parse(localStorage.getItem('current_user'));
-            // Solo permite ingresar si inició sesión con el rol "quisqueya" o es "administrador"
             if (!user || (user.role !== 'quisqueya' && user.role !== 'administrador')) {
                 alert('Acceso no autorizado. Debe iniciar sesión.');
                 window.location.href = 'login.html';
@@ -114,6 +113,6 @@
             localStorage.removeItem('current_user');
             window.location.href = 'login.html';
         }
-    </script>
+    </script>-->
 </body>
 </html>
