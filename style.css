@@ -60,6 +60,7 @@ nav ul {
     display: flex;
     list-style: none;
     gap: 30px;
+    align-items: center;
 }
 
 nav ul li a {
@@ -73,6 +74,29 @@ nav ul li a {
 nav ul li a:hover {
     color: var(--primary);
     text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+}
+
+/* --- ESTILOS DEL BOTÓN HAMBURGUESA (Oculto en PC) --- */
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 21px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+}
+
+.menu-toggle .bar {
+    width: 100%;
+    height: 3px;
+    background-color: var(--primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
 }
 
 .hero {
@@ -287,7 +311,6 @@ section {
     box-shadow: 0 0 25px var(--primary);
 }
 
-/* Distribución exacta: 65% para la Tabla General y 35% para el Top Killer */
 .tablas-lado-a-lado {
     display: grid;
     grid-template-columns: 65% 35%;
@@ -332,7 +355,6 @@ section {
     font-family: 'Orbitron', sans-serif;
 }
 
-/* Tarjetas de Booyah */
 .booyah-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -507,7 +529,6 @@ footer {
     z-index: 1001;
 }
 
-/* ESTILOS BOTÓN E IMPRESIÓN 4K */
 @media print {
     body * {
         visibility: hidden;
@@ -520,5 +541,49 @@ footer {
         left: 0;
         top: 0;
         width: 100%;
+    }
+}
+
+/* --- ADAPTACIÓN MÓVIL Y MENÚ DESPLEGABLE (Menor a 992px) --- */
+@media (max-width: 992px) {
+    header {
+        padding: 15px 20px;
+    }
+
+    /* Mostramos el botón hamburguesa */
+    .menu-toggle {
+        display: flex;
+    }
+
+    /* Ocultamos el menú desplegable por defecto */
+    nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: rgba(10, 11, 16, 0.98);
+        border-bottom: 2px solid rgba(0, 255, 204, 0.3);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        padding: 20px 0;
+    }
+
+    /* Clase que activa el despliegue con JavaScript */
+    nav.is-active {
+        display: block;
+    }
+
+    nav ul {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .jersey-container {
+        grid-template-columns: 1fr;
+    }
+
+    .tablas-lado-a-lado {
+        grid-template-columns: 1fr;
     }
 }
