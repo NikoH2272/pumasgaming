@@ -186,3 +186,13 @@ footer { text-align: center; padding: 30px; background: #050608; color: var(--gr
     .hero h1 { font-size: 2.3rem; }
     nav { display: none; }
 }
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--light);
+    text-decoration: none;
+}

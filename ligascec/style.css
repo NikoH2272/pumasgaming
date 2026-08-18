@@ -707,3 +707,12 @@ footer {
         width: 100%;
     }
 }
+a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--light);
+    text-decoration: none;
+}

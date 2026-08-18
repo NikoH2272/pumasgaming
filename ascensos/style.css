@@ -322,3 +322,12 @@ footer { text-align: center; padding: 30px; background: #050608; color: var(--gr
     font-size: 1.5rem;
     filter: drop-shadow(0 0 4px rgba(255, 0, 0, 0.6));
 }
+a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--light);
+    text-decoration: none;
+}
