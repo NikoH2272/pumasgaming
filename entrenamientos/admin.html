@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin | Pumas Gaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styleadmin.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
+</head>
+<body>
+
+<header class="site-header">
+    <div class="logo-container">
+        <img src="imagenes/LOGO PUMAS WEB.png" alt="Logo Pumas Gaming" class="logo-img">
+        <div class="logo">ADMIN PANEL</div>
+    </div>
+    <nav class="main-nav is-active" style="position: static; background: transparent; box-shadow: none;">
+        <ul>
+            <li><a href="entrenamientos.html" style="color: #fff; margin-right: 15px;" target="_blank"><i class="fa-solid fa-list"></i> Ver Historial Público</a></li>
+            <li><span id="welcomeUser" style="color: var(--primary); font-weight: bold; margin-right: 15px;"></span></li>
+            <li><a href="#" onclick="cerrarSesion()" style="color: var(--secondary);"><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
+        </ul>
+    </nav>
+</header>
+
+    <section id="cargar-resultados" class="tool-section" style="padding-top: 40px;">
+        <h2 class="section-title">Cargar Resultados de Entrenamientos</h2>
+        <div class="tool-container">
+            <p class="tool-desc">
+                Sube los registros <code>.log</code> o <code>.txt</code>. Se creará una carpeta en la nube, se calcularán las tablas generales de manera exacta y se guardará todo en Supabase.
+            </p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>TÍTULO DEL ENTRENAMIENTO</label>
+                    <input type="text" id="inputTituloTorneo" value="ENTRENAMIENTO OFICIAL PUMAS">
+                </div>
+                <div class="form-group">
+                    <label>JORNADA</label>
+                    <input type="text" id="inputJornadaTorneo" value="PRÁCTICA SQUAD">
+                </div>
+            </div>
+
+            <div class="form-grid" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label>FECHA Y HORA</label>
+                    <input type="datetime-local" id="inputFechaHoraEntreno" style="background:#0a0b10; color:#fff; border:1px solid rgba(255,255,255,0.2); padding:12px; border-radius:6px; width:100%;">
+                </div>
+                <div class="form-group">
+                    <label>MODERADOR / ADMIN</label>
+                    <input type="text" id="inputModerador" placeholder="Ej: Coach Niko">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label>SUBIR ARCHIVOS LOGS DE SALAS (.log, .txt)</label>
+                <input type="file" id="fileInput" multiple accept=".txt,.log" onchange="prepararRenombradoEquipos()">
+                <div id="seccionRenombrar" style="display: none; margin-top: 20px; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 8px;">
+                    <h3 style="color: #ffcc00; margin-bottom: 10px; font-family: 'Orbitron';">Editar Nombres de Equipos</h3>
+                    <div id="listaEquiposInputs" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;"></div>
+                    <button onclick="procesarConNombresPersonalizados()" class="btn-generar" style="margin-top: 15px; padding: 10px 20px; background: #00ffcc; color: #000; font-weight: bold; border: none; border-radius: 5px; cursor: pointer;">
+                        CONFIRMAR NOMBRES Y PROCESAR
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn-generar" onclick="procesarArchivosLog()">
+                <i class="fa-solid fa-gears"></i> PROCESAR Y GUARDAR EN BASE DE DATOS
+            </button>
+
+            <div class="results-wrapper">
+                <div id="outputTablasLadoALado" class="result-box" style="margin-top: 30px; display: flex; justify-content: center;"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 PUMAS GAMING. Panel de Administración.</p>
+    </footer>
+
+    <script>
+        const sesionUsuario = localStorage.getItem('pumas_user');
+        if (!sesionUsuario) {
+            window.location.href = 'login.html';
+        } else {
+            const usuarioObj = JSON.parse(sesionUsuario);
+            document.getElementById('welcomeUser').textContent = `Hola, ${usuarioObj.nombre}`;
+            document.getElementById('inputModerador').value = usuarioObj.nombre;
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem('pumas_user');
+            window.location.href = 'login.html';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            const offset = now.getTimezoneOffset();
+            const localDate = new Date(now.getTime() - (offset*60*1000)).toISOString().slice(0,16);
+            const inputFecha = document.getElementById('inputFechaHoraEntreno');
+            if(inputFecha && !inputFecha.value) inputFecha.value = localDate;
+        });
+    </script>
+    <script src="admin_logica.js"></script>
+</body>
+</html>

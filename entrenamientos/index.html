@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial de Entrenamientos | Pumas Gaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
+</head>
+<body>
+
+<header class="site-header">
+    <div class="logo-container">
+        <img src="imagenes/LOGO PUMAS WEB.png" alt="Logo Pumas Gaming" class="logo-img">
+        <div class="logo">PUMAS GAMING</div>
+    </div>
+    <button class="menu-toggle" aria-label="Abrir menú" onclick="toggleMenu()">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+    <nav class="main-nav" id="mainNav">
+        <ul>
+                        <li><a href="../index.html" style="color: var(--primary);">Inicio</a></li>
+            <li><a href="index.html" style="color: var(--primary);">Entrenamientos Pumas</a></li>
+            <li><a href="login.html" class="btn-access" style="padding: 8px 18px; font-size: 0.9rem;"><i class="fa-solid fa-user-lock"></i> Iniciar Sesión</a></li>
+        </ul>
+    </nav>
+</header>
+
+    <section class="hero">
+        <h1>Historial de Entrenamientos <span>Pumas Gaming</span></h1>
+        <p>Panel de control global y consolidado de sesiones de práctica oficiales sin desplazamiento forzado.</p>
+        
+        <div style="display: flex; justify-content: center; gap: 20px; margin-top: 30px; flex-wrap: wrap;">
+            <div style="background: var(--dark-card); border: 1px solid rgba(220,204,156,0.3); padding: 15px 25px; border-radius: 8px; text-align: center; min-width: 140px;">
+                <div style="color: var(--gray); font-size: 0.8rem; font-family: 'Orbitron';">EQUIPOS</div>
+                <div id="statTotalEquipos" style="color: var(--primary); font-family: 'Orbitron'; font-size: 1.5rem; font-weight: bold;">0</div>
+            </div>
+            <div style="background: var(--dark-card); border: 1px solid rgba(220,204,156,0.3); padding: 15px 25px; border-radius: 8px; text-align: center; min-width: 140px;">
+                <div style="color: var(--gray); font-size: 0.8rem; font-family: 'Orbitron';">KILLS</div>
+                <div id="statTotalKills" style="color: var(--primary); font-family: 'Orbitron'; font-size: 1.5rem; font-weight: bold;">0</div>
+            </div>
+            <div style="background: var(--dark-card); border: 1px solid rgba(220,204,156,0.3); padding: 15px 25px; border-radius: 8px; text-align: center; min-width: 140px;">
+                <div style="color: var(--gray); font-size: 0.8rem; font-family: 'Orbitron';">MAPAS JUGADOS</div>
+                <div id="statTotalMapas" style="color: var(--primary); font-family: 'Orbitron'; font-size: 1.5rem; font-weight: bold;">0</div>
+            </div>
+            
+            <div style="background: var(--dark-card); border: 1px solid rgba(220,204,156,0.3); padding: 15px 25px; border-radius: 8px; text-align: center; min-width: 140px;">
+                <div style="color: var(--gray); font-size: 0.8rem; font-family: 'Orbitron';">ENTRENAMIENTOS</div>
+                <div id="statTotalEntrenamientos" style="color: var(--primary); font-family: 'Orbitron'; font-size: 1.5rem; font-weight: bold;">0</div>
+            </div>
+        </div>
+    </section>
+
+    <main class="dashboard-3-columns">
+        
+        <div class="dashboard-col">
+            <div class="tabla-contenedor">
+                <div class="header-card-title">
+                    <i class="fa-solid fa-clipboard-list" style="color: var(--primary);"></i>
+                    <h3>Sesiones Registradas</h3>
+                </div>
+                <div style="width: 100%;">
+                    <table class="tabla-estilizada">
+                        <thead>
+                            <tr>
+                                <th>FECHA</th>
+                                <th>TORNEO</th>
+                                <th style="text-align: center;">VER</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodySesiones">
+                            <tr><td colspan="3" style="text-align:center; color: var(--gray);">Cargando sesiones...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-col">
+            <div class="tabla-contenedor">
+                <div class="header-card-title">
+                    <i class="fa-solid fa-globe" style="color: var(--primary);"></i>
+                    <h3>Top 50 Equipos Globales</h3>
+                </div>
+                <div style="width: 100%;">
+                    <table class="tabla-estilizada">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>EQUIPO</th>
+                                <th style="text-align:center;">BOOYAH 🏆</th>
+                                <th style="text-align:center;">TOTAL PTS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyTablaGlobal">
+                            <tr><td colspan="4" style="text-align:center; color: var(--gray);">Calculando global...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-col">
+            <div class="tabla-contenedor">
+                <div class="header-card-title">
+                    <i class="fa-solid fa-skull" style="color: var(--primary);"></i>
+                    <h3>Top Killers Globales</h3>
+                </div>
+                <div class="top-killers-grid" id="gridTopKillersGlobal" style="max-height: none; overflow-y: visible;">
+                    <div style="color: var(--gray); text-align:center; padding: 20px;">Cargando killers...</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="modalDetalleSesion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; backdrop-filter: blur(5px);">
+        <div style="background: var(--dark-card); border: 2px solid var(--primary); border-radius: 12px; max-width: 950px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 0 50px rgba(220,204,156,0.2);">
+            
+            <button onclick="cerrarModalDetalle()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(220,204,156,0.3); color: #fff; width: 35px; height: 35px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='var(--primary)'; this.style.color='#000';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='#fff';"><i class="fa-solid fa-xmark"></i></button>
+            
+            <div style="margin-bottom: 20px; border-bottom: 1px solid rgba(220,204,156,0.2); padding-bottom: 12px;">
+                <h3 id="tituloDetalleSesion" style="color: var(--primary); font-family: 'Orbitron'; font-size: 1.3rem; margin: 0 0 5px 0;">TABLA GENERAL DE LA SESIÓN</h3>
+                <span id="subtituloDetalle" style="font-size: 0.9rem; color: var(--secondary); font-family: 'Orbitron'; letter-spacing: 1px;"></span>
+            </div>
+
+            <div style="width: 100%;">
+                <table class="tabla-estilizada" id="tablaGeneralSesionUnica">
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 PUMAS GAMING. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            document.getElementById('mainNav').classList.toggle('is-active');
+        }
+
+        const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function cargarSesiones() {
+            const { data, error } = await supabaseClient
+                .from('entrenamientos_sesiones')
+                .select('*')
+                .order('fecha', { ascending: false });
+
+            const tbody = document.getElementById('bodySesiones');
+            if (error || !data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #ff3333;">Sin registros disponibles.</td></tr>`;
+                document.getElementById('bodyTablaGlobal').innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--gray);">Sin datos globales.</td></tr>`;
+                document.getElementById('gridTopKillersGlobal').innerHTML = `<div style="color: var(--gray); text-align:center; padding: 20px;">Sin datos globales.</div>`;
+                return;
+            }
+
+            document.getElementById('statTotalEntrenamientos').textContent = data.length;
+
+            tbody.innerHTML = '';
+            data.forEach(sesion => {
+                let fechaFormateada = new Date(sesion.fecha).toLocaleDateString();
+                let folderPath = sesion.archivo_url || '';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="color: var(--secondary);">${fechaFormateada}</td>
+                        <td style="font-weight: bold; color: var(--light);">${sesion.titulo}</td>
+                        <td style="text-align: center;">
+                            <button class="btn-ver" onclick="procesarSesionUnica('${folderPath}', '${sesion.titulo}', '${sesion.jornada}')">
+                                <i class="fa-solid fa-table"></i> Ver
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            await calcularTablaGlobalAcumulada(data);
+        }
+
+        async function calcularTablaGlobalAcumulada(sesiones) {
+            let globalTeamsMap = {};
+            let globalPlayersMap = {};
+            let totalMapasJugados = 0;
+            let totalKillsGenerales = 0;
+
+            for (let sesion of sesiones) {
+                if (!sesion.archivo_url) continue;
+
+                try {
+                    const { data: fileList } = await supabaseClient.storage
+                        .from('entrenamientos_logs')
+                        .list(sesion.archivo_url);
+
+                    if (!fileList) continue;
+
+                    totalMapasJugados += fileList.length;
+
+                    for (let file of fileList) {
+                        const { data: fileData } = await supabaseClient.storage
+                            .from('entrenamientos_logs')
+                            .download(`${sesion.archivo_url}/${file.name}`);
+
+                        if (fileData) {
+                            let text = await fileData.text();
+                            let lines = text.split('\n');
+                            lines.forEach(line => {
+                                const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
+                                if (teamMatch) {
+                                    let name = teamMatch[1].trim();
+                                    let rank = parseInt(teamMatch[2]);
+                                    let totalScore = parseInt(teamMatch[5]);
+
+                                    if (!globalTeamsMap[name]) {
+                                        globalTeamsMap[name] = { name, totalScore: 0, booyahs: 0 };
+                                    }
+                                    globalTeamsMap[name].totalScore += totalScore;
+                                    
+                                    if (rank === 1) {
+                                        globalTeamsMap[name].booyahs += 1;
+                                    }
+                                }
+
+                                const pMatch = line.match(/NAME:\s*(.+?)\s+ID:\s*\d+.*?KILL:\s*(\d+)/i);
+                                if (pMatch) {
+                                    let pName = pMatch[1].trim();
+                                    let killsCount = parseInt(pMatch[2]);
+                                    totalKillsGenerales += killsCount;
+                                    if (!globalPlayersMap[pName]) {
+                                        globalPlayersMap[pName] = { name: pName, kills: 0 };
+                                    }
+                                    globalPlayersMap[pName].kills += killsCount;
+                                }
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error leyendo carpeta global:", e);
+                }
+            }
+
+            // Actualizar estadísticas superiores
+            document.getElementById('statTotalEquipos').textContent = Object.keys(globalTeamsMap).length;
+            document.getElementById('statTotalKills').textContent = totalKillsGenerales;
+            document.getElementById('statTotalMapas').textContent = totalMapasJugados;
+
+            // Top 50 equipos globales sin scroll fijo
+            let equiposGlobalesOrdenados = Object.values(globalTeamsMap).sort((a, b) => b.totalScore - a.totalScore).slice(0, 50);
+            let bodyGlobal = document.getElementById('bodyTablaGlobal');
+            
+            if (equiposGlobalesOrdenados.length === 0) {
+                bodyGlobal.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--gray);">Sin registros globales.</td></tr>`;
+            } else {
+                bodyGlobal.innerHTML = '';
+                equiposGlobalesOrdenados.forEach((eq, idx) => {
+                    let colorPos = idx === 0 ? '#DCCC9C' : (idx === 1 ? '#959595' : (idx === 2 ? '#cd7f32' : 'var(--light)'));
+                    bodyGlobal.innerHTML += `
+                        <tr>
+                            <td style="font-weight:bold; color: ${colorPos};">#${idx+1}</td>
+                            <td style="font-weight: bold; color: var(--light);">${eq.name}</td>
+                            <td style="text-align:center; color: #DCCC9C; font-weight:bold;">${eq.booyahs}</td>
+                            <td style="text-align:center; color: ${colorPos}; font-weight:bold; font-family:'Orbitron';">${eq.totalScore}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // Top Killers globales sin scroll fijo
+            let killersGlobalesOrdenados = Object.values(globalPlayersMap).sort((a, b) => b.kills - a.kills).slice(0, 20);
+            let gridKillersGlobalHtml = '';
+            if (killersGlobalesOrdenados.length === 0) {
+                gridKillersGlobalHtml = `<div style="color: var(--gray); text-align:center; padding: 20px;">Sin datos de killers.</div>`;
+            } else {
+                killersGlobalesOrdenados.forEach((tk, i) => {
+                    let colorPos = i === 0 ? '#DCCC9C' : (i === 1 ? '#959595' : (i === 2 ? '#cd7f32' : 'var(--light)'));
+                    gridKillersGlobalHtml += `
+                        <div class="killer-card">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="color: ${colorPos}; font-weight: bold; font-family: 'Orbitron'; min-width: 25px;">#${i+1}</span>
+                                <span style="color: var(--light); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">${tk.name}</span>
+                            </div>
+                            <span style="color: var(--primary); font-weight: bold; font-family: 'Orbitron'; font-size: 0.9rem;"><i class="fa-solid fa-crosshairs" style="margin-right: 4px;"></i> ${tk.kills}</span>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('gridTopKillersGlobal').innerHTML = gridKillersGlobalHtml;
+        }
+
+        async function procesarSesionUnica(folderPath, titulo, jornada) {
+            if (!folderPath) {
+                alert("Este entrenamiento no tiene carpeta asociada.");
+                return;
+            }
+
+            document.getElementById('modalDetalleSesion').style.display = 'flex';
+            document.getElementById('tituloDetalleSesion').textContent = `TABLA GENERAL: ${titulo}`;
+            document.getElementById('subtituloDetalle').textContent = jornada;
+            
+            document.getElementById('tablaGeneralSesionUnica').innerHTML = `<thead><tr><th colspan="100" style="text-align:center; padding: 30px; color: var(--primary);">Cargando estadísticas de salas...</th></tr></thead>`;
+
+            try {
+                const { data: fileList, error: listError } = await supabaseClient.storage
+                    .from('entrenamientos_logs')
+                    .list(folderPath);
+
+                if (listError || !fileList || fileList.length === 0) {
+                    alert("No se encontraron archivos.");
+                    return;
+                }
+
+                fileList.sort((a, b) => a.name.localeCompare(b.name));
+
+                let textosSalas = [];
+                for (let file of fileList) {
+                    const { data: fileData, error: downloadError } = await supabaseClient.storage
+                        .from('entrenamientos_logs')
+                        .download(`${folderPath}/${file.name}`);
+
+                    if (!downloadError && fileData) {
+                        let text = await fileData.text();
+                        textosSalas.push(text);
+                    }
+                }
+
+                let equiposMap = {};
+                let numSalas = textosSalas.length;
+
+                textosSalas.forEach((text, salaIndex) => {
+                    let lines = text.split('\n');
+                    lines.forEach(line => {
+                        const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
+                        if (teamMatch) {
+                            let name = teamMatch[1].trim();
+                            if (!equiposMap[name]) {
+                                equiposMap[name] = { name, totalScore: 0, killScore: 0, salasPuntos: {}, salasJugadas: 0 };
+                            }
+                            let totalScore = parseInt(teamMatch[5]);
+                            let killScore = parseInt(teamMatch[3]);
+
+                            equiposMap[name].totalScore += totalScore;
+                            equiposMap[name].killScore += killScore;
+                            equiposMap[name].salasPuntos[salaIndex] = totalScore;
+                            equiposMap[name].salasJugadas += 1;
+                        }
+                    });
+                });
+
+                let equiposOrdenados = Object.values(equiposMap).sort((a, b) => b.totalScore - a.totalScore);
+
+                let htmlHeader = `
+                    <thead>
+                        <tr style="color: var(--primary); font-family: 'Orbitron'; border-bottom: 2px solid rgba(220,204,156,0.3); font-size: 0.85rem;">
+                            <th style="text-align:left; padding: 10px;">#</th>
+                            <th style="text-align:left; padding: 10px;">EQUIPO</th>
+                            ${Array.from({length: numSalas}).map((_,i) => `<th style="padding: 10px; text-align:center;">S${i+1}</th>`).join('')}
+                            <th style="padding: 10px; text-align:center;">SALAS</th>
+                            <th style="padding: 10px; text-align:center;">KILL</th>
+                            <th style="padding: 10px; text-align:center;">TOTAL</th>
+                        </tr>
+                    </thead>
+                `;
+
+                let htmlBody = `<tbody>`;
+                equiposOrdenados.forEach((eq, i) => {
+                    let colorFila = "var(--light)";
+                    if (i === 0) colorFila = '#DCCC9C';
+                    else if (i === 1) colorFila = '#959595';
+                    else if (i === 2) colorFila = '#cd7f32';
+
+                    htmlBody += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                            <td style="padding: 10px; font-weight: bold; color:${colorFila};">#${i+1}</td>
+                            <td style="padding: 10px; font-weight: bold; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <span style="color: var(--light);">${eq.name}</span>
+                            </td>
+                            ${Array.from({length: numSalas}).map((_,s) => `<td style="text-align:center; padding: 10px; color: var(--secondary);">${eq.salasPuntos[s] !== undefined ? eq.salasPuntos[s] : '-'}</td>`).join('')}
+                            <td style="text-align:center; padding: 10px; color: var(--primary); font-weight:bold;">${eq.salasJugadas}</td>
+                            <td style="text-align:center; padding: 10px; color: #ff5555; font-weight:bold;">${eq.killScore}</td>
+                            <td style="text-align:center; padding: 10px; color:${colorFila}; font-weight:bold; font-family:'Orbitron';">${eq.totalScore}</td>
+                        </tr>
+                    `;
+                });
+                htmlBody += `</tbody>`;
+
+                document.getElementById('tablaGeneralSesionUnica').innerHTML = htmlHeader + htmlBody;
+
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Error al cargar los datos de la sesión.");
+            }
+        }
+
+        function cerrarModalDetalle() {
+            document.getElementById('modalDetalleSesion').style.display = 'none';
+        }
+
+        window.addEventListener('DOMContentLoaded', cargarSesiones);
+    </script>
+</body>
+</html>

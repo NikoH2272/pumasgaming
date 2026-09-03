@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión | Pumas Gaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="auth-overlay">
+
+    <div class="auth-card">
+        <h2>Iniciar Sesión</h2>
+        <form onsubmit="realizarLogin(event)">
+            <div class="form-group-auth">
+                <label>Correo Electrónico</label>
+                <input type="email" id="loginEmail" required placeholder="admin@pumas.com">
+            </div>
+            <div class="form-group-auth">
+                <label>Contraseña</label>
+                <input type="password" id="loginPassword" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn-auth">Ingresar al Panel</button>
+            <p id="errorMsg" class="error-msg"></p>
+        </form>
+        <p style="margin-top: 20px; font-size: 0.9rem;"><a href="entrenamientos.html" style="color: var(--primary);">← Volver a Entrenamientos</a></p>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function realizarLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.textContent = "";
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('usuarios_admin')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('password', password)
+                    .maybeSingle();
+
+                if (error || !data) {
+                    errorMsg.textContent = "Credenciales incorrectas. Verifica tus datos.";
+                } else {
+                    localStorage.setItem('pumas_user', JSON.stringify(data));
+                    window.location.href = 'admin.html';
+                }
+            } catch (err) {
+                errorMsg.textContent = "Ocurrió un error inesperado al iniciar sesión.";
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pumas Gaming | Portal Oficial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
+</head>
+<body>
+
+<header class="site-header">
+    <div class="logo-container">
+        <img src="imagenes/LOGO PUMAS WEB.png" alt="Logo Pumas Gaming" class="logo-img">
+        <div class="logo">PUMAS GAMING</div>
+    </div>
+
+    <button class="menu-toggle" aria-label="Abrir menú" onclick="toggleMenu()">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </button>
+
+    <nav class="main-nav" id="mainNav">
+        <ul>
+            <li><a href="#ff-usa-video" onclick="closeMenu()">FF USA Pro</a></li>
+            <li><a href="entrenamientos/" onclick="closeMenu()">Entrenamientos</a></li>
+            <li><a href="#jersey" onclick="closeMenu()">Jerseys</a></li>
+            <li><a href="#roster" onclick="closeMenu()">Roster & Liga</a></li>
+            <li><a href="#patrocinadores" onclick="closeMenu()">Patrocinadores</a></li>
+            <li><a href="#entrenamientos" onclick="closeMenu()">Comunidad</a></li>
+            <li><a href="#resultados" onclick="closeMenu()">Herramienta FF</a></li>
+            <li><a href="login.html" class="btn-access" style="padding: 8px 18px; font-size: 0.9rem;"><i class="fa-solid fa-user-lock"></i> Iniciar Sesión</a></li>
+        </ul>
+    </nav>
+</header>
+
+    <section class="hero-slider" style="position: relative; width: 100%; height: calc(100vh - 76px); min-height: 500px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center; background: #141414;">
+        
+        <div class="slide active" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; background-image: linear-gradient(rgba(20,20,20,0.7), rgba(20,20,20,0.85)), url('imagenes/banner1.png'); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 1; transition: opacity 1s ease-in-out;">
+            <h1 style="font-size: 3rem; font-family: 'Orbitron'; color: var(--light); margin-bottom: 20px; text-shadow: 0 0 20px rgba(220,204,156,0.5);">El Dominio de <span style="color: var(--primary);">Pumas Gaming</span></h1>
+            <p style="font-size: 1.15rem; color: var(--gray); max-width: 700px; margin-bottom: 30px;">Portal oficial de alto rendimiento competitivo. Gestión de torneos con precisión profesional.</p>
+            <a href="#resultados" class="btn-access"><i class="fa-solid fa-lock-open"></i> Acceso a Herramientas</a>
+        </div>
+
+        <div class="slide" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; background-image: linear-gradient(rgba(20,20,20,0.7), rgba(20,20,20,0.85)), url('imagenes/banner2.png'); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 1s ease-in-out;">
+            <h1 style="font-size: 3rem; font-family: 'Orbitron'; color: var(--light); margin-bottom: 20px; text-shadow: 0 0 20px rgba(149,149,149,0.5);">División Profesional <span style="color: var(--secondary);">Free Fire USA</span></h1>
+            <p style="font-size: 1.15rem; color: var(--gray); max-width: 700px; margin-bottom: 30px;">Estrategia, rotaciones impecables y mentalidad ganadora en cada mapa.</p>
+            <a href="#ff-usa-video" class="btn-access"><i class="fa-solid fa-video"></i> Ver División Pro</a>
+        </div>
+
+        <div class="slide" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; background-image: linear-gradient(rgba(20,20,20,0.7), rgba(20,20,20,0.85)), url('imagenes/banner3.png'); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 1s ease-in-out;">
+            <h1 style="font-size: 3rem; font-family: 'Orbitron'; color: var(--light); margin-bottom: 20px; text-shadow: 0 0 20px rgba(220,204,156,0.5);">Roster & <span style="color: var(--accent-yellow);">Staff Oficial</span></h1>
+            <p style="font-size: 1.15rem; color: var(--gray); max-width: 700px; margin-bottom: 30px;">Conoce a los jugadores, coach y analistas que defienden nuestros colores.</p>
+            <a href="#roster" class="btn-access"><i class="fa-solid fa-users"></i> Ver Roster</a>
+        </div>
+
+    </section>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.hero-slider .slide');
+        function changeSlide() {
+            if(slides.length === 0) return;
+            slides[currentSlide].style.opacity = '0';
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].style.opacity = '1';
+        }
+        setInterval(changeSlide, 5000);
+    </script>
+
+    <section id="ff-usa-video" style="text-align: center;">
+        <h2 class="section-title">División Profesional Free Fire USA</h2>
+        <div style="max-width: 900px; margin: 0 auto; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 25px rgba(220,204,156,0.2);">
+            <video src="videos/jerseyUSA.mp4" autoplay muted loop playsinline width="100%">
+                Tu navegador no soporta el elemento de video.
+            </video>
+        </div>
+    </section>
+
+    <section id="jersey">
+        <h2 class="section-title">Jerseys Oficiales 2026</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; width: 100%;">
+            
+            <div class="card-box" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="color: var(--primary); margin-bottom: 10px;">Edición Pumas Elite</h3>
+                    <p style="margin-bottom: 20px;">Confeccionado con microfibra avanzada de alto rendimiento para garantizar frescura y comodidad bajo máxima presión en torneos.</p>
+                </div>
+                <div style="border-radius: 8px; overflow: hidden; border: 1px solid rgba(220,204,156,0.3);">
+                    <video src="videos/jersey.mp4" autoplay muted loop playsinline width="100%">
+                        Tu navegador no soporta el elemento de video.
+                    </video>
+                </div>
+            </div>
+
+            <div class="card-box" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="color: var(--primary); margin-bottom: 10px;">Edición Especial USA Pro</h3>
+                    <p style="margin-bottom: 20px;">Diseño exclusivo optimizado para la competición de alto nivel en el circuito internacional Free Fire USA.</p>
+                </div>
+                <div style="border-radius: 8px; overflow: hidden; border: 1px solid rgba(220,204,156,0.3);">
+                    <video src="videos/jerseyUSA.mp4" autoplay muted loop playsinline width="100%">
+                        Tu navegador no soporta el elemento de video.
+                    </video>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+
+    <section id="roster">
+        <h2 class="section-title">Roster Oficial & Liga USA Pro</h2>
+        <div style="display: grid; grid-template-columns: 2fr 1.5fr; gap: 30px; width: 100%; align-items: start;" class="roster-layout-grid">
+            
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;" class="roster-grid-4">
+                
+                <div class="card-box" style="padding: 15px 10px; text-align: center;">
+                    <img src="imagenes/jugador1.png" alt="Killua" onerror="this.src='imagenes/LOGO PUMAS WEB.png'" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--primary);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px;">KILLUA</h3>
+                    <p style="color: var(--primary); font-weight: bold; font-size: 0.85rem;">Soporte</p>
+                </div>
+
+                <div class="card-box" style="padding: 15px 10px; text-align: center;">
+                    <img src="imagenes/jugador2.png" alt="Zamas" onerror="this.src='imagenes/LOGO PUMAS WEB.png'" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--primary);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px;">ZAMAS</h3>
+                    <p style="color: var(--primary); font-weight: bold; font-size: 0.85rem;">Rusher L2</p>
+                </div>
+
+                <div class="card-box" style="padding: 15px 10px; text-align: center;">
+                    <img src="imagenes/jugador3.png" alt="Pinocho" onerror="this.src='imagenes/LOGO PUMAS WEB.png'" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--primary);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px;">PINOCHO</h3>
+                    <p style="color: var(--primary); font-weight: bold; font-size: 0.85rem;">Rusher L1</p>
+                </div>
+
+                <div class="card-box" style="padding: 15px 10px; text-align: center;">
+                    <img src="imagenes/jugador4.png" alt="Nein" onerror="this.src='imagenes/LOGO PUMAS WEB.png'" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--primary);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px;">NEIN</h3>
+                    <p style="color: var(--primary); font-weight: bold; font-size: 0.85rem;">Soporte</p>
+                </div>
+
+                <div class="card-box" style="padding: 15px 10px; text-align: center;">
+                    <img src="imagenes/jugador6.png" alt="Gxrciia" onerror="this.src='imagenes/LOGO PUMAS WEB.png'" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--primary);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px;">GXRCIIA</h3>
+                    <p style="color: var(--primary); font-weight: bold; font-size: 0.85rem;">Granadero</p>
+                </div>
+
+                <div class="card-box" style="padding: 15px 10px; text-align: center;">
+                    <img src="imagenes/jugador5.png" alt="Asta" onerror="this.src='imagenes/LOGO PUMAS WEB.png'" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--primary);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px;">ASTA</h3>
+                    <p style="color: var(--primary); font-weight: bold; font-size: 0.85rem;">Flex</p>
+                </div>
+
+                <div class="card-box" style="padding: 15px 10px; text-align: center; border-color: rgba(220,204,156,0.4);">
+                    <img src="imagenes/coach.png" alt="Gallardo" onerror="this.src='imagenes/LOGO PUMAS WEB.png'" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--accent-yellow);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--accent-yellow);">Gallardo</h3>
+                    <p style="color: var(--accent-yellow); font-weight: bold; font-size: 0.85rem;">Coach</p>
+                </div>
+
+                <div class="card-box" style="padding: 15px 10px; text-align: center; border-color: rgba(220,204,156,0.4);">
+                    <img src="imagenes/analista.png" alt="PH" onerror="this.src='imagenes/LOGO PUMAS WEB.png'" style="width: 75px; height: 75px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid var(--accent-yellow);">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 5px; color: var(--accent-yellow);">Lali</h3>
+                    <p style="color: var(--accent-yellow); font-weight: bold; font-size: 0.85rem;">Analista</p>
+                </div>
+
+            </div>
+
+            <div class="card-box" style="text-align: left; height: 100%; display: flex; flex-direction: column; justify-content: flex-start; background: linear-gradient(135deg, #121317 0%, #1a1c23 100%); padding: 20px;">
+                
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <i class="fa-solid fa-trophy" style="font-size: 1.3rem; color: var(--primary); margin-bottom:0;"></i>
+                    <h3 style="font-size: 1.05rem; margin-bottom: 0; font-family: 'Orbitron';">Liga USA Pro — Grupo A</h3>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 15px; align-items: center;" class="liga-grupo-grid">
+                    
+                    <div style="width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid rgba(220,204,156,0.3); background: #0a0a0c; height: 100%; display: flex; align-items: center;">
+                        <img src="imagenes/GRUPOA.png" alt="Grupo A Liga USA" onerror="this.style.display='none'" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 7px 10px; border-radius: 4px; border: 1px solid rgba(220,204,156,0.15);">
+                            <span style="color: var(--light); font-size: 0.75rem;">1. ZEUS E-SPORTS</span>
+                            <span style="color: var(--primary); font-family: 'Orbitron'; font-size: 0.8rem; font-weight: bold;">0 Pts</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 7px 10px; border-radius: 4px; border: 1px solid rgba(220,204,156,0.15);">
+                            <span style="color: var(--light); font-size: 0.75rem;">2. SHOW CREW</span>
+                            <span style="color: var(--primary); font-family: 'Orbitron'; font-size: 0.8rem; font-weight: bold;">0 Pts</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 7px 10px; border-radius: 4px; border: 1px solid rgba(220,204,156,0.15);">
+                            <span style="color: var(--light); font-size: 0.75rem;">3. RHINOSIX</span>
+                            <span style="color: var(--primary); font-family: 'Orbitron'; font-size: 0.8rem; font-weight: bold;">0 Pts</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 7px 10px; border-radius: 4px; border: 1px solid rgba(220,204,156,0.15);">
+                            <span style="color: var(--light); font-size: 0.75rem;">4. NRG ESPORT</span>
+                            <span style="color: var(--primary); font-family: 'Orbitron'; font-size: 0.8rem; font-weight: bold;">0 Pts</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(220,204,156,0.12); padding: 7px 10px; border-radius: 4px; border: 1px solid var(--primary);">
+                            <span style="color: var(--primary); font-weight: bold; font-size: 0.75rem;">5. PUMAS E7</span>
+                            <span style="color: var(--primary); font-family: 'Orbitron'; font-size: 0.8rem; font-weight: bold;">0 Pts</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); padding: 7px 10px; border-radius: 4px; border: 1px solid rgba(220,204,156,0.15);">
+                            <span style="color: var(--light); font-size: 0.75rem;">6. CHOCOLATINES</span>
+                            <span style="color: var(--primary); font-family: 'Orbitron'; font-size: 0.8rem; font-weight: bold;">0 Pts</span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <section id="patrocinadores">
+        <h2 class="section-title">Nuestros Patrocinadores</h2>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;" class="sponsors-grid-4">
+            
+            <a href="https://instagram.com" target="_blank" class="card-box" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;" title="Visitar Patrocinador 1">
+                <img src="imagenes/patrocinador1.png" alt="Patrocinador 1" onerror="this.style.display='none'" style="max-height: 50px; max-width: 100%; object-fit: contain; margin-bottom: 8px;">
+                <span style="color: var(--primary); font-weight: bold; font-size: 0.9rem; font-family: 'Orbitron';">DEZADA</span>
+            </a>
+
+            <a href="https://instagram.com" target="_blank" class="card-box" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;" title="Visitar Patrocinador 2">
+                <img src="imagenes/patrocinador2.png" alt="Patrocinador 2" onerror="this.style.display='none'" style="max-height: 50px; max-width: 100%; object-fit: contain; margin-bottom: 8px;">
+                <span style="color: var(--primary); font-weight: bold; font-size: 0.9rem; font-family: 'Orbitron';">GHOST GAMING MX</span>
+            </a>
+
+            <a href="https://instagram.com" target="_blank" class="card-box" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;" title="Visitar Patrocinador 3">
+                <img src="imagenes/patrocinador3.png" alt="Patrocinador 3" onerror="this.style.display='none'" style="max-height: 50px; max-width: 100%; object-fit: contain; margin-bottom: 8px;">
+                <span style="color: var(--primary); font-weight: bold; font-size: 0.9rem; font-family: 'Orbitron';">PUMAS GAMING</span>
+            </a>
+
+            <a href="https://instagram.com" target="_blank" class="card-box" style="text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 130px;" title="Visitar Patrocinador 4">
+                <img src="imagenes/patrocinador4.png" alt="Patrocinador 4" onerror="this.style.display='none'" style="max-height: 50px; max-width: 100%; object-fit: contain; margin-bottom: 8px;">
+                <span style="color: var(--primary); font-weight: bold; font-size: 0.9rem; font-family: 'Orbitron';">Proximamente...</span>
+            </a>
+
+        </div>
+    </section>
+
+    <section id="entrenamientos">
+        <h2 class="section-title">Comunidad & Mejores Equipos</h2>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;" class="grid-2-columns">
+            
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="card-box" style="text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <i class="fa-brands fa-whatsapp" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 0;"></i>
+                        <h3 style="margin-bottom: 0; font-size: 1.2rem;">Entrenamientos Oficiales</h3>
+                    </div>
+                    <p style="font-size: 0.95rem;">Horario: 10 AM México</p>
+                    <a href="https://chat.whatsapp.com/BaQ8E7HEqRiHcM7L1wHPYn" class="btn-access" style="padding: 8px 16px; font-size: 0.85rem; display: inline-block; margin-top: 12px;">Unirse al WhatsApp</a>
+                </div>
+
+                <div class="card-box" id="comunidad" style="text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <i class="fa-brands fa-discord" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 0;"></i>
+                        <h3 style="margin-bottom: 0; font-size: 1.2rem;">Servidor Discord</h3>
+                    </div>
+                    <a href="https://discord.gg/SpagAJr8t" class="btn-access" style="padding: 8px 16px; font-size: 0.85rem; display: inline-block; margin-top: 12px;">Unirse al Discord</a>
+                </div>
+
+                <div class="card-box" style="text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <i class="fa-brands fa-whatsapp" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 0;"></i>
+                        <h3 style="margin-bottom: 0; font-size: 1.2rem;">Comunidad & Dinámicas</h3>
+                    </div>
+                    <p style="font-size: 0.95rem;">Eventos, dinámicas y más actividades.</p>
+                    <a href="https://chat.whatsapp.com/GvydqT687oS05sMW5oNJFl" class="btn-access" style="padding: 8px 16px; font-size: 0.85rem; display: inline-block; margin-top: 12px;">Unirse al WhatsApp</a>
+                </div>
+
+                <div class="card-box" style="text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <i class="fa-solid fa-share-nodes" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 0;"></i>
+                        <h3 style="margin-bottom: 0; font-size: 1.2rem;">Zona de Redes</h3>
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--gray); margin-bottom: 15px;">Síguenos en nuestras plataformas oficiales:</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" style="background: rgba(0,0,0,0.5); padding: 12px 6px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                            <i class="fa-brands fa-instagram" style="font-size: 1.4rem; color: var(--primary);"></i>
+                            <span style="color: var(--light); font-size: 0.7rem; font-weight: bold; font-family: 'Orbitron';">Oficial</span>
+                        </a>
+
+                        <a href="https://www.instagram.com/pumas_e7_gaming" target="_blank" style="background: rgba(0,0,0,0.5); padding: 12px 6px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                            <i class="fa-brands fa-square-instagram" style="font-size: 1.4rem; color: #959595;"></i>
+                            <span style="color: var(--light); font-size: 0.7rem; font-weight: bold; font-family: 'Orbitron';">USA Pro</span>
+                        </a>
+
+                        <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" style="background: rgba(0,0,0,0.5); padding: 12px 6px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                            <i class="fa-brands fa-tiktok" style="font-size: 1.4rem; color: var(--light);"></i>
+                            <span style="color: var(--light); font-size: 0.7rem; font-weight: bold; font-family: 'Orbitron';">TikTok</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+                
+                <div class="card-box" style="text-align: left; display: flex; flex-direction: column; justify-content: flex-start; padding: 20px 15px; height: 100%;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid rgba(220,204,156,0.2); padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-ranking-star" style="font-size: 1.3rem; color: var(--primary);"></i>
+                            <h3 style="font-size: 0.95rem; margin-bottom: 0;">Top 10 Equipos Ligas Pumas</h3>
+                        </div>
+                        <a href="entrenamientos/" class="btn-access" style="padding: 5px 10px; font-size: 0.7rem; font-family: 'Orbitron';">Entrenamientos</a>
+                    </div>
+                    
+                    <div id="contenedorTopEquiposPublicos" style="display: flex; flex-direction: column; gap: 8px;">
+                        <p style="color: var(--gray); font-size: 0.85rem;">Cargando equipos...</p>
+                    </div>
+                </div>
+
+                <div class="card-box" style="text-align: left; display: flex; flex-direction: column; justify-content: flex-start; padding: 20px 15px; height: 100%;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid rgba(220,204,156,0.2); padding-bottom: 10px;">
+                        <i class="fa-solid fa-skull" style="font-size: 1.3rem; color: var(--primary);"></i>
+                        <h3 style="font-size: 0.95rem; margin-bottom: 0;">Top 10 Killers</h3>
+                    </div>
+                    
+                    <div id="contenedorTopKillersPublicos" style="display: flex; flex-direction: column; gap: 8px;">
+                        <p style="color: var(--gray); font-size: 0.85rem;">Cargando killers...</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <section id="resultados" class="tool-section">
+        <h2 class="section-title">Creador de Resultados Free Fire</h2>
+        <div class="tool-container">
+            <p class="tool-desc">
+                Carga tus archivos <code>.log</code> o <code>.txt</code>, selecciona el modo de cálculo y ordenamiento, y genera tus tablas profesionales.
+            </p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>MODO DE CÁLCULO Y ORDENAMIENTO</label>
+                    <select id="selectModoCalculo" class="dropdown-select" onchange="renderizarResultadosFromState()">
+                        <option value="1">1. Normal (Score Total Estándar)</option>
+                        <option value="2">2. Solo Posición (RankScore)</option>
+                        <option value="3">3. Solo Kills (Puntos por Kill)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>MODERADOR / ADMIN</label>
+                    <input type="text" id="inputModerador" placeholder="Ej: Mod · PumasZee">
+                </div>
+            </div>
+
+            <div class="form-grid" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label>LOGO PROPIO (SUBIR ARCHIVO)</label>
+                    <input type="file" id="inputLogoFile" class="file-input-custom" accept="image/*" onchange="cargarImagenLocal(event, 'logo')">
+                </div>
+                <div class="form-group">
+                    <label>FONDO PROPIO 4:5 (SUBIR ARCHIVO)</label>
+                    <input type="file" id="inputFondoFile" class="file-input-custom" accept="image/*" onchange="cargarImagenLocal(event, 'fondo')">
+                </div>
+            </div>
+
+            <div class="form-grid" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label>TÍTULO DEL TORNEO (GRANDE)</label>
+                    <input type="text" id="inputTituloTorneo" value="LIGA PUMAS GAMING" oninput="renderizarResultadosFromState()">
+                </div>
+                <div class="form-group">
+                    <label>JORNADA</label>
+                    <input type="text" id="inputJornadaTorneo" value="JORNADA 1" oninput="renderizarResultadosFromState()">
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>FECHA</label>
+                    <input type="text" id="inputFechaTorneo" value="03 SEP 2026" oninput="renderizarResultadosFromState()">
+                </div>
+                <div class="form-group">
+                    <label>COLOR DE FUENTE</label>
+                    <select id="selectColorFuente" class="dropdown-select" onchange="renderizarResultadosFromState()">
+                        <option value="#ffffff" selected>Blanco Estándar</option>
+                        <option value="#DCCC9C">Dorado Oficial (#DCCC9C)</option>
+                        <option value="#959595">Gris Suave (#959595)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <input type="file" id="fileInput" multiple accept=".txt,.log" onchange="prepararRenombradoEquipos()">
+                <div id="seccionRenombrar" style="display: none; margin-top: 20px; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 8px;">
+                    <h3 style="color: var(--primary); margin-bottom: 10px; font-family: 'Orbitron'; font-size: 1.1rem;">Editar Nombres de Equipos</h3>
+                    <div id="listaEquiposInputs" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;"></div>
+                    <button onclick="procesarConNombresPersonalizados()" class="btn-generar" style="margin-top: 15px; padding: 10px 20px;">
+                        CONFIRMAR NOMBRES Y GENERAR TABLA
+                    </button>
+                </div>
+            </div>
+
+            <button class="btn-generar" onclick="procesarArchivosLog()" style="margin-top: 15px;">
+                <i class="fa-solid fa-gears"></i> PROCESAR Y GENERAR RESULTADOS
+            </button>
+
+            <div class="results-wrapper">
+                <div id="outputTablasLadoALado" class="result-box" style="margin-top: 25px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 PUMAS GAMING. Todos los derechos reservados. Diseñado para alto rendimiento competitivo.</p>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            const nav = document.getElementById('mainNav');
+            nav.classList.toggle('is-active');
+        }
+        function closeMenu() {
+            const nav = document.getElementById('mainNav');
+            nav.classList.remove('is-active');
+        }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>

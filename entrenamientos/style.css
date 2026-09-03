@@ -1,0 +1,352 @@
+:root {
+    --primary: #DCCC9C;       /* Dorado Pumas Gaming */
+    --secondary: #959595;     /* Gris corporativo */
+    --dark: #07080c;          /* Negro base profundo */
+    --dark-card: #121318;     /* Fondo de contenedores / tarjetas */
+    --light: #ffffff;         /* Texto blanco puro */
+    --gray: #7d828c;          /* Gris secundario para textos */
+    --accent-yellow: #DCCC9C; /* Acento dorado */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+body {
+    background-color: var(--dark);
+    color: var(--light);
+    overflow-x: hidden;
+    width: 100vw;
+    margin: 0;
+}
+
+h1, h2, h3, .logo, .btn-access {
+    font-family: 'Orbitron', sans-serif;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 20px 40px;
+    background: rgba(12, 13, 18, 0.95);
+    border-bottom: 2px solid rgba(220, 204, 156, 0.2);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo-img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(220, 204, 156, 0.4));
+}
+
+.logo {
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--light);
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+nav ul {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+    align-items: center;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: var(--secondary);
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: 0.3s;
+}
+
+nav ul li a:hover {
+    color: var(--primary);
+    text-shadow: 0 0 10px rgba(220, 204, 156, 0.5);
+}
+
+.menu-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 21px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+}
+
+.menu-toggle .bar {
+    width: 100%;
+    height: 3px;
+    background-color: var(--primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 5px rgba(220, 204, 156, 0.5);
+}
+
+.hero {
+    text-align: center;
+    width: 100%;
+    padding: 60px 20px;
+    background: radial-gradient(circle at center, #1b1c24 0%, var(--dark) 75%);
+    border-bottom: 1px solid rgba(220, 204, 156, 0.15);
+}
+
+.hero h1 {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+    color: var(--light);
+    letter-spacing: 1px;
+}
+
+.hero h1 span {
+    color: var(--primary);
+    text-shadow: 0 0 25px rgba(220, 204, 156, 0.5);
+}
+
+.hero p {
+    font-size: 1.15rem;
+    color: var(--secondary);
+    letter-spacing: 0.5px;
+}
+
+.btn-access {
+    background: linear-gradient(45deg, var(--primary), #959595);
+    color: var(--dark);
+    padding: 8px 18px;
+    font-size: 0.9rem;
+    font-weight: 900;
+    border-radius: 6px;
+    text-decoration: none;
+    box-shadow: 0 0 15px rgba(220, 204, 156, 0.3);
+    transition: 0.3s;
+    display: inline-block;
+}
+
+.btn-access:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px var(--primary);
+}
+
+/* LAYOUT DE 3 COLUMNAS ESTILIZADO PROFESIONALMENTE */
+.dashboard-3-columns {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr 1.1fr;
+    gap: 25px;
+    width: 100%;
+    max-width: 100%;
+    padding: 35px 2.5%;
+    align-items: start;
+}
+
+.dashboard-col {
+    width: 100%;
+}
+
+.tabla-contenedor {
+    width: 100%;
+    background: var(--dark-card) !important;
+    border: 1px solid rgba(220, 204, 156, 0.2);
+    border-left: 4px solid var(--primary) !important;
+    border-radius: 10px !important;
+    padding: 24px !important;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9) !important;
+    min-height: 560px;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(145deg, #121318 0%, #0c0d12 100%);
+}
+
+.header-card-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(220, 204, 156, 0.15);
+    padding-bottom: 12px;
+}
+
+.header-card-title i {
+    font-size: 1.2rem;
+}
+
+.header-card-title h3 {
+    color: var(--primary) !important;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.tabla-estilizada {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--light);
+    font-size: 1rem;
+}
+
+.tabla-estilizada th {
+    color: var(--primary) !important;
+    font-family: 'Orbitron', sans-serif;
+    border-bottom: 2px solid rgba(220, 204, 156, 0.3) !important;
+    padding: 12px 10px;
+    text-align: left;
+    font-size: 0.8rem;
+    background: rgba(18, 19, 24, 0.9);
+    letter-spacing: 0.5px;
+}
+
+.tabla-estilizada td {
+    padding: 11px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tabla-estilizada tbody tr:hover {
+    background: rgba(220, 204, 156, 0.03);
+}
+
+.btn-ver {
+    background: linear-gradient(45deg, var(--primary), #a8a8a8) !important;
+    color: var(--dark) !important;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 4px;
+    font-weight: 900;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    transition: 0.3s;
+    box-shadow: 0 0 10px rgba(220, 204, 156, 0.15);
+}
+
+.btn-ver:hover {
+    transform: scale(1.05);
+    background: var(--primary) !important;
+    box-shadow: 0 0 20px var(--primary);
+}
+
+.top-killers-grid {
+    width: 100%;
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.killer-card {
+    background: rgba(18, 19, 24, 0.85) !important;
+    border: 1px solid rgba(149, 149, 149, 0.2);
+    border-left: 3px solid var(--primary) !important;
+    padding: 10px 14px !important;
+    border-radius: 6px !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.3s;
+}
+
+.killer-card:hover {
+    border-color: var(--primary);
+    transform: translateX(3px);
+    box-shadow: 0 5px 15px rgba(220, 204, 156, 0.1);
+}
+
+footer {
+    text-align: center;
+    width: 100%;
+    padding: 35px;
+    color: var(--gray);
+    background: #050609;
+    border-top: 1px solid rgba(220, 204, 156, 0.15);
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 1280px) {
+    .dashboard-3-columns {
+        grid-template-columns: 1fr;
+        padding: 20px 4%;
+    }
+    .tabla-contenedor {
+        min-height: auto;
+    }
+}
+
+@media (max-width: 992px) {
+    header { padding: 15px 20px; }
+    .menu-toggle { display: flex; }
+    nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: rgba(12, 13, 18, 0.98);
+        border-bottom: 2px solid rgba(220, 204, 156, 0.3);
+        padding: 20px 0;
+    }
+    nav.is-active { display: block; }
+    nav ul { flex-direction: column; align-items: center; gap: 20px; }
+}
+
+/* Adaptaciones generales para celulares */
+@media (max-width: 768px) {
+    header {
+        padding: 15px 20px;
+    }
+    
+    .logo {
+        font-size: 1.2rem;
+    }
+
+    .hero {
+        padding: 40px 15px;
+    }
+
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    /* Transformar el dashboard de 3 columnas en una sola columna vertical */
+    .dashboard-3-columns {
+        grid-template-columns: 1fr;
+        padding: 15px 10px;
+        gap: 15px;
+    }
+
+    .tabla-contenedor {
+        min-height: auto;
+        padding: 15px !important;
+    }
+
+    /* Permitir desplazamiento horizontal en tablas densas en móviles */
+    .tabla-estilizada {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
