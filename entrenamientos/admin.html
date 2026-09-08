@@ -21,18 +21,20 @@
     </div>
     <nav class="main-nav is-active" style="position: static; background: transparent; box-shadow: none;">
         <ul>
-            <li><a href="entrenamientos.html" style="color: #fff; margin-right: 15px;" target="_blank"><i class="fa-solid fa-list"></i> Ver Historial Público</a></li>
-            <li><span id="welcomeUser" style="color: var(--primary); font-weight: bold; margin-right: 15px;"></span></li>
-            <li><a href="#" onclick="cerrarSesion()" style="color: var(--secondary);"><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
+            <li><a href="#" onclick="cambiarPestanaAdmin('cargar')" id="navCargar" style="color: var(--primary);"><i class="fa-solid fa-upload"></i> Cargar Resultados</a></li>
+            <li><a href="#" onclick="cambiarPestanaAdmin('resultadosOficiales')" id="navOficiales" style="color: var(--secondary);"><i class="fa-solid fa-shield-halved"></i> Resultados Equipos Oficiales</a></li>
+            <li><a href="entrenamientos.html" style="color: #fff;" target="_blank"><i class="fa-solid fa-list"></i> Público</a></li>
+            <li><a href="#" onclick="cerrarSesion()" style="color: #ff5555;"><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
         </ul>
     </nav>
 </header>
 
-    <section id="cargar-resultados" class="tool-section" style="padding-top: 40px;">
+    <!-- SECCIÓN 1: CARGAR RESULTADOS -->
+    <section id="seccionCargar" class="tool-section" style="padding-top: 40px;">
         <h2 class="section-title">Cargar Resultados de Entrenamientos</h2>
         <div class="tool-container">
             <p class="tool-desc">
-                Sube los registros <code>.log</code> o <code>.txt</code>. Se creará una carpeta en la nube, se calcularán las tablas generales de manera exacta y se guardará todo en Supabase.
+                Sube los registros <code>.log</code> o <code>.txt</code>. Se validarán automáticamente contra los equipos registrados en la base de datos.
             </p>
 
             <div class="form-grid">
@@ -61,10 +63,10 @@
                 <label>SUBIR ARCHIVOS LOGS DE SALAS (.log, .txt)</label>
                 <input type="file" id="fileInput" multiple accept=".txt,.log" onchange="prepararRenombradoEquipos()">
                 <div id="seccionRenombrar" style="display: none; margin-top: 20px; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 8px;">
-                    <h3 style="color: #ffcc00; margin-bottom: 10px; font-family: 'Orbitron';">Editar Nombres de Equipos</h3>
-                    <div id="listaEquiposInputs" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;"></div>
+                    <h3 style="color: #ffcc00; margin-bottom: 10px; font-family: 'Orbitron';">Verificar Nombres y Estado de Equipos</h3>
+                    <div id="listaEquiposInputs" style="display: flex; flex-direction: column; gap: 8px;"></div>
                     <button onclick="procesarConNombresPersonalizados()" class="btn-generar" style="margin-top: 15px; padding: 10px 20px; background: #00ffcc; color: #000; font-weight: bold; border: none; border-radius: 5px; cursor: pointer;">
-                        CONFIRMAR NOMBRES Y PROCESAR
+                        CONFIRMAR Y ACTUALIZAR VISTA
                     </button>
                 </div>
             </div>
@@ -73,8 +75,41 @@
                 <i class="fa-solid fa-gears"></i> PROCESAR Y GUARDAR EN BASE DE DATOS
             </button>
 
+            <div style="margin-top: 15px;">
+                <button onclick="limpiarBaseDeDatosCompletamente()" style="width: 100%; padding: 12px; background: rgba(255, 51, 51, 0.15); color: #ff5555; border: 1px solid rgba(255, 51, 51, 0.4); border-radius: 6px; font-family: 'Orbitron'; font-weight: bold; cursor: pointer;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> LIMPIAR TODA LA BASE DE DATOS
+                </button>
+            </div>
+
             <div class="results-wrapper">
                 <div id="outputTablasLadoALado" class="result-box" style="margin-top: 30px; display: flex; justify-content: center;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN 2: RESULTADOS SOLO DE EQUIPOS OFICIALES REGISTRADOS -->
+    <section id="seccionResultadosOficiales" class="tool-section" style="padding-top: 40px; display: none;">
+        <h2 class="section-title">Resultados Exclusivos de Equipos Oficiales</h2>
+        <div class="tool-container">
+            <p class="tool-desc">
+                Tabla consolidada que filtra y muestra únicamente el rendimiento y puntuación de los equipos que forman parte de la lista oficial registrada.
+            </p>
+
+            <div style="margin-top: 20px; width: 100%; overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; color: #fff; font-size: 0.95rem;">
+                    <thead>
+                        <tr style="color: var(--primary); font-family: 'Orbitron'; border-bottom: 2px solid rgba(220,204,156,0.3); font-size: 0.85rem;">
+                            <th style="text-align: left; padding: 10px;">#</th>
+                            <th style="text-align: left; padding: 10px;">EQUIPO OFICIAL</th>
+                            <th style="text-align: center; padding: 10px;">TAG</th>
+                            <th style="text-align: center; padding: 10px;">BOOYAH 🏆</th>
+                            <th style="text-align: center; padding: 10px;">TOTAL PTS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaFiltroEquiposOficiales">
+                        <tr><td colspan="5" style="text-align: center; color: var(--gray); padding: 20px;">Cargando datos filtrados...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>
@@ -84,6 +119,26 @@
     </footer>
 
     <script>
+        function cambiarPestanaAdmin(pestana) {
+            const secCargar = document.getElementById('seccionCargar');
+            const secOficiales = document.getElementById('seccionResultadosOficiales');
+            const navCargar = document.getElementById('navCargar');
+            const navOficiales = document.getElementById('navOficiales');
+
+            if (pestana === 'cargar') {
+                secCargar.style.display = 'block';
+                secOficiales.style.display = 'none';
+                navCargar.style.color = 'var(--primary)';
+                navOficiales.style.color = 'var(--secondary)';
+            } else {
+                secCargar.style.display = 'none';
+                secOficiales.style.display = 'block';
+                navOficiales.style.color = 'var(--primary)';
+                navCargar.style.color = 'var(--secondary)';
+                cargarResultadosEquiposOficiales();
+            }
+        }
+
         const sesionUsuario = localStorage.getItem('pumas_user');
         if (!sesionUsuario) {
             window.location.href = 'login.html';

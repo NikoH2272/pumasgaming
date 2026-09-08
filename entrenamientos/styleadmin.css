@@ -5,7 +5,6 @@
     --dark-card: #121318;     /* Fondo de contenedores / tarjetas */
     --light: #ffffff;         /* Texto blanco puro */
     --gray: #7d828c;          /* Gris secundario para textos */
-    --accent-yellow: #DCCC9C; /* Acento dorado */
 }
 
 * {

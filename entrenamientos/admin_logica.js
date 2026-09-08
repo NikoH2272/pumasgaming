@@ -1,6 +1,10 @@
 let rawFilesData = [];
+let processedFilesTexts = [];
 let logoPersonalizadoBase64 = null;
 let fondoPersonalizadoBase64 = null;
+let globalEquipos = [];
+let globalTopKillers = [];
+let globalNumSalas = 0;
 
 async function prepararRenombradoEquipos() {
     const fileInput = document.getElementById('fileInput');
@@ -8,7 +12,7 @@ async function prepararRenombradoEquipos() {
     if (files.length === 0) return;
 
     rawFilesData = [];
-    let equiposUnicos = new Set();
+    let equiposEnLogs = new Set();
 
     for (let file of files) {
         let text = await file.text();
@@ -16,20 +20,57 @@ async function prepararRenombradoEquipos() {
         let lines = text.split('\n');
         lines.forEach(line => {
             const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:/i);
-            if (teamMatch) equiposUnicos.add(teamMatch[1].trim());
+            if (teamMatch) equiposEnLogs.add(teamMatch[1].trim());
         });
+    }
+
+    let equiposOficialesMap = {};
+    try {
+        const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
+        let supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        const { data: dbEquipos } = await supabaseClient.from('equipos_registrados').select('*');
+        if (dbEquipos) {
+            dbEquipos.forEach(eq => {
+                equiposOficialesMap[eq.nombre.toUpperCase()] = {
+                    nombreOficial: eq.nombre,
+                    tag: eq.tag
+                };
+            });
+        }
+    } catch (e) {
+        console.warn("No se pudo cargar el listado oficial de Supabase.", e);
     }
 
     const contenedor = document.getElementById('listaEquiposInputs');
     if (!contenedor) return;
     
     contenedor.innerHTML = '';
-    Array.from(equiposUnicos).forEach((eq) => {
+    contenedor.style.maxHeight = 'none';
+    contenedor.style.overflowY = 'visible';
+
+    Array.from(equiposEnLogs).forEach((eqOriginal) => {
+        let matchOficial = equiposOficialesMap[eqOriginal.toUpperCase()];
+        let sugerenciaNombre = matchOficial ? matchOficial.nombreOficial : eqOriginal;
+        
+        let badgeEstado = '';
+        if (matchOficial) {
+            badgeEstado = `<span style="background: rgba(0, 255, 128, 0.15); color: #00ff80; border: 1px solid rgba(0, 255, 128, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-family: 'Orbitron'; font-weight: bold; white-space: nowrap;"><i class="fa-solid fa-check"></i> REGISTRADO [${matchOficial.tag}]</span>`;
+        } else {
+            badgeEstado = `<span style="background: rgba(255, 51, 51, 0.15); color: #ff5555; border: 1px solid rgba(255, 51, 51, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-family: 'Orbitron'; font-weight: bold; white-space: nowrap;"><i class="fa-solid fa-xmark"></i> NO REGISTRADO</span>`;
+        }
+
         contenedor.innerHTML += `
-            <div style="display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 6px; margin-bottom: 8px;">
-                <span style="color: var(--gray); font-size: 0.85rem; width: 140px;">Original: <strong>${eq}</strong></span>
-                <input type="text" class="input-nombre-editable" data-original="${eq}" value="${eq}" style="flex: 2; padding: 8px; background: #0a0b10; border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 4px;">
-                <button onclick="this.parentElement.remove()" style="background:#ff3333; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" title="Eliminar equipo de esta sesión"><i class="fa-solid fa-trash"></i></button>
+            <div style="display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.03); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid ${matchOficial ? '#00ff80' : '#ff5555'};">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 5px;">
+                    <span style="color: var(--gray); font-size: 0.85rem;">Original: <strong>${eqOriginal}</strong></span>
+                    ${badgeEstado}
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="text" class="input-nombre-editable" data-original="${eqOriginal}" value="${sugerenciaNombre}" style="flex: 2; padding: 9px; background: #0a0b10; border: 1px solid rgba(220,204,156,0.3); color: #fff; border-radius: 4px; font-family:'Rajdhani'; font-weight:bold; font-size: 0.95rem;">
+                    <button onclick="this.closest('div').parentElement.remove()" style="background:#ff3333; color:#fff; border:none; padding:8px 12px; border-radius:4px; cursor:pointer;" title="Eliminar equipo de esta sesión"><i class="fa-solid fa-trash"></i></button>
+                </div>
             </div>
         `;
     });
@@ -37,12 +78,33 @@ async function prepararRenombradoEquipos() {
     document.getElementById('seccionRenombrar').style.display = 'block';
 }
 
-function procesarConNombresPersonalizados() {
+async function procesarConNombresPersonalizados() {
     let diccionarioRenombres = {};
+
     document.querySelectorAll('.input-nombre-editable').forEach(input => {
-        diccionarioRenombres[input.getAttribute('data-original')] = input.value.trim() || input.getAttribute('data-original');
+        let original = input.getAttribute('data-original');
+        let nuevoNombre = input.value.trim() || original;
+        diccionarioRenombres[original] = nuevoNombre;
     });
-    procesarLogs(rawFilesData, diccionarioRenombres);
+
+    // Modificar el texto interno de los archivos .log con los nombres mapeados (sin autorregistrar equipos nuevos)
+    processedFilesTexts = rawFilesData.map(text => {
+        let updatedText = text;
+        for (let original in diccionarioRenombres) {
+            let nuevo = diccionarioRenombres[original];
+            if (original !== nuevo) {
+                let regex = new RegExp(`TeamName:\\s*${escapeRegExp(original)}\\s+Rank:`, 'gi');
+                updatedText = updatedText.replace(regex, `TeamName: ${nuevo} Rank:`);
+            }
+        }
+        return updatedText;
+    });
+
+    procesarLogs(processedFilesTexts, {});
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 async function procesarArchivosLog() {
@@ -69,10 +131,19 @@ function procesarLogs(textsArray, renombresMap) {
         lines.forEach(line => {
             const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
             if (teamMatch) {
-                let rawTeam = teamMatch[1].trim();
-                let name = renombresMap[rawTeam] || rawTeam;
+                let name = teamMatch[1].trim();
                 if (!equiposMap[name]) {
-                    equiposMap[name] = { name, totalScore: 0, killScore: 0, rankScore: 0, salasPuntos: {}, salasJugadas: 0, booyahsCount: 0 };
+                    equiposMap[name] = { 
+                        name, 
+                        totalScore: 0, 
+                        killScore: 0, 
+                        rankScore: 0, 
+                        salasPuntos: {}, 
+                        salasKills: {}, 
+                        salasRank: {}, 
+                        salasJugadas: 0, 
+                        booyahsCount: 0 
+                    };
                 }
                 let totalScore = parseInt(teamMatch[5]);
                 let killScore = parseInt(teamMatch[3]);
@@ -82,7 +153,10 @@ function procesarLogs(textsArray, renombresMap) {
                 equiposMap[name].totalScore += totalScore;
                 equiposMap[name].killScore += killScore;
                 equiposMap[name].rankScore += rankScore;
+                
                 equiposMap[name].salasPuntos[i] = totalScore;
+                equiposMap[name].salasKills[i] = killScore;
+                equiposMap[name].salasRank[i] = rankScore;
                 equiposMap[name].salasJugadas += 1;
 
                 if (rank === 1) {
@@ -125,10 +199,6 @@ function procesarLogs(textsArray, renombresMap) {
     renderizarResultados(equiposArray, topKillersArray, numSalas);
 }
 
-let globalEquipos = [];
-let globalTopKillers = [];
-let globalNumSalas = 0;
-
 function renderizarResultados(eqs, tKs, nS) {
     let tC = document.getElementById('inputTituloTorneo') ? document.getElementById('inputTituloTorneo').value : "LIGA PUMAS GAMING",
         jC = document.getElementById('inputJornadaTorneo') ? document.getElementById('inputJornadaTorneo').value : "JORNADA 1",
@@ -159,7 +229,6 @@ function renderizarResultados(eqs, tKs, nS) {
     if (mC === '3') tM = "TABLA SOLO KILLS";
     
     let rWData = window._rWGlobal || [];
-
     let totalEquiposParticipantes = eqs.length;
     let totalKillsGenerales = tKs.reduce((acc, curr) => acc + curr.kills, 0);
 
@@ -176,7 +245,6 @@ function renderizarResultados(eqs, tKs, nS) {
                     <div style="font-family: 'Orbitron'; font-size: 0.8rem; color: ${cF}; margin-top: 2px; font-weight: bold; letter-spacing: 1px;">${jC} ${fC ? '— ' + fC : ''} | MODERADOR: ${nM}</div>
                 </div>
                 
-                <!-- TABLA GENERAL HASTA 15 EQUIPOS -->
                 <div style="position: absolute; top: 75px; left: 25px; width: 750px; background: ${fCo}; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3);">
                     <div style="color: #DCCC9C; font-family: 'Orbitron'; font-size: 0.78rem; margin-bottom: 2px; font-weight: bold;">${tM}</div>
                     <table style="width: 100%; border-collapse: collapse; font-size: 0.68rem; color: ${cF};">
@@ -211,7 +279,6 @@ function renderizarResultados(eqs, tKs, nS) {
                     </table>
                 </div>
                 
-                <!-- RESUMEN TOP 6 EQUIPOS DESTACADOS -->
                 <div style="position: absolute; top: 430px; left: 25px; width: 750px; background: ${fCo}; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3);">
                     <div style="font-family: 'Orbitron'; color: #DCCC9C; margin-bottom: 3px; font-size: 0.78rem; font-weight: bold;">RESUMEN DE EQUIPOS DESTACADOS (TOP 6)</div>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;">
@@ -234,7 +301,6 @@ function renderizarResultados(eqs, tKs, nS) {
                     </div>
                 </div>
 
-                <!-- BOOYAH POR SALA -->
                 <div style="position: absolute; top: 565px; left: 25px; width: 750px; background: ${fCo}; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3);">
                     <div style="font-family: 'Orbitron'; color: #DCCC9C; margin-bottom: 3px; font-size: 0.78rem; font-weight: bold;">BOOYAH POR SALA (VICTORIAS)</div>
                     <div style="display: grid; grid-template-columns: repeat(${Math.min(Math.max(rWData.length, 1), 5)}, 1fr); gap: 5px;">
@@ -248,7 +314,6 @@ function renderizarResultados(eqs, tKs, nS) {
                     </div>
                 </div>
 
-                <!-- TOP 15 KILLERS MÁS LETALES EN 5 COLUMNAS -->
                 <div style="position: absolute; top: 675px; left: 25px; width: 750px; background: ${fCo}; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3);">
                     <div style="font-family: 'Orbitron'; color: #DCCC9C; margin-bottom: 3px; font-size: 0.78rem; font-weight: bold;">TOP 15 KILLERS MÁS LETALES</div>
                     <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;">
@@ -267,7 +332,6 @@ function renderizarResultados(eqs, tKs, nS) {
                     </div>
                 </div>
 
-                <!-- RESUMEN FINAL DE LA PARTIDA (SALAS, EQUIPOS Y KILLS GENERALES) -->
                 <div style="position: absolute; top: 795px; left: 25px; width: 750px; background: ${fCo}; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3);">
                     <div style="font-family: 'Orbitron'; color: #DCCC9C; margin-bottom: 3px; font-size: 0.78rem; font-weight: bold;">RESUMEN GENERAL DE LA PARTIDA</div>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; font-size: 0.72rem;">
@@ -323,7 +387,14 @@ async function guardarEntrenamientoEnSupabase() {
 
         let folderName = `entreno_${fecha.toISOString().slice(0,10)}_${titulo.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${Date.now()}`;
 
-        if (files.length > 0) {
+        if (files.length > 0 && processedFilesTexts.length === files.length) {
+            for (let i = 0; i < files.length; i++) {
+                let nombreLimpio = files[i].name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+                let filePath = `${folderName}/${nombreLimpio}`;
+                let blobModificado = new Blob([processedFilesTexts[i]], { type: 'text/plain' });
+                await supabaseClient.storage.from('entrenamientos_logs').upload(filePath, blobModificado);
+            }
+        } else if (files.length > 0) {
             for (let file of files) {
                 let nombreLimpio = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
                 let filePath = `${folderName}/${nombreLimpio}`;
@@ -345,16 +416,18 @@ async function guardarEntrenamientoEnSupabase() {
             Object.keys(eq.salasPuntos).forEach(indexSala => {
                 let numSala = parseInt(indexSala) + 1;
                 let puntosSala = eq.salasPuntos[indexSala];
+                let killsSala = eq.salasKills ? (eq.salasKills[indexSala] || 0) : 0;
+                let rankSala = eq.salasRank ? (eq.salasRank[indexSala] || 0) : 0;
 
                 salasRows.push({
                     sesion_id: sesionId,
                     numero_sala: numSala,
                     equipo_nombre: eq.name,
-                    rank: 0,
-                    kill_score: eq.killScore || 0,
-                    rank_score: 0,
+                    rank: rankSala,
+                    kill_score: killsSala,
+                    rank_score: rankSala,
                     total_score: puntosSala,
-                    es_booyah: false
+                    es_booyah: (rankSala === 1)
                 });
             });
         });
@@ -383,6 +456,193 @@ async function guardarEntrenamientoEnSupabase() {
         alert("Error al sincronizar con la base de datos: " + (error.message || error));
     }
 }
+
+async function limpiarBaseDeDatosCompletamente() {
+    if (!confirm("⚠️ ADVERTENCIA: ¿Estás seguro de vaciar absolutamente toda la base de datos de entrenamientos?")) {
+        return;
+    }
+
+    const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
+    let supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    try {
+        await supabaseClient.from('top_killers').delete().neq('id', 0);
+        await supabaseClient.from('salas_resultados').delete().neq('id', 0);
+        await supabaseClient.from('entrenamientos_sesiones').delete().neq('id', 0);
+
+        alert("¡Base de datos limpiada correctamente!");
+        window.location.reload();
+    } catch (error) {
+        alert("Error al limpiar la base de datos.");
+    }
+}
+
+async function cargarEquiposRegistradosAdmin() {
+    const tbody = document.getElementById('tablaEquiposRegistradosAdmin');
+    if (!tbody) return;
+
+    try {
+        const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
+        let supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const { data, error } = await supabaseClient
+            .from('equipos_registrados')
+            .select('*')
+            .order('nombre', { ascending: true });
+
+        if (error || !data || data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--gray); padding: 15px;">No hay equipos registrados.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = '';
+        data.forEach(eq => {
+            tbody.innerHTML += `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 8px; font-weight: bold; color: #fff;">${eq.nombre}</td>
+                    <td style="text-align: center; padding: 8px; color: var(--primary); font-family: 'Orbitron'; font-weight: bold;">[${eq.tag}]</td>
+                    <td style="text-align: center; padding: 8px;">
+                        <button onclick="eliminarEquipoRegistrado(${eq.id}, '${eq.nombre}')" style="background: #ff3333; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;" title="Eliminar equipo">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.error("Error cargando equipos registrados:", err);
+    }
+}
+
+async function agregarEquipoOficial() {
+    let nombreInput = document.getElementById('inputNuevoEquipoNombre');
+    let tagInput = document.getElementById('inputNuevoEquipoTag');
+
+    let nombre = nombreInput.value.trim().toUpperCase();
+    let tag = tagInput.value.trim().toUpperCase();
+
+    if (!nombre || !tag) {
+        alert("Por favor, ingresa tanto el nombre como el tag del equipo.");
+        return;
+    }
+
+    try {
+        const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
+        let supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const { error } = await supabaseClient
+            .from('equipos_registrados')
+            .insert([{ nombre, tag }]);
+
+        if (error) throw error;
+
+        alert(`¡Equipo "${nombre}" registrado exitosamente!`);
+        nombreInput.value = '';
+        tagInput.value = '';
+        cargarEquiposRegistradosAdmin();
+
+    } catch (err) {
+        console.error("Error al registrar equipo:", err);
+        alert("No se pudo registrar el equipo. Es posible que ya exista.");
+    }
+}
+
+async function eliminarEquipoRegistrado(id, nombre) {
+    if (!confirm(`¿Estás seguro de eliminar a "${nombre}" de los equipos registrados?`)) return;
+
+    try {
+        const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
+        let supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const { error } = await supabaseClient
+            .from('equipos_registrados')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+
+        alert("Equipo eliminado correctamente.");
+        cargarEquiposRegistradosAdmin();
+
+    } catch (err) {
+        console.error("Error al eliminar equipo:", err);
+        alert("Ocurrió un error al intentar eliminar el equipo.");
+    }
+}
+
+async function cargarResultadosEquiposOficiales() {
+    const tbody = document.getElementById('tablaFiltroEquiposOficiales');
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--primary); padding: 20px;">Cargando todos los equipos oficiales...</td></tr>`;
+
+    try {
+        const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
+        let supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const { data: dbOficiales, error: errOficiales } = await supabaseClient.from('equipos_registrados').select('*');
+        if (errOficiales || !dbOficiales) throw errOficiales;
+
+        let acumuladoOficial = {};
+        dbOficiales.forEach(eq => {
+            let nombreKey = eq.nombre.trim().toUpperCase();
+            acumuladoOficial[nombreKey] = {
+                nombre: eq.nombre.trim(),
+                tag: eq.tag,
+                totalScore: 0,
+                booyahs: 0,
+                participaciones: 0
+            };
+        });
+
+        const { data: dbSalas, error: errSalas } = await supabaseClient.from('salas_resultados').select('*');
+        if (errSalas || !dbSalas) throw errSalas;
+
+        dbSalas.forEach(fila => {
+            let nombreLimpio = fila.equipo_nombre.trim().toUpperCase();
+            if (acumuladoOficial[nombreLimpio]) {
+                acumuladoOficial[nombreLimpio].totalScore += (fila.total_score || 0);
+                acumuladoOficial[nombreLimpio].participaciones += 1;
+                if (fila.es_booyah || fila.rank === 1) {
+                    acumuladoOficial[nombreLimpio].booyahs += 1;
+                }
+            }
+        });
+
+        let listaFiltrada = Object.values(acumuladoOficial).sort((a, b) => b.totalScore - a.totalScore);
+
+        tbody.innerHTML = '';
+        listaFiltrada.forEach((eq, idx) => {
+            let colorPos = idx === 0 && eq.totalScore > 0 ? '#DCCC9C' : (idx === 1 && eq.totalScore > 0 ? '#959595' : (idx === 2 && eq.totalScore > 0 ? '#cd7f32' : '#fff'));
+            let estiloFila = eq.participaciones === 0 ? 'opacity: 0.5;' : '';
+
+            tbody.innerHTML += `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${estiloFila}">
+                    <td style="padding: 10px; font-weight: bold; color: ${colorPos};">#${idx+1}</td>
+                    <td style="padding: 10px; font-weight: bold; color: #fff;">${eq.nombre} ${eq.participaciones === 0 ? '<span style="font-size:0.75rem; color:#ff5555; margin-left:8px;">(No ha participado)</span>' : ''}</td>
+                    <td style="text-align: center; padding: 10px; color: var(--primary); font-family: 'Orbitron'; font-weight: bold;">[${eq.tag}]</td>
+                    <td style="text-align: center; padding: 10px; color: #DCCC9C; font-weight: bold;">${eq.booyahs}</td>
+                    <td style="text-align: center; padding: 10px; color: ${colorPos}; font-weight: bold; font-family: 'Orbitron';">${eq.totalScore}</td>
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error("Error al cargar resultados de equipos oficiales:", err);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #ff5555; padding: 20px;">Error al conectar con la base de datos.</td></tr>`;
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof cargarEquiposRegistradosAdmin === 'function') {
+        cargarEquiposRegistradosAdmin();
+    }
+});
 
 function descargar() {
     html2canvas(document.getElementById('tablaCaptura'), { scale: 2, useCORS: true }).then(canvas => {
