@@ -132,7 +132,7 @@ function _xL(tA, rM, mod = "ADMIN", fec = "", hor = "") {
 }
 
 function renderizarResultados(eqs, tKs, nS, moderador = "ADMIN", fecha = "", hora = "") {
-    let tC = "LUCKY SQUAD",
+    let tC = "LUCKSQUAD",
         fU = "lucky.png";
     
     let eqO = [...eqs].sort((a, b) => b.totalScore - a.totalScore);
