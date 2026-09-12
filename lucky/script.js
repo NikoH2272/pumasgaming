@@ -16,7 +16,7 @@ async function prepararRenombradoEquipos() {
     if (!c) return;
     c.innerHTML = '';
     Array.from(eU).forEach(eq => {
-        c.innerHTML += `<div style="display:flex;gap:10px;align-items:center;background:rgba(255,255,255,0.03);padding:10px 15px;border-radius:6px;margin-bottom:8px;"><span style="color:var(--gray);font-size:0.85rem;width:140px;">Original: <strong>${eq}</strong></span><input type="text" class="input-nombre-editable" data-original="${eq}" value="${eq}" style="flex:2;padding:8px;background:#0a0a0c;border:1px solid rgba(0,198,255,0.25);color:#fff;border-radius:4px;"></div>`;
+        c.innerHTML += `<div style="display:flex;gap:10px;align-items:center;background:rgba(255,255,255,0.03);padding:10px 15px;border-radius:6px;margin-bottom:8px;"><span style="color:var(--gray);font-size:0.85rem;width:140px;">Original: <strong>${eq}</strong></span><input type="text" class="input-nombre-editable" data-original="${eq}" value="${eq}" style="flex:2;padding:8px;background:#050507;border:1px solid rgba(135,206,250,0.25);color:#fff;border-radius:4px;"></div>`;
     });
     document.getElementById('seccionRenombrar').style.display = 'block';
 }
@@ -31,10 +31,8 @@ function procesarConNombresPersonalizados() {
     let fechaInput = document.getElementById('inputFechaTorneo') ? document.getElementById('inputFechaTorneo').value : "";
     let horaInput = document.getElementById('inputHoraTorneo') ? document.getElementById('inputHoraTorneo').value : "";
 
-    // Formatear la fecha de forma limpia
     let fechaFinal = fechaInput ? new Date(fechaInput + 'T00:00:00').toLocaleDateString() : "";
 
-    // Procesar y formatear la hora (ej. de formato 24h a formato legible)
     let horaFinal = "";
     if (horaInput) {
         let [hh, mm] = horaInput.split(':');
@@ -134,14 +132,13 @@ function _xL(tA, rM, mod = "ADMIN", fec = "", hor = "") {
 }
 
 function renderizarResultados(eqs, tKs, nS, moderador = "ADMIN", fecha = "", hora = "") {
-    let tC = "ENTRENOS ROW X MAYA",
-        fU = "row.png";
+    let tC = "LUCKY SQUAD",
+        fU = "lucky.png";
     
     let eqO = [...eqs].sort((a, b) => b.totalScore - a.totalScore);
     let tKL = [...tKs].slice(0, 15);
     let rWData = window._rWGlobal || [];
 
-    // Construimos la línea del subtítulo incluyendo la fecha y la hora si fueron seleccionadas
     let infoExtra = "";
     if (fecha && hora) {
         infoExtra = ` — ${fecha} | ${hora}`;
@@ -151,55 +148,55 @@ function renderizarResultados(eqs, tKs, nS, moderador = "ADMIN", fecha = "", hor
         infoExtra = ` — ${hora}`;
     }
 
-    let h = `<div id="tablaCaptura" class="row-captura-container" style="background-image: url('${fU}');">` +
+    let h = `<div id="tablaCaptura" class="lucky-captura-container" style="background-image: url('${fU}');">` +
     
     // Encabezado
-    `<div class="row-header">` +
-    `<h1 class="row-titulo">${tC}</h1>` +
-    `<div class="row-subtitulo">RESULTADOS OFICIALES${infoExtra} | MODERADOR: ${moderador}</div>` +
+    `<div class="lucky-header">` +
+    `<h1 class="lucky-titulo">${tC}</h1>` +
+    `<div class="lucky-subtitulo">FECHA${infoExtra} | MODERADOR: ${moderador}</div>` +
     `</div>` +
     
     // TABLA PRINCIPAL GENERAL
-    `<div class="row-box row-tabla-general">` +
-    `<div class="row-box-title">TABLA GENERAL (ESTÁNDAR)</div>` +
-    `<table class="row-table"><thead><tr><th style="text-align:left;">#</th><th style="text-align:left;">EQUIPO</th>` +
+    `<div class="lucky-box lucky-tabla-general">` +
+    `<div class="lucky-box-title">TABLA GENERAL (ESTÁNDAR)</div>` +
+    `<table class="lucky-table"><thead><tr><th style="text-align:left;">#</th><th style="text-align:left;">EQUIPO</th>` +
     `${Array.from({ length: Math.min(nS, 6) }).map((_, i) => `<th style="text-align:center;">S${i + 1}</th>`).join('')}<th style="text-align:center;">KILL</th><th style="text-align:center;">TOTAL</th></tr></thead><tbody>` +
     eqO.map((eq, i) => {
-        let cFila = 'row-txt-white';
-        if (i === 0) cFila = 'row-txt-celeste';
-        else if (i === 1) cFila = 'row-txt-purpura';
-        return `<tr><td class="row-td-bold ${cFila}">#${i + 1}</td><td style="font-weight:bold;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span style="color:#ffffff;">${eq.name}</span></td>` +
+        let cFila = 'lucky-txt-white';
+        if (i === 0) cFila = 'lucky-txt-celeste';
+        else if (i === 1) cFila = 'lucky-txt-celeste-suave';
+        return `<tr><td class="lucky-td-bold ${cFila}">#${i + 1}</td><td style="font-weight:bold;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span style="color:#ffffff;">${eq.name}</span></td>` +
         `${Array.from({ length: Math.min(nS, 6) }).map((_, s) => {
             let pS = eq.salasPuntos[s];
             if (pS === undefined) return `<td style="text-align:center;color:#64748b;">-</td>`;
             return `<td style="text-align:center;color:#ffffff;">${pS}</td>`;
         }).join('')}` +
-        `<td style="text-align:center;color:#ff3366;font-weight:bold;">${eq.killScore}</td><td style="text-align:center;" class="row-td-bold ${cFila}">${eq.totalScore}</td></tr>`;
+        `<td style="text-align:center;color:#ff5577;font-weight:bold;">${eq.killScore}</td><td style="text-align:center;" class="lucky-td-bold ${cFila}">${eq.totalScore}</td></tr>`;
     }).join('') + `</tbody></table></div>` +
 
     // ZONA INFERIOR 1: BOOYAH POR SALA
-    `<div class="row-box row-booyah-section">` +
-    `<div class="row-box-title">BOOYAH POR SALA (VICTORIAS)</div>` +
-    `<div class="row-booyah-grid">` +
+    `<div class="lucky-box lucky-booyah-section">` +
+    `<div class="lucky-box-title">BOOYAH POR SALA (VICTORIAS)</div>` +
+    `<div class="lucky-booyah-grid">` +
     (rWData.length ? rWData.map(rw => `
-        <div class="row-card-item">` +
-            `<div class="row-sala-title">SALA ${rw.sala}</div>` +
-            `<div class="row-equipo-name" title="${rw.team}">${rw.team}</div>` +
-            `<div class="row-card-info">Pts: <strong style="color:#ffffff;">${rw.points}</strong> | K: <strong style="color:#ff3366;">${rw.kills}</strong></div>` +
+        <div class="lucky-card-item">` +
+            `<div class="lucky-sala-title">SALA ${rw.sala}</div>` +
+            `<div class="lucky-equipo-name" title="${rw.team}">${rw.team}</div>` +
+            `<div class="lucky-card-info">Pts: <strong style="color:#ffffff;">${rw.points}</strong> | K: <strong style="color:#ff5577;">${rw.kills}</strong></div>` +
         `</div>
     `).join('') : `<div style="color:#64748b;font-size:0.75rem;text-align:center;padding:6px;">No hay datos de Booyah registrados.</div>`) +
     `</div></div>` +
 
     // ZONA INFERIOR 2: TOP 15 KILLERS
-    `<div class="row-box row-killers-section">` +
-    `<div class="row-box-title">TOP 15 KILLERS MÁS LETALES</div>` +
-    `<div class="row-killers-grid">` +
+    `<div class="lucky-box lucky-killers-section">` +
+    `<div class="lucky-box-title">TOP 15 KILLERS MÁS LETALES</div>` +
+    `<div class="lucky-killers-grid">` +
     tKL.map((tk, i) => {
         let cP = '#ffffff';
-        if (i === 0) cP = '#00c6ff';
-        return `<div class="row-killer-item">` +
+        if (i === 0) cP = '#87ceeb';
+        return `<div class="lucky-killer-item">` +
             `<div><span style="color:${cP};font-weight:bold;margin-right:3px;">#${i + 1}</span><span style="color:#ffffff;font-weight:bold;max-width:58px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">${tk.name}</span></div>` +
-            `<span style="color:#ff3366;font-weight:bold;font-size:0.75rem;">${tk.kills}</span>` +
+            `<span style="color:#ff5577;font-weight:bold;font-size:0.75rem;">${tk.kills}</span>` +
         `</div>`;
     }).join('') +
     `</div></div></div>`;
@@ -221,9 +218,9 @@ function descargar() {
         return;
     }
     
-    html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#050814', logging: false }).then(canvas => {
+    html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#000000', logging: false }).then(canvas => {
         let link = document.createElement('a');
-        link.download = 'Entrenos_Row_x_Maya.png';
+        link.download = 'Lucky_Squad_Resultados.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
     }).catch(err => {

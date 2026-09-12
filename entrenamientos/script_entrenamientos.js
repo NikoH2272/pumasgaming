@@ -105,6 +105,7 @@ async function calcularTablaGlobalAcumulada(sesiones) {
                 if (fileData) {
                     let text = await fileData.text();
                     let lines = text.split('\n');
+                    
                     lines.forEach(line => {
                         const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
                         if (teamMatch) {
@@ -113,11 +114,18 @@ async function calcularTablaGlobalAcumulada(sesiones) {
                             let totalScore = parseInt(teamMatch[5]);
 
                             if (!globalTeamsMap[name]) {
-                                globalTeamsMap[name] = { name, totalScore: 0, booyahs: 0, sesionesSet: new Set() };
+                                globalTeamsMap[name] = { 
+                                    name: name, 
+                                    totalScore: 0, 
+                                    booyahs: 0, 
+                                    sesionesSet: new Set() 
+                                };
                             }
+                            
                             globalTeamsMap[name].totalScore += totalScore;
                             globalTeamsMap[name].sesionesSet.add(sesion.id);
                             
+                            // Corrección estricta para asegurar el conteo de victorias (Booyah)
                             if (rank === 1) {
                                 globalTeamsMap[name].booyahs += 1;
                             }
@@ -128,6 +136,7 @@ async function calcularTablaGlobalAcumulada(sesiones) {
                             let pName = pMatch[1].trim();
                             let killsCount = parseInt(pMatch[2]);
                             totalKillsGenerales += killsCount;
+                            
                             if (!globalPlayersMap[pName]) {
                                 globalPlayersMap[pName] = { name: pName, kills: 0 };
                             }
