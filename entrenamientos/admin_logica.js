@@ -426,7 +426,6 @@ async function guardarEntrenamientoEnSupabase() {
         let titulo = document.getElementById('inputTituloTorneo') ? document.getElementById('inputTituloTorneo').value : "ENTRENAMIENTO";
         let jornada = document.getElementById('selectTipoPartida') ? document.getElementById('selectTipoPartida').value : "NORMAL";
         
-        // Capturar la fecha exacta seleccionada en el input del admin
         let fechaInput = document.getElementById('inputFechaHoraEntreno') ? document.getElementById('inputFechaHoraEntreno').value : "";
         let fecha = fechaInput ? new Date(fechaInput) : new Date();
         
@@ -438,15 +437,18 @@ async function guardarEntrenamientoEnSupabase() {
         let folderName = `entreno_${fecha.toISOString().slice(0,10)}_${titulo.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${Date.now()}`;
 
         if (files.length > 0 && processedFilesTexts.length === files.length) {
-            for (let i = 0; i < files.length; i++) {
-                let nombreLimpio = files[i].name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-                let filePath = `${folderName}/${nombreLimpio}`;
-                let blobModificado = new Blob([processedFilesTexts[i]], { type: 'text/plain' });
-                await supabaseClient.storage.from('entrenamientos_logs').upload(filePath, blobModificado);
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    let nombreLimpio = files[i].name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+                    let filePath = `${folderName}/${nombreLimpio}`;
+                    let blobModificado = new Blob([processedFilesTexts[i]], { type: 'text/plain' });
+                    await supabaseClient.storage.from('entrenamientos_logs').upload(filePath, blobModificado);
+                }
+            } catch (storageErr) {
+                console.warn("Aviso: No se pudieron subir los archivos al Storage, pero se continuará guardando en la base de datos.", storageErr);
             }
         }
 
-        // Insertar la sesión usando la fecha del formulario del admin
         const { data: sesionData, error: sesionError } = await supabaseClient
             .from('entrenamientos_sesiones')
             .insert([{ titulo, jornada, fecha: fecha.toISOString(), moderador, archivo_url: folderName }])
@@ -478,10 +480,10 @@ async function guardarEntrenamientoEnSupabase() {
         });
 
         if (salasRows.length > 0) {
-            await supabaseClient.from('salas_resultados').insert(salasRows);
+            const { error: errorSalas } = await supabaseClient.from('salas_resultados').insert(salasRows);
+            if (errorSalas) console.error("Error al insertar salas:", errorSalas);
         }
 
-        // Procesar los top killers extrayendo el ID único del archivo log para prevenir conflictos por cambio de nombre
         let killersRows = [];
         processedFilesTexts.forEach(text => {
             let lines = text.split('\n');
@@ -496,12 +498,10 @@ async function guardarEntrenamientoEnSupabase() {
                 const playerMatch = line.match(/NAME:\s*(.+?)\s+ID:\s*(\d+).*?KILL:\s*(\d+)/i);
                 if (playerMatch) {
                     let pName = playerMatch[1].trim();
-                    let pId = parseInt(playerMatch[2]);
                     let pKills = parseInt(playerMatch[3]);
 
                     killersRows.push({
                         sesion_id: sesionId,
-                        jugador_id: pId,
                         jugador_nombre: pName,
                         equipo_nombre: currentTeam,
                         kills: pKills
@@ -511,16 +511,18 @@ async function guardarEntrenamientoEnSupabase() {
         });
 
         if (killersRows.length > 0) {
-            await supabaseClient.from('top_killers').insert(killersRows);
+            const { error: errorKillers } = await supabaseClient.from('top_killers').insert(killersRows);
+            if (errorKillers) console.error("Error al insertar top killers:", errorKillers);
         }
 
-        alert("¡Resultados procesados, fecha aplicada y guardados exitosamente en la base de datos!");
+        alert("¡Resultados procesados y guardados exitosamente en la base de datos!");
 
     } catch (error) {
-        console.error("Error al registrar en Supabase:", error);
-        alert("Ocurrió un error al guardar en la base de datos.");
+        console.error("Error crítico al registrar en Supabase:", error);
+        alert("Ocurrió un error al guardar en la base de datos. Revisa la consola (F12).");
     }
 }
+
 async function limpiarBaseDeDatosCompletamente() {
     if (!confirm("⚠️ ADVERTENCIA: ¿Estás seguro de vaciar absolutamente toda la base de datos?")) return;
     if (!supabaseClient) return;
