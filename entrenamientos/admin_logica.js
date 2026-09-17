@@ -204,7 +204,7 @@ function procesarLogs(textsArray, renombresMap) {
 }
 
 function renderizarResultados(eqs, tKs, nS) {
-    let tC = document.getElementById('inputTituloTorneo') ? document.getElementById('inputTituloTorneo').value : "LIGA PUMAS GAMING",
+    let tC = document.getElementById('inputTituloTorneo') ? document.getElementById('inputTituloTorneo').value : "",
         tTipo = document.getElementById('selectTipoPartida') ? document.getElementById('selectTipoPartida').value : "NORMAL",
         fInputVal = document.getElementById('inputFechaHoraEntreno') ? document.getElementById('inputFechaHoraEntreno').value : "",
         fC = fInputVal ? fInputVal.replace('T', ' ') : "",
