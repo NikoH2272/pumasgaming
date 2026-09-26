@@ -95,7 +95,6 @@
                         </div>
                     </div>
 
-                    <!-- Caja de Texto Copiable Automática en Carga -->
                     <div id="contenedorTextoCargadoCopiable" style="display: none; margin-top: 20px; background: rgba(18, 19, 23, 0.95); border: 1px solid rgba(220, 204, 156, 0.3); border-radius: 8px; padding: 15px; width: 100%;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                             <span style="font-family: 'Orbitron'; color: #DCCC9C; font-size: 0.85rem;">TEXTO DESCRIPTIVO PARA REDES / DISCORD</span>
@@ -124,7 +123,7 @@
         </div>
     </section>
 
-<!-- SECCIÓN 2: RESULTADOS EQUIPOS OFICIALES -->
+    <!-- SECCIÓN 2: RESULTADOS EQUIPOS OFICIALES -->
     <section id="seccionResultadosOficiales" class="tool-section" style="padding-top: 40px; display: none;">
         <h2 class="section-title">Resultados Exclusivos de Equipos Oficiales</h2>
         <div class="tool-container">
@@ -143,37 +142,55 @@
         <h2 class="section-title">Registro de Equipos VIP / Oficiales</h2>
         <div class="tool-container">
             <p class="tool-desc">
-                Agrega o elimina los equipos que formarán parte del listado oficial y exclusivo de equipos VIP.
+                Agrega equipos individualmente o registra múltiples equipos de forma masiva pegando la lista de nombres.
             </p>
 
-            <div class="form-grid" style="margin-bottom: 25px;">
-                <div class="form-group">
-                    <label>NOMBRE DEL EQUIPO</label>
-                    <input type="text" id="inputNombreVip" placeholder="Ej: Pumas Gaming">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px;">
+                
+                <!-- Registro Individual -->
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.2);">
+                    <h3 style="color: var(--primary); font-family: 'Orbitron'; font-size: 0.95rem; margin-bottom: 15px;"><i class="fa-solid fa-user-plus"></i> Registro Individual</h3>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>NOMBRE DEL EQUIPO</label>
+                        <input type="text" id="inputNombreVip" placeholder="Ej: Pumas Gaming">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label>LOGO / ESCUDO (OPCIONAL)</label>
+                        <input type="file" id="inputLogoVip" accept="image/*">
+                    </div>
+                    <button onclick="registrarNuevoEquipoVip()" class="btn-generar" style="margin-top: 0;">
+                        <i class="fa-solid fa-circle-plus"></i> GUARDAR EQUIPO VIP
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label>TAG / ABREVIATURA</label>
-                    <input type="text" id="inputTagVip" placeholder="Ej: PUMAS">
-                </div>
-            </div>
-            <button onclick="registrarNuevoEquipoVip()" class="btn-generar" style="max-width: 300px;">
-                <i class="fa-solid fa-circle-plus"></i> GUARDAR EQUIPO VIP
-            </button>
 
+                <!-- Registro Masivo -->
+                <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.2);">
+                    <h3 style="color: var(--primary); font-family: 'Orbitron'; font-size: 0.95rem; margin-bottom: 15px;"><i class="fa-solid fa-list-check"></i> Registro Masivo por Lista</h3>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label>PEGAR LISTA (Un nombre por línea)</label>
+                        <textarea id="inputListaMasivaVip" placeholder="Pumas Gaming&#10;Loro Squad&#10;Team Alpha" style="width: 100%; height: 110px; background: #0a0b10; border: 1px solid rgba(220,204,156,0.2); color: #fff; padding: 10px; border-radius: 6px; font-family: 'Rajdhani'; font-size: 0.9rem; resize: none;"></textarea>
+                    </div>
+                    <button onclick="registrarEquiposMasivos()" class="btn-generar" style="margin-top: 0; background: #00ffcc; color: #000;">
+                        <i class="fa-solid fa-file-arrow-up"></i> PROCESAR LISTA MASIVA
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Listado de Equipos Actuales -->
             <div style="margin-top: 35px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px;">
                 <h3 style="color: var(--primary); font-family: 'Orbitron'; font-size: 1rem; margin-bottom: 15px;">Listado de Equipos VIP Actuales</h3>
                 <div style="width: 100%; overflow-x: auto;">
                     <table style="width: 100%; border-collapse: collapse; color: #fff; font-size: 0.95rem;">
                         <thead>
                             <tr style="color: var(--primary); font-family: 'Orbitron'; border-bottom: 2px solid rgba(220,204,156,0.3); font-size: 0.85rem;">
-                                <th style="text-align: left; padding: 10px;">ID</th>
+                                <th style="text-align: center; padding: 10px;">LOGO</th>
                                 <th style="text-align: left; padding: 10px;">EQUIPO</th>
-                                <th style="text-align: center; padding: 10px;">TAG</th>
                                 <th style="text-align: center; padding: 10px;">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody id="tablaListaVipAdmin">
-                            <tr><td colspan="4" style="text-align: center; color: var(--gray); padding: 20px;">Cargando equipos...</td></tr>
+                            <tr><td colspan="3" style="text-align: center; color: var(--gray); padding: 20px;">Cargando equipos...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -231,7 +248,6 @@
                 </div>
             </div>
 
-            <!-- Caja de Texto Copiable Automática en Métricas -->
             <div id="contenedorTextoMetricasCopiable" style="display: none; margin-top: 25px; background: rgba(18, 19, 23, 0.95); border: 1px solid rgba(220, 204, 156, 0.3); border-radius: 8px; padding: 15px; width: 100%;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <span style="font-family: 'Orbitron'; color: #DCCC9C; font-size: 0.85rem;">TEXTO DESCRIPTIVO PARA REDES / DISCORD</span>

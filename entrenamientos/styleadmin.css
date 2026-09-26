@@ -162,11 +162,12 @@ nav ul li a:hover {
 input[type="file"] {
     background: #0a0b10;
     border: 1px dashed rgba(220, 204, 156, 0.3);
-    padding: 15px;
+    padding: 12px;
     border-radius: 6px;
     color: var(--gray);
     cursor: pointer;
     transition: 0.3s;
+    font-size: 0.9rem;
 }
 
 input[type="file"]:hover {
@@ -201,10 +202,6 @@ input[type="file"]:hover {
     justify-content: center;
     width: 100%;
 }
-
-/* ==========================================================================
-   CONTROL TOTAL DE TAMAÑOS, MÁRGENES, PADDINGS Y COLUMNAS DESDE EL CSS
-   ========================================================================== */
 
 #tablaCaptura {
     width: 800px;

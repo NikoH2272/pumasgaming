@@ -1,10 +1,5 @@
-let rawFilesData = [];
-let processedFilesTexts = [];
-let logoPersonalizadoBase64 = null;
-let fondoPersonalizadoBase64 = null;
 let globalEquipos = [];
 let globalTopKillers = [];
-let globalNumSalas = 0;
 
 function toggleMenu() {
     const nav = document.getElementById('mainNav');
@@ -36,47 +31,60 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = (typeof supabase !== 'undefined' && supabase.createClient) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 async function cargarSesiones() {
-    if (!supabaseClient) return;
-
-    const { data, error } = await supabaseClient
-        .from('entrenamientos_sesiones')
-        .select('*')
-        .order('fecha', { ascending: false });
-
     const tbody = document.getElementById('bodySesiones');
     if (!tbody) return;
 
-    if (error || !data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #ff3333;">Sin registros disponibles.</td></tr>`;
-        let bgGlobal = document.getElementById('bodyTablaGlobal');
-        let gridKillers = document.getElementById('gridTopKillersGlobal');
-        if (bgGlobal) bgGlobal.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--gray);">Sin datos globales.</td></tr>`;
-        if (gridKillers) gridKillers.innerHTML = `<div style="color: var(--gray); text-align:center; padding: 20px;">Sin datos globales.</div>`;
+    if (!supabaseClient) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #ff3333;">Error de conexión con Supabase.</td></tr>`;
         return;
     }
 
-    let statEntrenamientos = document.getElementById('statTotalEntrenamientos');
-    if (statEntrenamientos) statEntrenamientos.textContent = data.length;
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--primary);">Cargando sesiones...</td></tr>`;
 
-    tbody.innerHTML = '';
-    data.forEach(sesion => {
-        let fechaFormateada = new Date(sesion.fecha).toLocaleDateString();
-        let folderPath = sesion.archivo_url || '';
+    try {
+        const { data: sesiones, error } = await supabaseClient
+            .from('entrenamientos_sesiones')
+            .select('*')
+            .order('fecha', { ascending: false });
 
-        tbody.innerHTML += `
-            <tr>
-                <td style="color: var(--secondary);">${fechaFormateada}</td>
-                <td style="font-weight: bold; color: var(--light);">${sesion.titulo}</td>
-                <td style="text-align: center;">
-                    <button class="btn-ver" onclick="procesarSesionUnica('${folderPath}', '${sesion.titulo}', '${sesion.jornada}')">
-                        <i class="fa-solid fa-table"></i> Ver
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
+        if (error) throw error;
 
-    await calcularTablaGlobalAcumulada(data);
+        if (!sesiones || sesiones.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--gray);">Sin registros disponibles.</td></tr>`;
+            let bgGlobal = document.getElementById('bodyTablaGlobal');
+            let gridKillers = document.getElementById('gridTopKillersGlobal');
+            if (bgGlobal) bgGlobal.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--gray);">Sin datos globales.</td></tr>`;
+            if (gridKillers) gridKillers.innerHTML = `<div style="color: var(--gray); text-align:center; padding: 20px;">Sin datos globales.</div>`;
+            return;
+        }
+
+        let statEntrenamientos = document.getElementById('statTotalEntrenamientos');
+        if (statEntrenamientos) statEntrenamientos.textContent = sesiones.length;
+
+        tbody.innerHTML = '';
+        sesiones.forEach(sesion => {
+            let fechaFormateada = new Date(sesion.fecha).toLocaleDateString();
+            let folderPath = sesion.archivo_url || '';
+
+            tbody.innerHTML += `
+                <tr>
+                    <td style="color: var(--secondary);">${fechaFormateada}</td>
+                    <td style="font-weight: bold; color: var(--light);">${sesion.titulo}</td>
+                    <td style="text-align: center;">
+                        <button class="btn-ver" onclick="procesarSesionUnica('${folderPath}', '${sesion.titulo.replace(/'/g, "\\'")}', '${sesion.jornada}')">
+                            <i class="fa-solid fa-table"></i> Ver
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        await calcularTablaGlobalAcumulada(sesiones);
+
+    } catch (err) {
+        console.error("Error al cargar sesiones públicas:", err);
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #ff3333;">Error al cargar datos.</td></tr>`;
+    }
 }
 
 async function calcularTablaGlobalAcumulada(sesiones) {
@@ -87,14 +95,12 @@ async function calcularTablaGlobalAcumulada(sesiones) {
 
     for (let sesion of sesiones) {
         if (!sesion.archivo_url) continue;
-
         try {
             const { data: fileList } = await supabaseClient.storage
                 .from('entrenamientos_logs')
                 .list(sesion.archivo_url);
 
             if (!fileList) continue;
-
             totalMapasJugados += fileList.length;
 
             for (let file of fileList) {
@@ -103,31 +109,30 @@ async function calcularTablaGlobalAcumulada(sesiones) {
                     .download(`${sesion.archivo_url}/${file.name}`);
 
                 if (fileData) {
-                    let text = await fileData.text();
-                    let lines = text.split('\n');
-                    
+                    let texto = await fileData.text();
+                    let lines = texto.split('\n');
+
                     lines.forEach(line => {
                         const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
                         if (teamMatch) {
-                            let name = teamMatch[1].trim();
+                            let nombre = teamMatch[1].trim();
                             let rank = parseInt(teamMatch[2]);
                             let totalScore = parseInt(teamMatch[5]);
 
-                            if (!globalTeamsMap[name]) {
-                                globalTeamsMap[name] = { 
-                                    name: name, 
-                                    totalScore: 0, 
-                                    booyahs: 0, 
-                                    sesionesSet: new Set() 
+                            if (!globalTeamsMap[nombre]) {
+                                globalTeamsMap[nombre] = {
+                                    name: nombre,
+                                    totalScore: 0,
+                                    booyahs: 0,
+                                    sesionesSet: new Set()
                                 };
                             }
-                            
-                            globalTeamsMap[name].totalScore += totalScore;
-                            globalTeamsMap[name].sesionesSet.add(sesion.id);
-                            
-                            // Corrección estricta para asegurar el conteo de victorias (Booyah)
+
+                            globalTeamsMap[nombre].totalScore += totalScore;
+                            globalTeamsMap[nombre].sesionesSet.add(sesion.id);
+
                             if (rank === 1) {
-                                globalTeamsMap[name].booyahs += 1;
+                                globalTeamsMap[nombre].booyahs += 1;
                             }
                         }
 
@@ -136,7 +141,7 @@ async function calcularTablaGlobalAcumulada(sesiones) {
                             let pName = pMatch[1].trim();
                             let killsCount = parseInt(pMatch[2]);
                             totalKillsGenerales += killsCount;
-                            
+
                             if (!globalPlayersMap[pName]) {
                                 globalPlayersMap[pName] = { name: pName, kills: 0 };
                             }
@@ -146,7 +151,7 @@ async function calcularTablaGlobalAcumulada(sesiones) {
                 }
             }
         } catch (e) {
-            console.error("Error leyendo carpeta global:", e);
+            console.error("Error al leer carpeta global:", e);
         }
     }
 
@@ -160,7 +165,7 @@ async function calcularTablaGlobalAcumulada(sesiones) {
 
     let equiposGlobalesOrdenados = Object.values(globalTeamsMap).sort((a, b) => b.totalScore - a.totalScore).slice(0, 50);
     let bodyGlobal = document.getElementById('bodyTablaGlobal');
-    
+
     if (bodyGlobal) {
         if (equiposGlobalesOrdenados.length === 0) {
             bodyGlobal.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--gray);">Sin registros globales.</td></tr>`;
@@ -169,7 +174,6 @@ async function calcularTablaGlobalAcumulada(sesiones) {
             equiposGlobalesOrdenados.forEach((eq, idx) => {
                 let colorPos = idx === 0 ? '#DCCC9C' : (idx === 1 ? '#959595' : (idx === 2 ? '#cd7f32' : 'var(--light)'));
                 let sesionesCount = eq.sesionesSet ? eq.sesionesSet.size : 1;
-
                 bodyGlobal.innerHTML += `
                     <tr>
                         <td style="font-weight:bold; color: ${colorPos};">#${idx+1}</td>
@@ -212,7 +216,7 @@ async function cargarResultadosVipPublicos() {
     const tbody = document.getElementById('bodyTablaVip');
     if (!tbody || !supabaseClient) return;
 
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--primary); padding: 20px;">Cargando todos los equipos VIP...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--primary); padding: 20px;">Cargando todos los equipos VIP...</td></tr>`;
 
     try {
         const { data: dbOficiales, error: errOficiales } = await supabaseClient.from('equipos_registrados').select('*');
@@ -223,7 +227,6 @@ async function cargarResultadosVipPublicos() {
             let nombreKey = eq.nombre.trim().toUpperCase();
             acumuladoVip[nombreKey] = {
                 nombre: eq.nombre.trim(),
-                tag: eq.tag,
                 totalScore: 0,
                 booyahs: 0,
                 participaciones: 0
@@ -236,34 +239,31 @@ async function cargarResultadosVipPublicos() {
         dbSalas.forEach(fila => {
             let nombreLimpio = fila.equipo_nombre.trim().toUpperCase();
             if (acumuladoVip[nombreLimpio]) {
-                acumuladoVip[nombreLimpio].totalScore += (fila.total_score || 0);
+                acumuladoVip[nombreLimpio].totalScore += Number(fila.total_score || 0);
                 acumuladoVip[nombreLimpio].participaciones += 1;
-                if (fila.es_booyah || fila.rank === 1) {
+                if (fila.es_booyah === true || Number(fila.rank) === 1) {
                     acumuladoVip[nombreLimpio].booyahs += 1;
                 }
             }
         });
 
         let listaVip = Object.values(acumuladoVip).sort((a, b) => b.totalScore - a.totalScore);
-
         tbody.innerHTML = '';
+
         listaVip.forEach((eq, idx) => {
             let colorPos = idx === 0 && eq.totalScore > 0 ? '#DCCC9C' : (idx === 1 && eq.totalScore > 0 ? '#959595' : (idx === 2 && eq.totalScore > 0 ? '#cd7f32' : '#fff'));
-            let estiloFila = eq.participaciones === 0 ? 'opacity: 0.5;' : '';
-
             tbody.innerHTML += `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${estiloFila}">
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 10px; font-weight: bold; color: ${colorPos};">#${idx+1}</td>
-                    <td style="padding: 10px; font-weight: bold; color: #fff;">${eq.nombre} ${eq.participaciones === 0 ? '<span style="font-size:0.75rem; color:#ff5555; margin-left:8px;">(No ha participado)</span>' : ''}</td>
-                    <td style="text-align: center; padding: 10px; color: var(--primary); font-family: 'Orbitron'; font-weight: bold;">[${eq.tag}]</td>
+                    <td style="padding: 10px; font-weight: bold; color: #fff;">${eq.nombre}</td>
                     <td style="text-align: center; padding: 10px; color: #DCCC9C; font-weight: bold;">${eq.booyahs}</td>
                     <td style="text-align: center; padding: 10px; color: ${colorPos}; font-weight: bold; font-family: 'Orbitron';">${eq.totalScore}</td>
                 </tr>
             `;
         });
     } catch (err) {
-        console.error("Error cargando VIP públicos:", err);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #ff5555; padding: 20px;">Error al conectar con la base de datos.</td></tr>`;
+        console.error("Error al cargar VIP públicos:", err);
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ff5555; padding: 20px;">Error al conectar con la base de datos.</td></tr>`;
     }
 }
 
@@ -294,24 +294,24 @@ async function procesarSesionUnica(folderPath, titulo, jornada) {
         }
 
         fileList.sort((a, b) => a.name.localeCompare(b.name));
-
         let textosSalas = [];
+
         for (let file of fileList) {
             const { data: fileData, error: downloadError } = await supabaseClient.storage
                 .from('entrenamientos_logs')
                 .download(`${folderPath}/${file.name}`);
 
             if (!downloadError && fileData) {
-                let text = await fileData.text();
-                textosSalas.push(text);
+                let texto = await fileData.text();
+                textosSalas.push(texto);
             }
         }
 
         let equiposMap = {};
         let numSalas = textosSalas.length;
 
-        textosSalas.forEach((text, salaIndex) => {
-            let lines = text.split('\n');
+        textosSalas.forEach((texto, salaIndex) => {
+            let lines = texto.split('\n');
             lines.forEach(line => {
                 const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
                 if (teamMatch) {
@@ -321,7 +321,6 @@ async function procesarSesionUnica(folderPath, titulo, jornada) {
                     }
                     let totalScore = parseInt(teamMatch[5]);
                     let killScore = parseInt(teamMatch[3]);
-
                     equiposMap[name].totalScore += totalScore;
                     equiposMap[name].killScore += killScore;
                     equiposMap[name].salasPuntos[salaIndex] = totalScore;
@@ -366,7 +365,6 @@ async function procesarSesionUnica(folderPath, titulo, jornada) {
         htmlBody += `</tbody>`;
 
         if (tablaSesionUnica) tablaSesionUnica.innerHTML = htmlHeader + htmlBody;
-
     } catch (err) {
         console.error("Error:", err);
         alert("Error al cargar los datos de la sesión.");

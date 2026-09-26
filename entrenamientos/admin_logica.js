@@ -37,8 +37,7 @@ async function prepararRenombradoEquipos() {
             if (dbEquipos) {
                 dbEquipos.forEach(eq => {
                     equiposOficialesMap[eq.nombre.toUpperCase()] = {
-                        nombreOficial: eq.nombre,
-                        tag: eq.tag
+                        nombreOficial: eq.nombre
                     };
                 });
             }
@@ -58,7 +57,7 @@ async function prepararRenombradoEquipos() {
         
         let badgeEstado = '';
         if (matchOficial) {
-            badgeEstado = `<span style="background: rgba(0, 255, 128, 0.15); color: #00ff80; border: 1px solid rgba(0, 255, 128, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-family: 'Orbitron'; font-weight: bold; white-space: nowrap;"><i class="fa-solid fa-check"></i> [${matchOficial.tag}]</span>`;
+            badgeEstado = `<span style="background: rgba(0, 255, 128, 0.15); color: #00ff80; border: 1px solid rgba(0, 255, 128, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-family: 'Orbitron'; font-weight: bold; white-space: nowrap;"><i class="fa-solid fa-check"></i> OFICIAL</span>`;
         } else {
             badgeEstado = `<span style="background: rgba(255, 51, 51, 0.15); color: #ff5555; border: 1px solid rgba(255, 51, 51, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-family: 'Orbitron'; font-weight: bold; white-space: nowrap;"><i class="fa-solid fa-xmark"></i> NUEVO</span>`;
         }
@@ -264,8 +263,7 @@ function renderizarResultados(eqs, tKs, nS) {
                                 return `
                                 <tr>
                                     <td style="font-weight: bold; color:${cFila};">#${i+1}</td>
-                                    <td style="font-weight: bold; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><span style="color:${cF};">${eq.name}</span></td>
-                                    ${Array.from({length: Math.min(nS, 5)}).map((_, s) => {
+                                    <td style="font-weight: bold; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><span style="color:${cF};">${eq.name}</span></td>${Array.from({length: Math.min(nS, 5)}).map((_, s) => {
                                         let pS = eq.salasPuntos[s];
                                         if (mC === '2') pS = eq.salasRank[s];
                                         else if (mC === '3') pS = eq.salasKills[s];
@@ -291,7 +289,7 @@ function renderizarResultados(eqs, tKs, nS) {
                             return `
                             <div class="item-equipo-destacado">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1px;">
-                                    <span style="color:${cP}; font-weight:bold; max-width: 110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">#${i+1} ${eq.name}</span>
+                                    <span style="color:${cP}; font-weight:bold; max-width: 110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">#${i+1}${eq.name}</span>
                                     <span style="color:#DCCC9C; font-weight:bold;">👑 ${eq.booyahsCount || 0}</span>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; color:var(--gray); font-size:0.62rem;">
@@ -377,8 +375,6 @@ function generarTextoParaEntrenamientoActual(eqsArray, tkArray) {
 
     let fechaFormateada = fechaObj.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric' });
     let horaCOL = fechaObj.toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit', hour12: true });
-    let horaMX = fechaObj.toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', hour12: true });
-    let horaARG = fechaObj.toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: true });
 
     let top3Texto = eqsArray.slice(0, 3).map((eq, i) => `${i === 0 ? '🏆 1º' : (i === 1 ? '🥈 2º' : '🥉 3º')} ${eq.name} - ${eq.totalScore} PTS`).join('\n');
     let mvp = tkArray.length > 0 ? tkArray[0] : null;
@@ -386,7 +382,7 @@ function generarTextoParaEntrenamientoActual(eqsArray, tkArray) {
 
     let textoFinal = `🐺 ${tituloTorneo}
 📅 Fecha: ${fechaFormateada}
-⏰ Hora: ${horaCOL} COL / ${horaMX} MX / ${horaARG} ARG
+⏰ Hora: ${horaCOL} COL
 🌐 Región: EEUU
 
 🏆 TOP 3 EQUIPOS:
@@ -425,15 +421,12 @@ async function guardarEntrenamientoEnSupabase() {
     try {
         let titulo = document.getElementById('inputTituloTorneo') ? document.getElementById('inputTituloTorneo').value : "ENTRENAMIENTO";
         let jornada = document.getElementById('selectTipoPartida') ? document.getElementById('selectTipoPartida').value : "NORMAL";
-        
         let fechaInput = document.getElementById('inputFechaHoraEntreno') ? document.getElementById('inputFechaHoraEntreno').value : "";
         let fecha = fechaInput ? new Date(fechaInput) : new Date();
-        
         let moderador = document.getElementById('inputModerador') ? document.getElementById('inputModerador').value : "";
 
         const fileInput = document.getElementById('fileInput');
         let files = Array.from(fileInput.files);
-
         let folderName = `entreno_${fecha.toISOString().slice(0,10)}_${titulo.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${Date.now()}`;
 
         if (files.length > 0 && processedFilesTexts.length === files.length) {
@@ -445,7 +438,7 @@ async function guardarEntrenamientoEnSupabase() {
                     await supabaseClient.storage.from('entrenamientos_logs').upload(filePath, blobModificado);
                 }
             } catch (storageErr) {
-                console.warn("Aviso: No se pudieron subir los archivos al Storage, pero se continuará guardando en la base de datos.", storageErr);
+                console.warn("Aviso: No se pudieron subir los archivos al Storage.", storageErr);
             }
         }
 
@@ -480,8 +473,7 @@ async function guardarEntrenamientoEnSupabase() {
         });
 
         if (salasRows.length > 0) {
-            const { error: errorSalas } = await supabaseClient.from('salas_resultados').insert(salasRows);
-            if (errorSalas) console.error("Error al insertar salas:", errorSalas);
+            await supabaseClient.from('salas_resultados').insert(salasRows);
         }
 
         let killersRows = [];
@@ -491,35 +483,28 @@ async function guardarEntrenamientoEnSupabase() {
             
             lines.forEach(line => {
                 const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:/i);
-                if (teamMatch) {
-                    currentTeam = teamMatch[1].trim();
-                }
+                if (teamMatch) currentTeam = teamMatch[1].trim();
 
                 const playerMatch = line.match(/NAME:\s*(.+?)\s+ID:\s*(\d+).*?KILL:\s*(\d+)/i);
                 if (playerMatch) {
-                    let pName = playerMatch[1].trim();
-                    let pKills = parseInt(playerMatch[3]);
-
                     killersRows.push({
                         sesion_id: sesionId,
-                        jugador_nombre: pName,
+                        jugador_nombre: playerMatch[1].trim(),
                         equipo_nombre: currentTeam,
-                        kills: pKills
+                        kills: parseInt(playerMatch[3])
                     });
                 }
             });
         });
 
         if (killersRows.length > 0) {
-            const { error: errorKillers } = await supabaseClient.from('top_killers').insert(killersRows);
-            if (errorKillers) console.error("Error al insertar top killers:", errorKillers);
+            await supabaseClient.from('top_killers').insert(killersRows);
         }
 
-        alert("¡Resultados procesados y guardados exitosamente en la base de datos!");
-
+        alert("¡Resultados procesados y guardados exitosamente!");
     } catch (error) {
-        console.error("Error crítico al registrar en Supabase:", error);
-        alert("Ocurrió un error al guardar en la base de datos. Revisa la consola (F12).");
+        console.error("Error crítico:", error);
+        alert("Ocurrió un error al guardar en la base de datos.");
     }
 }
 
@@ -553,7 +538,7 @@ async function cargarResultadosEquiposOficiales() {
                 let nombreKey = eq.nombre.trim().toUpperCase();
                 acumuladoOficial[nombreKey] = { 
                     nombre: eq.nombre.trim(), 
-                    tag: eq.tag, 
+                    logo_url: eq.logo_url,
                     totalScore: 0, 
                     booyahs: 0, 
                     participaciones: 0 
@@ -585,16 +570,16 @@ async function cargarResultadosEquiposOficiales() {
 
         listaFiltrada.forEach((eq, idx) => {
             let colorPos = idx === 0 && eq.totalScore > 0 ? '#DCCC9C' : (idx === 1 && eq.totalScore > 0 ? '#959595' : (idx === 2 && eq.totalScore > 0 ? '#cd7f32' : '#fff'));
-            let estiloOpacidad = eq.participaciones === 0 ? 'opacity: 0.5;' : '';
+            let logoImgHtml = eq.logo_url ? `<img src="${eq.logo_url}" style="width: 28px; height: 28px; object-fit: contain; border-radius: 4px; background: #000;">` : `<i class="fa-solid fa-shield" style="color: var(--primary); font-size: 1.2rem;"></i>`;
 
             contenedor.innerHTML += `
-                <div style="background: rgba(18, 19, 23, 0.95); border: 1px solid rgba(220, 204, 156, 0.2); border-left: 3px solid ${colorPos}; border-radius: 6px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; ${estiloOpacidad}">
-                    <div style="display: flex; flex-direction: column; gap: 4px; overflow: hidden; max-width: 70%;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="background: rgba(18, 19, 23, 0.95); border: 1px solid rgba(220, 204, 156, 0.2); border-left: 3px solid ${colorPos}; border-radius: 6px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; max-width: 70%;">
+                        ${logoImgHtml}
+                        <div style="display: flex; align-items: center; gap: 6px;">
                             <span style="font-family: 'Orbitron'; font-weight: bold; color: ${colorPos}; font-size: 0.85rem;">#${idx+1}</span>
                             <span style="font-weight: bold; color: #fff; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${eq.nombre}">${eq.nombre}</span>
                         </div>
-                        <span style="color: var(--primary); font-family: 'Orbitron'; font-size: 0.75rem; font-weight: bold;">[${eq.tag}] ${eq.participaciones === 0 ? '<span style="color:#ff5555; font-size:0.65rem;">(Sin part.)</span>' : ''}</span>
                     </div>
                     <div style="display: flex; gap: 15px; align-items: center; text-align: right;">
                         <div>
@@ -611,85 +596,58 @@ async function cargarResultadosEquiposOficiales() {
         });
     } catch (err) {
         console.error("Error:", err);
-        contenedor.innerHTML = `<div style="text-align: center; color: #ff5555; padding: 20px; grid-column: span 2;">Error al cargar equipos oficiales.</div>`;
     }
 }
 
-async function cargarListaEntrenamientosParaBorrar() {
-    const tbody = document.getElementById('tablaListaEntrenamientosAdmin');
-    if (!tbody) return;
-
-    try {
-        if (!supabaseClient) return;
-        const { data } = await supabaseClient.from('entrenamientos_sesiones').select('*').order('fecha', { ascending: false });
-        if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--gray); padding: 20px;">No hay entrenamientos.</td></tr>`;
-            return;
-        }
-
-        tbody.innerHTML = '';
-        data.forEach(sesion => {
-            let fechaFormateada = new Date(sesion.fecha).toLocaleString();
-            tbody.innerHTML += `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 10px; color: var(--gray);">#${sesion.id}</td>
-                    <td style="padding: 10px; font-weight: bold; color: #fff;">${sesion.titulo}</td>
-                    <td style="padding: 10px; color: var(--primary); font-family: 'Orbitron'; font-size: 0.85rem;">[${sesion.jornada}]</td>
-                    <td style="padding: 10px; color: #fff;">${sesion.moderador || 'N/D'}</td>
-                    <td style="text-align: center; padding: 10px; color: var(--gray); font-size: 0.85rem;">${fechaFormateada}</td>
-                    <td style="text-align: center; padding: 10px;">
-                        <button onclick="eliminarEntrenamientoSesion('${sesion.id}', '${sesion.titulo.replace(/'/g, "\\'")}')" style="background: #ff3333; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
-                            <i class="fa-solid fa-trash"></i> Eliminar
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-    } catch (err) {
-        console.error("Error:", err);
-    }
-}
-
-async function eliminarEntrenamientoSesion(idSesion, tituloSesion) {
-    if (!confirm(`⚠️ ¿Estás seguro de eliminar el entrenamiento "${tituloSesion}"?`)) return;
-
-    try {
-        if (!supabaseClient) return;
-        await supabaseClient.from('salas_resultados').delete().eq('sesion_id', idSesion);
-        await supabaseClient.from('top_killers').delete().eq('sesion_id', idSesion);
-        await supabaseClient.from('entrenamientos_sesiones').delete().eq('id', idSesion);
-
-        alert("¡Entrenamiento eliminado correctamente!");
-        cargarListaEntrenamientosParaBorrar();
-    } catch (err) {
-        console.error("Error:", err);
-    }
-}
+// ==========================================
+// REGISTRO INDIVIDUAL, MASIVO Y EDICIÓN VIP (SIN TAG)
+// ==========================================
 
 async function registrarNuevoEquipoVip() {
     const nombreInput = document.getElementById('inputNombreVip');
-    const tagInput = document.getElementById('inputTagVip');
-
+    const logoInput = document.getElementById('inputLogoVip');
     const nombre = nombreInput ? nombreInput.value.trim() : "";
-    const tag = tagInput ? tagInput.value.trim().toUpperCase() : "";
 
-    if (!nombre || !tag) {
-        alert("Por favor, completa el nombre y el tag del equipo VIP.");
+    if (!nombre) {
+        alert("Por favor, ingresa el nombre del equipo.");
         return;
     }
 
     if (!supabaseClient) return;
 
     try {
-        const { error } = await supabaseClient
+        const { data: insertedData, error: insertError } = await supabaseClient
             .from('equipos_registrados')
-            .insert([{ nombre, tag }]);
+            .insert([{ nombre }])
+            .select()
+            .single();
 
-        if (error) throw error;
+        if (insertError) throw insertError;
+        let equipoId = insertedData.id;
+
+        if (logoInput && logoInput.files.length > 0) {
+            let file = logoInput.files[0];
+            let fileName = `logo_${equipoId}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9_.-]/g, '_')}`;
+
+            const { error: storageError } = await supabaseClient.storage
+                .from('logos_equipos')
+                .upload(fileName, file);
+
+            if (!storageError) {
+                const { data: publicUrlData } = supabaseClient.storage
+                    .from('logos_equipos')
+                    .getPublicUrl(fileName);
+
+                await supabaseClient
+                    .from('equipos_registrados')
+                    .update({ logo_url: publicUrlData.publicUrl })
+                    .eq('id', equipoId);
+            }
+        }
 
         alert("¡Equipo VIP registrado con éxito!");
         if (nombreInput) nombreInput.value = "";
-        if (tagInput) tagInput.value = "";
+        if (logoInput) logoInput.value = "";
         cargarListaEquiposVipAdmin();
     } catch (err) {
         console.error("Error al registrar equipo VIP:", err);
@@ -697,31 +655,88 @@ async function registrarNuevoEquipoVip() {
     }
 }
 
+async function registrarEquiposMasivos() {
+    const textarea = document.getElementById('inputListaMasivaVip');
+    if (!textarea || !textarea.value.trim()) {
+        alert("Por favor, ingresa una lista de equipos en el cuadro de texto.");
+        return;
+    }
+
+    let lineas = textarea.value.split('\n');
+    let nuevosEquipos = [];
+
+    lineas.forEach(linea => {
+        let nombre = linea.trim();
+        if (nombre) {
+            // Generamos un tag automático de respaldo para evitar el error de Supabase
+            let tagGenerado = nombre.replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase() || "VIP";
+            
+            nuevosEquipos.push({ 
+                nombre: nombre, 
+                tag: tagGenerado // Envía un tag automático por compatibilidad con la BD
+            });
+        }
+    });
+
+    if (nuevosEquipos.length === 0) {
+        alert("No se encontraron nombres válidos.");
+        return;
+    }
+
+    if (!supabaseClient) return;
+
+    try {
+        const { error } = await supabaseClient.from('equipos_registrados').insert(nuevosEquipos);
+        if (error) {
+            console.error("Error en Supabase:", error);
+            alert("Error al registrar: " + error.message);
+            return;
+        }
+
+        alert(`¡Se registraron ${nuevosEquipos.length} equipos masivamente con éxito!`);
+        textarea.value = '';
+        cargarListaEquiposVipAdmin();
+    } catch (err) {
+        console.error("Error crítico:", err);
+        alert("Ocurrió un error inesperado al procesar la lista.");
+    }
+}
+
 async function cargarListaEquiposVipAdmin() {
     const tbody = document.getElementById('tablaListaVipAdmin');
     if (!tbody || !supabaseClient) return;
 
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--primary); padding: 20px;">Cargando equipos VIP...</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--primary); padding: 20px;">Cargando equipos VIP...</td></tr>`;
 
     try {
         const { data, error } = await supabaseClient.from('equipos_registrados').select('*').order('nombre', { ascending: true });
         if (error) throw error;
 
         if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--gray); padding: 20px;">No hay equipos VIP registrados.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--gray); padding: 20px;">No hay equipos VIP registrados.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = '';
         data.forEach(eq => {
+            let logoHtml = eq.logo_url 
+                ? `<img src="${eq.logo_url}" style="width: 32px; height: 32px; object-fit: contain; border-radius: 4px; background: #000;">` 
+                : `<span style="color: var(--gray); font-size: 0.75rem;">Sin logo</span>`;
+
             tbody.innerHTML += `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <td style="padding: 10px; color: var(--gray);">#${eq.id}</td>
+                    <td style="text-align: center; padding: 10px;">${logoHtml}</td>
                     <td style="padding: 10px; font-weight: bold; color: #fff;">${eq.nombre}</td>
-                    <td style="text-align: center; padding: 10px; color: var(--primary); font-family: 'Orbitron'; font-weight: bold;">[${eq.tag}]</td>
-                    <td style="text-align: center; padding: 10px;">
-                        <button onclick="eliminarEquipoVip('${eq.id}', '${eq.nombre.replace(/'/g, "\\'")}')" style="background: #ff3333; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
-                            <i class="fa-solid fa-trash"></i> Eliminar
+                    <td style="text-align: center; padding: 10px; display: flex; gap: 8px; justify-content: center;">
+                        <button onclick="editarEquipoVipPrompt('${eq.id}', '${eq.nombre.replace(/'/g, "\\'")}')" style="background: var(--primary); color: #000; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;" title="Editar Nombre">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <label style="background: #00ffcc; color: #000; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;" title="Subir / Cambiar Logo">
+                            <i class="fa-solid fa-image"></i>
+                            <input type="file" id="fileLogo_${eq.id}" accept="image/*" style="display: none;" onchange="subirLogoEquipoVip('${eq.id}')">
+                        </label>
+                        <button onclick="eliminarEquipoVip('${eq.id}', '${eq.nombre.replace(/'/g, "\\'")}')" style="background: #ff3333; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;" title="Eliminar">
+                            <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
                 </tr>
@@ -729,7 +744,63 @@ async function cargarListaEquiposVipAdmin() {
         });
     } catch (err) {
         console.error("Error cargando tabla VIP:", err);
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ff5555; padding: 20px;">Error al cargar datos.</td></tr>`;
+    }
+}
+
+async function editarEquipoVipPrompt(idEquipo, nombreActual) {
+    let nuevoNombre = prompt("Modificar nombre del equipo:", nombreActual);
+    if (nuevoNombre === null) return;
+    nuevoNombre = nuevoNombre.trim();
+    if (!nuevoNombre) {
+        alert("El nombre no puede estar vacío.");
+        return;
+    }
+
+    try {
+        const { error } = await supabaseClient
+            .from('equipos_registrados')
+            .update({ nombre: nuevoNombre })
+            .eq('id', idEquipo);
+
+        if (error) throw error;
+        alert("¡Equipo actualizado correctamente!");
+        cargarListaEquiposVipAdmin();
+    } catch (err) {
+        console.error("Error al actualizar equipo:", err);
+        alert("No se pudo actualizar el equipo.");
+    }
+}
+
+async function subirLogoEquipoVip(idEquipo) {
+    const fileInput = document.getElementById(`fileLogo_${idEquipo}`);
+    if (!fileInput || fileInput.files.length === 0) return;
+
+    let file = fileInput.files[0];
+    let fileName = `logo_${idEquipo}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9_.-]/g, '_')}`;
+
+    try {
+        const { error: storageError } = await supabaseClient.storage
+            .from('logos_equipos')
+            .upload(fileName, file);
+
+        if (storageError) throw storageError;
+
+        const { data: publicUrlData } = supabaseClient.storage
+            .from('logos_equipos')
+            .getPublicUrl(fileName);
+
+        const { error: dbError } = await supabaseClient
+            .from('equipos_registrados')
+            .update({ logo_url: publicUrlData.publicUrl })
+            .eq('id', idEquipo);
+
+        if (dbError) throw dbError;
+
+        alert("¡Logo actualizado con éxito!");
+        cargarListaEquiposVipAdmin();
+    } catch (err) {
+        console.error("Error subiendo el logo:", err);
+        alert("Hubo un error al subir el logo.");
     }
 }
 
@@ -745,7 +816,6 @@ async function eliminarEquipoVip(idEquipo, nombreEquipo) {
         cargarListaEquiposVipAdmin();
     } catch (err) {
         console.error("Error eliminando equipo VIP:", err);
-        alert("Error al intentar eliminar el equipo.");
     }
 }
 
@@ -754,7 +824,6 @@ async function generarVistaPreviaMetricas() {
     const contenedorCopiable = document.getElementById('contenedorTextoMetricasCopiable');
     
     if (!contenedorPreview) return;
-
     contenedorPreview.innerHTML = `<div style="color: var(--primary); text-align: center; padding: 40px; font-family: 'Orbitron';">Analizando base de datos y calculando métricas globales...</div>`;
     if (contenedorCopiable) contenedorCopiable.style.display = 'none';
 
@@ -779,16 +848,8 @@ async function generarVistaPreviaMetricas() {
                 let nombreKey = eq.toUpperCase();
                 
                 if (!equiposMap[nombreKey]) {
-                    equiposMap[nombreKey] = { 
-                        nombre: eq, 
-                        totalPts: 0, 
-                        rankPts: 0, 
-                        kills: 0, 
-                        booyahs: 0, 
-                        sesionesSet: new Set() 
-                    };
+                    equiposMap[nombreKey] = { nombre: eq, totalPts: 0, rankPts: 0, kills: 0, booyahs: 0, sesionesSet: new Set() };
                 }
-                
                 equiposMap[nombreKey].totalPts += Number(s.total_score || 0);
                 equiposMap[nombreKey].rankPts += Number(s.rank_score || 0);
                 equiposMap[nombreKey].kills += Number(s.kill_score || 0);
@@ -796,10 +857,7 @@ async function generarVistaPreviaMetricas() {
                 if (s.es_booyah === true || s.rank === 1 || Number(s.rank) === 1) {
                     equiposMap[nombreKey].booyahs += 1;
                 }
-                
-                if (s.sesion_id) {
-                    equiposMap[nombreKey].sesionesSet.add(s.sesion_id);
-                }
+                if (s.sesion_id) equiposMap[nombreKey].sesionesSet.add(s.sesion_id);
             });
         }
 
@@ -812,7 +870,6 @@ async function generarVistaPreviaMetricas() {
                 if (!jugadoresMap[jugKey]) {
                     jugadoresMap[jugKey] = { nombre: jug, kills: 0, equipo: eqJugador };
                 }
-                
                 let kCount = Number(k.kills || 0);
                 jugadoresMap[jugKey].kills += kCount;
                 totalKillsGen += kCount;
@@ -835,8 +892,6 @@ async function generarVistaPreviaMetricas() {
         let fechaActual = new Date();
         let fechaFormateada = fechaActual.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric' });
         let horaCOL = fechaActual.toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit', hour12: true });
-        let horaMX = fechaActual.toLocaleTimeString('es-MX', { timeZone: 'America/Mexico_City', hour: '2-digit', minute: '2-digit', hour12: true });
-        let horaARG = fechaActual.toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: true });
 
         let top3Texto = top5Eq.slice(0, 3).map((eq, i) => `${i === 0 ? '🏆 1º' : (i === 1 ? '🥈 2º' : '🥉 3º')} ${eq.nombre} - ${eq.totalPts} PTS`).join('\n');
         let mvp = top5Jug.length > 0 ? top5Jug[0] : null;
@@ -844,7 +899,7 @@ async function generarVistaPreviaMetricas() {
 
         let textoCopiableFinal = `🐺 ENTRENOS PUMAS GG
 📅 Fecha: ${fechaFormateada}
-⏰ Hora: ${horaCOL} COL / ${horaMX} MX / ${horaARG} ARG
+⏰ Hora: ${horaCOL} COL
 🌐 Región: EEUU
 
 🏆 TOP 3 EQUIPOS:
@@ -856,7 +911,7 @@ ${mvpTexto}`;
         if (textareaCopiable) textareaCopiable.value = textoCopiableFinal;
         if (contenedorCopiable) contenedorCopiable.style.display = 'block';
 
-        let fU = (typeof fondoPersonalizadoBase64 !== 'undefined' && fondoPersonalizadoBase64) ? fondoPersonalizadoBase64 : "imagenes/FONDOS.png";
+        let fU = fondoPersonalizadoBase64 || "imagenes/FONDOS.png";
         let fV = `background-image: url('${fU}'); background-size: cover; background-position: center;`;
 
         let html = `
@@ -958,9 +1013,7 @@ ${mvpTexto}`;
                 </div>
             </div>
         `;
-
         contenedorPreview.innerHTML = html;
-
     } catch (err) {
         console.error("Error al generar las métricas globales:", err);
     }
