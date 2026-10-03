@@ -258,3 +258,244 @@ async function _cTP() {
 }
 
 window.addEventListener('DOMContentLoaded', () => _cTP());
+
+// Variable global para guardar la respuesta correcta del Captcha
+let respuestaCaptchaCorrecta = 0;
+
+// Función para generar la suma aleatoria
+function generarCaptcha() {
+    const num1 = Math.floor(Math.random() * 10) + 1; // Número del 1 al 10
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    respuestaCaptchaCorrecta = num1 + num2;
+    
+    const textoCaptcha = document.getElementById('textoCaptcha');
+    if(textoCaptcha) {
+        textoCaptcha.innerText = `${num1} + ${num2} =`;
+    }
+}
+
+// Generar el primer captcha cuando cargue la página
+window.addEventListener('DOMContentLoaded', () => {
+    _cTP(); // Tu función existente
+    generarCaptcha();
+});
+
+// Función para manejar el sorteo
+async function registrarSorteo(e) {
+    e.preventDefault();
+
+    // 1. Validar la trampa Honeypot (si tiene texto, es un bot)
+    const trampa = document.getElementById('sorteoTrampaBot').value;
+    if (trampa !== "") {
+        console.warn("Bot detectado y bloqueado.");
+        return; // Detiene la ejecución sin avisarle al bot
+    }
+
+    // 2. Validar el Captcha Matemático
+    const respuestaUsuario = parseInt(document.getElementById('sorteoCaptcha').value);
+    if (respuestaUsuario !== respuestaCaptchaCorrecta) {
+        alert("❌ Verificación anti-bot incorrecta. Intenta de nuevo.");
+        document.getElementById('sorteoCaptcha').value = ""; // Limpiar el campo
+        generarCaptcha(); // Generar uno nuevo
+        return;
+    }
+
+    // Obtener los valores del formulario
+    const equipo = document.getElementById('sorteoEquipo').value.trim();
+    const representante = document.getElementById('sorteoRepresentante').value.trim();
+    const igEquipo = document.getElementById('sorteoIg').value.trim();
+    const codigoPais = document.getElementById('sorteoCodigoPais').value;
+    const contacto = document.getElementById('sorteoContacto').value.trim();
+
+    if (!equipo || !representante || !igEquipo || !contacto) {
+        alert("❌ Todos los campos son obligatorios.");
+        return;
+    }
+
+    const numeroCompleto = `${codigoPais} ${contacto}`;
+    const boton = document.getElementById('btnSorteo');
+
+    boton.innerText = "REGISTRANDO...";
+    boton.disabled = true;
+
+    const codigoAleatorio = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const codigoSerial = `PUMAS-${codigoAleatorio}`;
+
+    const supabaseClientSorteo = supabase.createClient(
+        "https://bqemjroiegybdzksddkn.supabase.co", 
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo"
+    );
+
+    try {
+        const { data, error } = await supabaseClientSorteo
+            .from('sorteo_equipos')
+            .insert([
+                { 
+                    nombre_equipo: equipo, 
+                    nombre_representante: representante, 
+                    ig_equipo: igEquipo,
+                    numero_contacto: numeroCompleto, 
+                    codigo_serial: codigoSerial 
+                }
+            ]);
+
+        if (error) {
+            if (error.code === '23505') {
+                alert("❌ Este equipo ya se encuentra registrado en el sorteo. Solo se permite una entrada por equipo.");
+            } else {
+                alert("❌ Hubo un error al registrar: " + error.message);
+            }
+            boton.innerText = "REGISTRAR EQUIPO Y GENERAR TICKET";
+            boton.disabled = false;
+            generarCaptcha(); // Refrescar captcha en caso de error
+            return;
+        }
+
+        document.getElementById('formSorteo').style.display = 'none';
+        document.getElementById('resultadoSorteo').style.display = 'block';
+        document.getElementById('codigoLoteria').innerText = codigoSerial;
+
+    } catch (err) {
+        console.error(err);
+        alert("Ocurrió un error inesperado al conectar con el servidor.");
+        boton.innerText = "REGISTRAR EQUIPO Y GENERAR TICKET";
+        boton.disabled = false;
+        generarCaptcha(); // Refrescar captcha
+    }
+}
+// Validar si el sorteo sigue abierto
+async function verificarEstadoSorteo() {
+    const btnSorteo = document.getElementById('btnSorteo');
+    if (!btnSorteo) return; // Si no estamos en la página del sorteo, ignorar
+
+    const supabaseClientSorteo = supabase.createClient(
+        "https://bqemjroiegybdzksddkn.supabase.co", 
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo"
+    );
+
+    try {
+        const { data, error } = await supabaseClientSorteo.from('sorteo_config').select('fecha_limite').eq('id', 1).single();
+        
+        if (data && data.fecha_limite) {
+            const fechaLimite = new Date(data.fecha_limite);
+            const ahora = new Date();
+            
+            // Si la fecha actual superó la fecha límite
+            if (ahora > fechaLimite) {
+                // Cambiar el botón
+                btnSorteo.innerText = "⛔ INSCRIPCIONES CERRADAS";
+                btnSorteo.disabled = true;
+                btnSorteo.style.background = "#333";
+                btnSorteo.style.color = "#888";
+                btnSorteo.style.boxShadow = "none";
+                btnSorteo.style.cursor = "not-allowed";
+                
+                // Deshabilitar los inputs del formulario
+                document.getElementById('sorteoEquipo').disabled = true;
+                document.getElementById('sorteoRepresentante').disabled = true;
+                document.getElementById('sorteoIg').disabled = true;
+                document.getElementById('sorteoContacto').disabled = true;
+                document.getElementById('sorteoCodigoPais').disabled = true;
+                if(document.getElementById('sorteoCaptcha')) document.getElementById('sorteoCaptcha').disabled = true;
+            }
+        }
+    } catch (err) {
+        console.error("Error al verificar estado del sorteo:", err);
+    }
+}
+
+// Asegurar que se verifique el estado al cargar la página
+window.addEventListener('DOMContentLoaded', () => {
+    // Si tienes otras funciones de inicialización aquí, mantenlas
+    if (typeof generarCaptcha === 'function') generarCaptcha();
+    verificarEstadoSorteo();
+});
+
+// Variable global para el reloj
+let intervaloCountdown;
+
+// Validar si el sorteo sigue abierto y mostrar cuenta regresiva
+async function verificarEstadoSorteo() {
+    const btnSorteo = document.getElementById('btnSorteo');
+    const contenedorCuenta = document.getElementById('contenedorCuentaRegresiva');
+    if (!btnSorteo) return;
+
+    const supabaseClientSorteo = supabase.createClient(
+        "https://bqemjroiegybdzksddkn.supabase.co", 
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo"
+    );
+
+    try {
+        const { data, error } = await supabaseClientSorteo.from('sorteo_config').select('fecha_limite').eq('id', 1).single();
+        
+        if (data && data.fecha_limite) {
+            const fechaLimite = new Date(data.fecha_limite).getTime();
+            
+            // Mostrar el reloj porque sí hay una fecha configurada
+            if (contenedorCuenta) contenedorCuenta.style.display = 'block';
+
+            // Función que se ejecuta cada segundo
+            const actualizarReloj = () => {
+                const ahora = new Date().getTime();
+                const distancia = fechaLimite - ahora;
+
+                // Referencias a los números del HTML
+                const uiDias = document.getElementById('cdDias');
+                const uiHoras = document.getElementById('cdHoras');
+                const uiMin = document.getElementById('cdMin');
+                const uiSeg = document.getElementById('cdSeg');
+
+                // Si el tiempo ya se acabó
+                if (distancia <= 0) {
+                    clearInterval(intervaloCountdown);
+                    
+                    if (uiDias) {
+                        uiDias.innerText = "00";
+                        uiHoras.innerText = "00";
+                        uiMin.innerText = "00";
+                        uiSeg.innerText = "00";
+                    }
+
+                    // Bloquear botón y diseño
+                    btnSorteo.innerText = "⛔ INSCRIPCIONES CERRADAS";
+                    btnSorteo.disabled = true;
+                    btnSorteo.style.background = "#333";
+                    btnSorteo.style.color = "#888";
+                    btnSorteo.style.boxShadow = "none";
+                    btnSorteo.style.cursor = "not-allowed";
+                    
+                    // Bloquear inputs
+                    const inputs = ['sorteoEquipo', 'sorteoRepresentante', 'sorteoIg', 'sorteoContacto', 'sorteoCodigoPais', 'sorteoCaptcha'];
+                    inputs.forEach(id => {
+                        const el = document.getElementById(id);
+                        if(el) el.disabled = true;
+                    });
+                } else {
+                    // Matemáticas para calcular el tiempo
+                    const dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
+                    const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutos = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
+                    const segundos = Math.floor((distancia % (1000 * 60)) / 1000);
+
+                    // Imprimir con un 0 a la izquierda si es menor a 10
+                    if (uiDias) {
+                        uiDias.innerText = dias < 10 ? "0" + dias : dias;
+                        uiHoras.innerText = horas < 10 ? "0" + horas : horas;
+                        uiMin.innerText = minutos < 10 ? "0" + minutos : minutos;
+                        uiSeg.innerText = segundos < 10 ? "0" + segundos : segundos;
+                    }
+                }
+            };
+
+            // Ejecutar enseguida para no ver "00" durante el primer segundo
+            actualizarReloj();
+            intervaloCountdown = setInterval(actualizarReloj, 1000);
+            
+        } else {
+            // Si en la base de datos se quitó la fecha límite, ocultar el reloj
+            if (contenedorCuenta) contenedorCuenta.style.display = 'none';
+        }
+    } catch (err) {
+        console.error("Error al verificar estado del sorteo:", err);
+    }
+}

@@ -35,7 +35,6 @@
             <li><a href="#patrocinadores" onclick="closeMenu()">Patrocinadores</a></li>
             <li><a href="#entrenamientos" onclick="closeMenu()">Comunidad</a></li>
             <li><a href="#resultados" onclick="closeMenu()">Herramienta FF</a></li>
-            <li><a href="login.html" class="btn-access" style="padding: 8px 18px; font-size: 0.9rem;"><i class="fa-solid fa-user-lock"></i> Iniciar Sesión</a></li>
         </ul>
     </nav>
 </header>
@@ -73,7 +72,111 @@
         }
         setInterval(changeSlide, 5000);
     </script>
+<!-- SECCIÓN DE SORTEO -->
+    <section id="sorteo" class="tool-section">
+        <h2 class="section-title">Sorteo Pumas Gaming</h2>
+        <div class="tool-container" style="max-width: 600px; margin: 0 auto;">
+            <p class="tool-desc">
+                Regístrate para participar en nuestro sorteo. <strong>Solo se permite un registro por equipo y todos los datos son obligatorios.</strong>
+            </p>
 
+            <!-- CONTENEDOR DE LA CUENTA REGRESIVA -->
+            <div id="contenedorCuentaRegresiva" style="display: none; text-align: center; margin-bottom: 30px; background: rgba(220,204,156,0.05); padding: 15px; border-radius: 8px; border: 1px dashed rgba(220, 204, 156, 0.3);">
+                <p style="color: var(--primary); font-family: 'Orbitron'; margin-bottom: 15px; font-weight: bold; font-size: 1.1rem;"><i class="fa-solid fa-hourglass-half"></i> CIERRE DE INSCRIPCIONES EN:</p>
+                
+                <div style="display: flex; justify-content: center; gap: 10px; font-family: 'Orbitron'; font-size: 1.8rem; color: var(--light);">
+                    <div style="background: #121317; padding: 10px; border-radius: 8px; border: 1px solid var(--primary); min-width: 75px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                        <span id="cdDias">00</span><div style="font-size: 0.7rem; color: var(--gray); margin-top: 5px;">DÍAS</div>
+                    </div>
+                    <div style="background: #121317; padding: 10px; border-radius: 8px; border: 1px solid var(--primary); min-width: 75px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                        <span id="cdHoras">00</span><div style="font-size: 0.7rem; color: var(--gray); margin-top: 5px;">HRS</div>
+                    </div>
+                    <div style="background: #121317; padding: 10px; border-radius: 8px; border: 1px solid var(--primary); min-width: 75px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                        <span id="cdMin">00</span><div style="font-size: 0.7rem; color: var(--gray); margin-top: 5px;">MIN</div>
+                    </div>
+                    <div style="background: #121317; padding: 10px; border-radius: 8px; border: 1px solid var(--primary); min-width: 75px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                        <span id="cdSeg">00</span><div style="font-size: 0.7rem; color: var(--gray); margin-top: 5px;">SEG</div>
+                    </div>
+                </div>
+            </div>
+
+            <form id="formSorteo" onsubmit="registrarSorteo(event)">
+                <!-- Aquí continúa el resto de tu formulario (inputs, país, captcha, etc...) -->
+
+            <form id="formSorteo" onsubmit="registrarSorteo(event)">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>NOMBRE DEL EQUIPO *</label>
+                    <input type="text" id="sorteoEquipo" required placeholder="Ej: Pumas Elite">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>NOMBRE DEL REPRESENTANTE *</label>
+                    <input type="text" id="sorteoRepresentante" required placeholder="Ej: Juan Pérez">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label>INSTAGRAM DEL EQUIPO *</label>
+                    <input type="text" id="sorteoIg" required placeholder="Ej: @pumas.gaming.oficial">
+                </div>
+<div class="form-group" style="margin-bottom: 20px;">
+    <label>NÚMERO DE CONTACTO *</label>
+    <div style="display: flex; gap: 10px;">
+        <!-- Selector de Países de Latinoamérica -->
+        <select id="sorteoCodigoPais" required style="width: 35%; max-width: 140px; padding: 12px; background: #0a0a0c; border: 1px solid rgba(220, 204, 156, 0.25); color: var(--light); border-radius: 6px; font-family: 'Rajdhani', sans-serif;">
+            <option value="+54">🇦🇷 +54 (AR)</option>
+            <option value="+591">🇧🇴 +591 (BO)</option>
+            <option value="+55">🇧🇷 +55 (BR)</option>
+            <option value="+56">🇨🇱 +56 (CL)</option>
+            <option value="+57" selected>🇨🇴 +57 (CO)</option>
+            <option value="+506">🇨🇷 +506 (CR)</option>
+            <option value="+53">🇨🇺 +53 (CU)</option>
+            <option value="+593">🇪🇨 +593 (EC)</option>
+            <option value="+503">🇸🇻 +503 (SV)</option>
+            <option value="+502">🇬🇹 +502 (GT)</option>
+            <option value="+504">🇭🇳 +504 (HN)</option>
+            <option value="+52">🇲🇽 +52 (MX)</option>
+            <option value="+505">🇳🇮 +505 (NI)</option>
+            <option value="+507">🇵🇦 +507 (PA)</option>
+            <option value="+595">🇵🇾 +595 (PY)</option>
+            <option value="+51">🇵🇪 +51 (PE)</option>
+            <option value="+1">🇵🇷 +1 (PR / DO / US)</option>
+            <option value="+598">🇺🇾 +598 (UY)</option>
+            <option value="+58">🇻🇪 +58 (VE)</option>
+        </select>
+        
+        <!-- Input de Número -->
+        <input type="tel" id="sorteoContacto" required placeholder="Ej: 300 000 0000" style="flex: 1;">
+    </div>
+</div>
+<!-- 1. HONEYPOT (Trampa invisible para bots) -->
+                <div style="display: none; position: absolute; left: -9999px;">
+                    <label>Si eres humano, deja este campo en blanco</label>
+                    <input type="text" id="sorteoTrampaBot" name="trampa" tabindex="-1" autocomplete="off">
+                </div>
+
+                <!-- 2. CAPTCHA MATEMÁTICO -->
+                <div class="form-group" style="margin-bottom: 25px; background: rgba(220,204,156,0.05); padding: 15px; border-radius: 6px; border: 1px dashed rgba(220, 204, 156, 0.3);">
+                    <label>VERIFICACIÓN ANTI-BOT *</label>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <span id="textoCaptcha" style="font-family: 'Orbitron'; font-size: 1.3rem; color: var(--primary); white-space: nowrap; font-weight: bold;">? + ? =</span>
+                        <input type="number" id="sorteoCaptcha" required placeholder="Respuesta" style="flex: 1; text-align: center; font-size: 1.2rem;">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-generar" id="btnSorteo">
+                    REGISTRAR EQUIPO Y GENERAR TICKET
+                </button>
+            </form>
+
+            <!-- Contenedor que muestra el ticket tras el registro exitoso -->
+            <div id="resultadoSorteo" style="display: none; margin-top: 20px; padding: 25px; background: rgba(220,204,156,0.1); border: 1px solid var(--primary); border-radius: 8px; text-align: center;">
+                <h3 style="color: var(--primary); font-family: 'Orbitron'; margin-bottom: 10px;">¡Registro Exitoso!</h3>
+                <p style="margin-bottom: 15px; color: var(--light);">Tu código único de lotería es:</p>
+                <div id="codigoLoteria" style="font-size: 2.2rem; font-family: 'Orbitron'; font-weight: bold; letter-spacing: 4px; color: var(--dark); background: var(--primary); padding: 10px 20px; border-radius: 6px; display: inline-block;">
+                    <!-- El código se inserta aquí -->
+                </div>
+                <p style="margin-top: 15px; font-size: 0.85rem; color: var(--gray);">Guarda este código, será indispensable para reclamar tu premio.</p>
+            </div>
+        </div>
+    </section>
     <section id="jersey">
         <h2 class="section-title">Jerseys Oficiales 2026</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; width: 100%;">
