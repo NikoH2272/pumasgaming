@@ -28,50 +28,15 @@
 
     <nav class="main-nav" id="mainNav">
         <ul>
-            <li><a href="#ff-usa-video" onclick="closeMenu()">FF USA Pro</a></li>
             <li><a href="entrenamientos/" onclick="closeMenu()">Entrenamientos</a></li>
             <li><a href="#jersey" onclick="closeMenu()">Jerseys</a></li>
-            <li><a href="#roster" onclick="closeMenu()">Roster & Liga</a></li>
-            <li><a href="#patrocinadores" onclick="closeMenu()">Patrocinadores</a></li>
             <li><a href="#entrenamientos" onclick="closeMenu()">Comunidad</a></li>
             <li><a href="#resultados" onclick="closeMenu()">Herramienta FF</a></li>
         </ul>
     </nav>
 </header>
 
-    <section class="hero-slider" style="position: relative; width: 100%; height: calc(100vh - 76px); min-height: 500px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center; background: #141414;">
-        
-        <div class="slide active" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; background-image: linear-gradient(rgba(20,20,20,0.7), rgba(20,20,20,0.85)), url('imagenes/banner1.png'); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 1; transition: opacity 1s ease-in-out;">
-            <h1 style="font-size: 3rem; font-family: 'Orbitron'; color: var(--light); margin-bottom: 20px; text-shadow: 0 0 20px rgba(220,204,156,0.5);">El Dominio de <span style="color: var(--primary);">Pumas Gaming</span></h1>
-            <p style="font-size: 1.15rem; color: var(--gray); max-width: 700px; margin-bottom: 30px;">Portal oficial de alto rendimiento competitivo. Gestión de torneos con precisión profesional.</p>
-            <a href="#resultados" class="btn-access"><i class="fa-solid fa-lock-open"></i> Acceso a Herramientas</a>
-        </div>
 
-        <div class="slide" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; background-image: linear-gradient(rgba(20,20,20,0.7), rgba(20,20,20,0.85)), url('imagenes/banner2.png'); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 1s ease-in-out;">
-            <h1 style="font-size: 3rem; font-family: 'Orbitron'; color: var(--light); margin-bottom: 20px; text-shadow: 0 0 20px rgba(149,149,149,0.5);">División Profesional <span style="color: var(--secondary);">Free Fire USA</span></h1>
-            <p style="font-size: 1.15rem; color: var(--gray); max-width: 700px; margin-bottom: 30px;">Estrategia, rotaciones impecables y mentalidad ganadora en cada mapa.</p>
-            <a href="#ff-usa-video" class="btn-access"><i class="fa-solid fa-video"></i> Ver División Pro</a>
-        </div>
-
-        <div class="slide" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; background-image: linear-gradient(rgba(20,20,20,0.7), rgba(20,20,20,0.85)), url('imagenes/banner3.png'); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 1s ease-in-out;">
-            <h1 style="font-size: 3rem; font-family: 'Orbitron'; color: var(--light); margin-bottom: 20px; text-shadow: 0 0 20px rgba(220,204,156,0.5);">Roster & <span style="color: var(--accent-yellow);">Staff Oficial</span></h1>
-            <p style="font-size: 1.15rem; color: var(--gray); max-width: 700px; margin-bottom: 30px;">Conoce a los jugadores, coach y analistas que defienden nuestros colores.</p>
-            <a href="#roster" class="btn-access"><i class="fa-solid fa-users"></i> Ver Roster</a>
-        </div>
-
-    </section>
-
-    <script>
-        let currentSlide = 0;
-        const slides = document.querySelectorAll('.hero-slider .slide');
-        function changeSlide() {
-            if(slides.length === 0) return;
-            slides[currentSlide].style.opacity = '0';
-            currentSlide = (currentSlide + 1) % slides.length;
-            slides[currentSlide].style.opacity = '1';
-        }
-        setInterval(changeSlide, 5000);
-    </script>
 <!-- SECCIÓN DE SORTEO 
     <section id="sorteo" class="tool-section">
         <h2 class="section-title">Sorteo Pumas Gaming</h2>

@@ -1039,3 +1039,201 @@ function copiarTextoMetricas() {
         alert("¡Texto copiado al portapapeles con éxito!");
     });
 }
+// ==========================================
+// PROGRAMAR ENTRENAMIENTOS (CUPOS Y STAFF)
+// ==========================================
+async function guardarProgramacion() {
+    if (!supabaseClient) return;
+
+    let titulo = document.getElementById('progTitulo').value.trim();
+    let fecha = document.getElementById('progFecha').value;
+    let staff = document.getElementById('progStaff').value;
+    let cupos = document.getElementById('progTotalEquipos').value;
+    let link = document.getElementById('progLink').value.trim();
+    let equiposStaffTexto = document.getElementById('progStaffEquipos').value.trim();
+
+    if (!titulo || !fecha || !link) {
+        alert("Por favor, completa el título, la fecha y el link del grupo.");
+        return;
+    }
+
+    try {
+        // 1. Crear el entrenamiento en la base de datos
+        const { data: entData, error: entError } = await supabaseClient
+            .from('entrenamientos_programados')
+            .insert([{ 
+                titulo: titulo, 
+                fecha: new Date(fecha).toISOString(), 
+                hay_staff: staff, 
+                cupos_totales: parseInt(cupos), 
+                link_grupo: link 
+            }])
+            .select()
+            .single();
+
+        if (entError) throw entError;
+        
+        // 2. Si se requiere staff, registrar esos equipos inmediatamente para restar cupos
+        if (staff === 'SI' && equiposStaffTexto) {
+            let lineas = equiposStaffTexto.split('\n');
+            let insertsStaff = [];
+            
+            lineas.forEach(linea => {
+                let nombreEq = linea.trim();
+                if (nombreEq) {
+                    insertsStaff.push({
+                        entrenamiento_id: entData.id,
+                        nombre_jugador: nombreEq,
+                        telefono: 'REGISTRO STAFF' // Marca especial para identificarlos
+                    });
+                }
+            });
+
+            if (insertsStaff.length > 0) {
+                const { error: staffError } = await supabaseClient.from('registro_cupos').insert(insertsStaff);
+                if (staffError) console.error("Error guardando equipos de staff:", staffError);
+            }
+        }
+        
+        alert("¡Entrenamiento publicado exitosamente! Ya está disponible en la página de cupos.");
+        
+        // Limpiar formulario
+        document.getElementById('progTitulo').value = '';
+        document.getElementById('progLink').value = '';
+        document.getElementById('progStaffEquipos').value = '';
+        document.getElementById('progStaff').value = 'NO';
+        document.getElementById('contenedorStaffEquipos').style.display = 'none';
+    } catch (err) {
+        console.error("Error al programar entrenamiento:", err);
+        alert("Ocurrió un error al guardar la programación.");
+    }
+}
+
+// ==========================================
+// GESTIÓN EN VIVO DE CUPOS (ADMIN)
+// ==========================================
+
+async function cargarEntrenamientosProgramadosAdmin() {
+    const contenedor = document.getElementById('listaProgramadosAdmin');
+    if (!contenedor || !supabaseClient) return;
+
+    contenedor.innerHTML = `<div style="text-align:center; color:var(--primary); padding:20px;">Consultando base de datos...</div>`;
+
+    try {
+        const { data: entrenamientos, error: errEnt } = await supabaseClient
+            .from('entrenamientos_programados')
+            .select('*')
+            .order('fecha', { ascending: false });
+
+        if (errEnt) throw errEnt;
+
+        const { data: registros, error: errReg } = await supabaseClient
+            .from('registro_cupos')
+            .select('*');
+
+        if (errReg) throw errReg;
+
+        let equiposPorEntrenamiento = {};
+        registros.forEach(reg => {
+            if (!equiposPorEntrenamiento[reg.entrenamiento_id]) {
+                equiposPorEntrenamiento[reg.entrenamiento_id] = [];
+            }
+            equiposPorEntrenamiento[reg.entrenamiento_id].push(reg);
+        });
+
+        if (!entrenamientos || entrenamientos.length === 0) {
+            contenedor.innerHTML = `<div style="text-align:center; color:var(--gray); padding:20px;">No hay entrenamientos programados en el historial.</div>`;
+            return;
+        }
+
+        contenedor.innerHTML = '';
+        entrenamientos.forEach(ent => {
+            let listaEquipos = equiposPorEntrenamiento[ent.id] || [];
+            let inscritos = listaEquipos.length;
+            let cuposRestantes = ent.cupos_totales - inscritos;
+            let fechaStr = new Date(ent.fecha).toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' });
+            
+            let badgeEstado = ent.estado === 'ABIERTO' 
+                ? `<span style="background: rgba(0, 255, 128, 0.15); color: #00ff80; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem;">ABIERTO</span>` 
+                : `<span style="background: rgba(255, 51, 51, 0.15); color: #ff5555; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem;">CERRADO</span>`;
+
+            let listaHTML = listaEquipos.map((eq, i) => `
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 4px; font-size: 0.9rem; margin-bottom: 5px; display:flex; justify-content:space-between; align-items:center;">
+                    <span><strong style="color:var(--primary); margin-right:5px;">${i+1}.</strong> ${eq.nombre_jugador}</span>
+                    <span style="color:var(--gray); font-size:0.8rem; background: #0a0b10; padding: 3px 6px; border-radius: 4px;">${eq.telefono === 'REGISTRO STAFF' ? '<i class="fa-solid fa-shield-halved" style="color:var(--primary);"></i> Staff' : eq.telefono}</span>
+                </div>
+            `).join('');
+
+            if (listaEquipos.length === 0) listaHTML = `<div style="color:var(--gray); font-size:0.9rem; padding: 10px 0;">No hay equipos inscritos aún.</div>`;
+
+            let btnCerrar = ent.estado === 'ABIERTO'
+                ? `<button onclick="cambiarEstadoInscripcion('${ent.id}', 'CERRADO')" style="background: #ff3333; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;"><i class="fa-solid fa-lock"></i> CERRAR</button>`
+                : `<button onclick="cambiarEstadoInscripcion('${ent.id}', 'ABIERTO')" style="background: #00ffcc; color: #000; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;"><i class="fa-solid fa-lock-open"></i> REABRIR</button>`;
+
+            window[`entrenamiento_${ent.id}`] = { ...ent, listaEquipos, inscritos, cuposRestantes };
+
+            contenedor.innerHTML += `
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(220, 204, 156, 0.2); border-left: 4px solid ${ent.estado === 'ABIERTO' ? 'var(--primary)' : '#ff3333'}; border-radius: 8px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <h4 style="color: #fff; font-family: 'Orbitron'; font-size: 1.2rem; margin:0 0 5px 0;">${ent.titulo} ${badgeEstado}</h4>
+                            <div style="color: var(--gray); font-size: 0.9rem;"><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${fechaStr}</div>
+                            <div style="color: var(--gray); font-size: 0.95rem; margin-top: 5px;">Equipos: <strong style="color: #DCCC9C; font-size: 1.1rem;">${inscritos} / ${ent.cupos_totales}</strong> <span style="font-size:0.8rem;">(Faltan: ${cuposRestantes})</span></div>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="copiarListaWhatsApp('${ent.id}')" style="background: #25D366; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem; box-shadow: 0 0 10px rgba(37, 211, 102, 0.2);"><i class="fa-brands fa-whatsapp"></i> GENERAR LISTA</button>
+                            ${btnCerrar}
+                        </div>
+                    </div>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                        <div style="max-height: 200px; overflow-y: auto; padding-right: 5px;">
+                            ${listaHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+    } catch (err) {
+        console.error("Error al cargar entrenamientos admin:", err);
+        contenedor.innerHTML = `<div style="text-align:center; color:#ff3333; padding:20px;">Error al cargar la información.</div>`;
+    }
+}
+
+async function cambiarEstadoInscripcion(id, nuevoEstado) {
+    let mensaje = nuevoEstado === 'CERRADO' ? "¿Estás seguro de CERRAR las inscripciones?" : "¿Deseas REABRIR las inscripciones?";
+    if (!confirm(mensaje)) return;
+    
+    try {
+        const { error } = await supabaseClient.from('entrenamientos_programados').update({ estado: nuevoEstado }).eq('id', id);
+        if (error) throw error;
+        cargarEntrenamientosProgramadosAdmin();
+    } catch(err) {
+        alert("Error al cambiar el estado.");
+    }
+}
+
+function copiarListaWhatsApp(id) {
+    let ent = window[`entrenamiento_${id}`];
+    if (!ent) return;
+
+    let fechaActual = new Date(ent.fecha);
+    let fechaFormateada = fechaActual.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric' });
+    let horaCOL = fechaActual.toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit', hour12: true });
+
+    let listaTexto = ent.listaEquipos.map((eq, i) => `${i+1}. ${eq.nombre_jugador}`).join('\n');
+    if (ent.listaEquipos.length === 0) listaTexto = "Sin inscripciones todavía.";
+
+    let texto = `🐺 *${ent.titulo.toUpperCase()}* 🐺\n` +
+                `📅 Fecha: ${fechaFormateada}\n` +
+                `⏰ Hora: ${horaCOL} COL\n\n` +
+                `📋 *EQUIPOS CONFIRMADOS (${ent.inscritos}/${ent.cupos_totales}):*\n` +
+                `${listaTexto}\n\n` +
+                `⚠️ Faltan ${ent.cuposRestantes} equipos para llenar cupos.`;
+
+    navigator.clipboard.writeText(texto).then(() => {
+        alert("¡Lista copiada al portapapeles! Ya puedes pegarla en WhatsApp.");
+    }).catch(err => {
+        alert("Error al copiar. Selecciona el texto manualmente.");
+    });
+}

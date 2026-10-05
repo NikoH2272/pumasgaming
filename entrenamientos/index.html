@@ -55,56 +55,85 @@
     </section>
 
     <!-- VISTA 1: GENERAL -->
-    <main class="dashboard-3-columns" id="vistaGeneral">
-        <div class="dashboard-col">
+    <main class="dashboard-modulos" id="vistaGeneral">
+        
+        <!-- MÓDULO 1: CALENDARIO -->
+        <div class="dashboard-col" id="modulo-calendario">
             <div class="tabla-contenedor">
                 <div class="header-card-title">
-                    <i class="fa-solid fa-clipboard-list" style="color: var(--primary);"></i>
-                    <h3>Sesiones Registradas</h3>
+                    <i class="fa-solid fa-calendar-days" style="color: var(--primary);"></i>
+                    <h3>Calendario de Sesiones</h3>
                 </div>
                 <div style="width: 100%;">
-                    <table class="tabla-estilizada">
-                        <thead>
-                            <tr>
-                                <th>FECHA</th>
-                                <th>TORNEO</th>
-                                <th style="text-align: center;">VER</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bodySesiones">
-                            <tr><td colspan="3" style="text-align:center; color: var(--gray);">Cargando sesiones...</td></tr>
-                        </tbody>
-                    </table>
+                    <div id="calendarContainer" class="calendar-container">
+                        <div class="calendar-header">
+                            <button class="btn-ver" onclick="cambiarMes(-1)" style="padding: 4px 10px;">&lt;</button>
+                            <h4 id="monthYearDisplay" style="color: var(--light); margin: 0; font-family: 'Orbitron'; font-size: 1.1rem;">Mes Año</h4>
+                            <button class="btn-ver" onclick="cambiarMes(1)" style="padding: 4px 10px;">&gt;</button>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+                        </div>
+                        <div id="calendarGrid" class="calendar-grid"></div>
+                    </div>
+
+                    <div id="daySessionsContainer" style="margin-top: 25px; display: none;">
+                        <div style="border-top: 1px solid rgba(220, 204, 156, 0.2); margin-bottom: 15px;"></div>
+                        <h4 id="selectedDayTitle" style="color: var(--primary); margin-bottom: 12px; font-family: 'Orbitron';"></h4>
+                        <table class="tabla-estilizada">
+                            <thead>
+                                <tr>
+                                    <th>TORNEO / SESIÓN</th>
+                                    <th style="text-align: center;">ACCIÓN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodySesionesDia"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="dashboard-col">
+        <!-- MÓDULO 2: TOP 50 EQUIPOS (En 2 columnas) -->
+        <div class="dashboard-col" id="modulo-equipos">
             <div class="tabla-contenedor">
                 <div class="header-card-title">
                     <i class="fa-solid fa-globe" style="color: var(--primary);"></i>
                     <h3>Top 50 Equipos Globales</h3>
                 </div>
-                <div style="width: 100%;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; width: 100%;">
                     <table class="tabla-estilizada">
                         <thead>
                             <tr>
                                 <th>#</th>
                                 <th>EQUIPO</th>
                                 <th style="text-align:center;">SESIONES</th>
-                                <th style="text-align:center;">BOOYAH 🏆</th>
-                                <th style="text-align:center;">TOTAL PTS</th>
+                                <th style="text-align:center;">BOOYAH</th>
+                                <th style="text-align:center;">PTS</th>
                             </tr>
                         </thead>
-                        <tbody id="bodyTablaGlobal">
-                            <tr><td colspan="5" style="text-align:center; color: var(--gray);">Calculando global...</td></tr>
+                        <tbody id="bodyTablaGlobal1">
+                            <tr><td colspan="5" style="text-align:center; color: var(--gray);">Calculando...</td></tr>
                         </tbody>
+                    </table>
+                    <table class="tabla-estilizada">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>EQUIPO</th>
+                                <th style="text-align:center;">SESIONES</th>
+                                <th style="text-align:center;">BOOYAH</th>
+                                <th style="text-align:center;">PTS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyTablaGlobal2"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div class="dashboard-col">
+        <!-- MÓDULO 3: TOP KILLERS -->
+        <div class="dashboard-col" id="modulo-killers">
             <div class="tabla-contenedor">
                 <div class="header-card-title">
                     <i class="fa-solid fa-skull" style="color: var(--primary);"></i>

@@ -11,6 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
+
 </head>
 <body>
 
@@ -26,8 +27,9 @@
             <li><a href="#" onclick="cambiarPestanaAdmin('registrarVip')" id="navVipReg" style="color: var(--secondary);"><i class="fa-solid fa-user-plus"></i> Registrar VIP</a></li>
             <li><a href="#" onclick="cambiarPestanaAdmin('borrarEntrenos')" id="navBorrar" style="color: var(--secondary);"><i class="fa-solid fa-trash-can"></i> Borrar</a></li>
             <li><a href="#" onclick="cambiarPestanaAdmin('metricas')" id="navMetricas" style="color: var(--secondary);"><i class="fa-solid fa-chart-pie"></i> Métricas</a></li>
-            <li><a href="index.html" style="color: #fff;" target="_blank"><i class="fa-solid fa-list"></i> Público</a></li>
+            <li><a href="index.html" style="color: #fff;" target="_blank"><i class="fa-solid fa-list"></i> Público</a></li><li><a href="#" onclick="cambiarPestanaAdmin('programar')" id="navProgramar" style="color: var(--secondary);"><i class="fa-solid fa-calendar-plus"></i> Programar Cupos</a></li>
             <li><a href="#" onclick="cerrarSesion()" style="color: #ff5555;"><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
+            
         </ul>
     </nav>
 </header>
@@ -225,6 +227,70 @@
             </div>
         </div>
     </section>
+    <!-- SECCIÓN: PROGRAMAR ENTRENAMIENTOS (CUPOS) -->
+    <section id="seccionProgramar" class="tool-section" style="padding-top: 40px; display: none;">
+        <h2 class="section-title">Programar Entrenamiento (Abrir Cupos)</h2>
+        <div class="tool-container">
+            <p class="tool-desc">Configura los detalles del próximo entrenamiento. Al publicar, aparecerá en la página de cupos para que los jugadores se inscriban.</p>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>TÍTULO DEL ENTRENAMIENTO</label>
+                    <input type="text" id="progTitulo" placeholder="Ej: Práctica Oficial Pumas - Lunes">
+                </div>
+                <div class="form-group">
+                    <label>FECHA Y HORA</label>
+                    <input type="datetime-local" id="progFecha" style="background:#0a0b10; color:#fff; border:1px solid rgba(220,204,156,0.2); padding:12px; border-radius:6px; width:100%;">
+                </div>
+            </div>
+
+<div class="form-grid" style="margin-top: 15px;">
+                <div class="form-group">
+                    <label>¿SE REQUIERE STAFF?</label>
+                    <select id="progStaff" onchange="document.getElementById('contenedorStaffEquipos').style.display = this.value === 'SI' ? 'block' : 'none';">
+                        <option value="NO">NO</option>
+                        <option value="SI">SÍ, HABRÁ CUPOS DE STAFF</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>CUPOS TOTALES DE EQUIPOS</label>
+                    <input type="number" id="progTotalEquipos" value="15" min="1" max="50" style="background:#0a0b10; color:#fff; border:1px solid rgba(220,204,156,0.2); padding:12px; border-radius:6px; width:100%;">
+                </div>
+            </div>
+
+            <!-- Contenedor oculto que aparece al elegir SÍ en Staff -->
+            <div class="form-group" id="contenedorStaffEquipos" style="display: none; margin-top: 15px;">
+                <label>EQUIPOS ASEGURADOS POR STAFF (Uno por línea)</label>
+                <textarea id="progStaffEquipos" placeholder="Pumas Squad&#10;Team Alpha" style="width: 100%; height: 100px; background: #0a0b10; border: 1px solid rgba(220,204,156,0.3); color: #fff; padding: 10px; border-radius: 6px; font-family: 'Rajdhani'; resize: none;"></textarea>
+                <div style="color: var(--primary); font-size: 0.8rem; margin-top: 5px;"><i class="fa-solid fa-circle-info"></i> Estos equipos se restarán automáticamente de los cupos y aparecerán en la lista pública.</div>
+            </div>
+                <div class="form-group">
+                    <label>CUPOS TOTALES DE EQUIPOS</label>
+                    <input type="number" id="progTotalEquipos" value="15" min="1" max="50" style="background:#0a0b10; color:#fff; border:1px solid rgba(220,204,156,0.2); padding:12px; border-radius:6px; width:100%;">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label>LINK DEL GRUPO (WHATSAPP / DISCORD)</label>
+                <input type="url" id="progLink" placeholder="https://chat.whatsapp.com/...">
+            </div>
+
+            <button onclick="guardarProgramacion()" class="btn-generar" style="margin-top: 25px;">
+                <i class="fa-solid fa-save"></i> PUBLICAR ENTRENAMIENTO
+            </button>
+        </div>
+        <!-- Contenedor para la gestión en vivo de cupos -->
+        <div class="tool-container" style="margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="color: var(--primary); font-family: 'Orbitron'; font-size: 1.2rem; margin: 0;"><i class="fa-solid fa-list-check"></i> Gestión de Cupos Activos</h3>
+                <button onclick="cargarEntrenamientosProgramadosAdmin()" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(220,204,156,0.3); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
+            </div>
+            
+            <div id="listaProgramadosAdmin" style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="text-align: center; color: var(--gray); padding: 20px;">Cargando entrenamientos programados...</div>
+            </div>
+        </div>
+    </section>
 
     <!-- SECCIÓN 5: MÉTRICAS GLOBALES (4:5) -->
     <section id="seccionMetricas" class="tool-section" style="padding-top: 40px; display: none;">
@@ -260,36 +326,41 @@
 
         </div>
     </section>
+    
 
     <footer>
         <p>&copy; 2026 PUMAS GAMING. Panel de Administración.</p>
     </footer>
 
     <script>
-        function cambiarPestanaAdmin(pestana) {
+function cambiarPestanaAdmin(pestana) {
             const secCargar = document.getElementById('seccionCargar');
             const secOficiales = document.getElementById('seccionResultadosOficiales');
             const secVipReg = document.getElementById('seccionRegistrarVip');
             const secBorrar = document.getElementById('seccionBorrarEntrenos');
             const secMetricas = document.getElementById('seccionMetricas');
+            const secProgramar = document.getElementById('seccionProgramar');
             
             const navCargar = document.getElementById('navCargar');
             const navOficiales = document.getElementById('navOficiales');
             const navVipReg = document.getElementById('navVipReg');
             const navBorrar = document.getElementById('navBorrar');
             const navMetricas = document.getElementById('navMetricas');
+            const navProgramar = document.getElementById('navProgramar');
 
             secCargar.style.display = 'none';
             secOficiales.style.display = 'none';
             secVipReg.style.display = 'none';
             secBorrar.style.display = 'none';
             secMetricas.style.display = 'none';
+            if (secProgramar) secProgramar.style.display = 'none';
             
             navCargar.style.color = 'var(--secondary)';
             navOficiales.style.color = 'var(--secondary)';
             navVipReg.style.color = 'var(--secondary)';
             navBorrar.style.color = 'var(--secondary)';
             navMetricas.style.color = 'var(--secondary)';
+            if (navProgramar) navProgramar.style.color = 'var(--secondary)';
 
             if (pestana === 'cargar') {
                 secCargar.style.display = 'block';
@@ -309,6 +380,10 @@
             } else if (pestana === 'metricas') {
                 secMetricas.style.display = 'block';
                 navMetricas.style.color = 'var(--primary)';
+            } else if (pestana === 'programar') {
+                secProgramar.style.display = 'block';
+                navProgramar.style.color = 'var(--primary)';
+                cargarEntrenamientosProgramadosAdmin(); // <-- Llama la nueva función
             }
         }
 

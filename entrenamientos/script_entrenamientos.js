@@ -1,6 +1,11 @@
 let globalEquipos = [];
 let globalTopKillers = [];
 
+// Variables globales para el calendario
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let sesionesPorFecha = {};
+
 function toggleMenu() {
     const nav = document.getElementById('mainNav');
     if (nav) nav.classList.toggle('is-active');
@@ -31,15 +36,13 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = (typeof supabase !== 'undefined' && supabase.createClient) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 async function cargarSesiones() {
-    const tbody = document.getElementById('bodySesiones');
-    if (!tbody) return;
+    const contenedor = document.getElementById('calendarContainer');
+    if (!contenedor) return;
 
     if (!supabaseClient) {
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #ff3333;">Error de conexión con Supabase.</td></tr>`;
+        document.getElementById('calendarGrid').innerHTML = `<div style="grid-column: span 7; text-align:center; color: #ff3333; padding: 20px;">Error de conexión con Supabase.</div>`;
         return;
     }
-
-    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--primary);">Cargando sesiones...</td></tr>`;
 
     try {
         const { data: sesiones, error } = await supabaseClient
@@ -50,41 +53,125 @@ async function cargarSesiones() {
         if (error) throw error;
 
         if (!sesiones || sesiones.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--gray);">Sin registros disponibles.</td></tr>`;
-            let bgGlobal = document.getElementById('bodyTablaGlobal');
-            let gridKillers = document.getElementById('gridTopKillersGlobal');
-            if (bgGlobal) bgGlobal.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--gray);">Sin datos globales.</td></tr>`;
-            if (gridKillers) gridKillers.innerHTML = `<div style="color: var(--gray); text-align:center; padding: 20px;">Sin datos globales.</div>`;
+            document.getElementById('calendarGrid').innerHTML = `<div style="grid-column: span 7; text-align:center; color: var(--gray); padding: 20px;">Sin registros disponibles.</div>`;
             return;
         }
 
         let statEntrenamientos = document.getElementById('statTotalEntrenamientos');
         if (statEntrenamientos) statEntrenamientos.textContent = sesiones.length;
 
-        tbody.innerHTML = '';
+        // Agrupar sesiones por fecha exacta
+        sesionesPorFecha = {};
         sesiones.forEach(sesion => {
-            let fechaFormateada = new Date(sesion.fecha).toLocaleDateString();
-            let folderPath = sesion.archivo_url || '';
-
-            tbody.innerHTML += `
-                <tr>
-                    <td style="color: var(--secondary);">${fechaFormateada}</td>
-                    <td style="font-weight: bold; color: var(--light);">${sesion.titulo}</td>
-                    <td style="text-align: center;">
-                        <button class="btn-ver" onclick="procesarSesionUnica('${folderPath}', '${sesion.titulo.replace(/'/g, "\\'")}', '${sesion.jornada}')">
-                            <i class="fa-solid fa-table"></i> Ver
-                        </button>
-                    </td>
-                </tr>
-            `;
+            // Extrae solo la parte de la fecha (YYYY-MM-DD)
+            let dateStr = sesion.fecha.split('T')[0]; 
+            if (!sesionesPorFecha[dateStr]) {
+                sesionesPorFecha[dateStr] = [];
+            }
+            sesionesPorFecha[dateStr].push(sesion);
         });
 
+        // Renderizar el calendario con el mes actual
+        renderCalendar(currentMonth, currentYear);
+        
+        // Calcular topkillers y equipos
         await calcularTablaGlobalAcumulada(sesiones);
 
     } catch (err) {
         console.error("Error al cargar sesiones públicas:", err);
-        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: #ff3333;">Error al cargar datos.</td></tr>`;
+        document.getElementById('calendarGrid').innerHTML = `<div style="grid-column: span 7; text-align:center; color: #ff3333; padding: 20px;">Error al cargar datos.</div>`;
     }
+}
+
+// Función para dibujar los días del calendario
+function renderCalendar(month, year) {
+    const grid = document.getElementById('calendarGrid');
+    const display = document.getElementById('monthYearDisplay');
+    if (!grid || !display) return;
+
+    grid.innerHTML = '';
+    const date = new Date(year, month, 1);
+    const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    display.textContent = `${monthNames[month]} ${year}`;
+
+    const firstDayIndex = date.getDay();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+
+    // Espacios vacíos antes del día 1
+    for (let i = 0; i < firstDayIndex; i++) {
+        grid.innerHTML += `<div class="calendar-day empty"></div>`;
+    }
+
+    // Dibujar días del mes
+    for (let day = 1; day <= lastDay; day++) {
+        let mStr = (month + 1).toString().padStart(2, '0');
+        let dStr = day.toString().padStart(2, '0');
+        let dateStr = `${year}-${mStr}-${dStr}`;
+
+        let hasSession = sesionesPorFecha[dateStr] ? true : false;
+        let classStr = "calendar-day" + (hasSession ? " has-session" : "");
+
+        grid.innerHTML += `<div class="${classStr}" onclick="seleccionarDia('${dateStr}', this)">${day}</div>`;
+    }
+
+    // Ocultar la tabla de abajo si se cambia de mes
+    document.getElementById('daySessionsContainer').style.display = 'none';
+}
+
+// Cambiar de mes mediante las flechas
+function cambiarMes(dir) {
+    currentMonth += dir;
+    if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+    } else if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+    }
+    renderCalendar(currentMonth, currentYear);
+}
+
+// Función al dar clic en un día específico
+function seleccionarDia(dateStr, el) {
+    // Quitar selección previa
+    document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected-day'));
+    
+    // Marcar selección actual
+    if (!el.classList.contains('empty')) {
+        el.classList.add('selected-day');
+    }
+
+    const container = document.getElementById('daySessionsContainer');
+    const tbody = document.getElementById('bodySesionesDia');
+    const title = document.getElementById('selectedDayTitle');
+
+    // Si el día no tiene sesiones, ocultamos la tabla de abajo
+    if (!sesionesPorFecha[dateStr]) {
+        container.style.display = 'none';
+        return;
+    }
+
+    // Mostrar tabla y llenar datos
+    container.style.display = 'block';
+    
+    // Formatear la fecha considerando la zona horaria local
+    let fechaFormat = new Date(dateStr + 'T00:00:00').toLocaleDateString();
+    title.innerHTML = `<i class="fa-solid fa-list-check"></i> Registro del ${fechaFormat}`;
+    tbody.innerHTML = '';
+
+    sesionesPorFecha[dateStr].forEach(sesion => {
+        let folderPath = sesion.archivo_url || '';
+        tbody.innerHTML += `
+            <tr>
+                <td style="font-weight: bold; color: var(--light);">${sesion.titulo}</td>
+                <td style="text-align: center;">
+                    <button class="btn-ver" onclick="procesarSesionUnica('${folderPath}', '${sesion.titulo.replace(/'/g, "\\'")}', '${sesion.jornada}')">
+                        <i class="fa-solid fa-table"></i> Ver
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
 }
 
 async function calcularTablaGlobalAcumulada(sesiones) {
@@ -143,9 +230,10 @@ async function calcularTablaGlobalAcumulada(sesiones) {
                             totalKillsGenerales += killsCount;
 
                             if (!globalPlayersMap[pName]) {
-                                globalPlayersMap[pName] = { name: pName, kills: 0 };
+                                globalPlayersMap[pName] = { name: pName, kills: 0, salasJugadas: 0 };
                             }
                             globalPlayersMap[pName].kills += killsCount;
+                            globalPlayersMap[pName].salasJugadas += 1;
                         }
                     });
                 }
@@ -163,30 +251,45 @@ async function calcularTablaGlobalAcumulada(sesiones) {
     if (statKills) statKills.textContent = totalKillsGenerales;
     if (statMapas) statMapas.textContent = totalMapasJugados;
 
+    // --- LÓGICA PARA RENDERIZAR EQUIPOS EN 2 TABLAS ---
     let equiposGlobalesOrdenados = Object.values(globalTeamsMap).sort((a, b) => b.totalScore - a.totalScore).slice(0, 50);
-    let bodyGlobal = document.getElementById('bodyTablaGlobal');
+    let bodyGlobal1 = document.getElementById('bodyTablaGlobal1');
+    let bodyGlobal2 = document.getElementById('bodyTablaGlobal2');
 
-    if (bodyGlobal) {
+    if (bodyGlobal1 && bodyGlobal2) {
         if (equiposGlobalesOrdenados.length === 0) {
-            bodyGlobal.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--gray);">Sin registros globales.</td></tr>`;
+            bodyGlobal1.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--gray);">Sin registros globales.</td></tr>`;
+            bodyGlobal2.innerHTML = '';
         } else {
-            bodyGlobal.innerHTML = '';
+            bodyGlobal1.innerHTML = '';
+            bodyGlobal2.innerHTML = '';
+            
+            let mitad = Math.ceil(equiposGlobalesOrdenados.length / 2);
+
             equiposGlobalesOrdenados.forEach((eq, idx) => {
                 let colorPos = idx === 0 ? '#DCCC9C' : (idx === 1 ? '#959595' : (idx === 2 ? '#cd7f32' : 'var(--light)'));
                 let sesionesCount = eq.sesionesSet ? eq.sesionesSet.size : 1;
-                bodyGlobal.innerHTML += `
+                
+                let filaHTML = `
                     <tr>
                         <td style="font-weight:bold; color: ${colorPos};">#${idx+1}</td>
-                        <td style="font-weight: bold; color: var(--light);">${eq.name}</td>
+                        <td style="font-weight: bold; color: var(--light); font-size: 0.9rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${eq.name}</td>
                         <td style="text-align:center; color: var(--secondary); font-weight:bold;">${sesionesCount}</td>
                         <td style="text-align:center; color: #DCCC9C; font-weight:bold;">${eq.booyahs}</td>
                         <td style="text-align:center; color: ${colorPos}; font-weight:bold; font-family:'Orbitron';">${eq.totalScore}</td>
                     </tr>
                 `;
+                
+                if (idx < mitad) {
+                    bodyGlobal1.innerHTML += filaHTML;
+                } else {
+                    bodyGlobal2.innerHTML += filaHTML;
+                }
             });
         }
     }
 
+    // --- LÓGICA PARA RENDERIZAR KILLERS CON SALAS JUGADAS ---
     let killersGlobalesOrdenados = Object.values(globalPlayersMap).sort((a, b) => b.kills - a.kills).slice(0, 20);
     let gridKillersGlobalHtml = '';
     let gridKillersEl = document.getElementById('gridTopKillersGlobal');
@@ -203,7 +306,10 @@ async function calcularTablaGlobalAcumulada(sesiones) {
                             <span style="color: ${colorPos}; font-weight: bold; font-family: 'Orbitron'; min-width: 25px;">#${i+1}</span>
                             <span style="color: var(--light); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">${tk.name}</span>
                         </div>
-                        <span style="color: var(--primary); font-weight: bold; font-family: 'Orbitron'; font-size: 0.9rem;"><i class="fa-solid fa-crosshairs" style="margin-right: 4px;"></i> ${tk.kills}</span>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="color: var(--secondary); font-size: 0.85rem;" title="Salas Jugadas"><i class="fa-solid fa-gamepad" style="margin-right: 4px;"></i>${tk.salasJugadas}</span>
+                            <span style="color: var(--primary); font-weight: bold; font-family: 'Orbitron'; font-size: 0.9rem;"><i class="fa-solid fa-crosshairs" style="margin-right: 4px;"></i> ${tk.kills}</span>
+                        </div>
                     </div>
                 `;
             });
