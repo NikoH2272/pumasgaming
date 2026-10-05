@@ -106,14 +106,26 @@ async function procesarInscripcion() {
     let telefonoNum = document.getElementById('regTelefono').value.trim();
 
     if (!nombre || !telefonoNum) {
-        alert("Por favor completa tu nombre y teléfono.");
+        alert("Por favor completa tu nombre y número de teléfono.");
         return;
     }
 
     let telefonoCompleto = `${pais} ${telefonoNum}`;
 
     try {
-        const { error } = await supabaseClient
+        // 1. VERIFICACIÓN ANTI-SOBRECUPO (Por si 2 personas se registran al mismo tiempo)
+        const { data: checkRegs } = await supabaseClient.from('registro_cupos').select('id').eq('entrenamiento_id', idEntreno);
+        const { data: checkEnt } = await supabaseClient.from('entrenamientos_programados').select('cupos_totales, estado').eq('id', idEntreno).single();
+        
+        if (checkEnt.estado === 'CERRADO' || (checkRegs && checkRegs.length >= checkEnt.cupos_totales)) {
+            alert("Lo sentimos, los cupos para este entrenamiento se acaban de agotar.");
+            cerrarModal();
+            cargarEntrenamientosActivos();
+            return;
+        }
+
+        // 2. REGISTRAR AL EQUIPO EN LA BASE DE DATOS
+        const { error: insertError } = await supabaseClient
             .from('registro_cupos')
             .insert([{
                 entrenamiento_id: idEntreno,
@@ -121,13 +133,22 @@ async function procesarInscripcion() {
                 telefono: telefonoCompleto
             }]);
 
-        if (error) throw error;
+        if (insertError) throw insertError;
+
+        // 3. AUTO-CIERRE SI SE LLENARON LOS CUPOS CON ESTE ÚLTIMO REGISTRO
+        let totalInscritos = (checkRegs ? checkRegs.length : 0) + 1;
+        if (totalInscritos >= checkEnt.cupos_totales) {
+            await supabaseClient
+                .from('entrenamientos_programados')
+                .update({ estado: 'CERRADO' })
+                .eq('id', idEntreno);
+        }
 
         alert("¡Inscripción exitosa! Haz clic en Aceptar para unirte al grupo de coordinación.");
         cerrarModal();
-        cargarEntrenamientosActivos(); // Actualizar contador de cupos
+        cargarEntrenamientosActivos();
         
-        // Redirigir al usuario al grupo de WhatsApp/Discord
+        // Redirigir al grupo de WhatsApp
         window.open(linkGrupo, '_blank');
 
     } catch (err) {
