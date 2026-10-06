@@ -2,6 +2,8 @@ const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const normEquipo = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
 window.addEventListener('DOMContentLoaded', cargarEntrenamientosActivos);
 
 async function cargarEntrenamientosActivos() {
@@ -11,7 +13,9 @@ async function cargarEntrenamientosActivos() {
         const { data: entrenamientos, error } = await supabaseClient
             .from('entrenamientos_programados')
             .select('*')
+            
             .eq('estado', 'ABIERTO')
+            .or('publicar_en.is.null,publicar_en.lte.' + new Date().toISOString())
             .order('fecha', { ascending: true });
 
         if (error) throw error;
@@ -45,13 +49,13 @@ async function cargarEntrenamientosActivos() {
             let listaHTML = '';
             if (listaEquipos.length > 0) {
                 listaHTML = `<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <h4 style="color: var(--primary); font-family: 'Orbitron'; font-size: 0.9rem; margin-bottom: 10px;">📋 EQUIPOS CONFIRMADOS (${inscritos}/${ent.cupos_totales}):</h4>
+                    <h4 style="color: var(--primary); font-family: 'Michroma'; font-size: 0.9rem; margin-bottom: 10px;">📋 EQUIPOS CONFIRMADOS (${inscritos}/${ent.cupos_totales}):</h4>
                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
                 
                 listaEquipos.forEach(eq => {
                     let esStaff = eq.telefono === 'REGISTRO STAFF';
                     let badge = esStaff ? `<i class="fa-solid fa-shield-halved" style="color: var(--primary); margin-left: 5px;" title="Asegurado por Staff"></i>` : '';
-                    let colorFondo = esStaff ? 'rgba(220, 204, 156, 0.15)' : 'rgba(255,255,255,0.05)';
+                    let colorFondo = esStaff ? 'rgba(216,195,149, 0.15)' : 'rgba(255,255,255,0.05)';
                     let borde = esStaff ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.1)';
                     
                     listaHTML += `<span style="background: ${colorFondo}; border: ${borde}; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; color: #fff;">${eq.nombre_jugador} ${badge}</span>`;
@@ -62,15 +66,15 @@ async function cargarEntrenamientosActivos() {
 
             let btnInscribir = cuposRestantes > 0 
                 ? `<button onclick="abrirModalInscripcion('${ent.id}', '${ent.titulo.replace(/'/g, "\\'")}', '${ent.link_grupo}')" class="btn-access" style="padding: 10px 20px; border:none; cursor:pointer;">INSCRIBIR EQUIPO</button>`
-                : `<button disabled style="background: var(--secondary); color: var(--dark); padding: 10px 20px; border-radius: 6px; font-family: 'Orbitron'; font-weight: bold; border:none;">CUPOS AGOTADOS</button>`;
+                : `<button disabled style="background: var(--secondary); color: var(--dark); padding: 10px 20px; border-radius: 6px; font-family: 'Michroma'; font-weight: bold; border:none;">CUPOS AGOTADOS</button>`;
 
             contenedor.innerHTML += `
-                <div style="background: var(--dark-card); border: 1px solid rgba(220, 204, 156, 0.2); border-left: 4px solid var(--primary); border-radius: 10px; padding: 25px; margin-bottom: 20px;">
+                <div style="background: var(--dark-card); border: 1px solid rgba(216,195,149, 0.2); border-left: 4px solid var(--primary); border-radius: 10px; padding: 25px; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                         <div>
-                            <h2 style="color: var(--light); font-family: 'Orbitron'; font-size: 1.4rem; margin:0 0 10px 0;">${ent.titulo}</h2>
+                            <h2 style="color: var(--light); font-family: 'Michroma'; font-size: 1.4rem; margin:0 0 10px 0;">${ent.titulo}</h2>
                             <div style="color: var(--gray); font-size: 0.95rem; margin-bottom: 5px;"><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${fechaStr}</div>
-                            <div style="color: var(--gray); font-size: 0.95rem;"><i class="fa-solid fa-users" style="color: var(--primary);"></i> Cupos disponibles: <strong style="color: #DCCC9C; font-family:'Orbitron'; font-size:1.1rem;">${cuposRestantes} / ${ent.cupos_totales}</strong></div>
+                            <div style="color: var(--gray); font-size: 0.95rem;"><i class="fa-solid fa-users" style="color: var(--primary);"></i> Cupos disponibles: <strong style="color: #D8C395; font-family:'Michroma'; font-size:1.1rem;">${cuposRestantes} / ${ent.cupos_totales}</strong></div>
                         </div>
                         <div>${btnInscribir}</div>
                     </div>
@@ -114,13 +118,19 @@ async function procesarInscripcion() {
 
     try {
         // 1. VERIFICACIÓN ANTI-SOBRECUPO (Por si 2 personas se registran al mismo tiempo)
-        const { data: checkRegs } = await supabaseClient.from('registro_cupos').select('id').eq('entrenamiento_id', idEntreno);
-        const { data: checkEnt } = await supabaseClient.from('entrenamientos_programados').select('cupos_totales, estado').eq('id', idEntreno).single();
+        const { data: checkRegs } = await supabaseClient.from('registro_cupos').select('id, nombre_jugador').eq('entrenamiento_id', idEntreno);
+        const { data: checkEnt } = await supabaseClient.from('entrenamientos_programados').select('cupos_totales, estado, publicar_en').eq('id', idEntreno).single();
         
-        if (checkEnt.estado === 'CERRADO' || (checkRegs && checkRegs.length >= checkEnt.cupos_totales)) {
+        if (checkEnt.estado === 'CERRADO' || (checkEnt.publicar_en && new Date(checkEnt.publicar_en) > new Date()) || (checkRegs && checkRegs.length >= checkEnt.cupos_totales)) {
             alert("Lo sentimos, los cupos para este entrenamiento se acaban de agotar.");
             cerrarModal();
             cargarEntrenamientosActivos();
+            return;
+        }
+
+        // 1.5 EVITAR EQUIPOS REPETIDOS (ignora mayúsculas, tildes, espacios y símbolos)
+        if ((checkRegs || []).some(r => normEquipo(r.nombre_jugador) === normEquipo(nombre))) {
+            alert("Ese equipo ya está inscrito en este entrenamiento.");
             return;
         }
 
@@ -153,6 +163,6 @@ async function procesarInscripcion() {
 
     } catch (err) {
         console.error("Error al registrar:", err);
-        alert("Ocurrió un error. Es posible que los cupos se hayan agotado.");
+        alert(err && err.code === "23505" ? "Ese equipo ya está inscrito en este entrenamiento." : "Ocurrió un error. Es posible que los cupos se hayan agotado.");
     }
 }

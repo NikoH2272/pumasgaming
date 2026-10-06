@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pumas Gaming | Match Day Manager</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -28,7 +30,8 @@
     <nav class="main-nav" id="mainNav">
         <ul>
             <li><a href="index.html" onclick="closeMenu()">Portal Principal</a></li>
-            <li><a href="matchday.html" onclick="closeMenu()" style="color: var(--primary);">Match Day</a></li>
+            <li><a href="index.html#resultados" onclick="closeMenu()">Herramienta FF</a></li>
+            <li><a href="lista_sorteo.html" onclick="closeMenu()" style="color: var(--primary);"><i class="fa-solid fa-lock"></i> Admin</a></li>
         </ul>
     </nav>
 </header>
@@ -66,7 +69,7 @@
         </div>
 
         <div style="margin-top: 25px;">
-            <h3 style="font-family: 'Orbitron'; font-size: 1.1rem; color: var(--primary); margin-bottom: 15px;">Equipos y Escudos (Personalización Individual)</h3>
+            <h3 style="font-family: 'Michroma'; font-size: 1.1rem; color: var(--primary); margin-bottom: 15px;">Equipos y Escudos (Personalización Individual)</h3>
             <div id="matchDaySlotsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; max-height: 400px; overflow-y: auto; padding-right: 10px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px;">
                 <!-- Dinámico -->
             </div>

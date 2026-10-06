@@ -29,7 +29,6 @@ function procesarConNombresPersonalizados() {
     _xL(_rFD, dR);
 }
 
-// Ahora procesa localmente de inmediato al hacer clic en el botón principal, SIN subir nada a Supabase
 async function procesarArchivosLog() {
     let fI = document.getElementById('fileInput');
     if (!fI || !fI.files.length) {
@@ -145,15 +144,14 @@ function renderizarResultados(eqs, tKs, nS) {
     if (mC === '3') tM = "TABLA SOLO KILLS";
     let rWData = window._rWGlobal || [];
 
-    let h = `<div id="tablaCaptura" style="width:800px;height:1000px;${fV}position:relative;font-family:'Rajdhani',sans-serif;color:${cF};padding:20px;box-sizing:border-box;border:2px solid rgba(220,204,156,0.3);border-radius:12px;">` +
+    let h = `<div id="tablaCaptura" style="width:800px;height:1000px;${fV}position:relative;font-family:'Trebuchet MS',sans-serif;color:${cF};padding:20px;box-sizing:border-box;border:2px solid rgba(220,204,156,0.3);border-radius:12px;">` +
     `<div style="position:absolute;top:18px;right:30px;"><img src="${lU}" style="width:65px;height:65px;object-fit:contain;border-radius:50%;border:2px solid #DCCC9C;background:rgba(18,19,23,0.8);"></div>` +
-    `<div style="text-align:center;position:absolute;top:18px;left:40px;right:40px;"><h1 style="font-family:'Orbitron';font-size:1.6rem;color:#DCCC9C;margin:0;text-transform:uppercase;text-shadow:2px 2px 4px rgba(0,0,0,0.8);">${tC}</h1>` +
-    `<div style="font-family:'Orbitron';font-size:0.9rem;color:${cF};margin-top:3px;font-weight:bold;letter-spacing:1px;">${jC} ${fC ? '— ' + fC : ''} | MODERADOR: ${nM}</div></div>` +
+    `<div style="text-align:center;position:absolute;top:18px;left:40px;right:40px;"><h1 style="font-family:'Michroma';font-size:1.6rem;color:#DCCC9C;margin:0;text-transform:uppercase;text-shadow:2px 2px 4px rgba(0,0,0,0.8);">${tC}</h1>` +
+    `<div style="font-family:'Michroma';font-size:0.9rem;color:${cF};margin-top:3px;font-weight:bold;letter-spacing:1px;">${jC} ${fC ? '— ' + fC : ''} | MODERADOR: ${nM}</div></div>` +
     
-    // TABLA PRINCIPAL GENERAL
     `<div style="position:absolute;top:85px;left:35px;width:730px;background:${fCo};padding:8px;border-radius:8px;border:1px solid rgba(220,204,156,0.3);max-height:410px;overflow:hidden;">` +
-    `<div style="color:#DCCC9C;font-family:'Orbitron';font-size:0.85rem;margin-bottom:4px;font-weight:bold;">${tM}</div>` +
-    `<table style="width:100%;border-collapse:collapse;font-size:0.76rem;color:${cF};"><thead><tr style="color:#DCCC9C;font-family:'Orbitron';border-bottom:2px solid rgba(220,204,156,0.3);font-size:0.78rem;"><th style="text-align:left;padding:4px;">#</th><th style="text-align:left;padding:4px;">EQUIPO</th>` +
+    `<div style="color:#DCCC9C;font-family:'Michroma';font-size:0.85rem;margin-bottom:4px;font-weight:bold;">${tM}</div>` +
+    `<table style="width:100%;border-collapse:collapse;font-size:0.76rem;color:${cF};"><thead><tr style="color:#DCCC9C;font-family:'Michroma';border-bottom:2px solid rgba(220,204,156,0.3);font-size:0.78rem;"><th style="text-align:left;padding:4px;">#</th><th style="text-align:left;padding:4px;">EQUIPO</th>` +
     `${Array.from({ length: Math.min(nS, 6) }).map((_, i) => `<th style="padding:4px;text-align:center;">S${i + 1}</th>`).join('')}<th style="padding:4px;text-align:center;">KILL</th><th style="padding:4px;text-align:center;">TOTAL</th></tr></thead><tbody>` +
     eqO.map((eq, i) => {
         let cFila = cF;
@@ -168,19 +166,17 @@ function renderizarResultados(eqs, tKs, nS) {
         `<td style="text-align:center;padding:3.5px;color:#DCCC9C;font-weight:bold;">${eq.killScore}</td><td style="text-align:center;padding:3.5px;color:${cFila};font-weight:bold;">${eq.totalCalculado}</td></tr>`;
     }).join('') + `</tbody></table></div>` +
 
-    // ZONA INFERIOR 1: BOOYAH POR SALA
-    `<div style="position:absolute;top:520px;left:35px;width:730px;background:${fCo};padding:8px;border-radius:8px;border:1px solid rgba(220,204,156,0.3);"><div style="font-family:'Orbitron';color:#DCCC9C;margin-bottom:4px;font-size:0.82rem;font-weight:bold;">BOOYAH POR SALA (VICTORIAS)</div><div style="display:grid;grid-template-columns:repeat(${Math.min(Math.max(rWData.length, 1), 6)}, 1fr);gap:6px;">` +
+    `<div style="position:absolute;top:520px;left:35px;width:730px;background:${fCo};padding:8px;border-radius:8px;border:1px solid rgba(220,204,156,0.3);"><div style="font-family:'Michroma';color:#DCCC9C;margin-bottom:4px;font-size:0.82rem;font-weight:bold;">BOOYAH POR SALA (VICTORIAS)</div><div style="display:grid;grid-template-columns:repeat(${Math.min(Math.max(rWData.length, 1), 6)}, 1fr);gap:6px;">` +
     (rWData.length ? rWData.map(rw => `
         <div style="font-size:0.7rem;background:rgba(18,19,23,0.85);padding:5px 6px;border-radius:5px;border:1px solid rgba(220,204,156,0.2);text-align:center;">
-            <div style="color:#DCCC9C;font-family:'Orbitron';font-weight:bold;margin-bottom:2px;">SALA ${rw.sala} 👑</div>
+            <div style="color:#DCCC9C;font-family:'Michroma';font-weight:bold;margin-bottom:2px;">SALA ${rw.sala} 👑</div>
             <div style="color:${cF};font-weight:bold;max-width:95px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 auto;" title="${rw.team}">${rw.team}</div>
             <div style="color:var(--gray);font-size:0.65rem;margin-top:2px;">Pts: <strong style="color:#DCCC9C;">${rw.points}</strong> | K: <strong style="color:#DCCC9C;">${rw.kills}</strong></div>
         </div>
     `).join('') : `<div style="color:var(--gray);font-size:0.75rem;text-align:center;padding:6px;">No hay datos de Booyah registrados.</div>`) +
     `</div></div>` +
 
-    // ZONA INFERIOR 2: TOP 15 KILLERS
-    `<div style="position:absolute;top:660px;left:35px;width:730px;background:${fCo};padding:8px;border-radius:8px;border:1px solid rgba(220,204,156,0.3);"><div style="font-family:'Orbitron';color:#DCCC9C;margin-bottom:4px;font-size:0.82rem;font-weight:bold;">TOP 15 KILLERS MÁS LETALES</div><div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:5px;">` +
+    `<div style="position:absolute;top:660px;left:35px;width:730px;background:${fCo};padding:8px;border-radius:8px;border:1px solid rgba(220,204,156,0.3);"><div style="font-family:'Michroma';color:#DCCC9C;margin-bottom:4px;font-size:0.82rem;font-weight:bold;">TOP 15 KILLERS MÁS LETALES</div><div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:5px;">` +
     tKL.map((tk, i) => {
         let cP = cF;
         if (i === 0) cP = '#DCCC9C';
@@ -188,7 +184,6 @@ function renderizarResultados(eqs, tKs, nS) {
     }).join('') +
     `</div></div></div>`;
     
-    // Contenedor responsivo con scroll horizontal y botón de descarga corregido
     let wrapperHtml = `
         <div style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px;">
             ${h}
@@ -199,7 +194,6 @@ function renderizarResultados(eqs, tKs, nS) {
     document.getElementById('outputTablasLadoALado').innerHTML = wrapperHtml;
 }
 
-// Función de descarga corregida para usar html2canvas de forma estable
 function descargar() {
     let el = document.getElementById('tablaCaptura');
     if (!el) {
@@ -218,7 +212,6 @@ function descargar() {
     });
 }
 
-// Mantenemos solo el cargador público para mostrar los tops generales pasados de la BD en la portada si aplica
 async function _cTP() {
     let cT = document.getElementById('contenedorTopEquiposPublicos'), cK = document.getElementById('contenedorTopKillersPublicos');
     if (!cT && !cK) return;
@@ -236,7 +229,7 @@ async function _cTP() {
             let t10 = Object.values(eM).sort((a, b) => b.totalScore - a.totalScore).slice(0, 10);
             cT.innerHTML = t10.length ? t10.map((eq, i) => {
                 let cM = i === 0 ? 'var(--primary)' : i === 1 ? '#959595' : i === 2 ? '#cd7f32' : 'var(--gray)';
-                return `<div style="background:rgba(18,19,23,0.6);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(220,204,156,0.15);margin-bottom:6px;"><span style="font-weight:bold;font-size:0.85rem;"><span style="color:${cM};">#${i + 1}</span> ${eq.name}</span><span style="font-size:0.80rem;color:var(--primary);font-family:'Orbitron';">${eq.totalScore} Pts</span></div>`;
+                return `<div class="rank-row"><span><b style="color:${cM};">#${i + 1}</b> ${eq.name}</span><em>${eq.totalScore} pts</em></div>`;
             }).join('') : `<p style="color:var(--gray);font-size:0.85rem;">No hay registros de equipos.</p>`;
         }
         let { data: kD, error: kE } = await sC.from('top_killers').select('jugador_nombre, kills');
@@ -249,7 +242,7 @@ async function _cTP() {
             let t10k = Object.values(kM).sort((a, b) => b.kills - a.kills).slice(0, 10);
             cK.innerHTML = t10k.length ? t10k.map((tk, i) => {
                 let cP = i === 0 ? 'var(--primary)' : 'var(--light)';
-                return `<div style="background:rgba(18,19,23,0.6);padding:8px 12px;border-radius:6px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(220,204,156,0.15);margin-bottom:6px;"><span style="font-weight:bold;font-size:0.85rem;"><span style="color:${cP};">#${i + 1}</span> ${tk.name}</span><span style="font-size:0.80rem;color:var(--primary);font-family:'Orbitron';">${tk.kills} Kills</span></div>`;
+                return `<div class="rank-row"><span><b style="color:${cP};">#${i + 1}</b> ${tk.name}</span><em>${tk.kills} kills</em></div>`;
             }).join('') : `<p style="color:var(--gray);font-size:0.85rem;">No hay registros de killers.</p>`;
         }
     } catch (e) {
@@ -257,14 +250,12 @@ async function _cTP() {
     }
 }
 
-window.addEventListener('DOMContentLoaded', () => _cTP());
+/* _cTP desactivado: el ranking semanal lo pinta entrenamientos.js */
 
-// Variable global para guardar la respuesta correcta del Captcha
 let respuestaCaptchaCorrecta = 0;
 
-// Función para generar la suma aleatoria
 function generarCaptcha() {
-    const num1 = Math.floor(Math.random() * 10) + 1; // Número del 1 al 10
+    const num1 = Math.floor(Math.random() * 10) + 1;
     const num2 = Math.floor(Math.random() * 10) + 1;
     respuestaCaptchaCorrecta = num1 + num2;
     
@@ -274,33 +265,28 @@ function generarCaptcha() {
     }
 }
 
-// Generar el primer captcha cuando cargue la página
 window.addEventListener('DOMContentLoaded', () => {
-    _cTP(); // Tu función existente
+    _cTP();
     generarCaptcha();
 });
 
-// Función para manejar el sorteo
 async function registrarSorteo(e) {
     e.preventDefault();
 
-    // 1. Validar la trampa Honeypot (si tiene texto, es un bot)
     const trampa = document.getElementById('sorteoTrampaBot').value;
     if (trampa !== "") {
         console.warn("Bot detectado y bloqueado.");
-        return; // Detiene la ejecución sin avisarle al bot
-    }
-
-    // 2. Validar el Captcha Matemático
-    const respuestaUsuario = parseInt(document.getElementById('sorteoCaptcha').value);
-    if (respuestaUsuario !== respuestaCaptchaCorrecta) {
-        alert("❌ Verificación anti-bot incorrecta. Intenta de nuevo.");
-        document.getElementById('sorteoCaptcha').value = ""; // Limpiar el campo
-        generarCaptcha(); // Generar uno nuevo
         return;
     }
 
-    // Obtener los valores del formulario
+    const respuestaUsuario = parseInt(document.getElementById('sorteoCaptcha').value);
+    if (respuestaUsuario !== respuestaCaptchaCorrecta) {
+        alert("❌ Verificación anti-bot incorrecta. Intenta de nuevo.");
+        document.getElementById('sorteoCaptcha').value = "";
+        generarCaptcha();
+        return;
+    }
+
     const equipo = document.getElementById('sorteoEquipo').value.trim();
     const representante = document.getElementById('sorteoRepresentante').value.trim();
     const igEquipo = document.getElementById('sorteoIg').value.trim();
@@ -347,7 +333,7 @@ async function registrarSorteo(e) {
             }
             boton.innerText = "REGISTRAR EQUIPO Y GENERAR TICKET";
             boton.disabled = false;
-            generarCaptcha(); // Refrescar captcha en caso de error
+            generarCaptcha();
             return;
         }
 
@@ -360,61 +346,12 @@ async function registrarSorteo(e) {
         alert("Ocurrió un error inesperado al conectar con el servidor.");
         boton.innerText = "REGISTRAR EQUIPO Y GENERAR TICKET";
         boton.disabled = false;
-        generarCaptcha(); // Refrescar captcha
-    }
-}
-// Validar si el sorteo sigue abierto
-async function verificarEstadoSorteo() {
-    const btnSorteo = document.getElementById('btnSorteo');
-    if (!btnSorteo) return; // Si no estamos en la página del sorteo, ignorar
-
-    const supabaseClientSorteo = supabase.createClient(
-        "https://bqemjroiegybdzksddkn.supabase.co", 
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo"
-    );
-
-    try {
-        const { data, error } = await supabaseClientSorteo.from('sorteo_config').select('fecha_limite').eq('id', 1).single();
-        
-        if (data && data.fecha_limite) {
-            const fechaLimite = new Date(data.fecha_limite);
-            const ahora = new Date();
-            
-            // Si la fecha actual superó la fecha límite
-            if (ahora > fechaLimite) {
-                // Cambiar el botón
-                btnSorteo.innerText = "⛔ INSCRIPCIONES CERRADAS";
-                btnSorteo.disabled = true;
-                btnSorteo.style.background = "#333";
-                btnSorteo.style.color = "#888";
-                btnSorteo.style.boxShadow = "none";
-                btnSorteo.style.cursor = "not-allowed";
-                
-                // Deshabilitar los inputs del formulario
-                document.getElementById('sorteoEquipo').disabled = true;
-                document.getElementById('sorteoRepresentante').disabled = true;
-                document.getElementById('sorteoIg').disabled = true;
-                document.getElementById('sorteoContacto').disabled = true;
-                document.getElementById('sorteoCodigoPais').disabled = true;
-                if(document.getElementById('sorteoCaptcha')) document.getElementById('sorteoCaptcha').disabled = true;
-            }
-        }
-    } catch (err) {
-        console.error("Error al verificar estado del sorteo:", err);
+        generarCaptcha();
     }
 }
 
-// Asegurar que se verifique el estado al cargar la página
-window.addEventListener('DOMContentLoaded', () => {
-    // Si tienes otras funciones de inicialización aquí, mantenlas
-    if (typeof generarCaptcha === 'function') generarCaptcha();
-    verificarEstadoSorteo();
-});
-
-// Variable global para el reloj
 let intervaloCountdown;
 
-// Validar si el sorteo sigue abierto y mostrar cuenta regresiva
 async function verificarEstadoSorteo() {
     const btnSorteo = document.getElementById('btnSorteo');
     const contenedorCuenta = document.getElementById('contenedorCuentaRegresiva');
@@ -431,21 +368,17 @@ async function verificarEstadoSorteo() {
         if (data && data.fecha_limite) {
             const fechaLimite = new Date(data.fecha_limite).getTime();
             
-            // Mostrar el reloj porque sí hay una fecha configurada
             if (contenedorCuenta) contenedorCuenta.style.display = 'block';
 
-            // Función que se ejecuta cada segundo
             const actualizarReloj = () => {
                 const ahora = new Date().getTime();
                 const distancia = fechaLimite - ahora;
 
-                // Referencias a los números del HTML
                 const uiDias = document.getElementById('cdDias');
                 const uiHoras = document.getElementById('cdHoras');
                 const uiMin = document.getElementById('cdMin');
                 const uiSeg = document.getElementById('cdSeg');
 
-                // Si el tiempo ya se acabó
                 if (distancia <= 0) {
                     clearInterval(intervaloCountdown);
                     
@@ -456,7 +389,6 @@ async function verificarEstadoSorteo() {
                         uiSeg.innerText = "00";
                     }
 
-                    // Bloquear botón y diseño
                     btnSorteo.innerText = "⛔ INSCRIPCIONES CERRADAS";
                     btnSorteo.disabled = true;
                     btnSorteo.style.background = "#333";
@@ -464,20 +396,17 @@ async function verificarEstadoSorteo() {
                     btnSorteo.style.boxShadow = "none";
                     btnSorteo.style.cursor = "not-allowed";
                     
-                    // Bloquear inputs
                     const inputs = ['sorteoEquipo', 'sorteoRepresentante', 'sorteoIg', 'sorteoContacto', 'sorteoCodigoPais', 'sorteoCaptcha'];
                     inputs.forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.disabled = true;
                     });
                 } else {
-                    // Matemáticas para calcular el tiempo
                     const dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
                     const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     const minutos = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
                     const segundos = Math.floor((distancia % (1000 * 60)) / 1000);
 
-                    // Imprimir con un 0 a la izquierda si es menor a 10
                     if (uiDias) {
                         uiDias.innerText = dias < 10 ? "0" + dias : dias;
                         uiHoras.innerText = horas < 10 ? "0" + horas : horas;
@@ -487,15 +416,18 @@ async function verificarEstadoSorteo() {
                 }
             };
 
-            // Ejecutar enseguida para no ver "00" durante el primer segundo
             actualizarReloj();
             intervaloCountdown = setInterval(actualizarReloj, 1000);
             
         } else {
-            // Si en la base de datos se quitó la fecha límite, ocultar el reloj
             if (contenedorCuenta) contenedorCuenta.style.display = 'none';
         }
     } catch (err) {
         console.error("Error al verificar estado del sorteo:", err);
     }
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof generarCaptcha === 'function') generarCaptcha();
+    verificarEstadoSorteo();
+});

@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pumas Gaming | Portal Oficial</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -28,232 +30,126 @@
 
     <nav class="main-nav" id="mainNav">
         <ul>
-            <li><a href="entrenamientos/" onclick="closeMenu()">Entrenamientos</a></li>
+            <li><a href="#entrenamientos" onclick="closeMenu()">Entrenamientos</a></li>
             <li><a href="#jersey" onclick="closeMenu()">Jerseys</a></li>
-            <li><a href="#entrenamientos" onclick="closeMenu()">Comunidad</a></li>
+            <li><a href="#comunidad" onclick="closeMenu()">Comunidad</a></li>
+            <li><a href="#rankings" onclick="closeMenu()">Rankings</a></li>
             <li><a href="#resultados" onclick="closeMenu()">Herramienta FF</a></li>
+            <li><a href="/entrenamientos/login.html" class="btn-admin-nav" onclick="closeMenu()" style="color: var(--primary);"><i class="fa-solid fa-lock"></i> Admin</a></li>
         </ul>
     </nav>
 </header>
 
-
-<!-- SECCIÓN DE SORTEO 
-    <section id="sorteo" class="tool-section">
-        <h2 class="section-title">Sorteo Pumas Gaming</h2>
-        <div class="tool-container" style="max-width: 600px; margin: 0 auto;">
-            <p class="tool-desc">
-                Regístrate para participar en nuestro sorteo. <strong>Solo se permite un registro por equipo y todos los datos son obligatorios.</strong>
-            </p>
-
-            <div id="contenedorCuentaRegresiva" style="display: none; text-align: center; margin-bottom: 30px; background: rgba(220,204,156,0.05); padding: 15px; border-radius: 8px; border: 1px dashed rgba(220, 204, 156, 0.3);">
-                <p style="color: var(--primary); font-family: 'Orbitron'; margin-bottom: 15px; font-weight: bold; font-size: 1.1rem;"><i class="fa-solid fa-hourglass-half"></i> CIERRE DE INSCRIPCIONES EN:</p>
-                
-                <div style="display: flex; justify-content: center; gap: 10px; font-family: 'Orbitron'; font-size: 1.8rem; color: var(--light);">
-                    <div style="background: #121317; padding: 10px; border-radius: 8px; border: 1px solid var(--primary); min-width: 75px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
-                        <span id="cdDias">00</span><div style="font-size: 0.7rem; color: var(--gray); margin-top: 5px;">DÍAS</div>
-                    </div>
-                    <div style="background: #121317; padding: 10px; border-radius: 8px; border: 1px solid var(--primary); min-width: 75px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
-                        <span id="cdHoras">00</span><div style="font-size: 0.7rem; color: var(--gray); margin-top: 5px;">HRS</div>
-                    </div>
-                    <div style="background: #121317; padding: 10px; border-radius: 8px; border: 1px solid var(--primary); min-width: 75px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
-                        <span id="cdMin">00</span><div style="font-size: 0.7rem; color: var(--gray); margin-top: 5px;">MIN</div>
-                    </div>
-                    <div style="background: #121317; padding: 10px; border-radius: 8px; border: 1px solid var(--primary); min-width: 75px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
-                        <span id="cdSeg">00</span><div style="font-size: 0.7rem; color: var(--gray); margin-top: 5px;">SEG</div>
-                    </div>
-                </div>
-            </div>
-
-            <form id="formSorteo" onsubmit="registrarSorteo(event)">
-
-            <form id="formSorteo" onsubmit="registrarSorteo(event)">
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>NOMBRE DEL EQUIPO *</label>
-                    <input type="text" id="sorteoEquipo" required placeholder="Ej: Pumas Elite">
-                </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>NOMBRE DEL REPRESENTANTE *</label>
-                    <input type="text" id="sorteoRepresentante" required placeholder="Ej: Juan Pérez">
-                </div>
-                <div class="form-group" style="margin-bottom: 15px;">
-                    <label>INSTAGRAM DEL EQUIPO *</label>
-                    <input type="text" id="sorteoIg" required placeholder="Ej: @pumas.gaming.oficial">
-                </div>
-<div class="form-group" style="margin-bottom: 20px;">
-    <label>NÚMERO DE CONTACTO *</label>
-    <div style="display: flex; gap: 10px;">
-        <select id="sorteoCodigoPais" required style="width: 35%; max-width: 140px; padding: 12px; background: #0a0a0c; border: 1px solid rgba(220, 204, 156, 0.25); color: var(--light); border-radius: 6px; font-family: 'Rajdhani', sans-serif;">
-            <option value="+54">🇦🇷 +54 (AR)</option>
-            <option value="+591">🇧🇴 +591 (BO)</option>
-            <option value="+55">🇧🇷 +55 (BR)</option>
-            <option value="+56">🇨🇱 +56 (CL)</option>
-            <option value="+57" selected>🇨🇴 +57 (CO)</option>
-            <option value="+506">🇨🇷 +506 (CR)</option>
-            <option value="+53">🇨🇺 +53 (CU)</option>
-            <option value="+593">🇪🇨 +593 (EC)</option>
-            <option value="+503">🇸🇻 +503 (SV)</option>
-            <option value="+502">🇬🇹 +502 (GT)</option>
-            <option value="+504">🇭🇳 +504 (HN)</option>
-            <option value="+52">🇲🇽 +52 (MX)</option>
-            <option value="+505">🇳🇮 +505 (NI)</option>
-            <option value="+507">🇵🇦 +507 (PA)</option>
-            <option value="+595">🇵🇾 +595 (PY)</option>
-            <option value="+51">🇵🇪 +51 (PE)</option>
-            <option value="+1">🇵🇷 +1 (PR / DO / US)</option>
-            <option value="+598">🇺🇾 +598 (UY)</option>
-            <option value="+58">🇻🇪 +58 (VE)</option>
-        </select>
-        
-        <input type="tel" id="sorteoContacto" required placeholder="Ej: 300 000 0000" style="flex: 1;">
-    </div>
-</div>
-                <div style="display: none; position: absolute; left: -9999px;">
-                    <label>Si eres humano, deja este campo en blanco</label>
-                    <input type="text" id="sorteoTrampaBot" name="trampa" tabindex="-1" autocomplete="off">
-                </div>
-
-                <div class="form-group" style="margin-bottom: 25px; background: rgba(220,204,156,0.05); padding: 15px; border-radius: 6px; border: 1px dashed rgba(220, 204, 156, 0.3);">
-                    <label>VERIFICACIÓN ANTI-BOT *</label>
-                    <div style="display: flex; gap: 15px; align-items: center;">
-                        <span id="textoCaptcha" style="font-family: 'Orbitron'; font-size: 1.3rem; color: var(--primary); white-space: nowrap; font-weight: bold;">? + ? =</span>
-                        <input type="number" id="sorteoCaptcha" required placeholder="Respuesta" style="flex: 1; text-align: center; font-size: 1.2rem;">
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn-generar" id="btnSorteo">
-                    REGISTRAR EQUIPO Y GENERAR TICKET
-                </button>
-            </form>
-
-            <div id="resultadoSorteo" style="display: none; margin-top: 20px; padding: 25px; background: rgba(220,204,156,0.1); border: 1px solid var(--primary); border-radius: 8px; text-align: center;">
-                <h3 style="color: var(--primary); font-family: 'Orbitron'; margin-bottom: 10px;">¡Registro Exitoso!</h3>
-                <p style="margin-bottom: 15px; color: var(--light);">Tu código único de lotería es:</p>
-                <div id="codigoLoteria" style="font-size: 2.2rem; font-family: 'Orbitron'; font-weight: bold; letter-spacing: 4px; color: var(--dark); background: var(--primary); padding: 10px 20px; border-radius: 6px; display: inline-block;">
-                </div>
-                <p style="margin-top: 15px; font-size: 0.85rem; color: var(--gray);">Guarda este código, será indispensable para reclamar tu premio.</p>
+ <section class="portal-hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+            <div class="eyebrow">Comunidad competitiva · Free Fire</div>
+            <h1 id="hero-title">Nacidos para <span>competir.</span></h1>
+            <p>Pumas Gaming reúne a equipos que juegan con carácter. Entrena, sigue la competencia y crea tus resultados desde un solo lugar.</p>
+            <div class="hero-actions">
+                <a href="#entrenamientos" class="btn-access">Apartar cupo de entreno</a>
+                <a href="#comunidad" class="btn-access btn-outline">Entrar a la comunidad</a>
             </div>
         </div>
-    </section>-->
-    <section id="jersey">
-        <h2 class="section-title">Jerseys Oficiales 2026</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; width: 100%;">
-            
-            <div class="card-box" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <h3 style="color: var(--primary); margin-bottom: 10px;">Edición Pumas Elite</h3>
-                    <p style="margin-bottom: 20px;">Confeccionado con microfibra avanzada de alto rendimiento para garantizar frescura y comodidad bajo máxima presión en torneos.</p>
-                </div>
-                <div style="border-radius: 8px; overflow: hidden; border: 1px solid rgba(220,204,156,0.3);">
-                    <video src="videos/jersey.mp4" autoplay muted loop playsinline width="100%">
-                        Tu navegador no soporta el elemento de video.
-                    </video>
-                </div>
-            </div>
-
-            <div class="card-box" style="text-align: left; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <h3 style="color: var(--primary); margin-bottom: 10px;">Edición Especial USA Pro</h3>
-                    <p style="margin-bottom: 20px;">Diseño exclusivo optimizado para la competición de alto nivel en el circuito internacional Free Fire USA.</p>
-                </div>
-                <div style="border-radius: 8px; overflow: hidden; border: 1px solid rgba(220,204,156,0.3);">
-                    <video src="videos/jerseyUSA.mp4" autoplay muted loop playsinline width="100%">
-                        Tu navegador no soporta el elemento de video.
-                    </video>
-                </div>
-            </div>
-
+        <div class="hero-mark" aria-hidden="true">
+            <img src="/imagenes/LOGO PUMAS WEB.png" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+            <span class="mark-fallback">PG</span>
         </div>
     </section>
 
     <section id="entrenamientos">
-        <h2 class="section-title">Comunidad & Mejores Equipos</h2>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;" class="grid-2-columns">
-            
-            <div style="display: flex; flex-direction: column; gap: 20px;">
-                <div class="card-box" style="text-align: left;">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-                        <i class="fa-brands fa-whatsapp" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 0;"></i>
-                        <h3 style="margin-bottom: 0; font-size: 1.2rem;">Entrenamientos Oficiales</h3>
-                    </div>
-                    <p style="font-size: 0.95rem;">Horario: 10 AM México</p>
-                    <a href="https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd" class="btn-access" style="padding: 8px 16px; font-size: 0.85rem; display: inline-block; margin-top: 12px;">Unirse al WhatsApp</a>
-                </div>
-
-                <div class="card-box" id="comunidad" style="text-align: left;">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-                        <i class="fa-brands fa-discord" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 0;"></i>
-                        <h3 style="margin-bottom: 0; font-size: 1.2rem;">Servidor Discord</h3>
-                    </div>
-                    <a href="https://discord.gg/SpagAJr8t" class="btn-access" style="padding: 8px 16px; font-size: 0.85rem; display: inline-block; margin-top: 12px;">Unirse al Discord</a>
-                </div>
-
-                <div class="card-box" style="text-align: left;">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-                        <i class="fa-brands fa-whatsapp" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 0;"></i>
-                        <h3 style="margin-bottom: 0; font-size: 1.2rem;">Comunidad & Dinámicas</h3>
-                    </div>
-                    <p style="font-size: 0.95rem;">Eventos, dinámicas y más actividades.</p>
-                    <a href="https://chat.whatsapp.com/GvydqT687oS05sMW5oNJFl" class="btn-access" style="padding: 8px 16px; font-size: 0.85rem; display: inline-block; margin-top: 12px;">Unirse al WhatsApp</a>
-                </div>
-
-                <div class="card-box" style="text-align: left;">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-                        <i class="fa-solid fa-share-nodes" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 0;"></i>
-                        <h3 style="margin-bottom: 0; font-size: 1.2rem;">Zona de Redes</h3>
-                    </div>
-                    <p style="font-size: 0.9rem; color: var(--gray); margin-bottom: 15px;">Síguenos en nuestras plataformas oficiales:</p>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                        <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" style="background: rgba(0,0,0,0.5); padding: 12px 6px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
-                            <i class="fa-brands fa-instagram" style="font-size: 1.4rem; color: var(--primary);"></i>
-                            <span style="color: var(--light); font-size: 0.7rem; font-weight: bold; font-family: 'Orbitron';">Oficial</span>
-                        </a>
-
-                        <a href="https://www.instagram.com/pumas_e7_gaming" target="_blank" style="background: rgba(0,0,0,0.5); padding: 12px 6px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
-                            <i class="fa-brands fa-square-instagram" style="font-size: 1.4rem; color: #959595;"></i>
-                            <span style="color: var(--light); font-size: 0.7rem; font-weight: bold; font-family: 'Orbitron';">USA Pro</span>
-                        </a>
-
-                        <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" style="background: rgba(0,0,0,0.5); padding: 12px 6px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 6px;">
-                            <i class="fa-brands fa-tiktok" style="font-size: 1.4rem; color: var(--light);"></i>
-                            <span style="color: var(--light); font-size: 0.7rem; font-weight: bold; font-family: 'Orbitron';">TikTok</span>
-                        </a>
-                    </div>
+    <h2 class="section-title">Entrenamientos Oficiales</h2>
+    <div class="train-layout">
+        <article class="card-box train-main" id="trainMain"><p>Cargando entrenos...</p></article>
+        <aside class="train-side">
+            <div class="card-box">
+                <h3>Estadísticas</h3>
+                <div class="stat-grid">
+                    <div><b id="stEntrenos">…</b><small>Entrenamientos</small></div>
+                    <div><b id="stKills">…</b><small>Kills</small></div>
+                    <div><b id="stSalas">…</b><small>Salas jugadas</small></div>
+                    <div><b id="stEquipos">…</b><small>Equipos</small></div>
                 </div>
             </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
-                
-                <div class="card-box" style="text-align: left; display: flex; flex-direction: column; justify-content: flex-start; padding: 20px 15px; height: 100%;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid rgba(220,204,156,0.2); padding-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-ranking-star" style="font-size: 1.3rem; color: var(--primary);"></i>
-                            <h3 style="font-size: 0.95rem; margin-bottom: 0;">Top 10 Equipos Ligas Pumas</h3>
-                        </div>
-                        <a href="entrenamientos/" class="btn-access" style="padding: 5px 10px; font-size: 0.7rem; font-family: 'Orbitron';">Entrenamientos</a>
-                    </div>
-                    
-                    <div id="contenedorTopEquiposPublicos" style="display: flex; flex-direction: column; gap: 8px;">
-                        <p style="color: var(--gray); font-size: 0.85rem;">Cargando equipos...</p>
-                    </div>
-                </div>
-
-                <div class="card-box" style="text-align: left; display: flex; flex-direction: column; justify-content: flex-start; padding: 20px 15px; height: 100%;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; border-bottom: 1px solid rgba(220,204,156,0.2); padding-bottom: 10px;">
-                        <i class="fa-solid fa-skull" style="font-size: 1.3rem; color: var(--primary);"></i>
-                        <h3 style="font-size: 0.95rem; margin-bottom: 0;">Top 10 Killers</h3>
-                    </div>
-                    
-                    <div id="contenedorTopKillersPublicos" style="display: flex; flex-direction: column; gap: 8px;">
-                        <p style="color: var(--gray); font-size: 0.85rem;">Cargando killers...</p>
-                    </div>
-                </div>
-
+            <div class="card-box"><h3>Cómo apartar cupo</h3>
+                <ol class="steps">
+                    <li>Entra a la página de cupos y elige un entreno abierto.</li>
+                    <li>Inscribe tu equipo con nombre y teléfono.</li>
+                    <li>Únete al grupo de coordinación que se abre al confirmar.</li>
+                </ol>
+                <a href="entrenamientos/cupos.html" class="btn-access btn-big"><i class="fa-solid fa-ticket"></i> Apartar mi cupo</a>
             </div>
+        </aside>
+    </div>
+    <p class="train-more"><a href="entrenamientos/">Ver historial completo y resultados <i class="fa-solid fa-arrow-right"></i></a></p>
+</section>
 
+<section id="jersey">
+    <h2 class="section-title">Jerseys Oficiales 2026</h2>
+    <div class="jersey-grid">
+        <article class="card-box jersey-card">
+            <h3>Edición Pumas Elite</h3>
+            <p>Confeccionado con microfibra avanzada de alto rendimiento para garantizar frescura y comodidad bajo máxima presión en torneos.</p>
+            <video src="videos/jersey.mp4" autoplay muted loop playsinline>Tu navegador no soporta el elemento de video.</video>
+        </article>
+        <article class="card-box jersey-card">
+            <h3>Edición Especial USA Pro</h3>
+            <p>Diseño exclusivo optimizado para la competición de alto nivel en el circuito internacional Free Fire USA.</p>
+            <video src="videos/jerseyUSA.mp4" autoplay muted loop playsinline>Tu navegador no soporta el elemento de video.</video>
+        </article>
+    </div>
+</section>
+
+<section id="comunidad">
+    <h2 class="section-title">Comunidad</h2>
+    <div class="community-grid">
+        <article class="card-box community-card">
+            <div class="cc-head"><i class="fa-brands fa-whatsapp"></i><h3>Entrenamientos Oficiales</h3></div>
+            <p>Horario: 10 AM México</p>
+            <a href="https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd" class="btn-access" target="_blank" rel="noopener">Unirse al WhatsApp</a>
+        </article>
+        <article class="card-box community-card">
+            <div class="cc-head"><i class="fa-brands fa-discord"></i><h3>Servidor Discord</h3></div>
+            <p>Charla, busca equipo y entérate de todo.</p>
+            <a href="https://discord.gg/SpagAJr8t" class="btn-access" target="_blank" rel="noopener">Unirse al Discord</a>
+        </article>
+        <article class="card-box community-card">
+            <div class="cc-head"><i class="fa-brands fa-whatsapp"></i><h3>Comunidad & Dinámicas</h3></div>
+            <p>Eventos, dinámicas y más actividades.</p>
+            <a href="https://chat.whatsapp.com/GvydqT687oS05sMW5oNJFl" class="btn-access" target="_blank" rel="noopener">Unirse al WhatsApp</a>
+        </article>
+        <article class="card-box community-card">
+            <div class="cc-head"><i class="fa-solid fa-share-nodes"></i><h3>Zona de Redes</h3></div>
+            <p>Síguenos en nuestras plataformas oficiales:</p>
+            <div class="social-row">
+                <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i><span>Oficial</span></a>
+                <a href="https://www.instagram.com/pumas_e7_gaming" target="_blank" rel="noopener"><i class="fa-brands fa-square-instagram"></i><span>USA Pro</span></a>
+                <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i><span>TikTok</span></a>
+            </div>
+        </article>
+        <article class="card-box community-card card-slot">
+            <!-- NUEVA TARJETA: reemplaza este bloque copiando una tarjeta de arriba -->
+            <i class="fa-solid fa-plus"></i><span>Espacio disponible</span>
+        </article>
+        <article class="card-box community-card card-slot">
+            <!-- NUEVA TARJETA: reemplaza este bloque copiando una tarjeta de arriba -->
+            <i class="fa-solid fa-plus"></i><span>Espacio disponible</span>
+        </article>
+    </div>
+</section>
+
+<section id="rankings">
+    <h2 class="section-title">Rankings Pumas</h2>
+    <div class="rank-grid">
+        <div class="card-box">
+            <div class="rank-head"><i class="fa-solid fa-ranking-star"></i><h3 id="tituloTopEq">Top 10 Equipos · Semana</h3></div>
+            <div id="contenedorTopEquiposPublicos" class="rank-list"><p>Cargando equipos...</p></div>
         </div>
-    </section>
+        <div class="card-box">
+            <div class="rank-head"><i class="fa-solid fa-skull"></i><h3 id="tituloTopKill">Top 10 Killers · Semana</h3></div>
+            <div id="contenedorTopKillersPublicos" class="rank-list"><p>Cargando killers...</p></div>
+        </div>
+    </div>
+</section>
 
     <section id="resultados" class="tool-section">
         <h2 class="section-title">Creador de Resultados Free Fire</h2>
@@ -317,7 +213,7 @@
             <div class="form-group" style="margin-top: 15px;">
                 <input type="file" id="fileInput" multiple accept=".txt,.log" onchange="prepararRenombradoEquipos()">
                 <div id="seccionRenombrar" style="display: none; margin-top: 20px; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 8px;">
-                    <h3 style="color: var(--primary); margin-bottom: 10px; font-family: 'Orbitron'; font-size: 1.1rem;">Editar Nombres de Equipos</h3>
+                    <h3 style="color: var(--primary); margin-bottom: 10px; font-family: 'Michroma'; font-size: 1.1rem;">Editar Nombres de Equipos</h3>
                     <div id="listaEquiposInputs" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;"></div>
                     <button onclick="procesarConNombresPersonalizados()" class="btn-generar" style="margin-top: 15px; padding: 10px 20px;">
                         CONFIRMAR NOMBRES Y GENERAR TABLA
@@ -347,5 +243,6 @@
         }
     </script>
     <script src="script.js"></script>
+    <script src="entrenamientos.js"></script>
 </body>
 </html>

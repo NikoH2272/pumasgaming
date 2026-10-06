@@ -64,7 +64,7 @@ async function cargarSesiones() {
         sesionesPorFecha = {};
         sesiones.forEach(sesion => {
             // Extrae solo la parte de la fecha (YYYY-MM-DD)
-            let dateStr = sesion.fecha.split('T')[0]; 
+            let dateStr = diaLocal(sesion.fecha); 
             if (!sesionesPorFecha[dateStr]) {
                 sesionesPorFecha[dateStr] = [];
             }
@@ -174,148 +174,75 @@ function seleccionarDia(dateStr, el) {
     });
 }
 
-async function calcularTablaGlobalAcumulada(sesiones) {
-    let globalTeamsMap = {};
-    let globalPlayersMap = {};
-    let totalMapasJugados = 0;
-    let totalKillsGenerales = 0;
 
-    for (let sesion of sesiones) {
-        if (!sesion.archivo_url) continue;
-        try {
-            const { data: fileList } = await supabaseClient.storage
-                .from('entrenamientos_logs')
-                .list(sesion.archivo_url);
+const ZONA_HORARIA='America/Bogota';
+const diaLocal=iso=>new Date(iso).toLocaleDateString('en-CA',{timeZone:ZONA_HORARIA});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function semanaISO(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=t.getUTCFullYear();return y+'-'+Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7);}
+function rangoSemana(d){const l=new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()||7)-1)),f=new Date(l.getFullYear(),l.getMonth(),l.getDate()+6),o={day:'numeric',month:'short'};return l.toLocaleDateString('es',o)+' – '+f.toLocaleDateString('es',o);}
+async function parsearSesion(s){
+  const vacio={teams:{},players:{},salas:0,kills:0};
+  if(!s.archivo_url) return vacio;
+  const {data:fl}=await supabaseClient.storage.from('entrenamientos_logs').list(s.archivo_url);
+  if(!fl) return vacio;
+  const ck='pg_ses_v2_'+s.id;
+  try{const c=JSON.parse(localStorage.getItem(ck)); if(c&&c.salas===fl.length) return c;}catch(e){}
+  const out={teams:{},players:{},salas:fl.length,kills:0};
+  await Promise.all(fl.map(async f=>{
+    const {data}=await supabaseClient.storage.from('entrenamientos_logs').download(s.archivo_url+'/'+f.name); if(!data) return;
+    (await data.text()).split('\n').forEach(l=>{
+      const t=l.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
+      if(t){const e=out.teams[t[1].trim()]=out.teams[t[1].trim()]||{p:0,b:0}; e.p+=+t[5]; if(+t[2]===1) e.b++;}
+      const p=l.match(/NAME:\s*(.+?)\s+ID:\s*\d+.*?KILL:\s*(\d+)/i);
+      if(p){const e=out.players[p[1].trim()]=out.players[p[1].trim()]||{k:0,s:0}; e.k+=+p[2]; e.s++; out.kills+=+p[2];}
+    });
+  }));
+  try{localStorage.setItem(ck,JSON.stringify(out));}catch(e){}
+  return out;
+}
+function agregar(lista){
+  const eq={},pl={}; let salas=0,kills=0;
+  lista.forEach(([s,d])=>{salas+=d.salas;kills+=d.kills;
+    for(const n in d.teams){const e=eq[n]=eq[n]||{name:n,pts:0,b:0,ses:0};e.pts+=d.teams[n].p;e.b+=d.teams[n].b;e.ses++;}
+    for(const n in d.players){const e=pl[n]=pl[n]||{name:n,k:0,s:0};e.k+=d.players[n].k;e.s+=d.players[n].s;}});
+  return {eq:Object.values(eq).sort((a,b)=>b.pts-a.pts),pl:Object.values(pl).sort((a,b)=>b.k-a.k),salas,kills};
+}
+async function parsearTodas(sesiones,alAvanzar){
+  const res=[];
+  for(let i=0;i<sesiones.length;i+=4){
+    const ch=sesiones.slice(i,i+4), r=await Promise.all(ch.map(s=>parsearSesion(s).catch(()=>({teams:{},players:{},salas:0,kills:0}))));
+    ch.forEach((s,j)=>res.push([s,r[j]])); if(alAvanzar) alAvanzar(res);
+  }
+  return res;
+}
+function semanaObjetivo(parsed){
+  const key=p=>semanaISO(new Date(diaLocal(p[0].fecha)+'T00:00:00'));
+  let k=semanaISO(new Date()), lista=parsed.filter(p=>key(p)===k), actual=true;
+  if(!lista.length&&parsed.length){k=key(parsed[0]);lista=parsed.filter(p=>key(p)===k);actual=false;}
+  const f=lista.length?new Date(diaLocal(lista[0][0].fecha)+'T00:00:00'):new Date();
+  return {num:k.split('-')[1],lista,actual,rango:rangoSemana(f)};
+}
 
-            if (!fileList) continue;
-            totalMapasJugados += fileList.length;
-
-            for (let file of fileList) {
-                const { data: fileData } = await supabaseClient.storage
-                    .from('entrenamientos_logs')
-                    .download(`${sesion.archivo_url}/${file.name}`);
-
-                if (fileData) {
-                    let texto = await fileData.text();
-                    let lines = texto.split('\n');
-
-                    lines.forEach(line => {
-                        const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
-                        if (teamMatch) {
-                            let nombre = teamMatch[1].trim();
-                            let rank = parseInt(teamMatch[2]);
-                            let totalScore = parseInt(teamMatch[5]);
-
-                            if (!globalTeamsMap[nombre]) {
-                                globalTeamsMap[nombre] = {
-                                    name: nombre,
-                                    totalScore: 0,
-                                    booyahs: 0,
-                                    sesionesSet: new Set()
-                                };
-                            }
-
-                            globalTeamsMap[nombre].totalScore += totalScore;
-                            globalTeamsMap[nombre].sesionesSet.add(sesion.id);
-
-                            if (rank === 1) {
-                                globalTeamsMap[nombre].booyahs += 1;
-                            }
-                        }
-
-                        const pMatch = line.match(/NAME:\s*(.+?)\s+ID:\s*\d+.*?KILL:\s*(\d+)/i);
-                        if (pMatch) {
-                            let pName = pMatch[1].trim();
-                            let killsCount = parseInt(pMatch[2]);
-                            totalKillsGenerales += killsCount;
-
-                            if (!globalPlayersMap[pName]) {
-                                globalPlayersMap[pName] = { name: pName, kills: 0, salasJugadas: 0 };
-                            }
-                            globalPlayersMap[pName].kills += killsCount;
-                            globalPlayersMap[pName].salasJugadas += 1;
-                        }
-                    });
-                }
-            }
-        } catch (e) {
-            console.error("Error al leer carpeta global:", e);
-        }
-    }
-
-    let statEquipos = document.getElementById('statTotalEquipos');
-    let statKills = document.getElementById('statTotalKills');
-    let statMapas = document.getElementById('statTotalMapas');
-
-    if (statEquipos) statEquipos.textContent = Object.keys(globalTeamsMap).length;
-    if (statKills) statKills.textContent = totalKillsGenerales;
-    if (statMapas) statMapas.textContent = totalMapasJugados;
-
-    // --- LÓGICA PARA RENDERIZAR EQUIPOS EN 2 TABLAS ---
-    let equiposGlobalesOrdenados = Object.values(globalTeamsMap).sort((a, b) => b.totalScore - a.totalScore).slice(0, 50);
-    let bodyGlobal1 = document.getElementById('bodyTablaGlobal1');
-    let bodyGlobal2 = document.getElementById('bodyTablaGlobal2');
-
-    if (bodyGlobal1 && bodyGlobal2) {
-        if (equiposGlobalesOrdenados.length === 0) {
-            bodyGlobal1.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--gray);">Sin registros globales.</td></tr>`;
-            bodyGlobal2.innerHTML = '';
-        } else {
-            bodyGlobal1.innerHTML = '';
-            bodyGlobal2.innerHTML = '';
-            
-            let mitad = Math.ceil(equiposGlobalesOrdenados.length / 2);
-
-            equiposGlobalesOrdenados.forEach((eq, idx) => {
-                let colorPos = idx === 0 ? '#DCCC9C' : (idx === 1 ? '#959595' : (idx === 2 ? '#cd7f32' : 'var(--light)'));
-                let sesionesCount = eq.sesionesSet ? eq.sesionesSet.size : 1;
-                
-                let filaHTML = `
-                    <tr>
-                        <td style="font-weight:bold; color: ${colorPos};">#${idx+1}</td>
-                        <td style="font-weight: bold; color: var(--light); font-size: 0.9rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${eq.name}</td>
-                        <td style="text-align:center; color: var(--secondary); font-weight:bold;">${sesionesCount}</td>
-                        <td style="text-align:center; color: #DCCC9C; font-weight:bold;">${eq.booyahs}</td>
-                        <td style="text-align:center; color: ${colorPos}; font-weight:bold; font-family:'Orbitron';">${eq.totalScore}</td>
-                    </tr>
-                `;
-                
-                if (idx < mitad) {
-                    bodyGlobal1.innerHTML += filaHTML;
-                } else {
-                    bodyGlobal2.innerHTML += filaHTML;
-                }
-            });
-        }
-    }
-
-    // --- LÓGICA PARA RENDERIZAR KILLERS CON SALAS JUGADAS ---
-    let killersGlobalesOrdenados = Object.values(globalPlayersMap).sort((a, b) => b.kills - a.kills).slice(0, 20);
-    let gridKillersGlobalHtml = '';
-    let gridKillersEl = document.getElementById('gridTopKillersGlobal');
-
-    if (gridKillersEl) {
-        if (killersGlobalesOrdenados.length === 0) {
-            gridKillersGlobalHtml = `<div style="color: var(--gray); text-align:center; padding: 20px;">Sin datos de killers.</div>`;
-        } else {
-            killersGlobalesOrdenados.forEach((tk, i) => {
-                let colorPos = i === 0 ? '#DCCC9C' : (i === 1 ? '#959595' : (i === 2 ? '#cd7f32' : 'var(--light)'));
-                gridKillersGlobalHtml += `
-                    <div class="killer-card">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="color: ${colorPos}; font-weight: bold; font-family: 'Orbitron'; min-width: 25px;">#${i+1}</span>
-                            <span style="color: var(--light); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">${tk.name}</span>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <span style="color: var(--secondary); font-size: 0.85rem;" title="Salas Jugadas"><i class="fa-solid fa-gamepad" style="margin-right: 4px;"></i>${tk.salasJugadas}</span>
-                            <span style="color: var(--primary); font-weight: bold; font-family: 'Orbitron'; font-size: 0.9rem;"><i class="fa-solid fa-crosshairs" style="margin-right: 4px;"></i> ${tk.kills}</span>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-        gridKillersEl.innerHTML = gridKillersGlobalHtml;
-    }
+const _col=i=>i===0?'#D8C395':i===1?'#B9B2A4':i===2?'#cd7f32':'var(--light)';
+function _filaEq(eq,i){const c=_col(i);return `<tr><td style="font-weight:bold;color:${c};">#${i+1}</td><td style="font-weight:bold;color:var(--light);font-size:.9rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(eq.name)}</td><td style="text-align:center;color:var(--gray);font-weight:bold;">${eq.ses}</td><td style="text-align:center;color:#D8C395;font-weight:bold;">${eq.b}</td><td style="text-align:center;color:${c};font-weight:bold;font-family:'Michroma';">${eq.pts}</td></tr>`;}
+function _llenar(idA,idB,lista){
+  const A=document.getElementById(idA),B=document.getElementById(idB); if(!A||!B) return;
+  if(!lista.length){A.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--gray);">Sin registros.</td></tr>';B.innerHTML='';return;}
+  const m=Math.ceil(lista.length/2);
+  A.innerHTML=lista.slice(0,m).map((e,i)=>_filaEq(e,i)).join('');
+  B.innerHTML=lista.slice(m).map((e,i)=>_filaEq(e,i+m)).join('');
+}
+async function calcularTablaGlobalAcumulada(sesiones){
+  const parsed=await parsearTodas(sesiones);
+  const todo=agregar(parsed), sem=semanaObjetivo(parsed), w=agregar(sem.lista);
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('statTotalEquipos',todo.eq.length);set('statTotalKills',todo.kills);set('statTotalMapas',todo.salas);
+  const tit=document.getElementById('tituloTop50');
+  if(tit) tit.innerHTML=`Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual?'':' · última semana con datos'}</span>`;
+  _llenar('bodyTablaGlobal1','bodyTablaGlobal2',w.eq.slice(0,50));
+  _llenar('bodyTop100a','bodyTop100b',todo.eq.slice(0,100));
+  const g=document.getElementById('gridTopKillersGlobal');
+  if(g) g.innerHTML=todo.pl.slice(0,20).map((tk,i)=>`<div class="killer-card"><div style="display:flex;align-items:center;gap:10px;"><span style="color:${_col(i)};font-weight:bold;font-family:'Michroma';min-width:25px;">#${i+1}</span><span style="color:var(--light);font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">${esc(tk.name)}</span></div><div style="display:flex;align-items:center;gap:12px;"><span style="color:var(--gray);font-size:.85rem;" title="Salas Jugadas"><i class="fa-solid fa-gamepad" style="margin-right:4px;"></i>${tk.s}</span><span style="color:var(--primary);font-weight:bold;font-family:'Michroma';font-size:.9rem;"><i class="fa-solid fa-crosshairs" style="margin-right:4px;"></i> ${tk.k}</span></div></div>`).join('')||'<div style="color:var(--gray);text-align:center;padding:20px;">Sin datos de killers.</div>';
 }
 
 async function cargarResultadosVipPublicos() {
@@ -357,13 +284,13 @@ async function cargarResultadosVipPublicos() {
         tbody.innerHTML = '';
 
         listaVip.forEach((eq, idx) => {
-            let colorPos = idx === 0 && eq.totalScore > 0 ? '#DCCC9C' : (idx === 1 && eq.totalScore > 0 ? '#959595' : (idx === 2 && eq.totalScore > 0 ? '#cd7f32' : '#fff'));
+            let colorPos = idx === 0 && eq.totalScore > 0 ? '#D8C395' : (idx === 1 && eq.totalScore > 0 ? '#B9B2A4' : (idx === 2 && eq.totalScore > 0 ? '#cd7f32' : '#fff'));
             tbody.innerHTML += `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 10px; font-weight: bold; color: ${colorPos};">#${idx+1}</td>
                     <td style="padding: 10px; font-weight: bold; color: #fff;">${eq.nombre}</td>
-                    <td style="text-align: center; padding: 10px; color: #DCCC9C; font-weight: bold;">${eq.booyahs}</td>
-                    <td style="text-align: center; padding: 10px; color: ${colorPos}; font-weight: bold; font-family: 'Orbitron';">${eq.totalScore}</td>
+                    <td style="text-align: center; padding: 10px; color: #D8C395; font-weight: bold;">${eq.booyahs}</td>
+                    <td style="text-align: center; padding: 10px; color: ${colorPos}; font-weight: bold; font-family: 'Michroma';">${eq.totalScore}</td>
                 </tr>
             `;
         });
@@ -439,7 +366,7 @@ async function procesarSesionUnica(folderPath, titulo, jornada) {
 
         let htmlHeader = `
             <thead>
-                <tr style="color: var(--primary); font-family: 'Orbitron'; border-bottom: 2px solid rgba(220,204,156,0.3); font-size: 0.85rem;">
+                <tr style="color: var(--primary); font-family: 'Michroma'; border-bottom: 2px solid rgba(216,195,149,0.3); font-size: 0.85rem;">
                     <th style="text-align:left; padding: 10px;">#</th>
                     <th style="text-align:left; padding: 10px;">EQUIPO</th>
                     ${Array.from({length: numSalas}).map((_,i) => `<th style="padding: 10px; text-align:center;">S${i+1}</th>`).join('')}
@@ -453,8 +380,8 @@ async function procesarSesionUnica(folderPath, titulo, jornada) {
         let htmlBody = `<tbody>`;
         equiposOrdenados.forEach((eq, i) => {
             let colorFila = "var(--light)";
-            if (i === 0) colorFila = '#DCCC9C';
-            else if (i === 1) colorFila = '#959595';
+            if (i === 0) colorFila = '#D8C395';
+            else if (i === 1) colorFila = '#B9B2A4';
             else if (i === 2) colorFila = '#cd7f32';
 
             htmlBody += `
@@ -464,7 +391,7 @@ async function procesarSesionUnica(folderPath, titulo, jornada) {
                     ${Array.from({length: numSalas}).map((_,s) => `<td style="text-align:center; padding: 10px; color: var(--secondary);">${eq.salasPuntos[s] !== undefined ? eq.salasPuntos[s] : '-'}</td>`).join('')}
                     <td style="text-align:center; padding: 10px; color: var(--primary); font-weight:bold;">${eq.salasJugadas}</td>
                     <td style="text-align:center; padding: 10px; color: #ff5555; font-weight:bold;">${eq.killScore}</td>
-                    <td style="text-align:center; padding: 10px; color:${colorFila}; font-weight:bold; font-family:'Orbitron';">${eq.totalScore}</td>
+                    <td style="text-align:center; padding: 10px; color:${colorFila}; font-weight:bold; font-family:'Michroma';">${eq.totalScore}</td>
                 </tr>
             `;
         });

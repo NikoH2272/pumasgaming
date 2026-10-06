@@ -4,7 +4,7 @@ async function generarVistaPreviaMetricas() {
     
     if (!contenedorPreview) return;
 
-    contenedorPreview.innerHTML = `<div style="color: var(--primary); text-align: center; padding: 40px; font-family: 'Orbitron';">Analizando base de datos y calculando métricas globales...</div>`;
+    contenedorPreview.innerHTML = `<div style="color: var(--primary); text-align: center; padding: 40px; font-family: 'Michroma';">Analizando base de datos y calculando métricas globales...</div>`;
     if (contenedorCopiable) contenedorCopiable.style.display = 'none';
 
     try {
@@ -115,30 +115,30 @@ ${mvpTexto}`;
 
         let html = `
             <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-                <div id="metricasCaptura" style="width: 800px; height: 1000px; position: relative; font-family: 'Rajdhani', sans-serif; padding: 25px; box-sizing: border-box; border: 2px solid rgba(220, 204, 156, 0.3); border-radius: 12px; overflow: hidden; ${fV} color: #ffffff;">
+                <div id="metricasCaptura" style="width: 800px; height: 1000px; position: relative; font-family: 'Trebuchet MS', sans-serif; padding: 25px; box-sizing: border-box; border: 2px solid rgba(216,195,149, 0.3); border-radius: 12px; overflow: hidden; ${fV} color: #ffffff;">
 
                     <div style="text-align: center; margin-bottom: 18px;">
-                        <h1 style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; color: #DCCC9C; margin: 0; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">PUMAS GAMING</h1>
-                        <div style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; margin-top: 5px; font-weight: bold; letter-spacing: 2px; color: #fff;">ESTADÍSTICAS Y MÉTRICAS GLOBALES</div>
+                        <h1 style="font-family: 'Michroma', sans-serif; font-size: 2.2rem; color: #D8C395; margin: 0; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">PUMAS GAMING</h1>
+                        <div style="font-family: 'Michroma', sans-serif; font-size: 0.9rem; margin-top: 5px; font-weight: bold; letter-spacing: 2px; color: #fff;">ESTADÍSTICAS Y MÉTRICAS GLOBALES</div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
-                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center;">
-                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Orbitron';">TOTAL ENTRENOS</div>
-                            <div style="color: #DCCC9C; font-size: 1.3rem; font-weight: bold; font-family: 'Orbitron';">${totalEntrenos}</div>
+                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(216,195,149,0.3); text-align: center;">
+                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Michroma';">TOTAL ENTRENOS</div>
+                            <div style="color: #D8C395; font-size: 1.3rem; font-weight: bold; font-family: 'Michroma';">${totalEntrenos}</div>
                         </div>
-                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center;">
-                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Orbitron';">SALAS CREADAS</div>
-                            <div style="color: #DCCC9C; font-size: 1.3rem; font-weight: bold; font-family: 'Orbitron';">${totalSalas}</div>
+                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(216,195,149,0.3); text-align: center;">
+                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Michroma';">SALAS CREADAS</div>
+                            <div style="color: #D8C395; font-size: 1.3rem; font-weight: bold; font-family: 'Michroma';">${totalSalas}</div>
                         </div>
-                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center;">
-                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Orbitron';">KILLS TOTALES</div>
-                            <div style="color: #DCCC9C; font-size: 1.3rem; font-weight: bold; font-family: 'Orbitron';">${totalKillsGen}</div>
+                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(216,195,149,0.3); text-align: center;">
+                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Michroma';">KILLS TOTALES</div>
+                            <div style="color: #D8C395; font-size: 1.3rem; font-weight: bold; font-family: 'Michroma';">${totalKillsGen}</div>
                         </div>
                     </div>
 
-                    <div style="background: rgba(18, 19, 23, 0.95); padding: 12px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3); margin-bottom: 15px;">
-                        <div style="font-family: 'Orbitron', sans-serif; color: #DCCC9C; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px;">RÉCORDS DESTACADOS</div>
+                    <div style="background: rgba(18, 19, 23, 0.95); padding: 12px; border-radius: 8px; border: 1px solid rgba(216,195,149,0.3); margin-bottom: 15px;">
+                        <div style="font-family: 'Michroma', sans-serif; color: #D8C395; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px;">RÉCORDS DESTACADOS</div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.75rem;">
                             <div style="background: rgba(0,0,0,0.5); padding: 6px; border-radius: 4px;">
                                 <span style="color: var(--gray);">Más Pts Posición:</span><br>
@@ -160,11 +160,11 @@ ${mvpTexto}`;
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3);">
-                            <div style="font-family: 'Orbitron', sans-serif; color: #DCCC9C; font-size: 0.78rem; font-weight: bold; margin-bottom: 6px;">TOP 5 EQUIPOS</div>
+                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 8px; border: 1px solid rgba(216,195,149,0.3);">
+                            <div style="font-family: 'Michroma', sans-serif; color: #D8C395; font-size: 0.78rem; font-weight: bold; margin-bottom: 6px;">TOP 5 EQUIPOS</div>
                             <table style="width: 100%; border-collapse: collapse; font-size: 0.7rem;">
                                 <thead>
-                                    <tr style="color: #DCCC9C; border-bottom: 1px solid rgba(220,204,156,0.3);">
+                                    <tr style="color: #D8C395; border-bottom: 1px solid rgba(216,195,149,0.3);">
                                         <th style="text-align: left; padding: 2px;">#</th>
                                         <th style="text-align: left; padding: 2px;">Equipo</th>
                                         <th style="text-align: center; padding: 2px;">Pts</th>
@@ -173,20 +173,20 @@ ${mvpTexto}`;
                                 <tbody>
                                     ${top5Eq.map((eq, i) => `
                                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                            <td style="padding: 3px; color: #DCCC9C; font-weight: bold;">#${i+1}</td>
+                                            <td style="padding: 3px; color: #D8C395; font-weight: bold;">#${i+1}</td>
                                             <td style="padding: 3px; font-weight: bold; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${eq.nombre}</td>
-                                            <td style="padding: 3px; text-align: center; color: #DCCC9C; font-family: 'Orbitron';">${eq.totalPts}</td>
+                                            <td style="padding: 3px; text-align: center; color: #D8C395; font-family: 'Michroma';">${eq.totalPts}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
                             </table>
                         </div>
 
-                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3);">
-                            <div style="font-family: 'Orbitron', sans-serif; color: #DCCC9C; font-size: 0.78rem; font-weight: bold; margin-bottom: 6px;">TOP 5 JUGADORES</div>
+                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 8px; border: 1px solid rgba(216,195,149,0.3);">
+                            <div style="font-family: 'Michroma', sans-serif; color: #D8C395; font-size: 0.78rem; font-weight: bold; margin-bottom: 6px;">TOP 5 JUGADORES</div>
                             <table style="width: 100%; border-collapse: collapse; font-size: 0.7rem;">
                                 <thead>
-                                    <tr style="color: #DCCC9C; border-bottom: 1px solid rgba(220,204,156,0.3);">
+                                    <tr style="color: #D8C395; border-bottom: 1px solid rgba(216,195,149,0.3);">
                                         <th style="text-align: left; padding: 2px;">#</th>
                                         <th style="text-align: left; padding: 2px;">Jugador</th>
                                         <th style="text-align: center; padding: 2px;">Kills</th>
@@ -195,9 +195,9 @@ ${mvpTexto}`;
                                 <tbody>
                                     ${top5Jug.map((jg, i) => `
                                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                            <td style="padding: 3px; color: #DCCC9C; font-weight: bold;">#${i+1}</td>
+                                            <td style="padding: 3px; color: #D8C395; font-weight: bold;">#${i+1}</td>
                                             <td style="padding: 3px; font-weight: bold; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${jg.nombre}</td>
-                                            <td style="padding: 3px; text-align: center; color: #DCCC9C; font-family: 'Orbitron';">${jg.kills}</td>
+                                            <td style="padding: 3px; text-align: center; color: #D8C395; font-family: 'Michroma';">${jg.kills}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>

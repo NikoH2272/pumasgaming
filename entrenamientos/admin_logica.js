@@ -57,9 +57,9 @@ async function prepararRenombradoEquipos() {
         
         let badgeEstado = '';
         if (matchOficial) {
-            badgeEstado = `<span style="background: rgba(0, 255, 128, 0.15); color: #00ff80; border: 1px solid rgba(0, 255, 128, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-family: 'Orbitron'; font-weight: bold; white-space: nowrap;"><i class="fa-solid fa-check"></i> OFICIAL</span>`;
+            badgeEstado = `<span style="background: rgba(0, 255, 128, 0.15); color: #00ff80; border: 1px solid rgba(0, 255, 128, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-family: 'Michroma'; font-weight: bold; white-space: nowrap;"><i class="fa-solid fa-check"></i> OFICIAL</span>`;
         } else {
-            badgeEstado = `<span style="background: rgba(255, 51, 51, 0.15); color: #ff5555; border: 1px solid rgba(255, 51, 51, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-family: 'Orbitron'; font-weight: bold; white-space: nowrap;"><i class="fa-solid fa-xmark"></i> NUEVO</span>`;
+            badgeEstado = `<span style="background: rgba(255, 51, 51, 0.15); color: #ff5555; border: 1px solid rgba(255, 51, 51, 0.4); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-family: 'Michroma'; font-weight: bold; white-space: nowrap;"><i class="fa-solid fa-xmark"></i> NUEVO</span>`;
         }
 
         contenedor.innerHTML += `
@@ -69,7 +69,7 @@ async function prepararRenombradoEquipos() {
                     ${badgeEstado}
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="text" class="input-nombre-editable" data-original="${eqOriginal}" value="${sugerenciaNombre}" style="flex: 2; padding: 7px; background: #0a0b10; border: 1px solid rgba(220,204,156,0.3); color: #fff; border-radius: 4px; font-family:'Rajdhani'; font-weight:bold; font-size: 0.9rem;">
+                    <input type="text" class="input-nombre-editable" data-original="${eqOriginal}" value="${sugerenciaNombre}" style="flex: 2; padding: 7px; background: #0a0b10; border: 1px solid rgba(216,195,149,0.3); color: #fff; border-radius: 4px; font-family:'Trebuchet MS'; font-weight:bold; font-size: 0.9rem;">
                     <button onclick="this.closest('div').parentElement.remove()" style="background:#ff3333; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
@@ -258,8 +258,8 @@ function renderizarResultados(eqs, tKs, nS) {
                         <tbody>
                             ${eqO.slice(0, 15).map((eq, i) => {
                                 let cFila = cF;
-                                if (i === 0) cFila = '#DCCC9C';
-                                else if (i === 1) cFila = '#959595';
+                                if (i === 0) cFila = '#D8C395';
+                                else if (i === 1) cFila = '#B9B2A4';
                                 return `
                                 <tr>
                                     <td style="font-weight: bold; color:${cFila};">#${i+1}</td>
@@ -271,7 +271,7 @@ function renderizarResultados(eqs, tKs, nS) {
                                         if (pS === undefined) return `<td style="text-align:center; color:var(--gray);">-</td>`;
                                         return `<td style="text-align:center; color:${cF};">${pS}</td>`;
                                     }).join('')}
-                                    <td style="text-align:center; color:#DCCC9C; font-weight:bold;">${eq.killScore}</td>
+                                    <td style="text-align:center; color:#D8C395; font-weight:bold;">${eq.killScore}</td>
                                     <td style="text-align:center; color:${cFila}; font-weight:bold;">${eq.totalCalculado}</td>
                                 </tr>`;
                             }).join('')}
@@ -284,17 +284,17 @@ function renderizarResultados(eqs, tKs, nS) {
                     <div class="grid-equipos-destacados">
                         ${eqO.slice(0, 6).map((eq, i) => {
                             let cP = cF;
-                            if (i === 0) cP = '#DCCC9C';
+                            if (i === 0) cP = '#D8C395';
                             let sumK = eq.killScore || 0;
                             return `
                             <div class="item-equipo-destacado">
                                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1px;">
                                     <span style="color:${cP}; font-weight:bold; max-width: 110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">#${i+1}${eq.name}</span>
-                                    <span style="color:#DCCC9C; font-weight:bold;">👑 ${eq.booyahsCount || 0}</span>
+                                    <span style="color:#D8C395; font-weight:bold;">👑 ${eq.booyahsCount || 0}</span>
                                 </div>
                                 <div style="display:flex; justify-content:space-between; color:var(--gray); font-size:0.62rem;">
                                     <span>Pts: <strong style="color:${cF};">${eq.totalCalculado}</strong></span>
-                                    <span>Kills: <strong style="color:#DCCC9C;">${sumK}</strong></span>
+                                    <span>Kills: <strong style="color:#D8C395;">${sumK}</strong></span>
                                 </div>
                             </div>`;
                         }).join('')}
@@ -306,9 +306,9 @@ function renderizarResultados(eqs, tKs, nS) {
                     <div class="grid-booyah-salas" style="grid-template-columns: repeat(${Math.min(Math.max(rWData.length, 1), 5)}, 1fr);">
                         ${rWData.length ? rWData.map(rw => `
                             <div class="item-booyah-sala">
-                                <div style="color: #DCCC9C; font-family: 'Orbitron'; font-weight: bold; margin-bottom: 1px;">SALA ${rw.sala} 👑</div>
+                                <div style="color: #D8C395; font-family: 'Michroma'; font-weight: bold; margin-bottom: 1px;">SALA ${rw.sala} 👑</div>
                                 <div style="color: ${cF}; font-weight: bold; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;" title="${rw.team}">${rw.team}</div>
-                                <div style="color: var(--gray); font-size: 0.6rem; margin-top: 1px;">Pts: <strong style="color: #DCCC9C;">${rw.points}</strong> | K: <strong style="color: #DCCC9C;">${rw.kills}</strong></div>
+                                <div style="color: var(--gray); font-size: 0.6rem; margin-top: 1px;">Pts: <strong style="color: #D8C395;">${rw.points}</strong> | K: <strong style="color: #D8C395;">${rw.kills}</strong></div>
                             </div>
                         `).join('') : `<div style="color: var(--gray); font-size: 0.72rem; text-align: center; padding: 4px;">No hay datos de Booyah registrados.</div>`}
                     </div>
@@ -319,14 +319,14 @@ function renderizarResultados(eqs, tKs, nS) {
                     <div class="grid-top-killers">
                         ${tKL.map((tk, i) => {
                             let cP = cF;
-                            if (i === 0) cP = '#DCCC9C';
+                            if (i === 0) cP = '#D8C395';
                             return `
                             <div class="item-top-killer">
                                 <div style="overflow: hidden;">
                                     <span style="color: ${cP}; font-weight: bold; margin-right: 2px;">#${i+1}</span>
                                     <span style="color: ${cF}; font-weight: bold; max-width: 75px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;">${tk.name}</span>
                                 </div>
-                                <span style="color: #DCCC9C; font-weight: bold; font-size: 0.7rem;">${tk.kills}</span>
+                                <span style="color: #D8C395; font-weight: bold; font-size: 0.7rem;">${tk.kills}</span>
                             </div>`;
                         }).join('')}
                     </div>
@@ -337,15 +337,15 @@ function renderizarResultados(eqs, tKs, nS) {
                     <div class="grid-resumen-nums">
                         <div class="item-resumen-caja">
                             <div style="color: var(--gray); font-size: 0.62rem;">SALAS JUGADAS</div>
-                            <div style="color: #DCCC9C; font-family: 'Orbitron'; font-weight: bold; font-size: 0.9rem;">${nS}</div>
+                            <div style="color: #D8C395; font-family: 'Michroma'; font-weight: bold; font-size: 0.9rem;">${nS}</div>
                         </div>
                         <div class="item-resumen-caja">
                             <div style="color: var(--gray); font-size: 0.62rem;">EQUIPOS QUE JUGARON</div>
-                            <div style="color: #DCCC9C; font-family: 'Orbitron'; font-weight: bold; font-size: 0.9rem;">${totalEquiposParticipantes}</div>
+                            <div style="color: #D8C395; font-family: 'Michroma'; font-weight: bold; font-size: 0.9rem;">${totalEquiposParticipantes}</div>
                         </div>
                         <div class="item-resumen-caja">
                             <div style="color: var(--gray); font-size: 0.62rem;">KILL GENERALES</div>
-                            <div style="color: #DCCC9C; font-family: 'Orbitron'; font-weight: bold; font-size: 0.9rem;">${totalKillsGenerales}</div>
+                            <div style="color: #D8C395; font-family: 'Michroma'; font-weight: bold; font-size: 0.9rem;">${totalKillsGenerales}</div>
                         </div>
                     </div>
                 </div>
@@ -427,7 +427,7 @@ async function guardarEntrenamientoEnSupabase() {
 
         const fileInput = document.getElementById('fileInput');
         let files = Array.from(fileInput.files);
-        let folderName = `entreno_${fecha.toISOString().slice(0,10)}_${titulo.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${Date.now()}`;
+        let folderName = `entreno_${fecha.toLocaleDateString('en-CA',{timeZone:'America/Bogota'})}_${titulo.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${Date.now()}`;
 
         if (files.length > 0 && processedFilesTexts.length === files.length) {
             try {
@@ -569,26 +569,26 @@ async function cargarResultadosEquiposOficiales() {
         }
 
         listaFiltrada.forEach((eq, idx) => {
-            let colorPos = idx === 0 && eq.totalScore > 0 ? '#DCCC9C' : (idx === 1 && eq.totalScore > 0 ? '#959595' : (idx === 2 && eq.totalScore > 0 ? '#cd7f32' : '#fff'));
+            let colorPos = idx === 0 && eq.totalScore > 0 ? '#D8C395' : (idx === 1 && eq.totalScore > 0 ? '#B9B2A4' : (idx === 2 && eq.totalScore > 0 ? '#cd7f32' : '#fff'));
             let logoImgHtml = eq.logo_url ? `<img src="${eq.logo_url}" style="width: 28px; height: 28px; object-fit: contain; border-radius: 4px; background: #000;">` : `<i class="fa-solid fa-shield" style="color: var(--primary); font-size: 1.2rem;"></i>`;
 
             contenedor.innerHTML += `
-                <div style="background: rgba(18, 19, 23, 0.95); border: 1px solid rgba(220, 204, 156, 0.2); border-left: 3px solid ${colorPos}; border-radius: 6px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="background: rgba(18, 19, 23, 0.95); border: 1px solid rgba(216,195,149, 0.2); border-left: 3px solid ${colorPos}; border-radius: 6px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 12px; overflow: hidden; max-width: 70%;">
                         ${logoImgHtml}
                         <div style="display: flex; align-items: center; gap: 6px;">
-                            <span style="font-family: 'Orbitron'; font-weight: bold; color: ${colorPos}; font-size: 0.85rem;">#${idx+1}</span>
+                            <span style="font-family: 'Michroma'; font-weight: bold; color: ${colorPos}; font-size: 0.85rem;">#${idx+1}</span>
                             <span style="font-weight: bold; color: #fff; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${eq.nombre}">${eq.nombre}</span>
                         </div>
                     </div>
                     <div style="display: flex; gap: 15px; align-items: center; text-align: right;">
                         <div>
-                            <div style="color: var(--gray); font-size: 0.6rem; font-family: 'Orbitron';">BOOYAH</div>
-                            <div style="color: #DCCC9C; font-weight: bold; font-family: 'Orbitron'; font-size: 0.9rem;">${eq.booyahs} 🏆</div>
+                            <div style="color: var(--gray); font-size: 0.6rem; font-family: 'Michroma';">BOOYAH</div>
+                            <div style="color: #D8C395; font-weight: bold; font-family: 'Michroma'; font-size: 0.9rem;">${eq.booyahs} 🏆</div>
                         </div>
                         <div>
-                            <div style="color: var(--gray); font-size: 0.6rem; font-family: 'Orbitron';">PTS</div>
-                            <div style="color: ${colorPos}; font-weight: bold; font-family: 'Orbitron'; font-size: 1rem;">${eq.totalScore}</div>
+                            <div style="color: var(--gray); font-size: 0.6rem; font-family: 'Michroma';">PTS</div>
+                            <div style="color: ${colorPos}; font-weight: bold; font-family: 'Michroma'; font-size: 1rem;">${eq.totalScore}</div>
                         </div>
                     </div>
                 </div>
@@ -731,7 +731,7 @@ async function cargarListaEquiposVipAdmin() {
                         <button onclick="editarEquipoVipPrompt('${eq.id}', '${eq.nombre.replace(/'/g, "\\'")}')" style="background: var(--primary); color: #000; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;" title="Editar Nombre">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <label style="background: #00ffcc; color: #000; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;" title="Subir / Cambiar Logo">
+                        <label style="background: #D8C395; color: #000; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;" title="Subir / Cambiar Logo">
                             <i class="fa-solid fa-image"></i>
                             <input type="file" id="fileLogo_${eq.id}" accept="image/*" style="display: none;" onchange="subirLogoEquipoVip('${eq.id}')">
                         </label>
@@ -824,7 +824,7 @@ async function generarVistaPreviaMetricas() {
     const contenedorCopiable = document.getElementById('contenedorTextoMetricasCopiable');
     
     if (!contenedorPreview) return;
-    contenedorPreview.innerHTML = `<div style="color: var(--primary); text-align: center; padding: 40px; font-family: 'Orbitron';">Analizando base de datos y calculando métricas globales...</div>`;
+    contenedorPreview.innerHTML = `<div style="color: var(--primary); text-align: center; padding: 40px; font-family: 'Michroma';">Analizando base de datos y calculando métricas globales...</div>`;
     if (contenedorCopiable) contenedorCopiable.style.display = 'none';
 
     try {
@@ -916,30 +916,30 @@ ${mvpTexto}`;
 
         let html = `
             <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-                <div id="metricasCaptura" style="width: 800px; height: 1000px; position: relative; font-family: 'Rajdhani', sans-serif; padding: 25px; box-sizing: border-box; border: 2px solid rgba(220, 204, 156, 0.3); border-radius: 12px; overflow: hidden; ${fV} color: #ffffff;">
+                <div id="metricasCaptura" style="width: 800px; height: 1000px; position: relative; font-family: 'Trebuchet MS', sans-serif; padding: 25px; box-sizing: border-box; border: 2px solid rgba(216,195,149, 0.3); border-radius: 12px; overflow: hidden; ${fV} color: #ffffff;">
 
                     <div style="text-align: center; margin-bottom: 18px;">
-                        <h1 style="font-family: 'Orbitron', sans-serif; font-size: 2.2rem; color: #DCCC9C; margin: 0; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">PUMAS GAMING</h1>
-                        <div style="font-family: 'Orbitron', sans-serif; font-size: 0.9rem; margin-top: 5px; font-weight: bold; letter-spacing: 2px; color: #fff;">ESTADÍSTICAS Y MÉTRICAS GLOBALES</div>
+                        <h1 style="font-family: 'Michroma', sans-serif; font-size: 2.2rem; color: #D8C395; margin: 0; text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">PUMAS GAMING</h1>
+                        <div style="font-family: 'Michroma', sans-serif; font-size: 0.9rem; margin-top: 5px; font-weight: bold; letter-spacing: 2px; color: #fff;">ESTADÍSTICAS Y MÉTRICAS GLOBALES</div>
                     </div>
 
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
-                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center;">
-                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Orbitron';">TOTAL ENTRENOS</div>
-                            <div style="color: #DCCC9C; font-size: 1.3rem; font-weight: bold; font-family: 'Orbitron';">${totalEntrenos}</div>
+                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(216,195,149,0.3); text-align: center;">
+                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Michroma';">TOTAL ENTRENOS</div>
+                            <div style="color: #D8C395; font-size: 1.3rem; font-weight: bold; font-family: 'Michroma';">${totalEntrenos}</div>
                         </div>
-                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center;">
-                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Orbitron';">SALAS CREADAS</div>
-                            <div style="color: #DCCC9C; font-size: 1.3rem; font-weight: bold; font-family: 'Orbitron';">${totalSalas}</div>
+                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(216,195,149,0.3); text-align: center;">
+                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Michroma';">SALAS CREADAS</div>
+                            <div style="color: #D8C395; font-size: 1.3rem; font-weight: bold; font-family: 'Michroma';">${totalSalas}</div>
                         </div>
-                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(220,204,156,0.3); text-align: center;">
-                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Orbitron';">KILLS TOTALES</div>
-                            <div style="color: #DCCC9C; font-size: 1.3rem; font-weight: bold; font-family: 'Orbitron';">${totalKillsGen}</div>
+                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 6px; border: 1px solid rgba(216,195,149,0.3); text-align: center;">
+                            <div style="color: var(--gray); font-size: 0.7rem; font-family: 'Michroma';">KILLS TOTALES</div>
+                            <div style="color: #D8C395; font-size: 1.3rem; font-weight: bold; font-family: 'Michroma';">${totalKillsGen}</div>
                         </div>
                     </div>
 
-                    <div style="background: rgba(18, 19, 23, 0.95); padding: 12px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3); margin-bottom: 15px;">
-                        <div style="font-family: 'Orbitron', sans-serif; color: #DCCC9C; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px;">RÉCORDS DESTACADOS</div>
+                    <div style="background: rgba(18, 19, 23, 0.95); padding: 12px; border-radius: 8px; border: 1px solid rgba(216,195,149,0.3); margin-bottom: 15px;">
+                        <div style="font-family: 'Michroma', sans-serif; color: #D8C395; font-size: 0.85rem; font-weight: bold; margin-bottom: 8px;">RÉCORDS DESTACADOS</div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.75rem;">
                             <div style="background: rgba(0,0,0,0.5); padding: 6px; border-radius: 4px;">
                                 <span style="color: var(--gray);">Más Pts Posición:</span><br>
@@ -961,11 +961,11 @@ ${mvpTexto}`;
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3);">
-                            <div style="font-family: 'Orbitron', sans-serif; color: #DCCC9C; font-size: 0.78rem; font-weight: bold; margin-bottom: 6px;">TOP 5 EQUIPOS</div>
+                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 8px; border: 1px solid rgba(216,195,149,0.3);">
+                            <div style="font-family: 'Michroma', sans-serif; color: #D8C395; font-size: 0.78rem; font-weight: bold; margin-bottom: 6px;">TOP 5 EQUIPOS</div>
                             <table style="width: 100%; border-collapse: collapse; font-size: 0.7rem;">
                                 <thead>
-                                    <tr style="color: #DCCC9C; border-bottom: 1px solid rgba(220,204,156,0.3);">
+                                    <tr style="color: #D8C395; border-bottom: 1px solid rgba(216,195,149,0.3);">
                                         <th style="text-align: left; padding: 2px;">#</th>
                                         <th style="text-align: left; padding: 2px;">Equipo</th>
                                         <th style="text-align: center; padding: 2px;">Pts</th>
@@ -974,20 +974,20 @@ ${mvpTexto}`;
                                 <tbody>
                                     ${top5Eq.map((eq, i) => `
                                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                            <td style="padding: 3px; color: #DCCC9C; font-weight: bold;">#${i+1}</td>
+                                            <td style="padding: 3px; color: #D8C395; font-weight: bold;">#${i+1}</td>
                                             <td style="padding: 3px; font-weight: bold; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${eq.nombre}</td>
-                                            <td style="padding: 3px; text-align: center; color: #DCCC9C; font-family: 'Orbitron';">${eq.totalPts}</td>
+                                            <td style="padding: 3px; text-align: center; color: #D8C395; font-family: 'Michroma';">${eq.totalPts}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
                             </table>
                         </div>
 
-                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 8px; border: 1px solid rgba(220,204,156,0.3);">
-                            <div style="font-family: 'Orbitron', sans-serif; color: #DCCC9C; font-size: 0.78rem; font-weight: bold; margin-bottom: 6px;">TOP 5 JUGADORES</div>
+                        <div style="background: rgba(18, 19, 23, 0.95); padding: 10px; border-radius: 8px; border: 1px solid rgba(216,195,149,0.3);">
+                            <div style="font-family: 'Michroma', sans-serif; color: #D8C395; font-size: 0.78rem; font-weight: bold; margin-bottom: 6px;">TOP 5 JUGADORES</div>
                             <table style="width: 100%; border-collapse: collapse; font-size: 0.7rem;">
                                 <thead>
-                                    <tr style="color: #DCCC9C; border-bottom: 1px solid rgba(220,204,156,0.3);">
+                                    <tr style="color: #D8C395; border-bottom: 1px solid rgba(216,195,149,0.3);">
                                         <th style="text-align: left; padding: 2px;">#</th>
                                         <th style="text-align: left; padding: 2px;">Jugador</th>
                                         <th style="text-align: center; padding: 2px;">Kills</th>
@@ -996,9 +996,9 @@ ${mvpTexto}`;
                                 <tbody>
                                     ${top5Jug.map((jg, i) => `
                                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                            <td style="padding: 3px; color: #DCCC9C; font-weight: bold;">#${i+1}</td>
+                                            <td style="padding: 3px; color: #D8C395; font-weight: bold;">#${i+1}</td>
                                             <td style="padding: 3px; font-weight: bold; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${jg.nombre}</td>
-                                            <td style="padding: 3px; text-align: center; color: #DCCC9C; font-family: 'Orbitron';">${jg.kills}</td>
+                                            <td style="padding: 3px; text-align: center; color: #D8C395; font-family: 'Michroma';">${jg.kills}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -1051,6 +1051,10 @@ async function guardarProgramacion() {
     let cupos = document.getElementById('progTotalEquipos').value;
     let link = document.getElementById('progLink').value.trim();
     let equiposStaffTexto = document.getElementById('progStaffEquipos').value.trim();
+    const requierePub = document.getElementById('progRequierePub').value === 'SI';
+    const pubVal = document.getElementById('progPublicarEn').value;
+    if (requierePub && !pubVal) { alert('Indica la hora en que se publicará el entrenamiento.'); return; }
+    const extra = requierePub ? { publicar_en: new Date(pubVal).toISOString() } : {};
 
     if (!titulo || !fecha || !link) {
         alert("Por favor, completa el título, la fecha y el link del grupo.");
@@ -1066,7 +1070,8 @@ async function guardarProgramacion() {
                 fecha: new Date(fecha).toISOString(), 
                 hay_staff: staff, 
                 cupos_totales: parseInt(cupos), 
-                link_grupo: link 
+                link_grupo: link,
+                ...extra
             }])
             .select()
             .single();
@@ -1077,10 +1082,12 @@ async function guardarProgramacion() {
         if (staff === 'SI' && equiposStaffTexto) {
             let lineas = equiposStaffTexto.split('\n');
             let insertsStaff = [];
+            const vistosStaff = new Set();
             
             lineas.forEach(linea => {
                 let nombreEq = linea.trim();
-                if (nombreEq) {
+                if (nombreEq && !vistosStaff.has(nombreEq.toLowerCase().replace(/\s+/g, ' '))) {
+                    vistosStaff.add(nombreEq.toLowerCase().replace(/\s+/g, ' '));
                     insertsStaff.push({
                         entrenamiento_id: entData.id,
                         nombre_jugador: nombreEq,
@@ -1095,10 +1102,13 @@ async function guardarProgramacion() {
             }
         }
         
-        alert("¡Entrenamiento publicado exitosamente! Ya está disponible en la página de cupos.");
+        alert(requierePub ? "¡Entrenamiento guardado! Quedará pendiente y se abrirá solo a la hora indicada." : "¡Entrenamiento publicado exitosamente! Ya está disponible en la página de cupos.");
         
         // Limpiar formulario
         document.getElementById('progTitulo').value = '';
+        document.getElementById('progRequierePub').value = 'NO';
+        document.getElementById('progPublicarEn').value = '';
+        document.getElementById('contenedorPublicarEn').style.display = 'none';
         document.getElementById('progLink').value = '';
         document.getElementById('progStaffEquipos').value = '';
         document.getElementById('progStaff').value = 'NO';
@@ -1113,90 +1123,94 @@ async function guardarProgramacion() {
 // GESTIÓN EN VIVO DE CUPOS (ADMIN)
 // ==========================================
 
+let _cuposData = [], _filtroCupos = 'todos';
+const _CUPO_LBL = { activo: 'ACTIVO', lleno: 'LLENO / CERRADO', pendiente: 'PENDIENTE A ABRIR' };
+const _escC = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const _fmtC = iso => new Date(iso).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'medium', timeStyle: 'short' });
+
+function estadoCupo(ent, ins) {
+    if (ent.publicar_en && new Date(ent.publicar_en) > new Date()) return 'pendiente';
+    if (ent.estado === 'CERRADO' || ins >= ent.cupos_totales) return 'lleno';
+    return 'activo';
+}
+
 async function cargarEntrenamientosProgramadosAdmin() {
-    const contenedor = document.getElementById('listaProgramadosAdmin');
-    if (!contenedor || !supabaseClient) return;
-
-    contenedor.innerHTML = `<div style="text-align:center; color:var(--primary); padding:20px;">Consultando base de datos...</div>`;
-
+    const cont = document.getElementById('listaProgramadosAdmin');
+    if (!cont || !supabaseClient) return;
+    cont.innerHTML = '<div class="cupos-empty">Consultando base de datos...</div>';
     try {
-        const { data: entrenamientos, error: errEnt } = await supabaseClient
-            .from('entrenamientos_programados')
-            .select('*')
-            .order('fecha', { ascending: false });
-
-        if (errEnt) throw errEnt;
-
-        const { data: registros, error: errReg } = await supabaseClient
-            .from('registro_cupos')
-            .select('*');
-
-        if (errReg) throw errReg;
-
-        let equiposPorEntrenamiento = {};
-        registros.forEach(reg => {
-            if (!equiposPorEntrenamiento[reg.entrenamiento_id]) {
-                equiposPorEntrenamiento[reg.entrenamiento_id] = [];
-            }
-            equiposPorEntrenamiento[reg.entrenamiento_id].push(reg);
+        const { data: ents, error: e1 } = await supabaseClient.from('entrenamientos_programados').select('*').order('fecha', { ascending: false });
+        if (e1) throw e1;
+        const { data: regs, error: e2 } = await supabaseClient.from('registro_cupos').select('*');
+        if (e2) throw e2;
+        const porEnt = {};
+        (regs || []).forEach(r => (porEnt[r.entrenamiento_id] = porEnt[r.entrenamiento_id] || []).push(r));
+        _cuposData = (ents || []).map(ent => {
+            const listaEquipos = porEnt[ent.id] || [], inscritos = listaEquipos.length;
+            const o = { ...ent, listaEquipos, inscritos, cuposRestantes: ent.cupos_totales - inscritos, est: estadoCupo(ent, inscritos) };
+            window[`entrenamiento_${ent.id}`] = o;
+            return o;
         });
-
-        if (!entrenamientos || entrenamientos.length === 0) {
-            contenedor.innerHTML = `<div style="text-align:center; color:var(--gray); padding:20px;">No hay entrenamientos programados en el historial.</div>`;
-            return;
-        }
-
-        contenedor.innerHTML = '';
-        entrenamientos.forEach(ent => {
-            let listaEquipos = equiposPorEntrenamiento[ent.id] || [];
-            let inscritos = listaEquipos.length;
-            let cuposRestantes = ent.cupos_totales - inscritos;
-            let fechaStr = new Date(ent.fecha).toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' });
-            
-            let badgeEstado = ent.estado === 'ABIERTO' 
-                ? `<span style="background: rgba(0, 255, 128, 0.15); color: #00ff80; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem;">ABIERTO</span>` 
-                : `<span style="background: rgba(255, 51, 51, 0.15); color: #ff5555; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem;">CERRADO</span>`;
-
-            let listaHTML = listaEquipos.map((eq, i) => `
-                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 4px; font-size: 0.9rem; margin-bottom: 5px; display:flex; justify-content:space-between; align-items:center;">
-                    <span><strong style="color:var(--primary); margin-right:5px;">${i+1}.</strong> ${eq.nombre_jugador}</span>
-                    <span style="color:var(--gray); font-size:0.8rem; background: #0a0b10; padding: 3px 6px; border-radius: 4px;">${eq.telefono === 'REGISTRO STAFF' ? '<i class="fa-solid fa-shield-halved" style="color:var(--primary);"></i> Staff' : eq.telefono}</span>
-                </div>
-            `).join('');
-
-            if (listaEquipos.length === 0) listaHTML = `<div style="color:var(--gray); font-size:0.9rem; padding: 10px 0;">No hay equipos inscritos aún.</div>`;
-
-            let btnCerrar = ent.estado === 'ABIERTO'
-                ? `<button onclick="cambiarEstadoInscripcion('${ent.id}', 'CERRADO')" style="background: #ff3333; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;"><i class="fa-solid fa-lock"></i> CERRAR</button>`
-                : `<button onclick="cambiarEstadoInscripcion('${ent.id}', 'ABIERTO')" style="background: #00ffcc; color: #000; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;"><i class="fa-solid fa-lock-open"></i> REABRIR</button>`;
-
-            window[`entrenamiento_${ent.id}`] = { ...ent, listaEquipos, inscritos, cuposRestantes };
-
-            contenedor.innerHTML += `
-                <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(220, 204, 156, 0.2); border-left: 4px solid ${ent.estado === 'ABIERTO' ? 'var(--primary)' : '#ff3333'}; border-radius: 8px; padding: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
-                        <div>
-                            <h4 style="color: #fff; font-family: 'Orbitron'; font-size: 1.2rem; margin:0 0 5px 0;">${ent.titulo} ${badgeEstado}</h4>
-                            <div style="color: var(--gray); font-size: 0.9rem;"><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${fechaStr}</div>
-                            <div style="color: var(--gray); font-size: 0.95rem; margin-top: 5px;">Equipos: <strong style="color: #DCCC9C; font-size: 1.1rem;">${inscritos} / ${ent.cupos_totales}</strong> <span style="font-size:0.8rem;">(Faltan: ${cuposRestantes})</span></div>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button onclick="copiarListaWhatsApp('${ent.id}')" style="background: #25D366; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem; box-shadow: 0 0 10px rgba(37, 211, 102, 0.2);"><i class="fa-brands fa-whatsapp"></i> GENERAR LISTA</button>
-                            ${btnCerrar}
-                        </div>
-                    </div>
-                    <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                        <div style="max-height: 200px; overflow-y: auto; padding-right: 5px;">
-                            ${listaHTML}
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-
+        pintarCupos();
     } catch (err) {
-        console.error("Error al cargar entrenamientos admin:", err);
-        contenedor.innerHTML = `<div style="text-align:center; color:#ff3333; padding:20px;">Error al cargar la información.</div>`;
+        console.error('Error al cargar entrenamientos admin:', err);
+        cont.innerHTML = '<div class="cupos-empty" style="color:#e0897c;">Error al cargar la información.</div>';
+    }
+}
+
+function cambiarFiltroCupos(f) { _filtroCupos = f; pintarCupos(); }
+
+function pintarCupos() {
+    const cont = document.getElementById('listaProgramadosAdmin'), tabs = document.getElementById('tabsCupos');
+    const n = k => _cuposData.filter(e => e.est === k).length;
+    const T = [['todos', 'Todos', _cuposData.length], ['activo', 'Activos', n('activo')], ['lleno', 'Llenos', n('lleno')], ['pendiente', 'Pendientes a abrir', n('pendiente')]];
+    tabs.innerHTML = T.map(([k, l, c]) => `<button class="cupos-tab ${_filtroCupos === k ? 'on' : ''}" onclick="cambiarFiltroCupos('${k}')">${l} <b>${c}</b></button>`).join('');
+    const lista = _cuposData.filter(e => _filtroCupos === 'todos' || e.est === _filtroCupos);
+    if (!lista.length) { cont.innerHTML = '<div class="cupos-empty">No hay entrenamientos en esta categoría.</div>'; return; }
+    cont.innerHTML = lista.map(e => {
+        const pct = Math.min(100, e.inscritos / e.cupos_totales * 100);
+        const acciones = [
+            `<button class="btn-mini" onclick="copiarListaWhatsApp('${e.id}')"><i class="fa-brands fa-whatsapp"></i> Copiar lista</button>`,
+            e.est === 'pendiente' ? `<button class="btn-mini" onclick="publicarAhora('${e.id}')"><i class="fa-solid fa-bolt"></i> Publicar ahora</button>` : '',
+            e.estado === 'CERRADO' ? `<button class="btn-mini" onclick="cambiarEstadoInscripcion('${e.id}','ABIERTO')"><i class="fa-solid fa-lock-open"></i> Reabrir</button>`
+                : (e.est !== 'pendiente' ? `<button class="btn-mini" onclick="cambiarEstadoInscripcion('${e.id}','CERRADO')"><i class="fa-solid fa-lock"></i> Cerrar</button>` : ''),
+            `<button class="btn-mini peligro" onclick="borrarEntrenamiento('${e.id}')"><i class="fa-solid fa-trash"></i> Borrar</button>`
+        ].join('');
+        const equipos = e.listaEquipos.length ? e.listaEquipos.map((q, i) => `<div class="cupo-eq"><span><b>${i + 1}.</b> ${_escC(q.nombre_jugador)}</span><small>${q.telefono === 'REGISTRO STAFF' ? '<i class="fa-solid fa-shield-halved"></i> STAFF' : _escC(q.telefono)}</small></div>`).join('') : '<div class="cupos-empty">No hay equipos inscritos aún.</div>';
+        return `<div class="cupo-row ${e.est}">
+            <div class="cupo-main" onclick="document.getElementById('eq_${e.id}').classList.toggle('open')">
+                <span class="cupo-badge ${e.est}">${_CUPO_LBL[e.est]}</span>
+                <div class="cupo-info"><b>${_escC(e.titulo)}</b><small><i class="fa-regular fa-clock"></i> ${_fmtC(e.fecha)}${e.est === 'pendiente' ? ' · <i class="fa-solid fa-bolt"></i> Se publica: ' + _fmtC(e.publicar_en) : ''}</small></div>
+                <div class="cupo-meter"><b>${e.inscritos}/${e.cupos_totales}</b><div class="bar"><i style="width:${pct}%"></i></div></div>
+                <i class="fa-solid fa-chevron-down cupo-chev"></i>
+            </div>
+            <div class="cupo-actions">${acciones}</div>
+            <div class="cupo-equipos" id="eq_${e.id}">${equipos}</div>
+        </div>`;
+    }).join('');
+}
+
+async function publicarAhora(id) {
+    if (!confirm('¿Publicar este entrenamiento ahora mismo?')) return;
+    try {
+        const { error } = await supabaseClient.from('entrenamientos_programados').update({ publicar_en: null, estado: 'ABIERTO' }).eq('id', id);
+        if (error) throw error;
+        cargarEntrenamientosProgramadosAdmin();
+    } catch (err) { alert('No se pudo publicar.'); }
+}
+
+async function borrarEntrenamiento(id) {
+    const e = window[`entrenamiento_${id}`];
+    if (!confirm(`¿Borrar "${e ? e.titulo : 'este entrenamiento'}" y sus ${e ? e.inscritos : 0} inscripciones? No se puede deshacer.`)) return;
+    try {
+        await supabaseClient.from('registro_cupos').delete().eq('entrenamiento_id', id);
+        const { data, error } = await supabaseClient.from('entrenamientos_programados').delete().eq('id', id).select();
+        if (error) throw error;
+        if (!data || !data.length) throw new Error('Sin permiso para borrar (RLS).');
+        cargarEntrenamientosProgramadosAdmin();
+    } catch (err) {
+        console.error(err);
+        alert('No se pudo borrar. Revisa que Supabase permita DELETE en entrenamientos_programados y registro_cupos.');
     }
 }
 

@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Sorteo | Pumas Gaming</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -12,18 +14,17 @@
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
     <style>
         .tabla-sorteo { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.95rem; }
-        .tabla-sorteo th { background: var(--primary); color: var(--dark); padding: 12px; font-family: 'Orbitron', sans-serif; text-align: left; }
+        .tabla-sorteo th { background: var(--primary); color: var(--dark); padding: 12px; font-family: 'Michroma', sans-serif; text-align: left; }
         .tabla-sorteo td { padding: 12px; border-bottom: 1px solid rgba(220, 204, 156, 0.2); color: var(--light); }
         .tabla-sorteo tr:hover { background: rgba(220, 204, 156, 0.05); }
-        .badge-ticket { background: #121317; border: 1px solid var(--primary); color: var(--primary); padding: 4px 8px; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-weight: bold; letter-spacing: 1px; }
-        .contador { font-family: 'Orbitron', sans-serif; color: var(--primary); font-size: 1.2rem; }
+        .badge-ticket { background: #121317; border: 1px solid var(--primary); color: var(--primary); padding: 4px 8px; border-radius: 4px; font-family: 'Michroma', sans-serif; font-weight: bold; letter-spacing: 1px; }
+        .contador { font-family: 'Michroma', sans-serif; color: var(--primary); font-size: 1.2rem; }
         
         .btn-eliminar { background: rgba(255, 50, 50, 0.2); color: #ff6b6b; border: 1px solid #ff6b6b; padding: 5px 10px; border-radius: 4px; cursor: pointer; transition: 0.3s; }
         .btn-eliminar:hover { background: #ff6b6b; color: white; }
         
         .controles-superiores { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
 
-        /* --- ESTILOS DEL SORTEADOR --- */
         .pantalla-sorteador {
             background: #050507;
             border: 2px solid var(--primary);
@@ -34,7 +35,7 @@
             box-shadow: 0 0 20px rgba(220, 204, 156, 0.2) inset;
         }
         .texto-ticket-animado {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Michroma', sans-serif;
             font-size: 2.5rem;
             color: var(--light);
             letter-spacing: 3px;
@@ -45,7 +46,7 @@
         .texto-equipo-animado {
             font-size: 1.5rem;
             color: var(--primary);
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Jersey 25', sans-serif;
             font-weight: bold;
             min-height: 35px;
         }
@@ -56,7 +57,6 @@
             transition: all 0.3s ease;
         }
 
-        /* --- ESTILOS IMPRESIÓN --- */
         @media print {
             body { background: white !important; color: black !important; }
             .site-header, .controles-superiores, .col-acciones, .pantalla-sorteador { display: none !important; }
@@ -89,9 +89,8 @@
     
     <div class="tool-container" style="max-width: 1100px; margin: 0 auto; overflow-x: auto;">
         
-        <!-- PANTALLA DEL SORTEADOR -->
         <div class="pantalla-sorteador">
-            <h3 style="color: var(--gray); font-family: 'Orbitron'; margin-bottom: 20px;">🎲 SORTEO EN VIVO 🎲</h3>
+            <h3 style="color: var(--gray); font-family: 'Michroma'; margin-bottom: 20px;">🎲 SORTEO EN VIVO 🎲</h3>
             
             <div id="pantallaTicket" class="texto-ticket-animado">PUMAS-XXXXX</div>
             <div id="pantallaEquipo" class="texto-equipo-animado">Nombre del Equipo</div>
@@ -103,27 +102,24 @@
             </div>
         </div>
 
-        <!-- CONTROLES SUPERIORES (Botones de prueba e impresión) -->
         <div class="controles-superiores">
-            <!-- PANEL DE FECHA LÍMITE -->
-        <div class="panel-fecha" style="background: rgba(220,204,156,0.05); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed rgba(220, 204, 156, 0.3); display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-            <label style="color: var(--primary); font-family: 'Orbitron'; font-weight: bold;"><i class="fa-solid fa-clock"></i> FECHA LÍMITE DE INSCRIPCIÓN:</label>
-            <input type="datetime-local" id="inputFechaLimite" style="padding: 10px; background: #0a0a0c; border: 1px solid rgba(220,204,156,0.5); color: white; border-radius: 6px; font-family: 'Rajdhani'; font-size: 1rem;">
-            
-            <button onclick="guardarFechaLimite()" class="btn-access" style="padding: 10px 20px; font-size: 0.9rem;">
-                <i class="fa-solid fa-save"></i> GUARDAR
-            </button>
-            <button onclick="borrarFechaLimite()" class="btn-eliminar" style="padding: 10px 20px; font-size: 0.9rem; background: transparent;">
-                <i class="fa-solid fa-times"></i> QUITAR LÍMITE
-            </button>
-            
-            <span id="msgGuardado" style="color: #25D366; font-size: 0.95rem; font-weight: bold; display: none;"><i class="fa-solid fa-check"></i> ¡Actualizado!</span>
-        </div>
+            <div class="panel-fecha" style="background: rgba(220,204,156,0.05); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed rgba(220, 204, 156, 0.3); display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <label style="color: var(--primary); font-family: 'Michroma'; font-weight: bold;"><i class="fa-solid fa-clock"></i> FECHA LÍMITE DE INSCRIPCIÓN:</label>
+                <input type="datetime-local" id="inputFechaLimite" style="padding: 10px; background: #0a0a0c; border: 1px solid rgba(220,204,156,0.5); color: white; border-radius: 6px; font-family: 'Jersey 25'; font-size: 1rem;">
+                
+                <button onclick="guardarFechaLimite()" class="btn-access" style="padding: 10px 20px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-save"></i> GUARDAR
+                </button>
+                <button onclick="borrarFechaLimite()" class="btn-eliminar" style="padding: 10px 20px; font-size: 0.9rem; background: transparent;">
+                    <i class="fa-solid fa-times"></i> QUITAR LÍMITE
+                </button>
+                
+                <span id="msgGuardado" style="color: #25D366; font-size: 0.95rem; font-weight: bold; display: none;"><i class="fa-solid fa-check"></i> ¡Actualizado!</span>
+            </div>
             <div class="contador">
                 Total Registrados: <span id="totalEquipos">Cargando...</span>
             </div>
             <div style="display: flex; gap: 10px;">
-                <!-- Botón de Desarrollo (Puedes borrarlo después) -->
                 <button onclick="generarEquiposPrueba()" class="btn-access" style="background: #333; color: white; padding: 10px 15px; font-size: 0.8rem; border: none; cursor: pointer;">
                     <i class="fa-solid fa-vial"></i> AGREGAR 15 PRUEBAS
                 </button>
@@ -157,20 +153,17 @@
 </section>
 
 <script>
-    // Configuración de Supabase
     const supabaseUrl = "https://bqemjroiegybdzksddkn.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-    let listaGlobalEquipos = []; // Guardaremos los equipos aquí para el sorteador
+    let listaGlobalEquipos = [];
 
-    // Función para formatear la fecha
     function formatearFecha(fechaString) {
         const opciones = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         return new Date(fechaString).toLocaleDateString('es-ES', opciones);
     }
 
-    // Función principal para cargar los datos
     async function cargarEquiposSorteo() {
         try {
             const { data, error } = await supabaseClient
@@ -180,7 +173,7 @@
 
             if (error) throw error;
 
-            listaGlobalEquipos = data; // Almacenar para la ruleta
+            listaGlobalEquipos = data;
             const cuerpoTabla = document.getElementById('cuerpoTablaSorteo');
             const totalTexto = document.getElementById('totalEquipos');
             
@@ -218,7 +211,6 @@
         }
     }
 
-    // --- LÓGICA DEL SORTEADOR DINÁMICO ---
     let intervaloRuleta;
     function iniciarRuleta() {
         if (listaGlobalEquipos.length === 0) {
@@ -229,15 +221,13 @@
         const pantallaTicket = document.getElementById('pantallaTicket');
         const pantallaEquipo = document.getElementById('pantallaEquipo');
         
-        // Quitar estilos de ganador si se juega de nuevo
         pantallaTicket.classList.remove('ganador-highlight');
         pantallaEquipo.classList.remove('ganador-highlight');
 
-        let tiempoIteracion = 50; // Velocidad de los nombres pasando (50ms)
-        let duracionTotal = 3000; // 3 segundos dando vueltas
+        let tiempoIteracion = 50;
+        let duracionTotal = 3000;
         let tiempoActual = 0;
 
-        // Iniciar el efecto visual
         intervaloRuleta = setInterval(() => {
             const aleatorio = listaGlobalEquipos[Math.floor(Math.random() * listaGlobalEquipos.length)];
             pantallaTicket.innerText = aleatorio.codigo_serial;
@@ -246,19 +236,16 @@
 
             if (tiempoActual >= duracionTotal) {
                 clearInterval(intervaloRuleta);
-                // Elegir al ganador definitivo final
                 const ganadorFinal = listaGlobalEquipos[Math.floor(Math.random() * listaGlobalEquipos.length)];
                 pantallaTicket.innerText = "🏆 " + ganadorFinal.codigo_serial + " 🏆";
                 pantallaEquipo.innerText = "¡GANADOR: " + ganadorFinal.nombre_equipo.toUpperCase() + "!";
                 
-                // Aplicar estilos de celebración
                 pantallaTicket.classList.add('ganador-highlight');
                 pantallaEquipo.classList.add('ganador-highlight');
             }
         }, tiempoIteracion);
     }
 
-    // --- HERRAMIENTA DE DESARROLLADOR: GENERAR 15 EQUIPOS ---
     async function generarEquiposPrueba() {
         const btnGenerar = document.querySelector('button[onclick="generarEquiposPrueba()"]');
         btnGenerar.innerText = "CREANDO...";
@@ -270,10 +257,7 @@
         let nuevosEquipos = [];
 
         for(let i = 0; i < 15; i++) {
-            // Nombres aleatorios
             const nomEquipo = `${prefijos[Math.floor(Math.random() * prefijos.length)]} ${nombres[Math.floor(Math.random() * nombres.length)]} ${Math.floor(Math.random() * 999)}`;
-            
-            // Generar serial
             const codigoAleatorio = Math.random().toString(36).substring(2, 7).toUpperCase();
             const codigoSerial = `PUMAS-${codigoAleatorio}`;
 
@@ -291,7 +275,7 @@
             if (error) throw error;
             
             alert("✅ 15 Equipos de prueba agregados exitosamente.");
-            cargarEquiposSorteo(); // Recargar la tabla
+            cargarEquiposSorteo();
         } catch (error) {
             console.error(error);
             alert("❌ Error al generar equipos ficticios.");
@@ -301,7 +285,6 @@
         }
     }
 
-    // --- FUNCIÓN PARA ELIMINAR ---
     async function eliminarEquipo(id, nombreEquipo) {
         const confirmacion = confirm(`⚠️ ¿Estás seguro de que deseas eliminar al equipo "${nombreEquipo}"?\nEsta acción es irreversible.`);
         if (confirmacion) {
@@ -316,13 +299,9 @@
         }
     }
 
-    // Ejecutar al cargar la página
-    window.addEventListener('DOMContentLoaded', cargarEquiposSorteo);
-    // --- LÓGICA DE FECHA LÍMITE ---
     async function cargarFechaLimite() {
         const { data, error } = await supabaseClient.from('sorteo_config').select('fecha_limite').eq('id', 1).single();
         if (data && data.fecha_limite) {
-            // Convertir UTC a hora local para el input HTML
             const dateObj = new Date(data.fecha_limite);
             const tzoffset = (new Date()).getTimezoneOffset() * 60000;
             const localISOTime = (new Date(dateObj - tzoffset)).toISOString().slice(0,16);
@@ -338,7 +317,7 @@
             alert("Selecciona una fecha y hora primero.");
             return;
         }
-        const fechaISO = new Date(valor).toISOString(); // Convertir a UTC para la base de datos
+        const fechaISO = new Date(valor).toISOString();
         
         const { error } = await supabaseClient.from('sorteo_config').upsert({ id: 1, fecha_limite: fechaISO });
         if (!error) mostrarMensajeExito();
@@ -358,10 +337,9 @@
         setTimeout(() => msg.style.display = 'none', 3000);
     }
 
-    // Actualiza tu event listener para que cargue la fecha al abrir la página
     window.addEventListener('DOMContentLoaded', () => {
         cargarEquiposSorteo();
-        cargarFechaLimite(); // <--- NUEVO
+        cargarFechaLimite();
     });
 </script>
 
