@@ -1,214 +1,26 @@
-:root {
-    /* ==========================================================
-       PANEL DE CONTROL DE ESTILOS Y COLORES PRINCIPALES
-       ================================================---------- */
-    
-    /* Fondo principal: Degradado entre rosado y amarillo */
-    --bg-gradient: linear-gradient(135deg, #ff2a85 0%, #ff70a6 35%, #ffd166 70%, #ffcc00 100%);
-    
-    /* Colores del tema y acentos generales */
-    --primary: #ff70a6;       /* Rosado principal */
-    --secondary: #ffd166;     /* Amarillo secundario */
-    --dark: #0a0a0c;          /* Negro Profundo base */
-    --light: #ffffff;         /* Blanco Brillante para textos */
-    --gray: #a0a0a0;          /* Gris Claro para textos secundarios */
-    
-    /* Configuración específica para la tarjeta de captura de resultados */
-    --rusheo-captura-bg: #0c0914;                      
-    --rusheo-captura-border: rgba(255, 112, 166, 0.4); 
-    --rusheo-box-bg: rgba(20, 14, 30, 0.92);           
-    --rusheo-box-border: rgba(255, 209, 102, 0.4);     
-    
-    /* Colores tipográficos destacados dentro de los resultados */
-    --rusheo-txt-primario: #ff70a6;  
-    --rusheo-txt-secundario: #ffd166;  
-    --rusheo-kill-color: #ff3366;      
+/* Rusheo · estilos de la imagen descargable (4:5).
+   La apariencia de la página viene de ../portal-kit/portal.css.
+   Los colores de la imagen se fijan aquí para que no cambien con el tema de la página. */
+
+.rusheo-captura-container {
+    --primary: #ff70a6;
+    --secondary: #ffd166;
+    --light: #ffffff;
+    --gray: #a0a0a0;
+    --rusheo-captura-bg: #0c0914;
+    --rusheo-captura-border: rgba(255, 112, 166, 0.4);
+    --rusheo-box-bg: rgba(20, 14, 30, 0.92);
+    --rusheo-box-border: rgba(255, 209, 102, 0.4);
+    --rusheo-txt-primario: #ff70a6;
+    --rusheo-txt-secundario: #ffd166;
+    --rusheo-kill-color: #ff3366;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Rajdhani', sans-serif;
-}
-
-body {
-    background-color: var(--dark);
-    background-image: var(--bg-gradient);
-    color: var(--light);
-    overflow-x: hidden;
-    width: 100%;
-    min-height: 100vh;
-}
-
-/* Aplicación de la tipografía Carter One en títulos y botones */
-h1, h2, h3, .logo, .btn-access, .tool-container button {
-    font-family: 'Carter One', cursive;
-    letter-spacing: 1px;
-}
-
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 4%;
-    background: rgba(10, 10, 12, 0.92);
-    backdrop-filter: blur(10px);
-    border-bottom: 2px solid var(--primary);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    width: 100%;
-}
-
-.logo-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.logo-img {
-    width: 35px;
-    height: 35px;
-    object-fit: contain;
-}
-
-.logo {
-    font-size: 1.1rem;
-    font-weight: 900;
-    color: var(--light);
-    letter-spacing: 1px;
-    text-shadow: 0 0 10px var(--primary);
-}
-
-nav ul {
-    display: flex;
-    list-style: none;
-    gap: 20px;
-    align-items: center;
-}
-
-nav ul li a {
-    text-decoration: none;
-    color: var(--gray);
-    font-weight: 700;
-    font-size: 0.95rem;
-    transition: 0.3s;
-}
-
-nav ul li a:hover {
-    color: var(--primary);
-    text-shadow: 0 0 10px var(--primary);
-}
-
-section {
-    padding: 40px 3%;
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-    background: transparent;
-}
-
-.section-title {
-    font-size: 1.6rem;
-    margin-bottom: 30px;
-    text-align: center;
-    color: var(--light);
-    border-bottom: 2px solid var(--primary);
-    display: block;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-    padding-bottom: 6px;
-    text-shadow: 0 0 12px var(--primary);
-}
-
-.tool-section {
-    background: linear-gradient(180deg, rgba(10, 10, 12, 0.85) 0%, rgba(18, 19, 23, 0.9) 100%);
-    border-top: 1px solid var(--primary);
-    width: 100%;
-}
-
-.tool-container {
-    background: linear-gradient(145deg, #121317 0%, #0d0e12 100%);
-    border: 1px solid var(--primary);
-    border-radius: 12px;
-    padding: 30px 4%;
-    width: 100%;
-    box-shadow: 0 0 35px rgba(0, 0, 0, 0.7);
-}
-
-.tool-desc {
-    color: var(--gray);
-    margin-bottom: 20px;
-    font-size: 0.95rem;
-    text-align: center;
-}
-
-.form-group label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 6px;
-    font-family: 'Carter One', cursive;
-}
-
-.form-group input, .form-group select {
-    width: 100%;
-    padding: 12px;
-    background: #0a0a0c;
-    border: 1px solid var(--primary);
-    color: var(--light);
-    border-radius: 6px;
-    font-size: 1rem;
-    outline: none;
-    transition: 0.3s;
-}
-
-.form-group input:focus, .form-group select:focus {
-    border-color: var(--secondary);
-    box-shadow: 0 0 10px var(--secondary);
-}
-
-.btn-generar {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: #0a0a0c;
-    padding: 14px;
-    width: 100%;
-    font-size: 1rem;
-    font-weight: 900;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family: 'Carter One', cursive;
-    transition: 0.3s;
-    box-shadow: 0 0 20px var(--primary);
-}
-
-.btn-generar:hover {
-    box-shadow: 0 0 30px var(--secondary);
-    transform: translateY(-2px);
-}
-
-.results-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    overflow-x: auto;
-    margin-top: 15px;
-    padding-bottom: 10px;
-}
-
-footer {
-    text-align: center;
-    padding: 25px 4px;
-    color: var(--gray);
-    background: rgba(10, 10, 12, 0.95);
-    border-top: 1px solid var(--primary);
-    font-size: 0.85rem;
-    width: 100%;
-}
+/* La página usa otra letra e interlineado: dentro de la imagen se restablecen
+   (como estaba antes) para que entren todos los equipos y jugadores. */
+.rusheo-captura-container { line-height: normal; letter-spacing: normal; }
+.rusheo-captura-container :where(*) { margin: 0; padding: 0; line-height: normal; }
+.rusheo-captura-container :where(:not(i, .fa-solid, .fa-regular, .fa-brands)) { font-family: 'Rajdhani', sans-serif; }
 
 /* --- CONTENEDOR PRINCIPAL DE LA CAPTURA (800x1000px) --- */
 .rusheo-captura-container {
@@ -245,25 +57,29 @@ footer {
     text-shadow: 2px 2px 8px var(--primary);
 }
 
-/* Caja contenedora para los datos del subtítulo */
+/* Caja contenedora para los datos del subtítulo.
+   position: relative es necesario: sin él, la descarga (html2canvas) pinta el
+   fondo de la caja ENCIMA del texto y la fecha/hora sale tapada y pálida. */
 .rusheo-subtitulo-box {
-    display: inline-flex;
-    flex-direction: column;
-    gap: 3px;
-    background: var(--rusheo-box-bg);
+    position: relative;
+    display: inline-block;
+    text-align: center;
+    background: rgba(12, 8, 20, 0.88);
     border: 1px solid var(--rusheo-box-border);
-    padding: 8px 20px;
+    padding: 8px 22px;
     border-radius: 6px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
 .rusheo-sub-line {
-    font-size: 0.85rem;
+    display: block;
+    margin-top: 3px;
+    font-size: 0.95rem;
+    line-height: 1.25;
     color: var(--secondary);
-    font-weight: bold;
+    font-weight: 700;
     letter-spacing: 0.5px;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
 }
+.rusheo-sub-line:first-child { margin-top: 0; }
 
 /* --- CAJAS INTERNAS --- */
 .rusheo-box {

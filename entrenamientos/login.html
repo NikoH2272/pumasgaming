@@ -7,56 +7,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../portal-kit/portal.js?v=20261007l" data-portal="entrenamientos" data-modo="login"></script>
 </head>
 <body class="auth-overlay">
 
     <div class="auth-card">
         <h2>Iniciar Sesión</h2>
-        <form onsubmit="realizarLogin(event)">
+        <form id="formLogin" data-portal="entrenamientos" data-destino="admin.html" autocomplete="on">
             <div class="form-group-auth">
-                <label>Correo Electrónico</label>
-                <input type="email" id="loginEmail" required placeholder="admin@pumas.com">
+                <label for="usuario">Usuario</label>
+                <input type="text" id="usuario" name="usuario" required autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="coachniko">
             </div>
             <div class="form-group-auth">
-                <label>Contraseña</label>
-                <input type="password" id="loginPassword" required placeholder="••••••••">
+                <label for="clave">Contraseña</label>
+                <input type="password" id="clave" name="clave" required autocomplete="current-password" placeholder="••••••••">
             </div>
             <button type="submit" class="btn-auth">Ingresar al Panel</button>
-            <p id="errorMsg" class="error-msg"></p>
+            <p id="authMsg" class="error-msg" role="alert"></p>
         </form>
         <p style="margin-top: 20px; font-size: 0.9rem;"><a href="index.html" style="color: var(--primary);">← Volver a Entrenamientos</a></p>
     </div>
 
-    <script>
-        const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        async function realizarLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value.trim();
-            const errorMsg = document.getElementById('errorMsg');
-            errorMsg.textContent = "";
-
-            try {
-                const { data, error } = await supabaseClient
-                    .from('usuarios_admin')
-                    .select('*')
-                    .eq('email', email)
-                    .eq('password', password)
-                    .maybeSingle();
-
-                if (error || !data) {
-                    errorMsg.textContent = "Credenciales incorrectas. Verifica tus datos.";
-                } else {
-                    localStorage.setItem('pumas_user', JSON.stringify(data));
-                    window.location.href = 'admin.html';
-                }
-            } catch (err) {
-                errorMsg.textContent = "Ocurrió un error inesperado al iniciar sesión.";
-            }
-        }
-    </script>
+    <script src="../portal-kit/login.js?v=20261007l"></script>
 </body>
 </html>

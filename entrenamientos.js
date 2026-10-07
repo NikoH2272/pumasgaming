@@ -16,7 +16,7 @@ const esc0=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"
       const k=`${anio}-${String(mes+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
       g+=`<div class="calendar-day${porFecha[k]?" has-session":""}${k===sel?" selected-day":""}" data-d="${k}">${d}</div>`;
     }
-    const lista=sel&&porFecha[sel]?porFecha[sel]:todas.slice(0,8);
+    const lista=sel&&porFecha[sel]?porFecha[sel]:todas.slice(0,3);
     const titulo=sel&&porFecha[sel]?`Entrenamientos del ${fmt(sel)}`:"Últimos entrenamientos";
     $("trainMain").innerHTML=`
       <div class="header-card-title"><i class="fa-solid fa-calendar-days"></i><h3>Calendario de Sesiones</h3></div>
@@ -64,7 +64,12 @@ function agregar(lista){
   lista.forEach(([s,d])=>{salas+=d.salas;kills+=d.kills;
     for(const n in d.teams){const e=eq[n]=eq[n]||{name:n,pts:0,b:0,ses:0};e.pts+=d.teams[n].p;e.b+=d.teams[n].b;e.ses++;}
     for(const n in d.players){const e=pl[n]=pl[n]||{name:n,k:0,s:0};e.k+=d.players[n].k;e.s+=d.players[n].s;}});
-  return {eq:Object.values(eq).sort((a,b)=>b.pts-a.pts),pl:Object.values(pl).sort((a,b)=>b.k-a.k),salas,kills};
+  // Misma fórmula que la página de entrenamientos de Pumas:
+  // PR (Puntos Reales) = PG ÷ sesiones, entero · orden PR → booyah → PG
+  // KDA = kills ÷ salas jugadas · orden KDA → kills
+  const E=Object.values(eq).map(e=>({...e,pr:Math.round(e.pts/e.ses)})).sort((a,b)=>b.pr-a.pr||b.b-a.b||b.pts-a.pts||a.name.localeCompare(b.name));
+  const P=Object.values(pl).filter(x=>x.s>0).map(x=>({...x,kda:x.k/x.s})).sort((a,b)=>b.kda-a.kda||b.k-a.k);
+  return {eq:E,pl:P,salas,kills};
 }
 async function parsearTodas(sesiones,alAvanzar){
   const res=[];
@@ -92,10 +97,10 @@ function semanaObjetivo(parsed){
     pintarStats(parsed);
     const sem=semanaObjetivo(parsed), w=agregar(sem.lista), nota=sem.actual?'':' · última con datos';
     const te=$('tituloTopEq'), tk=$('tituloTopKill');
-    if(te) te.innerHTML=`Top 10 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${nota}</span>`;
-    if(tk) tk.innerHTML=`Top 10 Killers · Semana ${sem.num}<span class="wk-range">${sem.rango}${nota}</span>`;
-    rank('contenedorTopEquiposPublicos',w.eq.slice(0,10),x=>x.pts+' pts','Aún no hay entrenamientos esta semana.');
-    rank('contenedorTopKillersPublicos',w.pl.slice(0,10),x=>x.k+' kills','Aún no hay entrenamientos esta semana.');
+    if(te) te.innerHTML=`Top 10 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${nota} · PR = PG ÷ sesiones</span>`;
+    if(tk) tk.innerHTML=`Top 10 Killers · Semana ${sem.num}<span class="wk-range">${sem.rango}${nota} · KDA = kills ÷ salas</span>`;
+    rank('contenedorTopEquiposPublicos',w.eq.slice(0,10),x=>`${x.pr} PR <small>${x.pts} PG · ${x.ses} ses.</small>`,'Aún no hay entrenamientos esta semana.');
+    rank('contenedorTopKillersPublicos',w.pl.slice(0,10),x=>`${x.kda.toFixed(2)} KDA <small>${x.k} kills</small>`,'Aún no hay entrenamientos esta semana.');
   }
 
   document.addEventListener("DOMContentLoaded",async()=>{

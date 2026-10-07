@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corregir entrenos | Pumas Gaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261007l">
+    <link rel="icon" type="image/x-icon" href="../imagenes/LOGO PUMAS WEB.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../portal-kit/portal.js?v=20261007l" data-modo="login" data-sin-efecto></script>
+</head>
+<body>
+    <header class="site-header">
+        <a class="logo-container" href="./">
+            <img src="../imagenes/LOGO PUMAS WEB.png" alt="Pumas Gaming" class="logo-img">
+            <div class="logo"><span class="t-a">PUMAS</span> ADMIN</div>
+        </a>
+        <button class="menu-toggle" aria-label="Abrir menú" onclick="document.getElementById('mainNav').classList.toggle('is-active')">
+            <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+        </button>
+        <nav class="main-nav" id="mainNav">
+            <ul>
+                <li><a href="./"><i class="fa-solid fa-table-cells-large"></i> Portales</a></li>
+                <li><span class="pg-user"><i class="fa-solid fa-user-shield"></i> <span data-pg-usuario></span></span></li>
+                <li><a href="#" class="pg-salir" data-pg-salir><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
+            </ul>
+        </nav>
+    </header>
+    <section>
+        <h2 class="section-title">Corregir entrenos</h2>
+        <p class="tool-desc">Borra un entreno o corrige el nombre de un equipo en cualquier portal. Siempre se pide confirmación.</p>
+        <main id="correcciones" data-login="login.html"></main>
+    </section>
+    <footer><p>&copy; 2026 <b>PUMAS GAMING</b> · Panel de administración</p></footer>
+    <script src="../portal-kit/correcciones.js?v=20261007l"></script>
+</body>
+</html>

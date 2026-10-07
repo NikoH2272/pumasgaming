@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es" class="pg-verificando">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Pumas Gaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261007l">
+    <link rel="icon" type="image/x-icon" href="../imagenes/LOGO PUMAS WEB.png">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../portal-kit/portal.js?v=20261007l" data-modo="login"></script>
+</head>
+<body>
+    <header class="site-header">
+        <a class="logo-container" href="../index.html">
+            <img src="../imagenes/LOGO PUMAS WEB.png" alt="Pumas Gaming" class="logo-img">
+            <div class="logo"><span class="t-a">PUMAS</span> ADMIN</div>
+        </a>
+        <nav class="main-nav" style="display:block;position:static;width:auto;padding:0;border:0;background:none;box-shadow:none">
+            <ul style="flex-direction:row;gap:18px">
+                <li data-pg-permiso="gestionar" hidden><a href="usuarios.html" style="border:0"><i class="fa-solid fa-users-gear"></i> Usuarios</a></li>
+                <li data-pg-permiso="gestionar" hidden><a href="entrenos.html" style="border:0"><i class="fa-solid fa-pen-to-square"></i> Entrenos</a></li>
+                <li data-pg-permiso="personalizar" hidden><a href="config.html" style="border:0"><i class="fa-solid fa-wand-magic-sparkles"></i> Personalizar</a></li>
+                <li><span class="pg-user"><i class="fa-solid fa-user-shield"></i> <span data-pg-usuario></span> <small class="muted" id="rolNombre"></small></span></li>
+                <li><a href="#" class="pg-salir" id="btnSalir" style="border:0"><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section>
+        <h2 class="section-title">Tus portales</h2>
+        <p class="tool-desc" id="avisoRol" hidden></p>
+        <div class="hub-grid" id="hub"></div>
+    </section>
+
+    <footer><p>&copy; 2026 <b>PUMAS GAMING</b> · Panel de administración</p></footer>
+
+    <script>
+    (async function () {
+        const P = PumasPortal;
+        const s = await P.validar();
+        if (!s) { location.replace('login.html?next=' + encodeURIComponent('/admin/')); return; }
+        if (P.inicioDe(s) !== '/admin/' && !P.tiene(s, 'gestionar')) { location.replace(P.inicioDe(s)); return; }
+        document.documentElement.classList.remove('pg-verificando');
+        document.querySelector('[data-pg-usuario]').textContent = s.nombre || s.usuario;
+        document.getElementById('rolNombre').textContent = s.rol_nombre ? '· ' + s.rol_nombre : '';
+        document.querySelectorAll('[data-pg-permiso]').forEach(n => { n.hidden = !P.tiene(s, n.dataset.pgPermiso); });
+        // Ayuda para detectar roles mal asignados (ver sql/04_corregir_usuarios.sql)
+        const aviso = document.getElementById('avisoRol');
+        if (!('rol' in s)) {
+            aviso.hidden = false;
+            aviso.textContent = 'La base de datos tiene la versión vieja de las funciones de login (sin roles). Corre sql/05_reparar_funciones.sql en Supabase y vuelve a entrar.';
+        } else if (!s.rol) {
+            aviso.hidden = false;
+            aviso.textContent = 'Tu usuario no tiene rol asignado. Corre sql/04_corregir_usuarios.sql en Supabase o pide a un superadmin que te asigne uno.';
+        } else if (s.usuario === 'coachniko' && !P.tiene(s, 'gestionar')) {
+            aviso.hidden = false;
+            aviso.textContent = 'coachniko tiene el rol "' + (s.rol_nombre || s.rol) + '" y no puede gestionar usuarios. Corre sql/04_corregir_usuarios.sql para dejarlo como superadmin.';
+        }
+        document.getElementById('btnSalir').addEventListener('click', e => { e.preventDefault(); P.logout('login.html'); });
+
+        const colores = { principal: '#D8C395', entrenamientos: '#D8C395', ascensosqfd: '#4FC3F7', row: '#E53935', rusheo: '#FF8A00', zmf: '#E10600', dragonfest: '#2E6BFF', dragonfestfem: '#FF4FA3', zmffem: '#F0306E' };
+        const textos = {
+            principal: 'Página de inicio de Pumas Gaming.',
+            entrenamientos: 'Carga de resultados, cupos, VIP y métricas de entrenos.',
+            ascensosqfd: 'Procesador de salas y tabla de ascensos QFD.',
+            row: 'Resultados de ROW x Maya, imagen 4:5.',
+            rusheo: 'Resultados de Rusheo, imagen 4:5.',
+            zmf: 'ZMF mixto. Herramienta compartida con femenino.',
+            zmffem: 'ZMF femenino. Herramienta compartida con mixto.',
+            dragonfest: 'Dragon Fest mixto. Herramienta compartida con femenino.',
+            dragonfestfem: 'Dragon Fest femenino. Herramienta compartida con mixto.'
+        };
+        const tarjetas = Object.entries(P.PORTALES).filter(([k]) => P.puede(s, k)).map(([k, p]) => {
+            const principal = k === 'principal', entrenos = k === 'entrenamientos';
+            const abrir = principal
+                ? `<a class="btn-access" href="${p.url}"><i class="fa-solid fa-house"></i> Ver</a>`
+                : `<a class="btn-access" href="${p.admin}"><i class="fa-solid fa-screwdriver-wrench"></i> ${entrenos ? 'Panel' : 'Herramienta'}</a>` +
+                  `<a class="btn-access btn-outline" href="${p.url}"><i class="fa-solid fa-trophy"></i> Portal</a>`;
+            return `<article class="card-box hub-card" style="--c:${colores[k]}">
+                <h3>${P.escaparHtml(p.nombre)}</h3><p>${textos[k]}</p>
+                <div class="acciones">${abrir}</div></article>`;
+        });
+        if (P.tiene(s, 'personalizar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#D8C395">
+                <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Personalización</h3>
+                <p>Efecto para todas las páginas: calabazas, fantasmas, nieve o iconos.</p>
+                <div class="acciones"><a class="btn-access" href="config.html"><i class="fa-solid fa-sliders"></i> Personalizar</a></div></article>`);
+        if (P.tiene(s, 'gestionar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#e5484d">
+                <h3><i class="fa-solid fa-pen-to-square"></i> Corregir entrenos</h3>
+                <p>Borra un entreno de cualquier portal o corrige el nombre de un equipo.</p>
+                <div class="acciones"><a class="btn-access" href="entrenos.html"><i class="fa-solid fa-screwdriver-wrench"></i> Corregir</a></div></article>`);
+        if (P.tiene(s, 'gestionar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#F4EEDC">
+                <h3><i class="fa-solid fa-users-gear"></i> Usuarios y roles</h3>
+                <p>Crea usuarios y roles, asigna permisos y cambia contraseñas.</p>
+                <div class="acciones"><a class="btn-access" href="usuarios.html"><i class="fa-solid fa-user-shield"></i> Gestionar</a></div></article>`);
+        document.getElementById('hub').innerHTML = tarjetas.join('') || '<p class="tool-desc">Tu usuario no tiene portales asignados.</p>';
+    })();
+    </script>
+</body>
+</html>

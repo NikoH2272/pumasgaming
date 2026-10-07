@@ -909,6 +909,7 @@ footer {
 .btn-auth{width:100%;min-height:48px;border:1px solid var(--primary);border-radius:2px;color:var(--dark);background:var(--primary);font:900 .8rem var(--font-display);cursor:pointer;transition:.18s}
 .btn-auth:hover{color:var(--primary);background:transparent}
 .error-msg{margin-top:12px;color:#e0897c;font-size:.9rem}
+.error-msg.ok{color:var(--primary)}
 @media(max-width:1180px){.dashboard-modulos{grid-template-columns:1fr}.tabla-contenedor{min-height:auto}}
 @media(max-width:700px){.tabla-estilizada{display:block;overflow-x:auto}}
 

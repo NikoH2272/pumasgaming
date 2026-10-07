@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styleadmin.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../portal-kit/portal.js?v=20261007l" data-portal="entrenamientos" data-modo="admin"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
 
@@ -404,8 +405,7 @@ function cambiarPestanaAdmin(pestana) {
         }
 
         function cerrarSesion() {
-            localStorage.removeItem('pumas_user');
-            window.location.href = 'login.html';
+            PumasPortal.logout('login.html');
         }
 
         window.addEventListener('DOMContentLoaded', () => {

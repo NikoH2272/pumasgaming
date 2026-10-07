@@ -374,6 +374,8 @@ section {
 
 #jersey,
 #entrenamientos,
+#latam,
+#rankingsLatam,
 #comunidad,
 #rankings,
 #resultados {
@@ -852,7 +854,7 @@ footer {
 .cc-head{display:flex;align-items:center;gap:14px}
 .cc-head i{font-size:2rem}.cc-head h3{margin:0;font-size:1.05rem}
 .community-card p{margin:0}
-.social-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;margin-top:auto}
+.social-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;margin-top:auto}
 .social-row a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border:1px solid rgba(216,195,149,.3);border-radius:3px;background:rgba(0,0,0,.4);text-decoration:none}
 .social-row i{font-size:1.4rem}.social-row span{font:700 .7rem var(--font-display)}
 .card-slot{align-items:center;justify-content:center;min-height:130px;border-style:dashed!important;opacity:.45;color:var(--gray)}
@@ -896,3 +898,7 @@ footer {
 @media(max-width:900px){.train-layout{grid-template-columns:1fr}}
 
 .wk-range{display:block;margin-top:4px;color:var(--gray);font:600 .62rem var(--font-display);letter-spacing:.06em}
+/* ===== Entrenos LATAM ===== */
+.latam-intro { max-width: 680px; margin: -18px auto 28px; color: #c3bdae; text-align: center; line-height: 1.7; }
+#latam .card-box h3 { letter-spacing: .02em; }
+.rank-row em small{display:block;margin-top:2px;color:var(--gray);font:400 .66rem var(--font-body);text-align:right}
