@@ -165,7 +165,7 @@ function seleccionarDia(dateStr, el) {
             <tr>
                 <td style="font-weight: bold; color: var(--light);">${sesion.titulo}</td>
                 <td style="text-align: center;">
-                    <button class="btn-ver" onclick="procesarSesionUnica('${folderPath}', '${sesion.titulo.replace(/'/g, "\\'")}', '${sesion.jornada}')">
+                    <button class="btn-ver" onclick="procesarSesionUnica('${sesion.id}')"\\'")}', '${sesion.jornada}')">
                         <i class="fa-solid fa-table"></i> Ver
                     </button>
                 </td>
@@ -180,19 +180,20 @@ const diaLocal=iso=>new Date(iso).toLocaleDateString('en-CA',{timeZone:ZONA_HORA
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function semanaISO(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=t.getUTCFullYear();return y+'-'+Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7);}
 function rangoSemana(d){const l=new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()||7)-1)),f=new Date(l.getFullYear(),l.getMonth(),l.getDate()+6),o={day:'numeric',month:'short'};return l.toLocaleDateString('es',o)+' – '+f.toLocaleDateString('es',o);}
+const MIN_SALAS_KILLER=1; // mínimo de salas jugadas para entrar al Top Killers (1 = todos)
 async function parsearSesion(s){
   const vacio={teams:{},players:{},salas:0,kills:0};
   if(!s.archivo_url) return vacio;
   const {data:fl}=await supabaseClient.storage.from('entrenamientos_logs').list(s.archivo_url);
   if(!fl) return vacio;
-  const ck='pg_ses_v2_'+s.id;
+  const ck='pg_ses_v3_'+s.id;
   try{const c=JSON.parse(localStorage.getItem(ck)); if(c&&c.salas===fl.length) return c;}catch(e){}
   const out={teams:{},players:{},salas:fl.length,kills:0};
   await Promise.all(fl.map(async f=>{
     const {data}=await supabaseClient.storage.from('entrenamientos_logs').download(s.archivo_url+'/'+f.name); if(!data) return;
     (await data.text()).split('\n').forEach(l=>{
       const t=l.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
-      if(t){const e=out.teams[t[1].trim()]=out.teams[t[1].trim()]||{p:0,b:0}; e.p+=+t[5]; if(+t[2]===1) e.b++;}
+      if(t){const e=out.teams[t[1].trim()]=out.teams[t[1].trim()]||{p:0,b:0,k:0}; e.p+=+t[5]; e.k+=+t[3]; if(+t[2]===1) e.b++;}
       const p=l.match(/NAME:\s*(.+?)\s+ID:\s*\d+.*?KILL:\s*(\d+)/i);
       if(p){const e=out.players[p[1].trim()]=out.players[p[1].trim()]||{k:0,s:0}; e.k+=+p[2]; e.s++; out.kills+=+p[2];}
     });
@@ -203,9 +204,13 @@ async function parsearSesion(s){
 function agregar(lista){
   const eq={},pl={}; let salas=0,kills=0;
   lista.forEach(([s,d])=>{salas+=d.salas;kills+=d.kills;
-    for(const n in d.teams){const e=eq[n]=eq[n]||{name:n,pts:0,b:0,ses:0};e.pts+=d.teams[n].p;e.b+=d.teams[n].b;e.ses++;}
+    for(const n in d.teams){const e=eq[n]=eq[n]||{name:n,pts:0,b:0,k:0,ses:0};e.pts+=d.teams[n].p;e.b+=d.teams[n].b;e.k+=d.teams[n].k||0;e.ses++;}
     for(const n in d.players){const e=pl[n]=pl[n]||{name:n,k:0,s:0};e.k+=d.players[n].k;e.s+=d.players[n].s;}});
-  return {eq:Object.values(eq).sort((a,b)=>b.pts-a.pts),pl:Object.values(pl).sort((a,b)=>b.k-a.k),salas,kills};
+  // PR (Puntos Reales) = PG (puntos generales) ÷ sesiones, redondeado a entero · desempate: booyah → puntos totales
+  const E=Object.values(eq).map(e=>({...e,pr:Math.round(e.pts/e.ses)})).sort((a,b)=>b.pr-a.pr||b.b-a.b||b.pts-a.pts||a.name.localeCompare(b.name));
+  // KDA real = kills ÷ salas jugadas · desempate: kills
+  const P=Object.values(pl).filter(x=>x.s>=MIN_SALAS_KILLER).map(x=>({...x,kda:x.k/x.s})).sort((a,b)=>b.kda-a.kda||b.k-a.k);
+  return {eq:E,pl:P,salas,kills};
 }
 async function parsearTodas(sesiones,alAvanzar){
   const res=[];
@@ -224,13 +229,16 @@ function semanaObjetivo(parsed){
 }
 
 const _col=i=>i===0?'#D8C395':i===1?'#B9B2A4':i===2?'#cd7f32':'var(--light)';
-function _filaEq(eq,i){const c=_col(i);return `<tr><td style="font-weight:bold;color:${c};">#${i+1}</td><td style="font-weight:bold;color:var(--light);font-size:.9rem;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(eq.name)}</td><td style="text-align:center;color:var(--gray);font-weight:bold;">${eq.ses}</td><td style="text-align:center;color:#D8C395;font-weight:bold;">${eq.b}</td><td style="text-align:center;color:${c};font-weight:bold;font-family:'Michroma';">${eq.pts}</td></tr>`;}
+function _filaEq(eq,i){const c=_col(i);return `<tr><td style="font-weight:bold;color:${c};">#${i+1}</td><td style="font-weight:bold;color:var(--light);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(eq.name)}</td><td style="text-align:center;color:var(--gray);font-weight:bold;">${eq.ses}</td><td style="text-align:center;color:#D8C395;font-weight:bold;">${eq.b}</td><td style="text-align:center;color:var(--light);font-weight:bold;">${eq.k}</td><td style="text-align:center;color:var(--gray);font-weight:bold;">${eq.pts}</td><td style="text-align:center;color:${c};font-weight:bold;">${eq.pr}</td></tr>`;}
 function _llenar(idA,idB,lista){
   const A=document.getElementById(idA),B=document.getElementById(idB); if(!A||!B) return;
-  if(!lista.length){A.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--gray);">Sin registros.</td></tr>';B.innerHTML='';return;}
+  if(!lista.length){A.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--gray);">Sin registros.</td></tr>';B.innerHTML='';return;}
   const m=Math.ceil(lista.length/2);
   A.innerHTML=lista.slice(0,m).map((e,i)=>_filaEq(e,i)).join('');
   B.innerHTML=lista.slice(m).map((e,i)=>_filaEq(e,i+m)).join('');
+  const cap=(tb,txt)=>{const tbl=tb.closest('table');let c=tbl.querySelector('caption');if(!c)c=tbl.createCaption();c.textContent=txt;};
+  cap(A,`PUESTOS 1 – ${m}`);
+  cap(B,lista.length>m?`PUESTOS ${m+1} – ${lista.length}`:'');
 }
 async function calcularTablaGlobalAcumulada(sesiones){
   const parsed=await parsearTodas(sesiones);
@@ -238,11 +246,11 @@ async function calcularTablaGlobalAcumulada(sesiones){
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   set('statTotalEquipos',todo.eq.length);set('statTotalKills',todo.kills);set('statTotalMapas',todo.salas);
   const tit=document.getElementById('tituloTop50');
-  if(tit) tit.innerHTML=`Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual?'':' · última semana con datos'}</span>`;
+  if(tit) tit.innerHTML=`Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual?'':' · última semana con datos'} · Orden: PR → booyah</span>`;
   _llenar('bodyTablaGlobal1','bodyTablaGlobal2',w.eq.slice(0,50));
   _llenar('bodyTop100a','bodyTop100b',todo.eq.slice(0,100));
   const g=document.getElementById('gridTopKillersGlobal');
-  if(g) g.innerHTML=todo.pl.slice(0,20).map((tk,i)=>`<div class="killer-card"><div style="display:flex;align-items:center;gap:10px;"><span style="color:${_col(i)};font-weight:bold;font-family:'Michroma';min-width:25px;">#${i+1}</span><span style="color:var(--light);font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;">${esc(tk.name)}</span></div><div style="display:flex;align-items:center;gap:12px;"><span style="color:var(--gray);font-size:.85rem;" title="Salas Jugadas"><i class="fa-solid fa-gamepad" style="margin-right:4px;"></i>${tk.s}</span><span style="color:var(--primary);font-weight:bold;font-family:'Michroma';font-size:.9rem;"><i class="fa-solid fa-crosshairs" style="margin-right:4px;"></i> ${tk.k}</span></div></div>`).join('')||'<div style="color:var(--gray);text-align:center;padding:20px;">Sin datos de killers.</div>';
+  if(g) g.innerHTML=todo.pl.length?`<div class="killer-head"><span>#</span><span>JUGADOR</span><span>SALAS</span><span>KILLS</span><span>KDA</span></div>`+todo.pl.slice(0,10).map((tk,i)=>`<div class="killer-card k5"><span style="color:${_col(i)};font-weight:bold;">#${i+1}</span><span class="k-name">${esc(tk.name)}</span><span class="k-num">${tk.s}</span><span class="k-num">${tk.k}</span><span class="k-num" style="color:${_col(i)};">${tk.kda.toFixed(2)}</span></div>`).join(''):'<div style="color:var(--gray);text-align:center;padding:20px;">Sin datos de killers.</div>';
 }
 
 async function cargarResultadosVipPublicos() {
@@ -297,110 +305,6 @@ async function cargarResultadosVipPublicos() {
     } catch (err) {
         console.error("Error al cargar VIP públicos:", err);
         tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ff5555; padding: 20px;">Error al conectar con la base de datos.</td></tr>`;
-    }
-}
-
-async function procesarSesionUnica(folderPath, titulo, jornada) {
-    if (!folderPath || !supabaseClient) {
-        alert("Este entrenamiento no tiene carpeta asociada.");
-        return;
-    }
-
-    let modalDetalle = document.getElementById('modalDetalleSesion');
-    let tituloDetalle = document.getElementById('tituloDetalleSesion');
-    let subDetalle = document.getElementById('subtituloDetalle');
-    let tablaSesionUnica = document.getElementById('tablaGeneralSesionUnica');
-
-    if (modalDetalle) modalDetalle.style.display = 'flex';
-    if (tituloDetalle) tituloDetalle.textContent = `TABLA GENERAL: ${titulo}`;
-    if (subDetalle) subDetalle.textContent = jornada;
-    if (tablaSesionUnica) tablaSesionUnica.innerHTML = `<thead><tr><th colspan="100" style="text-align:center; padding: 30px; color: var(--primary);">Cargando estadísticas de salas...</th></tr></thead>`;
-
-    try {
-        const { data: fileList, error: listError } = await supabaseClient.storage
-            .from('entrenamientos_logs')
-            .list(folderPath);
-
-        if (listError || !fileList || fileList.length === 0) {
-            alert("No se encontraron archivos.");
-            return;
-        }
-
-        fileList.sort((a, b) => a.name.localeCompare(b.name));
-        let textosSalas = [];
-
-        for (let file of fileList) {
-            const { data: fileData, error: downloadError } = await supabaseClient.storage
-                .from('entrenamientos_logs')
-                .download(`${folderPath}/${file.name}`);
-
-            if (!downloadError && fileData) {
-                let texto = await fileData.text();
-                textosSalas.push(texto);
-            }
-        }
-
-        let equiposMap = {};
-        let numSalas = textosSalas.length;
-
-        textosSalas.forEach((texto, salaIndex) => {
-            let lines = texto.split('\n');
-            lines.forEach(line => {
-                const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
-                if (teamMatch) {
-                    let name = teamMatch[1].trim();
-                    if (!equiposMap[name]) {
-                        equiposMap[name] = { name, totalScore: 0, killScore: 0, salasPuntos: {}, salasJugadas: 0 };
-                    }
-                    let totalScore = parseInt(teamMatch[5]);
-                    let killScore = parseInt(teamMatch[3]);
-                    equiposMap[name].totalScore += totalScore;
-                    equiposMap[name].killScore += killScore;
-                    equiposMap[name].salasPuntos[salaIndex] = totalScore;
-                    equiposMap[name].salasJugadas += 1;
-                }
-            });
-        });
-
-        let equiposOrdenados = Object.values(equiposMap).sort((a, b) => b.totalScore - a.totalScore);
-
-        let htmlHeader = `
-            <thead>
-                <tr style="color: var(--primary); font-family: 'Michroma'; border-bottom: 2px solid rgba(216,195,149,0.3); font-size: 0.85rem;">
-                    <th style="text-align:left; padding: 10px;">#</th>
-                    <th style="text-align:left; padding: 10px;">EQUIPO</th>
-                    ${Array.from({length: numSalas}).map((_,i) => `<th style="padding: 10px; text-align:center;">S${i+1}</th>`).join('')}
-                    <th style="text-align: center; padding: 10px;">SALAS</th>
-                    <th style="text-align: center; padding: 10px;">KILL</th>
-                    <th style="text-align: center; padding: 10px;">TOTAL</th>
-                </tr>
-            </thead>
-        `;
-
-        let htmlBody = `<tbody>`;
-        equiposOrdenados.forEach((eq, i) => {
-            let colorFila = "var(--light)";
-            if (i === 0) colorFila = '#D8C395';
-            else if (i === 1) colorFila = '#B9B2A4';
-            else if (i === 2) colorFila = '#cd7f32';
-
-            htmlBody += `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
-                    <td style="padding: 10px; font-weight: bold; color:${colorFila};">#${i+1}</td>
-                    <td style="padding: 10px; font-weight: bold; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><span style="color: var(--light);">${eq.name}</span></td>
-                    ${Array.from({length: numSalas}).map((_,s) => `<td style="text-align:center; padding: 10px; color: var(--secondary);">${eq.salasPuntos[s] !== undefined ? eq.salasPuntos[s] : '-'}</td>`).join('')}
-                    <td style="text-align:center; padding: 10px; color: var(--primary); font-weight:bold;">${eq.salasJugadas}</td>
-                    <td style="text-align:center; padding: 10px; color: #ff5555; font-weight:bold;">${eq.killScore}</td>
-                    <td style="text-align:center; padding: 10px; color:${colorFila}; font-weight:bold; font-family:'Michroma';">${eq.totalScore}</td>
-                </tr>
-            `;
-        });
-        htmlBody += `</tbody>`;
-
-        if (tablaSesionUnica) tablaSesionUnica.innerHTML = htmlHeader + htmlBody;
-    } catch (err) {
-        console.error("Error:", err);
-        alert("Error al cargar los datos de la sesión.");
     }
 }
 

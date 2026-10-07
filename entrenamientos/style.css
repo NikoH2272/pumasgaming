@@ -582,6 +582,7 @@ input[type="file"]::file-selector-button {
 
 .btn-generar {
   width: 100%;
+      position: relative;
   min-height: 48px;
   padding: 13px 20px;
   border: 1px solid var(--primary);
@@ -872,7 +873,7 @@ footer {
 .hero h1{margin:0 0 12px;color:var(--light);font-size:clamp(1.7rem,4.2vw,3.1rem);font-weight:900;line-height:1.05;letter-spacing:-.03em;text-transform:uppercase}
 .hero h1 span{display:block;color:var(--primary)}
 .hero p{margin:0 auto;max-width:640px;color:#c3bdae}
-.dashboard-modulos{display:grid;grid-template-columns:minmax(0,20fr) minmax(0,40fr) minmax(0,20fr);gap:24px;align-items:start;width:100%;max-width:none;margin:0;padding:clamp(28px,4vw,56px) clamp(16px,3vw,40px)}
+.dashboard-modulos{display:grid;grid-template-columns:minmax(0,35fr) minmax(0,65fr);gap:24px;align-items:start;width:100%;max-width:none;margin:0;padding:clamp(28px,4vw,56px) clamp(16px,3vw,40px)}
 .dashboard-col{min-width:0}
 .tabla-contenedor{display:flex;flex-direction:column;width:100%;min-height:560px;padding:clamp(18px,2.2vw,28px);border:1px solid rgba(216,195,149,.22);border-radius:3px;background:linear-gradient(145deg,rgba(216,195,149,.04),transparent 45%),linear-gradient(145deg,#202020,#121212 78%);box-shadow:0 16px 44px rgba(0,0,0,.3)}
 .header-card-title{display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid rgba(216,195,149,.2)}
@@ -914,3 +915,190 @@ footer {
 #modulo-top100{grid-column:1/-1}
 .tabla-doble{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:24px}
 .wk-range{display:block;margin-top:4px;color:var(--gray);font:600 .66rem var(--font-display);letter-spacing:.06em;text-transform:none}
+
+/* ===== Layout: Calendario + Top 10 Killers (izq) · Top 50 (der) · Top 100 abajo ===== */
+#modulo-calendario{grid-column:1;grid-row:1}
+#modulo-killers{grid-column:1;grid-row:2}
+#modulo-equipos{grid-column:2;grid-row:1/span 2}
+#modulo-top100{grid-column:1/-1;grid-row:3}
+#modulo-calendario .tabla-contenedor,#modulo-killers .tabla-contenedor{min-height:auto}
+#modulo-equipos .tabla-estilizada th,#modulo-top100 .tabla-estilizada th{padding:10px 5px;font-size:.58rem;letter-spacing:.04em}
+#modulo-equipos .tabla-estilizada td,#modulo-top100 .tabla-estilizada td{padding:8px 5px;font-size:.88rem}
+.header-card-title h3 .wk-range{font-size:.6rem}
+@media(max-width:1180px){#modulo-calendario,#modulo-killers,#modulo-equipos,#modulo-top100{grid-column:auto;grid-row:auto}}
+
+
+/* ===== Títulos de columnas legibles + Top Killers en columnas ===== */
+#modulo-equipos .tabla-estilizada th,#modulo-top100 .tabla-estilizada th{font-family:'Trebuchet MS',sans-serif;font-size:.74rem;font-weight:800;letter-spacing:.05em;white-space:nowrap;color:var(--primary);border-bottom:2px solid rgba(216,195,149,.45)}
+#modulo-equipos caption,#modulo-top100 caption{caption-side:top;padding:0 0 8px;color:var(--primary);font:800 .66rem 'Michroma',sans-serif;letter-spacing:.08em;text-align:left}
+.leyenda-tabla{margin:0 0 14px;color:var(--gray);font-size:.82rem;line-height:1.5}
+.leyenda-tabla b{color:var(--primary)}
+.killer-head,.killer-card.k5{display:grid;grid-template-columns:34px minmax(0,1fr) 54px 54px 60px;gap:8px;align-items:center}
+.killer-head{padding:0 14px 8px;border-bottom:2px solid rgba(216,195,149,.45);color:var(--primary);font:800 .74rem 'Trebuchet MS',sans-serif;letter-spacing:.05em}
+.killer-head span:nth-child(n+3),.killer-card.k5 .k-num{text-align:center}
+.killer-card.k5 .k-name{overflow:hidden;color:var(--light);font-weight:bold;text-overflow:ellipsis;white-space:nowrap}
+.killer-card.k5 .k-num{color:var(--light);font-weight:bold;font-size:.88rem}
+
+.header-leyenda{margin-left:auto;color:var(--gray);font-size:.8rem;text-align:right}
+.header-leyenda b{color:var(--primary)}
+
+
+/* ===== Separación suave entre columnas / tablas ===== */
+.tabla-contenedor{box-shadow:0 6px 22px rgba(0,0,0,.38),0 0 0 1px rgba(216,195,149,.05)}
+#modulo-equipos .tabla-estilizada,#modulo-top100 .tabla-estilizada{background:rgba(244,238,220,.018);border:1px solid rgba(216,195,149,.09);box-shadow:0 4px 14px rgba(0,0,0,.32)}
+
+/* ===== Vista de entreno (misma captura que el admin) ===== */
+#tablaCaptura {
+    width: 800px;
+    height: 1050px;
+    position: relative;
+    font-family: 'Trebuchet MS', sans-serif;
+    padding: 15px;
+    box-sizing: border-box;
+    border: 2px solid rgba(216,195,149, 0.3);
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+}
+
+.captura-header {
+    text-align: center;
+    position: absolute;
+    top: 15px;
+    left: 40px;
+    right: 40px;
+}
+
+.captura-titulo {
+    font-family: 'Michroma', sans-serif;
+    font-size: 3rem;
+    color: #D8C395;
+    margin: 0;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+.captura-subtitulo {
+    font-family: 'Michroma', sans-serif;
+    font-size: 0.8rem;
+    margin-top: 150px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.captura-card {
+    position: absolute;
+    left: 25px;
+    width: 750px;
+    padding: 6px 10px;
+    border: 1px solid rgba(216,195,149, 0.3);
+    background: rgba(18, 19, 23, 0.95);
+}
+
+.card-titulo {
+    font-family: 'Michroma', sans-serif;
+    color: #D8C395;
+    margin-bottom: 2px;
+    font-size: 0.78rem;
+    font-weight: bold;
+}
+
+.card-tabla-general       { top: 185px; }
+.card-equipos-destacados  { top: 560px; }
+.card-booyah-sala         { top: 685px; }
+.card-top-killers         { top: 785px; }
+
+.tabla-general-interna {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.68rem;
+}
+
+.tabla-general-interna th {
+    color: #D8C395;
+    font-family: 'Michroma';
+    border-bottom: 2px solid rgba(216,195,149,0.3);
+    font-size: 0.7rem;
+    padding: 2px;
+}
+
+.tabla-general-interna td {
+    padding: 2px 3px;
+}
+
+.grid-equipos-destacados {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+}
+
+.item-equipo-destacado {
+    font-size: 0.68rem;
+    background: rgba(18,19,23,0.85);
+    padding: 4px 6px;
+    border: 1px solid rgba(216,195,149,0.2);
+}
+
+.grid-booyah-salas {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+}
+
+.item-booyah-sala {
+    font-size: 0.65rem;
+    background: rgba(18,19,23,0.85);
+    padding: 4px 5px;
+    border: 1px solid rgba(216,195,149,0.2);
+    text-align: center;
+}
+
+.grid-top-killers {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 4px;
+}
+
+.item-top-killer {
+    font-size: 0.65rem;
+    background: rgba(18,19,23,0.85);
+    padding: 3px 5px;
+    border: 1px solid rgba(216,195,149,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-resumen-general { 
+    top: 920px; 
+    width: 550px;
+    margin-left: 190px;
+}
+
+.grid-resumen-nums {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    text-align: center;
+    font-size: 0.72rem;
+}
+
+.item-resumen-caja {
+    background: rgba(18,19,23,0.85);
+    padding: 5px;
+    border: 1px solid rgba(216,195,149,0.2);
+}
+
+
+#tablaCaptura .captura-titulo{letter-spacing:normal;line-height:normal;font-weight:700}
+.modal-vista{position:fixed;inset:0;z-index:2000;justify-content:center;align-items:flex-start;padding:20px;overflow-y:auto;background:rgba(0,0,0,.85);backdrop-filter:blur(5px)}
+.modal-vista-box{position:relative;width:100%;max-width:900px;margin:auto;padding:28px 30px 30px;border:1px solid rgba(216,195,149,.4);border-radius:3px;background:linear-gradient(145deg,#202020,#121212)}
+.modal-vista-x{position:absolute;top:12px;right:12px;width:34px;height:34px;border:1px solid rgba(216,195,149,.3);border-radius:50%;color:#fff;background:rgba(255,255,255,.05);cursor:pointer}
+.vista-head{margin:0 40px 18px 0;padding-bottom:12px;border-bottom:1px solid rgba(216,195,149,.2)}
+.vista-head h3{margin:0 0 4px;color:var(--primary);font-size:1.05rem}
+.vista-head span,.vista-cargando{color:var(--gray);font-size:.85rem}
+.vista-cargando{padding:30px;text-align:center}
+.vista-actions{margin:20px auto 0;max-width:340px}
+.vista-texto{margin-top:22px}
+.vista-texto-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:var(--primary);font:800 .7rem var(--font-display)}
+.vista-texto textarea{width:100%;height:210px;padding:12px;border:1px solid rgba(216,195,149,.25);border-radius:2px;color:var(--light);background:#0a0b10;font:inherit;resize:vertical}

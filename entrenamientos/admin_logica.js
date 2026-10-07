@@ -1,3 +1,4 @@
+const TITULO_ENTRENO = 'ENTRENOS PUMAS GG';
 const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
 let supabaseClient = null;
@@ -203,7 +204,7 @@ function procesarLogs(textsArray, renombresMap) {
 }
 
 function renderizarResultados(eqs, tKs, nS) {
-    let tC = document.getElementById('inputTituloTorneo') ? document.getElementById('inputTituloTorneo').value : "",
+    let tC = "",
         tTipo = document.getElementById('selectTipoPartida') ? document.getElementById('selectTipoPartida').value : "NORMAL",
         fInputVal = document.getElementById('inputFechaHoraEntreno') ? document.getElementById('inputFechaHoraEntreno').value : "",
         fC = fInputVal ? fInputVal.replace('T', ' ') : "",
@@ -367,8 +368,7 @@ function generarTextoParaEntrenamientoActual(eqsArray, tkArray) {
     
     if (!contenedorCopiable || !textarea) return;
 
-    let tituloInput = document.getElementById('inputTituloTorneo');
-    let tituloTorneo = tituloInput ? tituloInput.value : "ENTRENAMIENTOS PUMAS GG";
+    let tituloTorneo = TITULO_ENTRENO;
 
     let fechaInput = document.getElementById('inputFechaHoraEntreno');
     let fechaObj = fechaInput && fechaInput.value ? new Date(fechaInput.value) : new Date();
@@ -419,7 +419,7 @@ async function guardarEntrenamientoEnSupabase() {
     if (!supabaseClient) return;
 
     try {
-        let titulo = document.getElementById('inputTituloTorneo') ? document.getElementById('inputTituloTorneo').value : "ENTRENAMIENTO";
+        let titulo = TITULO_ENTRENO;
         let jornada = document.getElementById('selectTipoPartida') ? document.getElementById('selectTipoPartida').value : "NORMAL";
         let fechaInput = document.getElementById('inputFechaHoraEntreno') ? document.getElementById('inputFechaHoraEntreno').value : "";
         let fecha = fechaInput ? new Date(fechaInput) : new Date();
