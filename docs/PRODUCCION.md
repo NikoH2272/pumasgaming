@@ -16,6 +16,8 @@ Corre en Supabase → SQL Editor los SQL que falten, **en orden** (marca ☑ en 
 | 07–08 | Entrenos LATAM (con Pumas) | Sección LATAM y `/entrenoslatam/` |
 | 09 | Guardar y corregir entrenos | Botón "Cargar a la base de datos" y página Corregir entrenos |
 | 10 | ZMF femenino | Portal ZMF femenino y su guardado |
+| 11 | Links de grupos | Opcional: los links ya vienen en el código; esto los deja editables en la base |
+| 12 | Optimizar LATAM + respaldo | Muy recomendado: baja el consumo de datos del plan gratis y activa el botón **Generar respaldo** del panel |
 
 Comprobaciones rápidas en Supabase:
 - [ ] `select usuario, rol, activo from usuarios_admin;` → cada admin con su rol; **coachniko = superadmin**.
@@ -65,7 +67,11 @@ Luego crea el Pull Request a `main` en GitHub y únelo. GitHub Pages publica en 
 - [ ] En **Corregir entrenos**: borrar ese entreno de prueba.
 - [ ] En celular: menú, portada y tablas sin scroll horizontal.
 
-## 5. Si algo sale mal
+## 5. Respaldo
+
+En el plan gratis de Supabase no hay copias automáticas descargables. Entra como **coachniko** → panel `/admin/` → **Respaldo → Generar respaldo** y guarda el `.json` (por ejemplo, cada semana y antes de cambios grandes). No incluye contraseñas ni los archivos de logs del storage.
+
+## 6. Si algo sale mal
 
 - **Volver a la versión anterior del sitio:** en GitHub → el commit → *Revert*, o:
 

@@ -1,5 +1,5 @@
 /* Entrenos LATAM · estilos de la página (la base viene de ../portal-kit/portal.css) */
-@import url('../portal-kit/latam.css?v=20261007l');
+@import url('../portal-kit/latam.css?v=20261007n');
 
 .latam-barra { padding-top: 26px; padding-bottom: 0; }
 .latam-filtro { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }

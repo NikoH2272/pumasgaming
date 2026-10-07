@@ -6,10 +6,10 @@
     <title>Admin | Pumas Gaming</title>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261007l">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261007n">
     <link rel="icon" type="image/x-icon" href="../imagenes/LOGO PUMAS WEB.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261007l" data-modo="login"></script>
+    <script src="../portal-kit/portal.js?v=20261007n" data-modo="login"></script>
 </head>
 <body>
     <header class="site-header">
@@ -86,6 +86,11 @@
                 <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Personalización</h3>
                 <p>Efecto para todas las páginas: calabazas, fantasmas, nieve o iconos.</p>
                 <div class="acciones"><a class="btn-access" href="config.html"><i class="fa-solid fa-sliders"></i> Personalizar</a></div></article>`);
+        if (P.tiene(s, 'gestionar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#6ee7a8">
+                <h3><i class="fa-solid fa-shield-halved"></i> Respaldo</h3>
+                <p>Descarga una copia de toda la base (portales, usuarios sin contraseñas, roles y todos los entrenos) en un archivo.</p>
+                <div class="acciones"><button class="btn-access" id="btnRespaldo"><i class="fa-solid fa-download"></i> Generar respaldo</button></div>
+                <p class="muted" id="respaldoMsg" role="status"></p></article>`);
         if (P.tiene(s, 'gestionar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#e5484d">
                 <h3><i class="fa-solid fa-pen-to-square"></i> Corregir entrenos</h3>
                 <p>Borra un entreno de cualquier portal o corrige el nombre de un equipo.</p>
@@ -95,6 +100,33 @@
                 <p>Crea usuarios y roles, asigna permisos y cambia contraseñas.</p>
                 <div class="acciones"><a class="btn-access" href="usuarios.html"><i class="fa-solid fa-user-shield"></i> Gestionar</a></div></article>`);
         document.getElementById('hub').innerHTML = tarjetas.join('') || '<p class="tool-desc">Tu usuario no tiene portales asignados.</p>';
+
+        // Respaldo: confirma, pide la copia a la base y la descarga como archivo .json
+        const btnR = document.getElementById('btnRespaldo');
+        if (btnR) btnR.addEventListener('click', async () => {
+            const msg = document.getElementById('respaldoMsg');
+            const ok = await P.confirmar({
+                titulo: '¿Generar respaldo?',
+                html: '<p>Se descargará un archivo <b>.json</b> con todos los datos de la base: portales, roles, usuarios (<b>sin contraseñas</b>), configuración y todos los entrenos con sus resultados y killers.</p><p>Guárdalo en un lugar seguro (Drive, PC). Los archivos de logs del storage no se incluyen.</p>',
+                si: 'Sí, generar', no: 'Cancelar'
+            });
+            if (!ok) return;
+            btnR.disabled = true; msg.textContent = 'Generando respaldo...';
+            try {
+                const datos = await P.respaldo();
+                const fecha = new Date();
+                const nombre = 'pumasgaming-respaldo-' + fecha.toISOString().slice(0, 16).replace('T', '_').replace(':', '-') + '.json';
+                const blob = new Blob([JSON.stringify(datos)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob); a.download = nombre;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+                const total = Object.values(datos.filas_por_tabla || {}).reduce((x, y) => x + y, 0);
+                msg.textContent = '✔ Respaldo descargado: ' + nombre + ' (' + total.toLocaleString('es') + ' filas, ' + Math.max(1, Math.round(blob.size / 1024)).toLocaleString('es') + ' KB).';
+            } catch (err) {
+                msg.textContent = 'No se pudo generar: ' + err.message;
+            } finally { btnR.disabled = false; }
+        });
     })();
     </script>
 </body>

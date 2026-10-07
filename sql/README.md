@@ -14,6 +14,8 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 08 | `08_latam_con_pumas.sql` | Pumas entra en Entrenos LATAM (vistas con UNION, sin copiar datos) | ☐ |
 | 09 | `09_guardar_y_corregir_entrenos.sql` | Guardar entrenos desde cada herramienta; superadmin borra entrenos y corrige nombres | ☐ |
 | 10 | `10_zmf_femenino.sql` | ZMF mixto y femenino: portal zmffem y rol de ZMF con los dos | ☐ |
+| 11 | `11_links_grupos.sql` | Links de WhatsApp de cada entreno en `portales.link` | ☐ |
+| 12 | `12_optimizar_latam_y_respaldo.sql` | LATAM calculado en la base (pocos KB por visita) + respaldo para superadmin | ☐ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 

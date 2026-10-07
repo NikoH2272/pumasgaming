@@ -200,6 +200,9 @@
         })
     };
 
+    // Respaldo completo de la base en JSON (superadmin). No incluye contraseñas.
+    const respaldo = () => rpcAdmin('admin_respaldo');
+
     /* ---------------- Ventana de confirmación ---------------- */
     // confirmar({ titulo, html, si, no, peligro }) → Promise<boolean>
     // Si html trae campos con [data-campo], resuelve { ok, campos: {nombre: valor} }
@@ -338,7 +341,7 @@ html.pg-verificando body{visibility:hidden}
     window.PumasPortal = {
         PORTALES, EFECTOS, portal: PORTAL,
         login, logout, validar, guard, puede, tiene, inicioDe, db, sesion: leerSesion,
-        cargarEfecto, guardarEfecto, aplicarEfecto, usuarios, entrenos, confirmar, escaparHtml
+        cargarEfecto, guardarEfecto, aplicarEfecto, usuarios, entrenos, respaldo, confirmar, escaparHtml
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);

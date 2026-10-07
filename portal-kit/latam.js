@@ -1,7 +1,8 @@
 /* =====================================================================
    PUMAS GAMING · Entrenos LATAM
-   Junta los entrenos de Pumas, Rusheo, ROW, QFD, Dragon Fest y ZMF leyendo
-   las vistas v_latam_* (no copian datos). Misma fórmula que el portal de Pumas:
+   Junta los entrenos de Pumas, Rusheo, ROW, QFD, Dragon Fest y ZMF.
+   Los rankings los calcula la base (latam_resumen, sql/12) y llegan listos:
+   pocos KB por visita aunque haya miles de entrenos. Misma fórmula que el portal de Pumas:
      PG  = puntos generales (total)
      PR  = PG ÷ sesiones (entero)  · orden: PR → booyah → PG
      KDA = kills ÷ salas jugadas    · orden: KDA → kills
@@ -27,7 +28,16 @@
     ];
     const POR_ID = Object.fromEntries(PORTALES.map(p => [p.id, p]));
     const LOGO_PUMAS = '/imagenes/LOGO PUMAS WEB.png';
-    const LINKS_POR_DEFECTO = { entrenamientos: 'https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd' };
+    // Grupos de WhatsApp de cada entreno. Si la base (portales.link) tiene otro link, manda el de la base.
+    const LINKS_POR_DEFECTO = {
+        entrenamientos: 'https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd',
+        rusheo:         'https://chat.whatsapp.com/Lqu9o94aq9XIBI1QlYR6M0',
+        row:            'https://chat.whatsapp.com/GMp7e5AUHpa6qoiJuhQ8wA',
+        ascensosqfd:    'https://chat.whatsapp.com/GHpSM5xUyWdHr79DIsW2p8',
+        zmf:            'https://chat.whatsapp.com/KSCHFXzg3XJGNIU6dt6UAl'
+    };
+    // Grupos extra (botón adicional en la tarjeta)
+    const LINKS_EXTRA = { entrenamientos: [{ texto: 'Unirse Ligas', url: 'https://chat.whatsapp.com/CVnTo8XyLTv0PRRYRFYUr9' }] };
     // Instagram de cada entreno (por ahora solo Pumas)
     const INSTAGRAM = { entrenamientos: 'https://www.instagram.com/entrenos.pumas.gg/' };
 
@@ -181,10 +191,90 @@
                 <div class="latam-logo">${imgLogo(p.logo, p.nombre)}</div>
                 <h3>${esc(p.id === 'entrenamientos' ? 'Pumas Gaming' : p.nombre)}</h3>
                 <p class="latam-sub">${doble ? 'Mixto y femenino' : p.id === 'entrenamientos' ? 'Entrenos oficiales' : 'Entrenos by Pumas'}</p>
-                <div class="latam-acciones">${botones}${grupo}${INSTAGRAM[ids[0]]
+                <div class="latam-acciones">${botones}${grupo}${(LINKS_EXTRA[ids[0]] || []).map(x =>
+                    `<a class="btn-access btn-outline" href="${esc(x.url)}" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"></i> ${esc(x.texto)}</a>`).join('')}${INSTAGRAM[ids[0]]
                     ? `<a class="btn-access btn-outline" href="${INSTAGRAM[ids[0]]}" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i> Instagram</a>` : ''}</div>
             </article>`;
         }).join('');
+    }
+
+    /* ---------------- Resumen (calculado en la base) ---------------- */
+    // La base (sql/12) devuelve los rankings ya calculados: pocos KB por visita.
+    // Si esa función aún no existe, se calcula como antes en el navegador.
+    const aEquipo = e => ({ name: e.equipo, ses: e.ses, b: e.b, k: e.k, pts: e.pts, pr: e.pr,
+        entrenos: e.entrenos, kps: e.ses ? e.k / e.ses : 0, porPortal: e.part || {} });
+    const aKiller = x => ({ name: x.jugador, equipo: x.equipo, k: x.k, s: x.s, kda: Number(x.kda) || 0, porPortal: x.part || {} });
+    const faltaFuncion = err => /latam_resumen|latam_calendario|could not find|schema cache|PGRST202/i.test((err && (err.message + ' ' + err.code)) || '');
+
+    let legado = null;   // datos completos, solo si la base aún no tiene sql/12
+    async function datosLegado() { return legado || (legado = await cargarDatos()); }
+
+    async function resumen(portal, completo) {
+        const { data, error } = await P.db().rpc('latam_resumen', { p_portal: portal, p_completo: completo });
+        if (!error && data) {
+            const lunes = new Date(data.semana.lunes + 'T00:00:00');
+            const out = {
+                semana: { num: data.semana.num, actual: data.semana.actual, rango: rangoSemana(lunes) },
+                semanaEquipos: (data.semana_equipos || []).map(aEquipo),
+                semanaKillers: (data.semana_killers || []).map(aKiller)
+            };
+            if (!completo) return out;
+            const ind = {};
+            Object.entries(data.individuales || {}).forEach(([id, v]) => { ind[id] = { entrenos: v.entrenos, top: (v.top || []).map(aEquipo) }; });
+            return Object.assign(out, {
+                stats: data.stats,
+                historico: (data.historico || []).map(aEquipo),
+                killers: (data.killers || []).map(aKiller),
+                letales: (data.letales || []).map(aEquipo),
+                activos: (data.activos || []).map(aEquipo),
+                jugadores: (data.jugadores || []).map(aKiller),
+                individuales: ind,
+                ultimos: data.ultimos || []
+            });
+        }
+        if (error && !faltaFuncion(error)) throw error;
+        return resumenLocal(await datosLegado(), portal, completo);
+    }
+
+    // Mismo resultado que latam_resumen, calculado en el navegador (compatibilidad)
+    function resumenLocal(d, portal, completo) {
+        const f = r => !portal || r.portal === portal;
+        const ses = d.sesiones.filter(f), eqs = d.equipos.filter(f), kls = d.killers.filter(f);
+        const sem = semanaObjetivo(ses);
+        const enSemana = r => semanaDe(r.fecha) === sem.clave;
+        const out = {
+            semana: sem,
+            semanaEquipos: agregarEquipos(eqs.filter(enSemana)).slice(0, completo ? 50 : 10),
+            semanaKillers: agregarKillers(kls.filter(enSemana)).slice(0, 10)
+        };
+        if (!completo) return out;
+        const todo = agregarEquipos(eqs), killers = agregarKillers(kls);
+        const mapas = Object.values(eqs.reduce((m, r) => { m[idSesion(r)] = Math.max(m[idSesion(r)] || 0, r.salas); return m; }, {})).reduce((a, b) => a + b, 0);
+        const ind = {};
+        PORTALES.filter(p => !portal || p.id === portal).forEach(p => {
+            ind[p.id] = { entrenos: d.sesiones.filter(s => s.portal === p.id).length, top: agregarEquipos(d.equipos.filter(r => r.portal === p.id)).slice(0, 10) };
+        });
+        return Object.assign(out, {
+            stats: { entrenos: ses.length, equipos: todo.length, kills: kls.reduce((a, r) => a + (r.kills || 0), 0), mapas },
+            historico: todo.slice(0, 100),
+            killers: killers.slice(0, 10),
+            letales: [...todo].sort((a, b) => b.k - a.k || b.kps - a.kps).slice(0, 5),
+            activos: [...todo].sort((a, b) => b.ses - a.ses || b.entrenos - a.entrenos || b.pr - a.pr).slice(0, 5),
+            jugadores: [...killers].sort((a, b) => b.k - a.k || b.kda - a.kda).slice(0, 5),
+            individuales: ind,
+            ultimos: ses.slice(0, 8)
+        });
+    }
+
+    // Entrenos de un mes (para el calendario)
+    async function sesionesDelMes(portal, anio, mes) {
+        const desde = `${anio}-${String(mes + 1).padStart(2, '0')}-01`;
+        const hasta = `${anio}-${String(mes + 1).padStart(2, '0')}-${String(new Date(anio, mes + 1, 0).getDate()).padStart(2, '0')}`;
+        const { data, error } = await P.db().rpc('latam_calendario', { p_portal: portal, p_desde: desde, p_hasta: hasta });
+        if (!error) return data || [];
+        if (!faltaFuncion(error)) throw error;
+        const d = await datosLegado();
+        return d.sesiones.filter(s => (!portal || s.portal === portal) && diaLocal(s.fecha) >= desde && diaLocal(s.fecha) <= hasta);
     }
 
     /* ---------------- Rankings (index principal) ---------------- */
@@ -204,15 +294,12 @@
         if (ley) ley.innerHTML = leyendaHTML();
         if (!eqEl && !klEl) return;
         try {
-            const d = await cargarDatos();
-            const sem = semanaObjetivo(d.sesiones);
-            const enSemana = r => semanaDe(r.fecha) === sem.clave;
-            const eq = agregarEquipos(d.equipos.filter(enSemana)).slice(0, 10);
-            const kl = agregarKillers(d.killers.filter(enSemana)).slice(0, 10);
-            const nota = sem.actual ? '' : ' · última con datos';
+            const r = await resumen(null, false);
+            const sem = r.semana, nota = sem.actual ? '' : ' · última con datos';
             const t1 = document.getElementById('latamTituloEq'), t2 = document.getElementById('latamTituloKill');
             if (t1) t1.innerHTML = `Top 10 Equipos LATAM · Semana ${sem.num}<span class="wk-range">${sem.rango}${nota} · PR</span>`;
             if (t2) t2.innerHTML = `Top 10 Killers LATAM · Semana ${sem.num}<span class="wk-range">${sem.rango}${nota} · KDA</span>`;
+            const eq = r.semanaEquipos.slice(0, 10), kl = r.semanaKillers.slice(0, 10);
             eqEl.innerHTML = eq.length ? eq.map((x, i) => filaRank(x, i, `${x.pr} PR`)).join('') : '<p>Aún no hay entrenos LATAM registrados.</p>';
             klEl.innerHTML = kl.length ? kl.map((x, i) => filaRank(x, i, `${x.kda.toFixed(2)} KDA`)).join('') : '<p>Aún no hay entrenos LATAM registrados.</p>';
         } catch (e) {
@@ -255,12 +342,9 @@
     }
 
     // Destacados: equipos más letales, que más participan y jugador más letal
-    function destacados(equipos, killers) {
+    function destacados(letales, activos, jugadores) {
         const cont = document.getElementById('latamDestacados');
         if (!cont) return;
-        const letales = [...equipos].sort((a, b) => b.k - a.k || b.kps - a.kps).slice(0, 5);
-        const activos = [...equipos].sort((a, b) => b.ses - a.ses || b.entrenos - a.entrenos || b.pr - a.pr).slice(0, 5);
-        const jugadores = [...killers].sort((a, b) => b.k - a.k || b.kda - a.kda).slice(0, 5);
         const fila = (x, i, valor, sub) => `<div class="dest-fila latam-row" ${tocable(x)}>
             <b style="color:${colPuesto(i) || 'var(--gray)'}">#${i + 1}</b>
             <span class="dest-nombre">${esc(x.name)}${sub ? `<small>${sub}</small>` : ''}</span>
@@ -290,13 +374,13 @@
     }
 
     // Tablas individuales: un Top 10 (por PR) de cada entreno
-    function individuales(d, filtro) {
+    function individuales(ind, filtro) {
         const cont = document.getElementById('latamIndividuales');
         if (!cont) return;
         const lista = PORTALES.filter(p => filtro === 'todos' || p.id === filtro);
         cont.innerHTML = lista.map(p => {
-            const eqs = agregarEquipos(d.equipos.filter(r => r.portal === p.id)).slice(0, 10);
-            const nSes = d.sesiones.filter(s => s.portal === p.id).length;
+            const v = ind[p.id] || { entrenos: 0, top: [] };
+            const eqs = v.top, nSes = v.entrenos;
             return `<article class="card-box ind-card" style="--c:${p.color}">
                 <div class="ind-head">${imgLogo(p.logo, p.nombre)}<div><h3>${esc(p.nombre)}</h3><small>${nSes} entreno${nSes === 1 ? '' : 's'}</small></div>
                     <a class="btn-mini" href="${p.url}">Portal</a></div>
@@ -311,78 +395,77 @@
         }).join('');
     }
 
+    let filtroPortal = null;   // null = todos
+    const cacheResumen = {};
+
     async function iniciarPortal() {
         const ley = document.getElementById('latamLeyenda');
         if (ley) ley.innerHTML = leyendaHTML();
         const chips = document.getElementById('latamFiltro');
-        let d;
-        try { d = await cargarDatos(); }
-        catch (e) {
-            console.warn('LATAM:', e);
-            document.querySelectorAll('[data-latam-vacio]').forEach(n => { n.innerHTML = '<tr class="vacio"><td colspan="7"><i class="fa-solid fa-database"></i>Los resultados LATAM estarán disponibles cuando se active la base (sql/07 y 08).</td></tr>'; });
-            pintarCalendario([]);
-            return;
-        }
-
-        // Si este mes no tiene entrenos, el calendario abre en el mes del último
-        if (d.sesiones.length) {
-            const hoy = `${calAnio}-${String(calMes + 1).padStart(2, '0')}`;
-            if (!d.sesiones.some(s => diaLocal(s.fecha).startsWith(hoy))) {
-                const f = diaLocal(d.sesiones[0].fecha); calAnio = +f.slice(0, 4); calMes = +f.slice(5, 7) - 1;
-            }
-        }
-
-        let filtro = 'todos';
         if (chips) {
             chips.innerHTML = `<button class="chip on" data-p="todos">Todos</button>` + PORTALES.map(p =>
                 `<button class="chip" data-p="${p.id}" style="--c:${p.color}">${esc(p.nombre)}</button>`).join('');
             chips.onclick = e => {
                 const b = e.target.closest('[data-p]'); if (!b) return;
-                filtro = b.dataset.p;
+                filtroPortal = b.dataset.p === 'todos' ? null : b.dataset.p;
                 chips.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b));
                 pintar();
             };
         }
-
-        function pintar() {
-            const f = r => filtro === 'todos' || r.portal === filtro;
-            const ses = d.sesiones.filter(f), eqs = d.equipos.filter(f), kls = d.killers.filter(f);
-            const todo = agregarEquipos(eqs), killers = agregarKillers(kls);
-            const sem = semanaObjetivo(ses);
-            const semana = agregarEquipos(eqs.filter(r => semanaDe(r.fecha) === sem.clave));
-            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Number(v).toLocaleString('es'); };
-            set('statEquipos', todo.length);
-            set('statKills', kls.reduce((a, r) => a + (r.kills || 0), 0));
-            // Mapas jugados = salas de cada entreno (la mayor cantidad que jugó algún equipo en ese entreno)
-            const mapas = Object.values(eqs.reduce((m, r) => { m[idSesion(r)] = Math.max(m[idSesion(r)] || 0, r.salas); return m; }, {})).reduce((a, b) => a + b, 0);
-            set('statMapas', mapas);
-            set('statEntrenos', ses.length);
-
-            const tit = document.getElementById('tituloTop50');
-            if (tit) tit.innerHTML = `Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual ? '' : ' · última semana con datos'} · Orden: PR → booyah</span>`;
-            llenarDoble('bodySemanaA', 'bodySemanaB', semana.slice(0, 50));
-            llenarDoble('bodyTop100A', 'bodyTop100B', todo.slice(0, 100));
-
-            const g = document.getElementById('gridKillers');
-            if (g) g.innerHTML = killers.length
-                ? `<div class="killer-head"><span>#</span><span>JUGADOR</span><span>SALAS</span><span>KILLS</span><span>KDA</span></div>` + killers.slice(0, 10).map(filaKiller).join('')
-                : '<p class="res-vacio"><i class="fa-solid fa-skull"></i>Sin datos de killers todavía.</p>';
-
-            destacados(todo, killers);
-            individuales(d, filtro);
-            pintarCalendario(ses);
-        }
-        pintar();
+        await pintar(true);
     }
 
-    // Calendario igual al de Pumas, con un punto del color de cada entreno
-    let calMes = new Date().getMonth(), calAnio = new Date().getFullYear(), calSel = null, calSes = [];
-    function pintarCalendario(sesiones) {
-        calSes = sesiones;
+    async function pintar(primeraVez) {
+        const clave = filtroPortal || 'todos';
+        let r;
+        try { r = cacheResumen[clave] || (cacheResumen[clave] = await resumen(filtroPortal, true)); }
+        catch (e) {
+            console.warn('LATAM:', e);
+            document.querySelectorAll('[data-latam-vacio]').forEach(n => { n.innerHTML = '<tr class="vacio"><td colspan="7"><i class="fa-solid fa-database"></i>Los resultados LATAM estarán disponibles pronto.</td></tr>'; });
+            return;
+        }
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Number(v || 0).toLocaleString('es'); };
+        set('statEquipos', r.stats.equipos); set('statKills', r.stats.kills);
+        set('statMapas', r.stats.mapas); set('statEntrenos', r.stats.entrenos);
+
+        const sem = r.semana;
+        const tit = document.getElementById('tituloTop50');
+        if (tit) tit.innerHTML = `Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual ? '' : ' · última semana con datos'} · Orden: PR → booyah</span>`;
+        llenarDoble('bodySemanaA', 'bodySemanaB', r.semanaEquipos.slice(0, 50));
+        llenarDoble('bodyTop100A', 'bodyTop100B', r.historico.slice(0, 100));
+
+        const g = document.getElementById('gridKillers');
+        if (g) g.innerHTML = r.killers.length
+            ? `<div class="killer-head"><span>#</span><span>JUGADOR</span><span>SALAS</span><span>KILLS</span><span>KDA</span></div>` + r.killers.map(filaKiller).join('')
+            : '<p class="res-vacio"><i class="fa-solid fa-skull"></i>Sin datos de killers todavía.</p>';
+
+        destacados(r.letales, r.activos, r.jugadores);
+        individuales(r.individuales, filtroPortal || 'todos');
+
+        // El calendario abre en el mes del último entreno si este mes no tiene
+        calUltimos = r.ultimos;
+        if (primeraVez && r.ultimos.length) {
+            const f = diaLocal(r.ultimos[0].fecha);
+            calAnio = +f.slice(0, 4); calMes = +f.slice(5, 7) - 1;
+        }
+        calSel = null;
+        cargarMes();
+    }
+
+    // Calendario igual al de Pumas: carga solo el mes visible, con un punto del color de cada entreno
+    let calMes = new Date().getMonth(), calAnio = new Date().getFullYear(), calSel = null, calSes = [], calUltimos = [];
+    const cacheMes = {};
+    async function cargarMes() {
+        const clave = `${filtroPortal || 'todos'}:${calAnio}-${calMes}`;
+        try { calSes = cacheMes[clave] || (cacheMes[clave] = await sesionesDelMes(filtroPortal, calAnio, calMes)); }
+        catch (e) { console.warn('LATAM calendario:', e); calSes = []; }
+        pintarCalendario();
+    }
+    function pintarCalendario() {
         const cont = document.getElementById('latamCalendario');
         if (!cont) return;
         const porDia = {};
-        sesiones.forEach(s => { (porDia[diaLocal(s.fecha)] = porDia[diaLocal(s.fecha)] || []).push(s); });
+        calSes.forEach(s => { (porDia[diaLocal(s.fecha)] = porDia[diaLocal(s.fecha)] || []).push(s); });
         const first = new Date(calAnio, calMes, 1).getDay(), dias = new Date(calAnio, calMes + 1, 0).getDate();
         let g = '<div class="calendar-day empty"></div>'.repeat(first);
         for (let d = 1; d <= dias; d++) {
@@ -391,7 +474,7 @@
             const puntos = [...new Set(del.map(s => s.portal))].map(p => `<i style="background:${(POR_ID[p] || {}).color || '#999'}"></i>`).join('');
             g += `<div class="calendar-day${del.length ? ' has-session' : ''}${k === calSel ? ' selected-day' : ''}" data-d="${k}">${d}<span class="cal-puntos">${puntos}</span></div>`;
         }
-        const lista = calSel && porDia[calSel] ? porDia[calSel] : sesiones.slice(0, 8);
+        const lista = calSel && porDia[calSel] ? porDia[calSel] : calUltimos;
         cont.innerHTML = `
             <div class="calendar-container">
                 <div class="calendar-header"><button class="btn-mini" data-nav="-1" aria-label="Mes anterior">&lt;</button><h4>${MES[calMes]} ${calAnio}</h4><button class="btn-mini" data-nav="1" aria-label="Mes siguiente">&gt;</button></div>
@@ -410,12 +493,15 @@
         const cont = document.getElementById('latamCalendario');
         if (!cont || !cont.contains(e.target)) return;
         const n = e.target.closest('[data-nav]'), dd = e.target.closest('[data-d]'), a = e.target.closest('[data-all]');
-        if (n) { calMes += +n.dataset.nav; if (calMes > 11) { calMes = 0; calAnio++; } if (calMes < 0) { calMes = 11; calAnio--; } }
-        else if (dd) { calSel = dd.classList.contains('has-session') ? dd.dataset.d : null; }
-        else if (a) { calSel = null; }
+        if (n) {
+            calMes += +n.dataset.nav; if (calMes > 11) { calMes = 0; calAnio++; } if (calMes < 0) { calMes = 11; calAnio--; }
+            calSel = null; cargarMes(); return;
+        }
+        if (dd) calSel = dd.classList.contains('has-session') ? dd.dataset.d : null;
+        else if (a) calSel = null;
         else return;
-        pintarCalendario(calSes);
+        pintarCalendario();
     });
 
-    window.Latam = { PORTALES, cargarDatos, agregarEquipos, agregarKillers, iniciarIndex, iniciarPortal };
+    window.Latam = { PORTALES, resumen, cargarDatos, agregarEquipos, agregarKillers, iniciarIndex, iniciarPortal };
 })();
