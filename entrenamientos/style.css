@@ -1166,3 +1166,4 @@ footer{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
   .ver-mas{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;margin-top:8px;border:1px solid rgba(216,195,149,.5);border-radius:3px;color:var(--primary);background:rgba(216,195,149,.06);font:800 .72rem var(--font-display);cursor:pointer}
   .ver-mas[hidden]{display:none}
 }
+@media(max-width:640px){.orden-btn{min-height:42px;min-width:56px}}

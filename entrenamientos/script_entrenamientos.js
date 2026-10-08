@@ -244,11 +244,20 @@ const _col=i=>i===0?'#D8C395':i===1?'#B9B2A4':i===2?'#cd7f32':'var(--light)';
 function _filaEq(eq,i){const c=_col(i);return `<tr><td class="c-pos" style="font-weight:bold;color:${c};">#${i+1}</td><td class="eq-nombre" style="font-weight:bold;color:var(--light);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(eq.name)}</td><td data-l="SES" style="text-align:center;color:var(--gray);font-weight:bold;">${eq.ses}</td><td data-l="BOO" style="text-align:center;color:#D8C395;font-weight:bold;">${eq.b}</td><td data-l="KILL" style="text-align:center;color:var(--light);font-weight:bold;">${eq.k}</td><td data-l="PG" style="text-align:center;color:var(--gray);font-weight:bold;">${eq.pts}</td><td class="c-pr" data-l="PR" style="text-align:center;color:${c};font-weight:bold;">${eq.pr}</td></tr>`;}
 // Histórico ordenable: PR (PG ÷ sesiones) o PG (puntos totales)
 let _historicoPumas=[];
-const _ordenPumas={pr:(a,b)=>b.pr-a.pr||b.b-a.b||b.pts-a.pts||a.name.localeCompare(b.name),pg:(a,b)=>b.pts-a.pts||b.pr-a.pr||b.b-a.b||a.name.localeCompare(b.name)};
+const _ordenPumas={pr:(a,b)=>b.pr-a.pr||b.b-a.b||b.pts-a.pts||a.name.localeCompare(b.name),pg:(a,b)=>b.pts-a.pts||b.pr-a.pr||b.b-a.b||a.name.localeCompare(b.name),kill:(a,b)=>b.k-a.k||b.pr-a.pr||b.pts-a.pts||a.name.localeCompare(b.name)};
+const _textoOrden=o=>o==='pg'?'Orden: PG (puntos totales) → PR':o==='kill'?'Orden: KILLS (totales) → PR':'Orden: PR (PG ÷ sesiones) → booyah';
+let _semanaPumas=[],_semInfo=null;
 function ordenarHistorico(orden){
   document.querySelectorAll('#ordenHistorico .orden-btn').forEach(x=>x.classList.toggle('on',x.dataset.orden===orden));
-  const n=document.getElementById('notaHistorico'); if(n) n.textContent=orden==='pg'?'Orden: PG (puntos totales) → PR':'Orden: PR (PG ÷ sesiones) → booyah';
+  const n=document.getElementById('notaHistorico'); if(n) n.textContent=_textoOrden(orden);
   _llenar('bodyTop100a','bodyTop100b',[..._historicoPumas].sort(_ordenPumas[orden]).slice(0,100));
+}
+// Top 50 de la semana ordenable: PR, PG o KILLS
+function ordenarSemana(orden){
+  document.querySelectorAll('#ordenSemana .orden-btn').forEach(x=>x.classList.toggle('on',x.dataset.orden===orden));
+  const tit=document.getElementById('tituloTop50');
+  if(tit&&_semInfo) tit.innerHTML=`Top 50 Equipos · Semana ${_semInfo.num}<span class="wk-range">${_semInfo.rango}${_semInfo.actual?'':' · última semana con datos'} · ${_textoOrden(orden)}</span>`;
+  _llenar('bodyTablaGlobal1','bodyTablaGlobal2',[..._semanaPumas].sort(_ordenPumas[orden]).slice(0,50));
 }
 function _llenar(idA,idB,lista){
   const A=document.getElementById(idA),B=document.getElementById(idB); if(!A||!B) return;
@@ -272,9 +281,9 @@ async function calcularTablaGlobalAcumulada(sesiones){
   const todo=agregar(parsed), sem=semanaObjetivo(parsed), w=agregar(sem.lista);
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   set('statTotalEquipos',todo.eq.length);set('statTotalKills',todo.kills);set('statTotalMapas',todo.salas);
-  const tit=document.getElementById('tituloTop50');
-  if(tit) tit.innerHTML=`Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual?'':' · última semana con datos'} · Orden: PR → booyah</span>`;
-  _llenar('bodyTablaGlobal1','bodyTablaGlobal2',w.eq.slice(0,50));
+  _semanaPumas=w.eq; _semInfo=sem;
+  const _os=document.querySelector('#ordenSemana .orden-btn.on');
+  ordenarSemana(_os?_os.dataset.orden:'pr');
   _historicoPumas=todo.eq;
   const _o=document.querySelector('#ordenHistorico .orden-btn.on');
   ordenarHistorico(_o?_o.dataset.orden:'pr');

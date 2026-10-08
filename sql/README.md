@@ -19,6 +19,7 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 13 | `13_historico_ordenable.sql` | Histórico Top 100 ordenable por PR o PG (portales y LATAM) | ☐ |
 | 14 | `14_top_killers.sql` | Top killers con mínimo 3 salas + top por kills totales | ☐ |
 | 15 | `15_top_booyah.sql` | Destacado Top Booyah (5 equipos con más booyahs) | ☐ |
+| 16 | `16_ranking_pr_pg_kills.sql` | Top 50 e Histórico ordenables por PR, PG o KILLS | ☐ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 

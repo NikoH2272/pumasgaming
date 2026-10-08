@@ -484,12 +484,29 @@ footer b { color: var(--primary); }
 .wk-range { display: block; margin-top: 4px; color: var(--gray); font: 400 .72rem var(--font-body); letter-spacing: 0; text-transform: none; }
 .leyenda-tabla { margin: -4px 0 14px; color: var(--gray); font-size: .78rem; }
 .leyenda-tabla b { color: var(--primary); }
-.tabla-doble { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
+.tabla-doble { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+@media (min-width: 1101px) {
+  /* separación clara entre "Puestos 1–25" y "Puestos 26–50" */
+  .tabla-doble { column-gap: 44px; }
+  .tabla-doble .lt-tabla + .lt-tabla { border-left: 1px solid rgba(var(--primary-rgb), .25); }
+  .tabla-doble .lt-tabla + .lt-tabla :is(th, td):first-child, .tabla-doble .lt-tabla + .lt-tabla caption { padding-left: 16px; }
+}
+@media (min-width: 641px) {
+  /* columnas fijas: cada tabla respeta su mitad y los nombres largos se cortan con "…" */
+  .lt-tabla { table-layout: fixed; width: 100%; }
+  .lt-tabla th:first-child { width: 36px; }
+  .lt-tabla th:nth-child(3), .lt-tabla th:nth-child(4) { width: 42px; }   /* SES, BOO */
+  .lt-tabla th:nth-child(5) { width: 64px; }                               /* KILL: hasta 6 dígitos */
+  .lt-tabla th:nth-child(6) { width: 56px; }                               /* PG */
+  .lt-tabla th:nth-child(7) { width: 48px; }                               /* PR */
+  .lt-tabla td { padding-left: 5px; padding-right: 5px; }
+  .lt-tabla .eq-nombre { max-width: none; }
+}
 .lt-tabla { min-width: 0; }
 .lt-tabla caption { padding: 0 0 6px; color: var(--gray); font: 700 .62rem var(--font-display); letter-spacing: .12em; text-align: left; }
-.lt-tabla th { padding: 8px 6px; font-size: .6rem; }
-.lt-tabla td { padding: 7px 6px; font-weight: 700; font-size: .86rem; font-variant-numeric: tabular-nums; }
-.lt-tabla .eq-nombre { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.lt-tabla th { padding: 9px 8px; font-size: .6rem; }
+.lt-tabla td { padding: 8px 8px; font-weight: 700; font-size: .86rem; font-variant-numeric: tabular-nums; }
+.lt-tabla .eq-nombre { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
 .lt-tabla .c-b { color: var(--primary); }
 .lt-tabla .c-pg { color: var(--gray); }
 .lt-killers { display: flex; flex-direction: column; gap: 6px; }
@@ -497,7 +514,7 @@ footer b { color: var(--primary); }
 .killer-head { color: var(--primary); font: 700 .58rem var(--font-display); letter-spacing: .08em; }
 .killer-card { border: 1px solid rgba(var(--primary-rgb), .15); border-radius: 2px; font-weight: 700; }
 .killer-card .k-name { overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
-.tabla-cabecera { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.tabla-cabecera { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 
 /* Top killers: dos tablas (por KDA y por kills) */
 .killers-doble { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
@@ -506,7 +523,7 @@ footer b { color: var(--primary); }
 .killers-nota { margin: 12px 0 0; font-size: .78rem; }
 
 /* Botones "Ordenar por PR | PG" */
-.orden-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--gray); font-size: .74rem; }
+.orden-toggle { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--gray); font-size: .74rem; }
 .orden-btn { min-width: 46px; min-height: 34px; padding: 5px 12px; border: 1px solid rgba(var(--primary-rgb), .5); border-radius: 2px;
   color: var(--light); background: transparent; font: 800 .7rem var(--font-display); cursor: pointer; }
 .orden-btn.on, .orden-btn:hover { color: var(--on-primary); background: var(--primary); border-color: var(--primary); }
@@ -533,6 +550,7 @@ footer b { color: var(--primary); }
   .lt-tabla .part-det { display: block; }
   .killer-head, .killer-card { grid-template-columns: 28px minmax(0, 1fr) 40px 64px 48px; gap: 4px; padding: 8px 6px; font-size: .8rem; }
   .tabla-cabecera { flex-direction: column; }
+  .orden-btn { min-height: 42px; min-width: 56px; }
   .killers-doble { grid-template-columns: 1fr; }
   .killer-head { font-size: .5rem; letter-spacing: 0; }
   /* Tablas largas: solo los primeros 10 hasta tocar "Ver los N" */
@@ -559,10 +577,10 @@ footer b { color: var(--primary); }
 .cal-puntos { position: absolute; right: 0; bottom: 3px; left: 0; display: flex; justify-content: center; gap: 2px; }
 .cal-puntos i { width: 6px; height: 6px; border-radius: 50%; }
 .ses-titulo { margin-top: 0; }
-.semana-grid { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(300px, 1fr); align-items: start; gap: 24px; }
+.semana-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 1fr); align-items: start; gap: 22px; }
 .semana-grid .card-box { max-width: none; margin: 0; }
 #latamCalendario .res-lista { max-height: 520px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-@media (max-width: 900px) { .semana-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .semana-grid { grid-template-columns: 1fr; } }
 
 /* ---------- iPhone y celulares ---------- */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }

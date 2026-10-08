@@ -219,7 +219,7 @@
         if (!error && data) {
             const lunes = new Date(data.semana.lunes + 'T00:00:00');
             const out = {
-                semana: { num: data.semana.num, actual: data.semana.actual, rango: rangoSemana(lunes) },
+                semana: { num: data.semana.num, actual: data.semana.actual, rango: rangoSemana(lunes), lunes: data.semana.lunes },
                 semanaEquipos: (data.semana_equipos || []).map(aEquipo),
                 semanaKillers: (data.semana_killers || []).map(aKiller).filter(conSalas),
                 // sin sql/14 no llega la lista por kills: se arma con lo que hay
@@ -282,14 +282,31 @@
     // Histórico Top 100 ordenado por 'pr' (PG ÷ sesiones) o 'pg' (puntos totales)
     const ordenarPor = {
         pr: (a, b) => b.pr - a.pr || b.b - a.b || b.pts - a.pts || a.name.localeCompare(b.name),
-        pg: (a, b) => b.pts - a.pts || b.pr - a.pr || b.b - a.b || a.name.localeCompare(b.name)
+        pg: (a, b) => b.pts - a.pts || b.pr - a.pr || b.b - a.b || a.name.localeCompare(b.name),
+        kill: (a, b) => b.k - a.k || b.pr - a.pr || b.pts - a.pts || a.name.localeCompare(b.name)
     };
     async function historico(portal, orden) {
         const { data, error } = await P.db().rpc('latam_historico', { p_portal: portal, p_orden: orden, p_limite: 100 });
-        if (!error) return (data || []).map(aEquipo);
+        if (!error) return (data || []).map(aEquipo).sort(ordenarPor[orden]);   // sin sql/16, 'kill' llega por PR: se reordena
         if (!/latam_historico|could not find|schema cache|PGRST202/i.test(error.message + ' ' + error.code)) throw error;
         const d = await datosLegado();
         return agregarEquipos(d.equipos.filter(r => !portal || r.portal === portal)).sort(ordenarPor[orden]).slice(0, 100);
+    }
+
+    // Ranking ordenado por 'pr', 'pg' o 'kill'. semana = r.semana (Top 50) o null (histórico).
+    const masDias = (ymd, n) => { const d = new Date(ymd + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA'); };
+    async function ranking(portal, orden, semana, limite, respaldo) {
+        if (!semana || semana.lunes) {
+            const { data, error } = await P.db().rpc('latam_ranking', {
+                p_portal: portal, p_orden: orden, p_limite: limite,
+                p_desde: semana ? semana.lunes : null, p_hasta: semana ? masDias(semana.lunes, 6) : null
+            });
+            if (!error) return (data || []).map(aEquipo);
+            if (!/latam_ranking|could not find|schema cache|PGRST202/i.test(error.message + ' ' + error.code)) throw error;
+        }
+        // sin sql/16: la semana se reordena con lo que ya llegó; el histórico usa latam_historico
+        if (semana) return [...(respaldo || [])].sort(ordenarPor[orden]).slice(0, limite);
+        return (await historico(portal, orden)).slice(0, limite);
     }
 
     // Entrenos de un mes (para el calendario)
@@ -478,7 +495,8 @@
         if (!cont) return;
         cont.innerHTML = `<span>Ordenar por</span>
             <button type="button" class="orden-btn on" data-orden="pr" title="Puntos Reales = PG ÷ sesiones">PR</button>
-            <button type="button" class="orden-btn" data-orden="pg" title="Puntos Generales = total de puntos">PG</button>`;
+            <button type="button" class="orden-btn" data-orden="pg" title="Puntos Generales = total de puntos">PG</button>
+            <button type="button" class="orden-btn" data-orden="kill" title="Kills totales">KILLS</button>`;
         cont.onclick = e => {
             const b = e.target.closest('[data-orden]'); if (!b || b.classList.contains('on')) return;
             cont.querySelectorAll('.orden-btn').forEach(x => x.classList.toggle('on', x === b));
@@ -489,7 +507,11 @@
         const b = document.querySelector('#' + contId + ' .orden-btn.on');
         return b ? b.dataset.orden : 'pr';
     }
-    const textoOrden = o => o === 'pg' ? 'Orden: PG (puntos totales) → PR' : 'Orden: PR (PG ÷ sesiones) → booyah';
+    const textoOrden = o => o === 'pg' ? 'Orden: PG (puntos totales) → PR' : o === 'kill' ? 'Orden: KILLS (totales) → PR' : 'Orden: PR (PG ÷ sesiones) → booyah';
+    const tituloSemana = (sem, ordenId) => {
+        const tit = document.getElementById('tituloTop50');
+        if (tit) tit.innerHTML = `Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual ? '' : ' · última semana con datos'} · ${textoOrden(ordenActual(ordenId))}</span>`;
+    };
 
     let filtroPortal = null;   // null = todos
     const cacheResumen = {};
@@ -508,10 +530,17 @@
                 pintar();
             };
         }
+        const actual = async () => cacheResumen[filtroPortal || 'todos'] || await resumen(filtroPortal, true);
         montarOrden('ordenHistorico', async orden => {
             const n = document.getElementById('notaHistorico'); if (n) n.textContent = textoOrden(orden);
-            try { llenarDoble('bodyTop100A', 'bodyTop100B', orden === 'pr' ? (cacheResumen[filtroPortal || 'todos'] || await resumen(filtroPortal, true)).historico : await historico(filtroPortal, orden)); }
+            try { const r = await actual(); llenarDoble('bodyTop100A', 'bodyTop100B', orden === 'pr' ? r.historico : await ranking(filtroPortal, orden, null, 100)); }
             catch (e) { console.warn('LATAM histórico:', e); }
+        });
+        montarOrden('ordenSemana', async orden => {
+            try {
+                const r = await actual(); tituloSemana(r.semana, 'ordenSemana');
+                llenarDoble('bodySemanaA', 'bodySemanaB', orden === 'pr' ? r.semanaEquipos.slice(0, 50) : await ranking(filtroPortal, orden, r.semana, 50, r.semanaEquipos));
+            } catch (e) { console.warn('LATAM semana:', e); }
         });
         await pintar(true);
     }
@@ -529,15 +558,13 @@
         set('statEquipos', r.stats.equipos); set('statKills', r.stats.kills);
         set('statMapas', r.stats.mapas); set('statEntrenos', r.stats.entrenos);
 
-        const sem = r.semana;
-        const tit = document.getElementById('tituloTop50');
-        if (tit) tit.innerHTML = `Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual ? '' : ' · última semana con datos'} · Orden: PR → booyah</span>`;
-        llenarDoble('bodySemanaA', 'bodySemanaB', r.semanaEquipos.slice(0, 50));
-        if (ordenActual('ordenHistorico') === 'pg') {
-            historico(filtroPortal, 'pg').then(l => llenarDoble('bodyTop100A', 'bodyTop100B', l)).catch(e => console.warn(e));
-        } else {
-            llenarDoble('bodyTop100A', 'bodyTop100B', r.historico.slice(0, 100));
-        }
+        // Al cambiar de entreno se respeta el orden elegido (PR, PG o KILLS)
+        tituloSemana(r.semana, 'ordenSemana');
+        const oS = ordenActual('ordenSemana'), oH = ordenActual('ordenHistorico');
+        if (oS === 'pr') llenarDoble('bodySemanaA', 'bodySemanaB', r.semanaEquipos.slice(0, 50));
+        else ranking(filtroPortal, oS, r.semana, 50, r.semanaEquipos).then(l => llenarDoble('bodySemanaA', 'bodySemanaB', l)).catch(e => console.warn(e));
+        if (oH === 'pr') llenarDoble('bodyTop100A', 'bodyTop100B', r.historico.slice(0, 100));
+        else ranking(filtroPortal, oH, null, 100).then(l => llenarDoble('bodyTop100A', 'bodyTop100B', l)).catch(e => console.warn(e));
 
         pintarKillers('gridKillers', r.killers, r.killersKills);
 
@@ -627,14 +654,17 @@
         set('statEntrenos', r.stats.entrenos); set('statEquipos', r.stats.equipos);
         set('statMapas', r.stats.mapas); set('statKills', r.stats.kills);
 
-        const sem = r.semana;
-        const tit = document.getElementById('tituloTop50');
-        if (tit) tit.innerHTML = `Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual ? '' : ' · última semana con datos'} · Orden: PR → booyah</span>`;
+        tituloSemana(r.semana, 'ordenSemana');
         llenarDoble('bodySemanaA', 'bodySemanaB', r.semanaEquipos.slice(0, 50), false);
         llenarDoble('bodyTop100A', 'bodyTop100B', r.historico.slice(0, 100), false);
+        montarOrden('ordenSemana', async orden => {
+            tituloSemana(r.semana, 'ordenSemana');
+            try { llenarDoble('bodySemanaA', 'bodySemanaB', orden === 'pr' ? r.semanaEquipos.slice(0, 50) : await ranking(portal, orden, r.semana, 50, r.semanaEquipos), false); }
+            catch (e) { console.warn('Semana:', e); }
+        });
         montarOrden('ordenHistorico', async orden => {
             const n = document.getElementById('notaHistorico'); if (n) n.textContent = textoOrden(orden);
-            try { llenarDoble('bodyTop100A', 'bodyTop100B', orden === 'pr' ? r.historico : await historico(portal, orden), false); }
+            try { llenarDoble('bodyTop100A', 'bodyTop100B', orden === 'pr' ? r.historico : await ranking(portal, orden, null, 100), false); }
             catch (e) { console.warn('Histórico:', e); }
         });
 
