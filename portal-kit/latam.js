@@ -88,6 +88,10 @@
             .sort((a, b) => b.pr - a.pr || b.b - a.b || b.pts - a.pts || a.name.localeCompare(b.name));
     }
 
+    const MIN_SALAS = 3;   // mínimo de salas jugadas para entrar a los top killers
+    const conSalas = x => x.s >= MIN_SALAS;
+    const porKills = (a, b) => b.k - a.k || b.kda - a.kda;
+
     function agregarKillers(filas) {
         const pl = {};
         filas.forEach(r => {
@@ -95,7 +99,7 @@
             e.k += r.kills || 0; e.s += r.salas || 0;
             e.porPortal[r.portal] = (e.porPortal[r.portal] || 0) + 1;
         });
-        return Object.values(pl).filter(x => x.s > 0)
+        return Object.values(pl).filter(conSalas)
             .map(x => ({ ...x, kda: x.k / x.s }))
             .sort((a, b) => b.kda - a.kda || b.k - a.k);
     }
@@ -216,7 +220,9 @@
             const out = {
                 semana: { num: data.semana.num, actual: data.semana.actual, rango: rangoSemana(lunes) },
                 semanaEquipos: (data.semana_equipos || []).map(aEquipo),
-                semanaKillers: (data.semana_killers || []).map(aKiller)
+                semanaKillers: (data.semana_killers || []).map(aKiller).filter(conSalas),
+                // sin sql/14 no llega la lista por kills: se arma con lo que hay
+                semanaKillersKills: (data.semana_killers_kills || data.semana_killers || []).map(aKiller).filter(conSalas).sort(porKills)
             };
             if (!completo) return out;
             const ind = {};
@@ -224,10 +230,11 @@
             return Object.assign(out, {
                 stats: data.stats,
                 historico: (data.historico || []).map(aEquipo),
-                killers: (data.killers || []).map(aKiller),
+                killers: (data.killers || []).map(aKiller).filter(conSalas),
+                killersKills: (data.killers_kills || data.jugadores || []).map(aKiller).filter(conSalas).sort(porKills),
                 letales: (data.letales || []).map(aEquipo),
                 activos: (data.activos || []).map(aEquipo),
-                jugadores: (data.jugadores || []).map(aKiller),
+                jugadores: (data.jugadores || []).map(aKiller).filter(conSalas),
                 individuales: ind,
                 ultimos: data.ultimos || []
             });
@@ -245,7 +252,8 @@
         const out = {
             semana: sem,
             semanaEquipos: agregarEquipos(eqs.filter(enSemana)).slice(0, completo ? 50 : 10),
-            semanaKillers: agregarKillers(kls.filter(enSemana)).slice(0, 10)
+            semanaKillers: agregarKillers(kls.filter(enSemana)).slice(0, 10),
+            semanaKillersKills: agregarKillers(kls.filter(enSemana)).sort(porKills).slice(0, 10)
         };
         if (!completo) return out;
         const todo = agregarEquipos(eqs), killers = agregarKillers(kls);
@@ -258,12 +266,26 @@
             stats: { entrenos: ses.length, equipos: todo.length, kills: kls.reduce((a, r) => a + (r.kills || 0), 0), mapas },
             historico: todo.slice(0, 100),
             killers: killers.slice(0, 10),
+            killersKills: [...killers].sort(porKills).slice(0, 10),
             letales: [...todo].sort((a, b) => b.k - a.k || b.kps - a.kps).slice(0, 5),
             activos: [...todo].sort((a, b) => b.ses - a.ses || b.entrenos - a.entrenos || b.pr - a.pr).slice(0, 5),
             jugadores: [...killers].sort((a, b) => b.k - a.k || b.kda - a.kda).slice(0, 5),
             individuales: ind,
             ultimos: ses.slice(0, 8)
         });
+    }
+
+    // Histórico Top 100 ordenado por 'pr' (PG ÷ sesiones) o 'pg' (puntos totales)
+    const ordenarPor = {
+        pr: (a, b) => b.pr - a.pr || b.b - a.b || b.pts - a.pts || a.name.localeCompare(b.name),
+        pg: (a, b) => b.pts - a.pts || b.pr - a.pr || b.b - a.b || a.name.localeCompare(b.name)
+    };
+    async function historico(portal, orden) {
+        const { data, error } = await P.db().rpc('latam_historico', { p_portal: portal, p_orden: orden, p_limite: 100 });
+        if (!error) return (data || []).map(aEquipo);
+        if (!/latam_historico|could not find|schema cache|PGRST202/i.test(error.message + ' ' + error.code)) throw error;
+        const d = await datosLegado();
+        return agregarEquipos(d.equipos.filter(r => !portal || r.portal === portal)).sort(ordenarPor[orden]).slice(0, 100);
     }
 
     // Entrenos de un mes (para el calendario)
@@ -309,43 +331,69 @@
         }
     }
 
+    // Fecha con día de la semana; la descarga de la imagen solo está en el portal de cada entreno
+    const fechaSes = s => window.PumasDescargas ? PumasDescargas.fechaHTML(s.fecha) : `<small>${fmtDia(diaLocal(s.fecha))}</small>`;
+    const descargaSes = s => window.PumasDescargas ? PumasDescargas.botones(s) : '';
+
     /* ---------------- Portal /entrenoslatam/ ---------------- */
     const MES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const fmtDia = d => new Date(d + 'T00:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' });
     const VACIO = '<tr class="vacio"><td colspan="7"><i class="fa-solid fa-database"></i>Sin registros todavía.</td></tr>';
 
-    function filaTabla(e, i) {
+    // data-l = etiqueta que se ve en el celular (la tabla se muestra como ficha)
+    function filaTabla(e, i, conPart) {
         const c = colPuesto(i);
-        return `<tr class="latam-row" ${tocable(e)}>
-            <td style="color:${c || 'inherit'}"><b>#${i + 1}</b></td>
-            <td class="eq-nombre">${esc(e.name)} <i class="fa-solid fa-chevron-down part-flecha"></i></td>
-            <td>${e.ses}</td><td class="c-b">${e.b}</td><td>${e.k}</td><td class="c-pg">${e.pts}</td>
-            <td style="color:${c || 'var(--light)'}"><b>${e.pr}</b></td></tr>`;
+        const extra = conPart === false ? '' : `class="latam-row" ${tocable(e)}`;
+        return `<tr ${extra}>
+            <td class="c-pos" style="color:${c || 'inherit'}"><b>#${i + 1}</b></td>
+            <td class="eq-nombre">${esc(e.name)}${conPart === false ? '' : ' <i class="fa-solid fa-chevron-down part-flecha"></i>'}</td>
+            <td data-l="SES">${e.ses}</td><td class="c-b" data-l="BOO">${e.b}</td><td data-l="KILL">${e.k}</td><td class="c-pg" data-l="PG">${e.pts}</td>
+            <td class="c-pr" data-l="PR" style="color:${c || 'var(--light)'}"><b>${e.pr}</b></td></tr>`;
     }
-    function llenarDoble(idA, idB, lista) {
+    function llenarDoble(idA, idB, lista, conPart) {
         const A = document.getElementById(idA), B = document.getElementById(idB);
         if (!A || !B) return;
         if (!lista.length) { A.innerHTML = VACIO; B.innerHTML = ''; B.closest('table').hidden = true; A.closest('table').caption.textContent = ''; return; }
         const m = Math.ceil(lista.length / 2);
-        A.innerHTML = lista.slice(0, m).map(filaTabla).join('');
-        B.innerHTML = lista.slice(m).map((e, i) => filaTabla(e, i + m)).join('');
+        A.innerHTML = lista.slice(0, m).map((e, i) => filaTabla(e, i, conPart)).join('');
+        B.innerHTML = lista.slice(m).map((e, i) => filaTabla(e, i + m, conPart)).join('');
         B.closest('table').hidden = lista.length <= m;
         A.closest('table').caption.textContent = `PUESTOS 1 – ${m}`;
         B.closest('table').caption.textContent = lista.length > m ? `PUESTOS ${m + 1} – ${lista.length}` : '';
     }
 
-    function filaKiller(k, i) {
+    function pintarKillers(contId, porKda, porK, conPart) {
+        const g = document.getElementById(contId);
+        if (!g) return;
+        const lista = (arr, resaltar) => arr.length
+            ? `<div class="killer-head"><span>#</span><span>JUGADOR</span><span>SALAS</span><span>KILLS</span><span>KDA</span></div>` +
+              arr.slice(0, 10).map((k, i) => filaKiller(k, i, conPart, resaltar)).join('')
+            : '<p class="res-vacio"><i class="fa-solid fa-skull"></i>Sin jugadores con 3 salas o más todavía.</p>';
+        g.innerHTML = `<div class="killers-doble">
+                <div><h4 class="killers-sub"><i class="fa-solid fa-chart-line"></i> Por KDA <small>kills ÷ salas</small></h4>${lista(porKda, 'kda')}</div>
+                <div><h4 class="killers-sub"><i class="fa-solid fa-crosshairs"></i> Por kills totales <small>sin fórmula</small></h4>${lista(porK, 'kills')}</div>
+            </div>
+            <p class="muted killers-nota">Solo cuentan jugadores con ${MIN_SALAS} salas o más.</p>`;
+    }
+
+    function filaKiller(k, i, conPart, resaltar) {
         const c = colPuesto(i);
+        const kd = resaltar === 'kills' ? '' : `style="color:${c || 'inherit'}"`;
+        const kl = resaltar === 'kills' ? `style="color:${c || 'inherit'}"` : '';
+        if (conPart === false) return `<div class="killer-card">
+            <span style="color:${c || 'inherit'}"><b>#${i + 1}</b></span><span class="k-name">${esc(k.name)}</span>
+            <span>${k.s}</span><span ${kl}><b>${k.k}</b></span><span ${kd}><b>${k.kda.toFixed(2)}</b></span></div>`;
         return `<div class="killer-card latam-row" ${tocable(k)}>
             <span style="color:${c || 'inherit'}"><b>#${i + 1}</b></span><span class="k-name">${esc(k.name)}</span>
             <span>${k.s}</span><span>${k.k}</span><span style="color:${c || 'inherit'}"><b>${k.kda.toFixed(2)}</b></span></div>`;
     }
 
     // Destacados: equipos más letales, que más participan y jugador más letal
-    function destacados(letales, activos, jugadores) {
-        const cont = document.getElementById('latamDestacados');
+    function destacados(letales, activos, jugadores, conPart, contId) {
+        const cont = document.getElementById(contId || 'latamDestacados');
         if (!cont) return;
-        const fila = (x, i, valor, sub) => `<div class="dest-fila latam-row" ${tocable(x)}>
+        const toc = x => conPart === false ? '' : `latam-row" ${tocable(x)} data-x="`;
+        const fila = (x, i, valor, sub) => `<div class="dest-fila ${toc(x)}">
             <b style="color:${colPuesto(i) || 'var(--gray)'}">#${i + 1}</b>
             <span class="dest-nombre">${esc(x.name)}${sub ? `<small>${sub}</small>` : ''}</span>
             <em>${valor}</em></div>`;
@@ -364,7 +412,7 @@
             </article>
             <article class="card-box dest-card dest-mvp">
                 <h3 class="subtitulo-bloque"><i class="fa-solid fa-crosshairs"></i> Jugador más letal</h3>
-                ${top ? `<div class="mvp latam-row" ${tocable(top)}>
+                ${top ? `<div class="mvp ${toc(top)}">
                         <i class="fa-solid fa-skull mvp-icono"></i>
                         <div><b class="mvp-nombre">${esc(top.name)}</b><small>${esc(top.equipo || '')}</small></div>
                         <div class="mvp-datos"><span><b>${top.k}</b>kills</span><span><b>${top.s}</b>salas</span><span><b>${top.kda.toFixed(2)}</b>KDA</span></div>
@@ -386,14 +434,33 @@
                     <a class="btn-mini" href="${p.url}">Portal</a></div>
                 <table class="pg-tabla lt-tabla ind-tabla">
                     <thead><tr><th>#</th><th>Equipo</th><th>SES</th><th>BOO</th><th>PG</th><th>PR</th></tr></thead>
-                    <tbody>${eqs.length ? eqs.map((e, i) => `<tr><td style="color:${colPuesto(i) || 'inherit'}"><b>#${i + 1}</b></td>
-                        <td class="eq-nombre">${esc(e.name)}</td><td>${e.ses}</td><td class="c-b">${e.b}</td><td class="c-pg">${e.pts}</td>
-                        <td style="color:${colPuesto(i) || 'var(--light)'}"><b>${e.pr}</b></td></tr>`).join('')
+                    <tbody>${eqs.length ? eqs.map((e, i) => `<tr><td class="c-pos" style="color:${colPuesto(i) || 'inherit'}"><b>#${i + 1}</b></td>
+                        <td class="eq-nombre">${esc(e.name)}</td><td data-l="SES">${e.ses}</td><td class="c-b" data-l="BOO">${e.b}</td><td class="c-pg" data-l="PG">${e.pts}</td>
+                        <td class="c-pr" data-l="PR" style="color:${colPuesto(i) || 'var(--light)'}"><b>${e.pr}</b></td></tr>`).join('')
                         : '<tr class="vacio"><td colspan="6">Sin entrenos todavía.</td></tr>'}</tbody>
                 </table>
             </article>`;
         }).join('');
     }
+
+    // Botones "Ordenar por PR | PG" del histórico
+    function montarOrden(contId, alCambiar) {
+        const cont = document.getElementById(contId);
+        if (!cont) return;
+        cont.innerHTML = `<span>Ordenar por</span>
+            <button type="button" class="orden-btn on" data-orden="pr" title="Puntos Reales = PG ÷ sesiones">PR</button>
+            <button type="button" class="orden-btn" data-orden="pg" title="Puntos Generales = total de puntos">PG</button>`;
+        cont.onclick = e => {
+            const b = e.target.closest('[data-orden]'); if (!b || b.classList.contains('on')) return;
+            cont.querySelectorAll('.orden-btn').forEach(x => x.classList.toggle('on', x === b));
+            alCambiar(b.dataset.orden);
+        };
+    }
+    function ordenActual(contId) {
+        const b = document.querySelector('#' + contId + ' .orden-btn.on');
+        return b ? b.dataset.orden : 'pr';
+    }
+    const textoOrden = o => o === 'pg' ? 'Orden: PG (puntos totales) → PR' : 'Orden: PR (PG ÷ sesiones) → booyah';
 
     let filtroPortal = null;   // null = todos
     const cacheResumen = {};
@@ -412,6 +479,11 @@
                 pintar();
             };
         }
+        montarOrden('ordenHistorico', async orden => {
+            const n = document.getElementById('notaHistorico'); if (n) n.textContent = textoOrden(orden);
+            try { llenarDoble('bodyTop100A', 'bodyTop100B', orden === 'pr' ? (cacheResumen[filtroPortal || 'todos'] || await resumen(filtroPortal, true)).historico : await historico(filtroPortal, orden)); }
+            catch (e) { console.warn('LATAM histórico:', e); }
+        });
         await pintar(true);
     }
 
@@ -432,12 +504,13 @@
         const tit = document.getElementById('tituloTop50');
         if (tit) tit.innerHTML = `Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual ? '' : ' · última semana con datos'} · Orden: PR → booyah</span>`;
         llenarDoble('bodySemanaA', 'bodySemanaB', r.semanaEquipos.slice(0, 50));
-        llenarDoble('bodyTop100A', 'bodyTop100B', r.historico.slice(0, 100));
+        if (ordenActual('ordenHistorico') === 'pg') {
+            historico(filtroPortal, 'pg').then(l => llenarDoble('bodyTop100A', 'bodyTop100B', l)).catch(e => console.warn(e));
+        } else {
+            llenarDoble('bodyTop100A', 'bodyTop100B', r.historico.slice(0, 100));
+        }
 
-        const g = document.getElementById('gridKillers');
-        if (g) g.innerHTML = r.killers.length
-            ? `<div class="killer-head"><span>#</span><span>JUGADOR</span><span>SALAS</span><span>KILLS</span><span>KDA</span></div>` + r.killers.map(filaKiller).join('')
-            : '<p class="res-vacio"><i class="fa-solid fa-skull"></i>Sin datos de killers todavía.</p>';
+        pintarKillers('gridKillers', r.killers, r.killersKills);
 
         destacados(r.letales, r.activos, r.jugadores);
         individuales(r.individuales, filtroPortal || 'todos');
@@ -485,8 +558,8 @@
             <div class="res-lista">${lista.length ? lista.map(s => {
                 const p = POR_ID[s.portal] || { nombre: s.portal, color: '#999', url: '#' };
                 return `<div class="res-row" style="border-left-color:${p.color}">
-                    <div><b>${esc(s.titulo)}</b><small>${esc(p.nombre)} · ${fmtDia(diaLocal(s.fecha))}${s.jornada ? ' · ' + esc(s.jornada) : ''}</small></div>
-                    <a class="btn-mini" href="${p.url}">Ver</a></div>`;
+                    <div><b>${esc(s.titulo)}</b> ${fechaSes(s)}<small>${esc(p.nombre)}${s.jornada ? ' · ' + esc(s.jornada) : ''}</small></div>
+                    <div class="pg-ses-acc"><a class="btn-mini" href="${p.url}">Ver</a></div></div>`;
             }).join('') : '<p class="res-vacio"><i class="fa-solid fa-calendar-xmark"></i>Aún no hay entrenos LATAM registrados.</p>'}</div>`;
     }
     document.addEventListener('click', e => {
@@ -503,5 +576,38 @@
         pintarCalendario();
     });
 
-    window.Latam = { PORTALES, resumen, cargarDatos, agregarEquipos, agregarKillers, iniciarIndex, iniciarPortal };
+    async function iniciarResultadosPortal(portal) {
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Number(v || 0).toLocaleString('es'); };
+        let r;
+        try { r = await resumen(portal, true); }
+        catch (e) {
+            console.warn('Resultados:', e);
+            document.querySelectorAll('[data-latam-vacio]').forEach(n => { n.innerHTML = '<tr class="vacio"><td colspan="7"><i class="fa-solid fa-database"></i>Los resultados estarán disponibles pronto.</td></tr>'; });
+            return;
+        }
+        set('statEntrenos', r.stats.entrenos); set('statEquipos', r.stats.equipos);
+        set('statMapas', r.stats.mapas); set('statKills', r.stats.kills);
+
+        const sem = r.semana;
+        const tit = document.getElementById('tituloTop50');
+        if (tit) tit.innerHTML = `Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual ? '' : ' · última semana con datos'} · Orden: PR → booyah</span>`;
+        llenarDoble('bodySemanaA', 'bodySemanaB', r.semanaEquipos.slice(0, 50), false);
+        llenarDoble('bodyTop100A', 'bodyTop100B', r.historico.slice(0, 100), false);
+        montarOrden('ordenHistorico', async orden => {
+            const n = document.getElementById('notaHistorico'); if (n) n.textContent = textoOrden(orden);
+            try { llenarDoble('bodyTop100A', 'bodyTop100B', orden === 'pr' ? r.historico : await historico(portal, orden), false); }
+            catch (e) { console.warn('Histórico:', e); }
+        });
+
+        pintarKillers('gridKillers', r.killers, r.killersKills, false);
+        destacados(r.letales, r.activos, r.jugadores, false);
+
+        const ul = document.getElementById('listaSesiones');
+        if (ul) ul.innerHTML = r.ultimos.length ? r.ultimos.map(s => `<div class="res-row">
+                <div><b>${esc(s.titulo)}</b> ${fechaSes(s)}<small>${esc(s.jornada || '')}</small></div>
+                <div class="pg-ses-acc">${descargaSes({ ...s, portal: s.portal || portal })}</div></div>`).join('')
+            : '<p class="res-vacio"><i class="fa-solid fa-calendar-xmark"></i>Todavía no hay entrenos registrados.</p>';
+    }
+
+    window.Latam = { PORTALES, MIN_SALAS, pintarKillers, pintarDestacados: destacados, resumen, historico, cargarDatos, agregarEquipos, agregarKillers, iniciarIndex, iniciarPortal, iniciarResultadosPortal };
 })();

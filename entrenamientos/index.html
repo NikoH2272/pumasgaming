@@ -7,9 +7,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../portal-kit/latam.css?v=20261008g">
+    <link rel="stylesheet" href="style.css?v=20261008d">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261007n" data-portal="entrenamientos" data-modo="publico"></script>
+    <script src="../portal-kit/portal.js?v=20261008g" data-portal="entrenamientos" data-modo="publico"></script>
+    <script src="../portal-kit/descargas.js?v=20261008g"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
 </head>
 <body>
@@ -142,7 +144,7 @@
             <div class="tabla-contenedor">
                 <div class="header-card-title">
                     <i class="fa-solid fa-skull" style="color: var(--primary);"></i>
-                    <h3>Top 10 Killers · KDA Real<span class="wk-range">Kills ÷ salas jugadas</span></h3>
+                    <h3>Top 10 Killers<span class="wk-range">Por KDA (kills ÷ salas) y por kills totales · mínimo 3 salas</span></h3>
                 </div>
                 <div class="top-killers-grid" id="gridTopKillersGlobal" style="max-height: none; overflow-y: visible;">
                     <div style="color: var(--gray); text-align:center; padding: 20px;">Cargando killers...</div>
@@ -154,9 +156,17 @@
         <div class="dashboard-col" id="modulo-top100">
             <div class="tabla-contenedor" style="min-height:auto;">
                 <div class="header-card-title"><i class="fa-solid fa-trophy" style="color: var(--primary);"></i><h3>Top 100 Equipos Históricos</h3><span class="header-leyenda"><b>PG</b> Puntos Generales · <b>PR</b> Puntos Reales</span></div>
+                <div class="orden-toggle" id="ordenHistorico" role="group" aria-label="Ordenar histórico"><span>Ordenar por</span><button type="button" class="orden-btn on" data-orden="pr" onclick="ordenarHistorico('pr')" title="Puntos Reales = PG ÷ sesiones">PR</button><button type="button" class="orden-btn" data-orden="pg" onclick="ordenarHistorico('pg')" title="Puntos Generales = total de puntos">PG</button> <small id="notaHistorico">Orden: PR (PG ÷ sesiones) → booyah</small></div>
                 <p style="color:var(--gray);margin-bottom:16px;">Acumulado de todos los entrenamientos de la base de datos. PR = PG ÷ sesiones, en número entero; desempate por booyah.</p>
                 <p class="leyenda-tabla"><b>SESIONES</b> entrenos jugados · <b>BOOYAH</b> victorias · <b>KILL</b> kills · <b>PG</b> Puntos Generales (total) · <b>PR</b> Puntos Reales (PG ÷ sesiones, en número entero)</p>
                 <div class="tabla-doble"><table class="tabla-estilizada"><thead><tr><th>#</th><th>EQUIPO</th><th style="text-align:center;">SESIONES</th><th style="text-align:center;">BOOYAH</th><th style="text-align:center;">KILL</th><th style="text-align:center;" title="Puntos Generales (total)">PG</th><th style="text-align:center;" title="Puntos Reales = PG ÷ sesiones">PR</th></tr></thead><tbody id="bodyTop100a"><tr><td colspan="5" style="text-align:center;color:var(--gray);">Calculando...</td></tr></tbody></table><table class="tabla-estilizada"><thead><tr><th>#</th><th>EQUIPO</th><th style="text-align:center;">SESIONES</th><th style="text-align:center;">BOOYAH</th><th style="text-align:center;">KILL</th><th style="text-align:center;" title="Puntos Generales (total)">PG</th><th style="text-align:center;" title="Puntos Reales = PG ÷ sesiones">PR</th></tr></thead><tbody id="bodyTop100b"><tr><td colspan="5" style="text-align:center;color:var(--gray);">Calculando...</td></tr></tbody></table></div>
+            </div>
+        </div>
+        <!-- MÓDULO 5: DESTACADOS -->
+        <div class="dashboard-col" id="modulo-destacados">
+            <div class="tabla-contenedor" style="min-height:auto;">
+                <div class="header-card-title"><i class="fa-solid fa-star" style="color: var(--primary);"></i><h3>Destacados</h3></div>
+                <div class="dest-grid" id="pumasDestacados"><div style="color: var(--gray); text-align:center; padding: 20px;">Calculando...</div></div>
             </div>
         </div>
     </main>
@@ -202,7 +212,8 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="script_entrenamientos.js"></script>
+    <script src="../portal-kit/latam.js?v=20261008g"></script>
+    <script src="script_entrenamientos.js?v=20261008g"></script>
     <script src="vista_sesion.js"></script>
 </body>
 </html>

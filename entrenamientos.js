@@ -26,7 +26,7 @@ const esc0=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"
         <div class="calendar-grid">${g}</div>
       </div>
       <div class="ses-head"><h4>${titulo}</h4>${sel?'<button class="btn-ver" data-all="1">Ver todos</button>':""}</div>
-      <div class="ses-list">${lista.length?lista.map(s=>`<div class="ses-row"><div><b>${esc(s.titulo)}</b><small>${fmt(diaLocal(s.fecha))}${s.jornada?" · "+esc(s.jornada):""}</small></div><a class="btn-ver" href="entrenamientos/index.html">Ver</a></div>`).join(""):"<p>Aún no hay entrenamientos registrados.</p>"}</div>`;
+      <div class="ses-list">${lista.length?lista.map(s=>{const D=window.PumasDescargas;return `<div class="ses-row"><div><b>${esc(s.titulo)}</b> ${D?D.fechaHTML(s.fecha):''}<small>${D?'':fmt(diaLocal(s.fecha))}${s.jornada?(D?'':' · ')+esc(s.jornada):""}</small></div><div class="pg-ses-acc"><a class="btn-ver" href="entrenamientos/index.html">Ver</a></div></div>`;}).join(""):"<p>Aún no hay entrenamientos registrados.</p>"}</div>`;
   }
   $("trainMain").addEventListener("click",e=>{
     const n=e.target.closest("[data-nav]"), d=e.target.closest("[data-d]"), a=e.target.closest("[data-all]");
@@ -68,7 +68,7 @@ function agregar(lista){
   // PR (Puntos Reales) = PG ÷ sesiones, entero · orden PR → booyah → PG
   // KDA = kills ÷ salas jugadas · orden KDA → kills
   const E=Object.values(eq).map(e=>({...e,pr:Math.round(e.pts/e.ses)})).sort((a,b)=>b.pr-a.pr||b.b-a.b||b.pts-a.pts||a.name.localeCompare(b.name));
-  const P=Object.values(pl).filter(x=>x.s>0).map(x=>({...x,kda:x.k/x.s})).sort((a,b)=>b.kda-a.kda||b.k-a.k);
+  const P=Object.values(pl).filter(x=>x.s>=3).map(x=>({...x,kda:x.k/x.s})).sort((a,b)=>b.kda-a.kda||b.k-a.k); // mínimo 3 salas
   return {eq:E,pl:P,salas,kills};
 }
 async function parsearTodas(sesiones,alAvanzar){

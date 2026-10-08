@@ -8,11 +8,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261007n">
-    <link rel="stylesheet" href="style.css?v=20261007n">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261008g">
+    <link rel="stylesheet" href="style.css?v=20261008g">
     <link rel="icon" href="imagenes/latam.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261007n" data-portal="entrenoslatam" data-modo="publico"></script>
+    <script src="../portal-kit/portal.js?v=20261008g" data-portal="entrenoslatam" data-modo="publico"></script>
+    <script src="../portal-kit/descargas.js?v=20261008g"></script>
 </head>
 <body>
 
@@ -27,6 +28,7 @@
         <nav class="main-nav" id="mainNav">
             <ul>
                 <li><a href="#semana">Semana</a></li>
+                <li><a href="#killers">Killers</a></li>
                 <li><a href="#historico">Histórico</a></li>
                 <li><a href="#destacados">Destacados</a></li>
                 <li><a href="#individuales">Por entreno</a></li>
@@ -80,8 +82,11 @@
 
         <!-- 2. TOP 100 HISTÓRICO -->
         <article class="card-box lt-ancho" id="historico">
-            <h3 class="subtitulo-bloque"><i class="fa-solid fa-trophy"></i> Top 100 Equipos históricos LATAM</h3>
-            <p class="leyenda-tabla">Acumulado de todos los entrenos LATAM. PR = PG ÷ sesiones, en número entero; desempate por booyah.</p>
+            <div class="tabla-cabecera">
+                <h3 class="subtitulo-bloque"><i class="fa-solid fa-trophy"></i> Top 100 Equipos históricos LATAM</h3>
+                <div class="orden-toggle" id="ordenHistorico" role="group" aria-label="Ordenar histórico"></div>
+            </div>
+            <p class="leyenda-tabla"><b>PG</b> Puntos Generales · <b>PR</b> Puntos Reales (PG ÷ sesiones). <span id="notaHistorico">Orden: PR (PG ÷ sesiones) → booyah</span></p>
             <div class="tabla-doble">
                 <table class="pg-tabla lt-tabla"><caption></caption>
                     <thead><tr><th>#</th><th>Equipo</th><th>SES</th><th>BOO</th><th>KILL</th><th>PG</th><th>PR</th></tr></thead>
@@ -94,13 +99,13 @@
             </div>
         </article>
         <!-- 3. TOP KILLERS -->
-        <article class="card-box" id="killers">
-            <h3 class="subtitulo-bloque"><i class="fa-solid fa-skull"></i> Top 10 Killers · KDA real<span class="wk-range">Kills ÷ salas jugadas</span></h3>
+        <article class="card-box lt-ancho" id="killers">
+            <h3 class="subtitulo-bloque"><i class="fa-solid fa-skull"></i> Top 10 Killers LATAM<span class="wk-range">Por KDA (kills ÷ salas) y por kills totales · mínimo 3 salas</span></h3>
             <div class="lt-killers" id="gridKillers"><p class="res-vacio">Cargando...</p></div>
         </article>
 
         <!-- CALENDARIO (abajo, junto a killers) -->
-        <article class="card-box" id="calendario">
+        <article class="card-box lt-ancho" id="calendario">
             <h3 class="subtitulo-bloque"><i class="fa-solid fa-calendar-days"></i> Calendario de sesiones</h3>
             <div id="latamCalendario"><p class="res-vacio">Cargando...</p></div>
         </article>
@@ -123,7 +128,7 @@
         <p>&copy; 2026 <b>ENTRENOS LATAM</b> by PUMAS GAMING. Todos los derechos reservados.</p>
     </footer>
 
-    <script src="../portal-kit/latam.js?v=20261007n"></script>
+    <script src="../portal-kit/latam.js?v=20261008g"></script>
     <script>Latam.iniciarPortal();</script>
 </body>
 </html>

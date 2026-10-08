@@ -1,5 +1,5 @@
 /* Entrenos LATAM · estilos de la página (la base viene de ../portal-kit/portal.css) */
-@import url('../portal-kit/latam.css?v=20261007n');
+@import url('../portal-kit/latam.css?v=20261008g');
 
 .latam-barra { padding-top: 26px; padding-bottom: 0; }
 .latam-filtro { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
@@ -14,26 +14,8 @@
 .lt-modulos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; width: min(100%, 1360px); margin: 0 auto; padding: 28px clamp(16px, 4vw, 56px) 60px; }
 .lt-modulos .card-box { max-width: none; margin: 0; }
 .lt-ancho { grid-column: 1 / -1; }
-.wk-range { display: block; margin-top: 4px; color: var(--gray); font: 400 .72rem var(--font-body); letter-spacing: 0; text-transform: none; }
-.leyenda-tabla { margin: -4px 0 14px; color: var(--gray); font-size: .78rem; }
-.leyenda-tabla b { color: var(--primary); }
 
-/* Tablas dobles */
-.tabla-doble { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 14px; }
-.lt-tabla { min-width: 0; }
-.lt-tabla caption { padding: 0 0 6px; color: var(--gray); font: 700 .62rem var(--font-display); letter-spacing: .12em; text-align: left; }
-.lt-tabla th { padding: 8px 6px; font-size: .6rem; }
-.lt-tabla td { padding: 7px 6px; font-weight: 700; font-size: .86rem; }
-.lt-tabla .eq-nombre { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
-.lt-tabla .c-b { color: var(--primary); }
-.lt-tabla .c-pg { color: var(--gray); }
-
-/* Killers */
-.lt-killers { display: flex; flex-direction: column; gap: 6px; }
-.killer-head, .killer-card { display: grid; grid-template-columns: 34px minmax(0, 1fr) 46px 46px 52px; align-items: center; gap: 6px; padding: 8px 10px; text-align: center; }
-.killer-head { color: var(--primary); font: 700 .58rem var(--font-display); letter-spacing: .08em; }
-.killer-card { border: 1px solid rgba(var(--primary-rgb), .15); border-radius: 2px; font-weight: 700; }
-.killer-card .k-name { overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+/* Tablas, killers y botones de orden: ver ../portal-kit/portal.css (compartidos con los portales) */
 
 /* Calendario (igual al de Pumas, con puntos de color por entreno) */
 .calendar-container { padding: 14px; border: 1px solid rgba(var(--primary-rgb), .15); border-radius: 3px; background: #111; }
@@ -49,6 +31,11 @@
 .calendar-day.empty { background: transparent; cursor: default; }
 .cal-puntos { position: absolute; right: 0; bottom: 3px; left: 0; display: flex; justify-content: center; gap: 2px; }
 .cal-puntos i { width: 6px; height: 6px; border-radius: 50%; }
+/* Calendario a todo el ancho: calendario a la izquierda, lista a la derecha */
+#latamCalendario { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 24px; }
+#latamCalendario .calendar-container { grid-row: 1 / span 2; }
+#latamCalendario .ses-titulo { margin-top: 0; }
+@media (max-width: 760px) { #latamCalendario { display: block; } #latamCalendario .ses-titulo { margin-top: 20px; } }
 .ses-titulo { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px; color: var(--primary); font: 800 .78rem var(--font-display); }
 
 @media (max-width: 900px) {

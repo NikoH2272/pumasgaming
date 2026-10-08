@@ -8,10 +8,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261007n">
+    <link rel="stylesheet" href="../portal-kit/latam.css?v=20261008g">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261008g">
     <link rel="icon" href="imagenes/dragonfest.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261007n" data-portal="dragonfest" data-modo="publico"></script>
+    <script src="../portal-kit/portal.js?v=20261008g" data-portal="dragonfest" data-modo="publico"></script>
+    <script src="../portal-kit/descargas.js?v=20261008g"></script>
 </head>
 <body data-tema="dragonfest">
 
@@ -25,9 +27,10 @@
         </button>
         <nav class="main-nav" id="mainNav">
             <ul>
-                <li><a href="#tablaGeneral" onclick="closeMenu()">Tabla general</a></li>
-                <li><a href="#entrenos" onclick="closeMenu()">Entrenos</a></li>
-                <li><a href="#killers" onclick="closeMenu()">Top killers</a></li>
+                <li><a href="#semana" onclick="closeMenu()">Semana</a></li>
+                <li><a href="#historico" onclick="closeMenu()">Histórico</a></li>
+                                <li><a href="#killers" onclick="closeMenu()">Killers</a></li>
+                <li><a href="#destacados" onclick="closeMenu()">Destacados</a></li>
                 <li><a href="femenino.html">Femenino</a></li>
                 <li><a href="/">Pumas Gaming</a></li>
                 <li><a href="admin.html"><i class="fa-solid fa-lock"></i> Admin</a></li>
@@ -40,11 +43,11 @@
             <div class="eyebrow">Resultados oficiales · Free Fire</div>
             <h1><span class="t-a">Dragon</span> <span class="t-b">Fest</span><small>by <b>PUMAS</b> · Mixto</small></h1>
             <p>Tabla general, últimos entrenos y top killers de Dragon Fest, actualizados con cada sala procesada.</p>
-            <div class="stat-row" id="resStats">
-                <div><b data-stat="entrenos">0</b><small>Entrenos</small></div>
-                <div><b data-stat="equipos">0</b><small>Equipos</small></div>
-                <div><b data-stat="booyahs">0</b><small>Booyahs</small></div>
-                <div><b data-stat="kills">0</b><small>Kills</small></div>
+            <div class="stat-row">
+                <div><b id="statEntrenos">0</b><small>Entrenos</small></div>
+                <div><b id="statEquipos">0</b><small>Equipos</small></div>
+                <div><b id="statMapas">0</b><small>Mapas</small></div>
+                <div><b id="statKills">0</b><small>Kills</small></div>
             </div>
         </div>
         <div class="hero-visual">
@@ -56,32 +59,62 @@
         </div>
     </section>
 
-    <section id="tablaGeneral">
-        <h2 class="section-title">Tabla general</h2>
+    <section id="semana">
+        <h2 class="section-title">Top 50 de la semana</h2>
         <div class="card-box">
-            <div class="pg-tabla-wrap">
-                <table class="pg-tabla">
-                    <thead>
-                        <tr><th>#</th><th>Equipo</th><th>Entrenos</th><th>Salas</th><th>Booyahs</th><th>Kills</th><th>Puntos</th></tr>
-                    </thead>
-                    <tbody id="tbodyTablaGeneral">
-                        <tr class="vacio"><td colspan="7"><i class="fa-solid fa-spinner fa-spin"></i>Cargando resultados...</td></tr>
-                    </tbody>
+            <h3 class="subtitulo-bloque" id="tituloTop50">Top 50 Equipos · Semana</h3>
+            <p class="leyenda-tabla"><b>SES</b> entrenos jugados · <b>BOO</b> booyah · <b>KILL</b> kills · <b>PG</b> Puntos Generales · <b>PR</b> Puntos Reales (PG ÷ sesiones)</p>
+            <div class="tabla-doble">
+                <table class="pg-tabla lt-tabla"><caption></caption>
+                    <thead><tr><th>#</th><th>Equipo</th><th>SES</th><th>BOO</th><th>KILL</th><th>PG</th><th>PR</th></tr></thead>
+                    <tbody id="bodySemanaA" data-latam-vacio><tr class="vacio"><td colspan="7"><i class="fa-solid fa-spinner fa-spin"></i>Calculando...</td></tr></tbody>
+                </table>
+                <table class="pg-tabla lt-tabla"><caption></caption>
+                    <thead><tr><th>#</th><th>Equipo</th><th>SES</th><th>BOO</th><th>KILL</th><th>PG</th><th>PR</th></tr></thead>
+                    <tbody id="bodySemanaB"></tbody>
                 </table>
             </div>
         </div>
     </section>
 
+    <section id="historico">
+        <h2 class="section-title">Histórico Top 100</h2>
+        <div class="card-box">
+            <div class="tabla-cabecera">
+                <h3 class="subtitulo-bloque"><i class="fa-solid fa-trophy"></i> Equipos históricos</h3>
+                <div class="orden-toggle" id="ordenHistorico" role="group" aria-label="Ordenar histórico"></div>
+            </div>
+            <p class="leyenda-tabla"><b>PG</b> Puntos Generales · <b>PR</b> Puntos Reales (PG ÷ sesiones). <span id="notaHistorico">Orden: PR (PG ÷ sesiones) → booyah</span></p>
+            <div class="tabla-doble">
+                <table class="pg-tabla lt-tabla"><caption></caption>
+                    <thead><tr><th>#</th><th>Equipo</th><th>SES</th><th>BOO</th><th>KILL</th><th>PG</th><th>PR</th></tr></thead>
+                    <tbody id="bodyTop100A" data-latam-vacio><tr class="vacio"><td colspan="7"><i class="fa-solid fa-spinner fa-spin"></i>Calculando...</td></tr></tbody>
+                </table>
+                <table class="pg-tabla lt-tabla"><caption></caption>
+                    <thead><tr><th>#</th><th>Equipo</th><th>SES</th><th>BOO</th><th>KILL</th><th>PG</th><th>PR</th></tr></thead>
+                    <tbody id="bodyTop100B"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section id="killers">
+        <h2 class="section-title">Top killers</h2>
+        <div class="card-box">
+            <h3 class="subtitulo-bloque"><i class="fa-solid fa-skull"></i> Top 10 killers<span class="wk-range">Por KDA (kills ÷ salas) y por kills totales · mínimo 3 salas</span></h3>
+            <div class="lt-killers" id="gridKillers"><p class="res-vacio">Cargando...</p></div>
+        </div>
+    </section>
+
+    <section id="destacados">
+        <h2 class="section-title">Destacados</h2>
+        <div class="dest-grid" id="latamDestacados"><p class="res-vacio">Cargando...</p></div>
+    </section>
+
     <section id="entrenos">
-        <div class="res-grid">
-            <article class="card-box">
-                <h3 class="subtitulo-bloque"><i class="fa-solid fa-calendar-days"></i> Últimos entrenos</h3>
-                <div class="res-lista" id="listaSesiones"><p class="res-vacio">Cargando...</p></div>
-            </article>
-            <article class="card-box" id="killers">
-                <h3 class="subtitulo-bloque"><i class="fa-solid fa-skull"></i> Top 10 killers</h3>
-                <div class="res-lista" id="listaKillers"><p class="res-vacio">Cargando...</p></div>
-            </article>
+        <div class="card-box">
+            <h3 class="subtitulo-bloque"><i class="fa-solid fa-calendar-days"></i> Últimos entrenos</h3>
+            <div class="res-lista" id="listaSesiones"><p class="res-vacio">Cargando...</p></div>
         </div>
     </section>
 
@@ -93,6 +126,7 @@
         function toggleMenu() { document.getElementById('mainNav').classList.toggle('is-active'); }
         function closeMenu() { document.getElementById('mainNav').classList.remove('is-active'); }
     </script>
-    <script src="../portal-kit/resultados.js?v=20261007n" data-portal="dragonfest"></script>
+    <script src="../portal-kit/latam.js?v=20261008g"></script>
+    <script>Latam.iniciarResultadosPortal('dragonfest');</script>
 </body>
 </html>

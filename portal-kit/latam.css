@@ -45,14 +45,14 @@
 .dest-fila { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 9px 10px; border: 1px solid rgba(216, 195, 149, .14); border-radius: 2px; background: rgba(14, 14, 14, .7); }
 .dest-nombre { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .dest-nombre small { display: block; color: #8f897d; font-weight: 400; font-size: .72rem; }
-.dest-fila em { color: #D8C395; font: normal .72rem "Michroma", sans-serif; white-space: nowrap; }
-.mvp { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; margin-bottom: 8px; padding: 14px; border: 1px solid rgba(216, 195, 149, .45); border-radius: 2px; background: linear-gradient(135deg, rgba(216, 195, 149, .16), rgba(14, 14, 14, .9)); }
-.mvp-icono { color: #D8C395; font-size: 2rem; }
+.dest-fila em { color: var(--primary, #D8C395); font: normal .72rem "Michroma", sans-serif; white-space: nowrap; }
+.mvp { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; margin-bottom: 8px; padding: 14px; border: 1px solid var(--primary, #D8C395); border-radius: 2px; background: linear-gradient(135deg, rgba(var(--primary-rgb, 216, 195, 149), .16), rgba(14, 14, 14, .9)); }
+.mvp-icono { color: var(--primary, #D8C395); font-size: 2rem; }
 .mvp-nombre { display: block; overflow: hidden; color: #F4EEDC; font: 900 1rem "Michroma", sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .mvp small { color: #8f897d; }
 .mvp-datos { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
 .mvp-datos span { padding: 6px; border: 1px solid rgba(216, 195, 149, .2); color: #8f897d; font-size: .62rem; text-transform: uppercase; }
-.mvp-datos b { display: block; color: #D8C395; font: 900 1.15rem "Michroma", sans-serif; }
+.mvp-datos b { display: block; color: var(--primary, #D8C395); font: 900 1.15rem "Michroma", sans-serif; }
 
 /* Tablas individuales de cada entreno */
 .ind-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }

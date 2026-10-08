@@ -39,8 +39,9 @@ portal-kit/           código compartido por todos los portales
   usuarios.js         usuarios y roles (superadmin)
   correcciones.js     borrar entrenos y corregir nombres de equipos (superadmin)
   guardado.js         botón "Cargar a la base de datos" de las herramientas
-  resultados.js       portal público de resultados de cada entreno
-  latam.js / .css     Entrenos LATAM (index y /entrenoslatam/)
+  descargas.js        descargar la imagen de un entreno igual que en su herramienta (solo en su portal)
+  latam.js / .css     resultados: Entrenos LATAM, index y portal público de cada entreno
+                      (Top 50 semana, Histórico 100 ordenable PR/PG, killers)
 admin/                panel central
 <portal>/             index.html (resultados) · admin.html (herramienta) · login.html · imagenes/
 sql/                  cambios de base de datos numerados (ver sql/README.md)

@@ -155,19 +155,23 @@ function seleccionarDia(dateStr, el) {
     container.style.display = 'block';
     
     // Formatear la fecha considerando la zona horaria local
-    let fechaFormat = new Date(dateStr + 'T00:00:00').toLocaleDateString();
+    // Ej.: "lunes 5 de octubre de 2026"
+    let fechaFormat = new Date(dateStr + 'T00:00:00').toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     title.innerHTML = `<i class="fa-solid fa-list-check"></i> Registro del ${fechaFormat}`;
     tbody.innerHTML = '';
 
     sesionesPorFecha[dateStr].forEach(sesion => {
-        let folderPath = sesion.archivo_url || '';
+        const ses = { portal: 'entrenamientos', id: sesion.id, titulo: sesion.titulo, fecha: sesion.fecha, jornada: sesion.jornada };
+        const fechaTxt = window.PumasDescargas ? PumasDescargas.fechaHTML(sesion.fecha) : '';
+        const dl = window.PumasDescargas ? PumasDescargas.botones(ses) : '';
         tbody.innerHTML += `
             <tr>
-                <td style="font-weight: bold; color: var(--light);">${sesion.titulo}</td>
+                <td style="font-weight: bold; color: var(--light);">${esc(sesion.titulo)}<br>${fechaTxt}</td>
                 <td style="text-align: center;">
-                    <button class="btn-ver" onclick="procesarSesionUnica('${sesion.id}')"\\'")}', '${sesion.jornada}')">
-                        <i class="fa-solid fa-table"></i> Ver
-                    </button>
+                    <div class="pg-ses-acc" style="justify-content:center">
+                        ${dl}
+                        <button class="btn-ver" onclick="procesarSesionUnica('${sesion.id}')"><i class="fa-solid fa-table"></i> Ver</button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -180,7 +184,7 @@ const diaLocal=iso=>new Date(iso).toLocaleDateString('en-CA',{timeZone:ZONA_HORA
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function semanaISO(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=t.getUTCFullYear();return y+'-'+Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7);}
 function rangoSemana(d){const l=new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()||7)-1)),f=new Date(l.getFullYear(),l.getMonth(),l.getDate()+6),o={day:'numeric',month:'short'};return l.toLocaleDateString('es',o)+' – '+f.toLocaleDateString('es',o);}
-const MIN_SALAS_KILLER=1; // mínimo de salas jugadas para entrar al Top Killers (1 = todos)
+const MIN_SALAS_KILLER=3; // mínimo de salas jugadas para entrar a los top killers
 async function parsearSesion(s){
   const vacio={teams:{},players:{},salas:0,kills:0};
   if(!s.archivo_url) return vacio;
@@ -229,7 +233,16 @@ function semanaObjetivo(parsed){
 }
 
 const _col=i=>i===0?'#D8C395':i===1?'#B9B2A4':i===2?'#cd7f32':'var(--light)';
-function _filaEq(eq,i){const c=_col(i);return `<tr><td style="font-weight:bold;color:${c};">#${i+1}</td><td style="font-weight:bold;color:var(--light);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(eq.name)}</td><td style="text-align:center;color:var(--gray);font-weight:bold;">${eq.ses}</td><td style="text-align:center;color:#D8C395;font-weight:bold;">${eq.b}</td><td style="text-align:center;color:var(--light);font-weight:bold;">${eq.k}</td><td style="text-align:center;color:var(--gray);font-weight:bold;">${eq.pts}</td><td style="text-align:center;color:${c};font-weight:bold;">${eq.pr}</td></tr>`;}
+// data-l = etiqueta que se ve en el celular, donde cada equipo se muestra como ficha
+function _filaEq(eq,i){const c=_col(i);return `<tr><td class="c-pos" style="font-weight:bold;color:${c};">#${i+1}</td><td class="eq-nombre" style="font-weight:bold;color:var(--light);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(eq.name)}</td><td data-l="SES" style="text-align:center;color:var(--gray);font-weight:bold;">${eq.ses}</td><td data-l="BOO" style="text-align:center;color:#D8C395;font-weight:bold;">${eq.b}</td><td data-l="KILL" style="text-align:center;color:var(--light);font-weight:bold;">${eq.k}</td><td data-l="PG" style="text-align:center;color:var(--gray);font-weight:bold;">${eq.pts}</td><td class="c-pr" data-l="PR" style="text-align:center;color:${c};font-weight:bold;">${eq.pr}</td></tr>`;}
+// Histórico ordenable: PR (PG ÷ sesiones) o PG (puntos totales)
+let _historicoPumas=[];
+const _ordenPumas={pr:(a,b)=>b.pr-a.pr||b.b-a.b||b.pts-a.pts||a.name.localeCompare(b.name),pg:(a,b)=>b.pts-a.pts||b.pr-a.pr||b.b-a.b||a.name.localeCompare(b.name)};
+function ordenarHistorico(orden){
+  document.querySelectorAll('#ordenHistorico .orden-btn').forEach(x=>x.classList.toggle('on',x.dataset.orden===orden));
+  const n=document.getElementById('notaHistorico'); if(n) n.textContent=orden==='pg'?'Orden: PG (puntos totales) → PR':'Orden: PR (PG ÷ sesiones) → booyah';
+  _llenar('bodyTop100a','bodyTop100b',[..._historicoPumas].sort(_ordenPumas[orden]).slice(0,100));
+}
 function _llenar(idA,idB,lista){
   const A=document.getElementById(idA),B=document.getElementById(idB); if(!A||!B) return;
   if(!lista.length){A.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--gray);">Sin registros.</td></tr>';B.innerHTML='';return;}
@@ -248,9 +261,22 @@ async function calcularTablaGlobalAcumulada(sesiones){
   const tit=document.getElementById('tituloTop50');
   if(tit) tit.innerHTML=`Top 50 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${sem.actual?'':' · última semana con datos'} · Orden: PR → booyah</span>`;
   _llenar('bodyTablaGlobal1','bodyTablaGlobal2',w.eq.slice(0,50));
-  _llenar('bodyTop100a','bodyTop100b',todo.eq.slice(0,100));
+  _historicoPumas=todo.eq;
+  const _o=document.querySelector('#ordenHistorico .orden-btn.on');
+  ordenarHistorico(_o?_o.dataset.orden:'pr');
+  // Top killers en dos tablas: por KDA (kills ÷ salas) y por kills totales (mínimo 3 salas)
   const g=document.getElementById('gridTopKillersGlobal');
-  if(g) g.innerHTML=todo.pl.length?`<div class="killer-head"><span>#</span><span>JUGADOR</span><span>SALAS</span><span>KILLS</span><span>KDA</span></div>`+todo.pl.slice(0,10).map((tk,i)=>`<div class="killer-card k5"><span style="color:${_col(i)};font-weight:bold;">#${i+1}</span><span class="k-name">${esc(tk.name)}</span><span class="k-num">${tk.s}</span><span class="k-num">${tk.k}</span><span class="k-num" style="color:${_col(i)};">${tk.kda.toFixed(2)}</span></div>`).join(''):'<div style="color:var(--gray);text-align:center;padding:20px;">Sin datos de killers.</div>';
+  const porKills=[...todo.pl].sort((a,b)=>b.k-a.k||b.kda-a.kda);
+  const lista=(arr,res)=>arr.length?`<div class="killer-head"><span>#</span><span>JUGADOR</span><span>SALAS</span><span>KILLS</span><span>KDA</span></div>`+arr.slice(0,10).map((tk,i)=>`<div class="killer-card k5"><span style="color:${_col(i)};font-weight:bold;">#${i+1}</span><span class="k-name">${esc(tk.name)}</span><span class="k-num">${tk.s}</span><span class="k-num"${res==='k'?` style="color:${_col(i)};"`:''}>${tk.k}</span><span class="k-num"${res==='kda'?` style="color:${_col(i)};"`:''}>${tk.kda.toFixed(2)}</span></div>`).join(''):'<div style="color:var(--gray);text-align:center;padding:20px;">Sin jugadores con 3 salas o más.</div>';
+  if(g) g.innerHTML=`<div class="killers-doble"><div><h4 class="killers-sub">Por KDA <small>kills ÷ salas</small></h4>${lista(todo.pl,'kda')}</div><div><h4 class="killers-sub">Por kills totales <small>sin fórmula</small></h4>${lista(porKills,'k')}</div></div><p class="killers-nota">Solo cuentan jugadores con ${MIN_SALAS_KILLER} salas o más.</p>`;
+  // Destacados (mismo bloque que Entrenos LATAM)
+  if(window.Latam&&Latam.pintarDestacados){
+    const eqs=todo.eq.map(e=>({...e,kps:e.k/e.ses,entrenos:1}));
+    Latam.pintarDestacados(
+      [...eqs].sort((a,b)=>b.k-a.k||b.kps-a.kps).slice(0,5),
+      [...eqs].sort((a,b)=>b.ses-a.ses||b.pr-a.pr).slice(0,5),
+      porKills.slice(0,5), false, 'pumasDestacados');
+  }
 }
 
 async function cargarResultadosVipPublicos() {

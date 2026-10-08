@@ -1103,3 +1103,42 @@ footer {
 .vista-texto{margin-top:22px}
 .vista-texto-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:var(--primary);font:800 .7rem var(--font-display)}
 .vista-texto textarea{width:100%;height:210px;padding:12px;border:1px solid rgba(216,195,149,.25);border-radius:2px;color:var(--light);background:#0a0b10;font:inherit;resize:vertical}
+/* ===== Histórico ordenable PR / PG ===== */
+.orden-toggle{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 14px;color:var(--gray);font-size:.78rem}
+.orden-toggle small{color:var(--gray);font-size:.74rem}
+.orden-btn{min-width:46px;min-height:34px;padding:5px 12px;border:1px solid rgba(216,195,149,.5);border-radius:2px;color:var(--light);background:transparent;font:800 .7rem var(--font-display);cursor:pointer}
+.orden-btn.on,.orden-btn:hover{color:#0A0A0A;background:var(--primary);border-color:var(--primary)}
+
+/* ===== Celular: cada equipo como ficha (#, nombre y PR arriba · SES, BOO, KILL y PG abajo) ===== */
+@media(max-width:640px){
+  #modulo-equipos .tabla-estilizada,#modulo-top100 .tabla-estilizada{display:block;overflow:visible;border:0;background:none;box-shadow:none}
+  #modulo-equipos .tabla-estilizada thead,#modulo-top100 .tabla-estilizada thead{display:none}
+  #modulo-equipos .tabla-estilizada tbody,#modulo-top100 .tabla-estilizada tbody{display:block}
+  #modulo-equipos .tabla-estilizada caption,#modulo-top100 .tabla-estilizada caption{display:block;text-align:left}
+  #modulo-equipos .tabla-estilizada tr,#modulo-top100 .tabla-estilizada tr{display:grid;grid-template-columns:34px repeat(4,minmax(0,1fr));min-width:0;align-items:center;margin-bottom:6px;padding:8px 8px 6px;border:1px solid rgba(216,195,149,.16);border-radius:3px;background:rgba(18,18,18,.85)}
+  #modulo-equipos .tabla-estilizada td,#modulo-top100 .tabla-estilizada td{padding:2px 4px!important;border:0!important;text-align:center!important;font-size:.82rem!important}
+  .tabla-doble{grid-template-columns:1fr!important;gap:12px}
+  #modulo-equipos>.tabla-contenedor>div{grid-template-columns:1fr!important}
+  :is(#modulo-equipos,#modulo-top100) .tabla-estilizada td.c-pos{grid-row:1/span 2;grid-column:1;font-size:.9rem!important}
+  :is(#modulo-equipos,#modulo-top100) .tabla-estilizada td.eq-nombre{grid-row:1;grid-column:2/span 3;max-width:none!important;text-align:left!important;font-size:.95rem!important}
+  :is(#modulo-equipos,#modulo-top100) .tabla-estilizada td[data-l]{grid-row:2}
+  :is(#modulo-equipos,#modulo-top100) .tabla-estilizada td.c-pr{grid-row:1;grid-column:5;font-size:1.05rem!important}
+  .tabla-estilizada td[data-l]::before{display:block;content:attr(data-l);color:var(--gray);font:700 .52rem var(--font-display);letter-spacing:.08em}
+  .tabla-estilizada td.c-pr::before{color:var(--primary)}
+}
+
+/* ===== Top killers en dos tablas + destacados ===== */
+/* Orden: calendario | Top 50 · (vacío) | Top killers · Top 100 · Destacados */
+#modulo-equipos{grid-row:1}
+#modulo-killers{grid-column:2;grid-row:2}
+#modulo-top100{grid-row:3}
+#modulo-destacados{grid-column:1/-1;grid-row:4}
+@media(max-width:1180px){#modulo-killers,#modulo-destacados,#modulo-equipos,#modulo-top100{grid-column:auto;grid-row:auto}}
+.killers-doble{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.killers-sub{display:flex;align-items:baseline;gap:8px;margin:0 0 8px;color:var(--primary);font:800 .78rem var(--font-display)}
+.killers-sub small{color:var(--gray);font:400 .72rem 'Trebuchet MS',sans-serif}
+.killers-nota{margin:12px 0 0;color:var(--gray);font-size:.78rem}
+#pumasDestacados .card-box{background:#141414;border:1px solid rgba(216,195,149,.2);border-radius:3px;padding:18px}
+#pumasDestacados .subtitulo-bloque{margin:0 0 10px;color:var(--primary);font-size:.85rem}
+#pumasDestacados .muted{color:var(--gray);font-size:.8rem}
+@media(max-width:760px){.killers-doble{grid-template-columns:1fr}}
