@@ -13,7 +13,7 @@
     const P = window.PumasPortal;
     const esc = P.escaparHtml;
     const ZONA = 'America/Bogota';
-    const V = '20261008g';
+    const V = '20261008h';
 
     // Herramienta de cada portal: carpeta, estilos, script y tipo de imagen
     const HERRAMIENTAS = {
@@ -145,6 +145,23 @@
         });
     }
 
+    // iPhone / iPad: hoja de compartir (deja "Guardar imagen" en Fotos). Si no se puede, descarga normal.
+    const esIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    async function guardar(href, nombre) {
+        if (esIOS && navigator.canShare) {
+            try {
+                const blob = await (await fetch(href)).blob();
+                const archivo = new File([blob], nombre, { type: blob.type || 'image/png' });
+                if (navigator.canShare({ files: [archivo] })) { await navigator.share({ files: [archivo], title: nombre }); return; }
+            } catch (e) {
+                if (e && e.name === 'AbortError') return;   // la persona cerró la hoja de compartir
+            }
+        }
+        const a = document.createElement('a');   // se descarga desde la página (no desde el marco oculto)
+        a.href = href; a.download = nombre;
+        document.body.appendChild(a); a.click(); a.remove();
+    }
+
     async function descargarImagen(s) {
         const h = HERRAMIENTAS[s.portal];
         if (!h) throw new Error('Este entreno no tiene herramienta de imagen.');
@@ -158,12 +175,8 @@
             const listo = new Promise((ok, mal) => {
                 const clickOriginal = w.HTMLAnchorElement.prototype.click;
                 w.HTMLAnchorElement.prototype.click = function () {
-                    if (this.download) {
-                        const a = document.createElement('a');   // se descarga desde la página (no desde el marco)
-                        a.href = this.href; a.download = this.download;
-                        document.body.appendChild(a); a.click(); a.remove();
-                        ok();
-                    } else clickOriginal.call(this);
+                    if (this.download) { guardar(this.href, this.download).then(ok, ok); }
+                    else clickOriginal.call(this);
                 };
                 setTimeout(() => mal(new Error('La imagen tardó demasiado en generarse.')), 30000);
             });

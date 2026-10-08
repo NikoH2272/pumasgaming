@@ -1,5 +1,5 @@
 /* Entrenos LATAM · estilos de la página (la base viene de ../portal-kit/portal.css) */
-@import url('../portal-kit/latam.css?v=20261008g');
+@import url('../portal-kit/latam.css?v=20261008k');
 
 .latam-barra { padding-top: 26px; padding-bottom: 0; }
 .latam-filtro { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
@@ -11,34 +11,21 @@
 
 /* Módulos en el mismo orden que el portal de Pumas */
 /* Tablas generales arriba a todo el ancho; killers y calendario abajo */
-.lt-modulos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; width: min(100%, 1360px); margin: 0 auto; padding: 28px clamp(16px, 4vw, 56px) 60px; }
+.lt-modulos { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(300px, 1fr); align-items: start; gap: 24px; width: min(100%, 1360px); margin: 0 auto; padding: 28px clamp(16px, 4vw, 56px) 60px; }
 .lt-modulos .card-box { max-width: none; margin: 0; }
 .lt-ancho { grid-column: 1 / -1; }
 
 /* Tablas, killers y botones de orden: ver ../portal-kit/portal.css (compartidos con los portales) */
 
-/* Calendario (igual al de Pumas, con puntos de color por entreno) */
-.calendar-container { padding: 14px; border: 1px solid rgba(var(--primary-rgb), .15); border-radius: 3px; background: #111; }
-.calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.calendar-header h4 { margin: 0; color: var(--light); font: 700 .95rem var(--font-display); }
-.calendar-weekdays, .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; }
-.calendar-weekdays { margin-bottom: 8px; color: var(--gray); font: 700 .58rem var(--font-display); }
-.calendar-grid { gap: 5px; }
-.calendar-day { position: relative; padding: 9px 2px 13px; border: 1px solid transparent; border-radius: 2px; background: rgba(244, 238, 220, .04); font-weight: 700; cursor: pointer; transition: .18s; }
-.calendar-day:hover:not(.empty) { background: rgba(var(--primary-rgb), .16); }
-.calendar-day.has-session { border-color: var(--primary); background: rgba(var(--primary-rgb), .14); }
-.calendar-day.selected-day { outline: 2px solid var(--light); outline-offset: 1px; }
-.calendar-day.empty { background: transparent; cursor: default; }
-.cal-puntos { position: absolute; right: 0; bottom: 3px; left: 0; display: flex; justify-content: center; gap: 2px; }
-.cal-puntos i { width: 6px; height: 6px; border-radius: 50%; }
-/* Calendario a todo el ancho: calendario a la izquierda, lista a la derecha */
-#latamCalendario { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto 1fr; column-gap: 24px; }
-#latamCalendario .calendar-container { grid-row: 1 / span 2; }
-#latamCalendario .ses-titulo { margin-top: 0; }
+/* Calendario: ver ../portal-kit/portal.css (compartido con los portales) */
+
+/* LATAM: Top 50 a la izquierda y calendario a la derecha (en celular, uno debajo del otro) */
+@media (min-width: 901px) { #semana { grid-column: 1; } #calendario { grid-column: 2; } }
 @media (max-width: 760px) { #latamCalendario { display: block; } #latamCalendario .ses-titulo { margin-top: 20px; } }
 .ses-titulo { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px; color: var(--primary); font: 800 .78rem var(--font-display); }
 
 @media (max-width: 900px) {
   .lt-modulos { grid-template-columns: 1fr; }
+  #semana, #calendario { grid-column: 1; }
   .lt-ancho { grid-column: 1; }
 }

@@ -73,6 +73,12 @@ async function cargarSesiones() {
 
         // Renderizar el calendario con el mes actual
         renderCalendar(currentMonth, currentYear);
+        // Si hoy hubo entrenos, se despliegan solos
+        const hoyStr = diaLocal(new Date().toISOString());
+        if (sesionesPorFecha[hoyStr]) {
+            const celda = [...document.querySelectorAll('#calendarGrid .calendar-day')].find(d => (d.getAttribute('onclick') || '').includes(hoyStr));
+            if (celda) seleccionarDia(hoyStr, celda);
+        }
         
         // Calcular topkillers y equipos
         await calcularTablaGlobalAcumulada(sesiones);
@@ -157,7 +163,8 @@ function seleccionarDia(dateStr, el) {
     // Formatear la fecha considerando la zona horaria local
     // Ej.: "lunes 5 de octubre de 2026"
     let fechaFormat = new Date(dateStr + 'T00:00:00').toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    title.innerHTML = `<i class="fa-solid fa-list-check"></i> Registro del ${fechaFormat}`;
+    const esHoy = dateStr === diaLocal(new Date().toISOString());
+    title.innerHTML = `<i class="fa-solid fa-list-check"></i> ${esHoy ? 'Entrenos de hoy · ' : 'Registro del '}${fechaFormat}`;
     tbody.innerHTML = '';
 
     sesionesPorFecha[dateStr].forEach(sesion => {
@@ -252,6 +259,13 @@ function _llenar(idA,idB,lista){
   const cap=(tb,txt)=>{const tbl=tb.closest('table');let c=tbl.querySelector('caption');if(!c)c=tbl.createCaption();c.textContent=txt;};
   cap(A,`PUESTOS 1 – ${m}`);
   cap(B,lista.length>m?`PUESTOS ${m+1} – ${lista.length}`:'');
+  // En el celular: solo los primeros 10 hasta tocar "Ver los N"
+  const cont=A.closest('table').parentElement; cont.classList.add('tablas-pumas');
+  let b=cont.nextElementSibling&&cont.nextElementSibling.classList.contains('ver-mas')?cont.nextElementSibling:null;
+  if(!b){b=document.createElement('button');b.type='button';b.className='ver-mas';cont.after(b);cont.classList.add('recortar');
+    b.addEventListener('click',()=>{cont.classList.toggle('recortar');b._t();if(cont.classList.contains('recortar'))cont.scrollIntoView({block:'start'});});}
+  b._t=()=>{b.innerHTML=cont.classList.contains('recortar')?`<i class="fa-solid fa-chevron-down"></i> Ver los ${lista.length}`:'<i class="fa-solid fa-chevron-up"></i> Ver menos';};
+  b.hidden=lista.length<=10; b._t();
 }
 async function calcularTablaGlobalAcumulada(sesiones){
   const parsed=await parsearTodas(sesiones);
@@ -275,7 +289,8 @@ async function calcularTablaGlobalAcumulada(sesiones){
     Latam.pintarDestacados(
       [...eqs].sort((a,b)=>b.k-a.k||b.kps-a.kps).slice(0,5),
       [...eqs].sort((a,b)=>b.ses-a.ses||b.pr-a.pr).slice(0,5),
-      porKills.slice(0,5), false, 'pumasDestacados');
+      porKills.slice(0,5), false, 'pumasDestacados',
+      [...eqs].filter(e=>e.b>0).sort((a,b)=>b.b-a.b||b.pr-a.pr||b.pts-a.pts).slice(0,5));
   }
 }
 

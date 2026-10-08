@@ -91,6 +91,7 @@
     const MIN_SALAS = 3;   // mínimo de salas jugadas para entrar a los top killers
     const conSalas = x => x.s >= MIN_SALAS;
     const porKills = (a, b) => b.k - a.k || b.kda - a.kda;
+    const porBooyah = (a, b) => b.b - a.b || b.pr - a.pr || b.pts - a.pts;
 
     function agregarKillers(filas) {
         const pl = {};
@@ -235,6 +236,8 @@
                 letales: (data.letales || []).map(aEquipo),
                 activos: (data.activos || []).map(aEquipo),
                 jugadores: (data.jugadores || []).map(aKiller).filter(conSalas),
+                // sin sql/15 se arma con el histórico
+                topBooyah: (data.top_booyah || [...(data.historico || [])].sort((a, b) => b.b - a.b || b.pr - a.pr)).map(aEquipo).filter(e => e.b > 0).slice(0, 5),
                 individuales: ind,
                 ultimos: data.ultimos || []
             });
@@ -270,6 +273,7 @@
             letales: [...todo].sort((a, b) => b.k - a.k || b.kps - a.kps).slice(0, 5),
             activos: [...todo].sort((a, b) => b.ses - a.ses || b.entrenos - a.entrenos || b.pr - a.pr).slice(0, 5),
             jugadores: [...killers].sort((a, b) => b.k - a.k || b.kda - a.kda).slice(0, 5),
+            topBooyah: todo.filter(e => e.b > 0).sort(porBooyah).slice(0, 5),
             individuales: ind,
             ultimos: ses.slice(0, 8)
         });
@@ -360,6 +364,26 @@
         B.closest('table').hidden = lista.length <= m;
         A.closest('table').caption.textContent = `PUESTOS 1 – ${m}`;
         B.closest('table').caption.textContent = lista.length > m ? `PUESTOS ${m + 1} – ${lista.length}` : '';
+        botonVerMas(A.closest('.tabla-doble'), lista.length);
+    }
+
+    const textoVerMas = (b, cont) => {
+        b.innerHTML = cont.classList.contains('recortar') ? `<i class="fa-solid fa-chevron-down"></i> Ver los ${b.dataset.total}` : '<i class="fa-solid fa-chevron-up"></i> Ver menos';
+    };
+    // En el celular las tablas largas muestran solo los primeros 10, con botón para ver todos
+    function botonVerMas(cont, total) {
+        if (!cont) return;
+        let b = cont.nextElementSibling && cont.nextElementSibling.classList.contains('ver-mas') ? cont.nextElementSibling : null;
+        if (!b) {
+            b = document.createElement('button');
+            b.type = 'button'; b.className = 'ver-mas';
+            cont.after(b);
+            cont.classList.add('recortar');
+            b.addEventListener('click', () => { cont.classList.toggle('recortar'); textoVerMas(b, cont); if (cont.classList.contains('recortar')) cont.scrollIntoView({ block: 'start' }); });
+        }
+        b.dataset.total = total;
+        b.hidden = total <= 10;
+        textoVerMas(b, cont);
     }
 
     function pintarKillers(contId, porKda, porK, conPart) {
@@ -389,7 +413,7 @@
     }
 
     // Destacados: equipos más letales, que más participan y jugador más letal
-    function destacados(letales, activos, jugadores, conPart, contId) {
+    function destacados(letales, activos, jugadores, conPart, contId, booyah) {
         const cont = document.getElementById(contId || 'latamDestacados');
         if (!cont) return;
         const toc = x => conPart === false ? '' : `latam-row" ${tocable(x)} data-x="`;
@@ -409,6 +433,11 @@
                 <h3 class="subtitulo-bloque"><i class="fa-solid fa-people-group"></i> Equipos que más participan</h3>
                 <p class="muted">Más sesiones jugadas.</p>
                 ${activos.length ? activos.map((x, i) => fila(x, i, `${x.ses} ses.`, `en ${x.entrenos} entreno${x.entrenos === 1 ? '' : 's'}`)).join('') : vacio}
+            </article>
+            <article class="card-box dest-card">
+                <h3 class="subtitulo-bloque"><i class="fa-solid fa-crown"></i> Top Booyah</h3>
+                <p class="muted">Más salas ganadas (booyahs).</p>
+                ${(booyah || []).length ? booyah.map((x, i) => fila(x, i, `${x.b} booyah${x.b === 1 ? '' : 's'}`, `${x.ses} ses. · PR ${x.pr}`)).join('') : vacio}
             </article>
             <article class="card-box dest-card dest-mvp">
                 <h3 class="subtitulo-bloque"><i class="fa-solid fa-crosshairs"></i> Jugador más letal</h3>
@@ -512,7 +541,7 @@
 
         pintarKillers('gridKillers', r.killers, r.killersKills);
 
-        destacados(r.letales, r.activos, r.jugadores);
+        destacados(r.letales, r.activos, r.jugadores, undefined, undefined, r.topBooyah);
         individuales(r.individuales, filtroPortal || 'todos');
 
         // El calendario abre en el mes del último entreno si este mes no tiene
@@ -522,16 +551,24 @@
             calAnio = +f.slice(0, 4); calMes = +f.slice(5, 7) - 1;
         }
         calSel = null;
+        if (primeraVez) calAutoHoy = true;
         cargarMes();
     }
 
     // Calendario igual al de Pumas: carga solo el mes visible, con un punto del color de cada entreno
     let calMes = new Date().getMonth(), calAnio = new Date().getFullYear(), calSel = null, calSes = [], calUltimos = [];
+    let calAutoHoy = true;        // la primera vez se despliegan solos los entrenos de hoy
+    let calConDescarga = false;   // en el portal de cada entreno: botón Descargar en vez de "Ver"
     const cacheMes = {};
     async function cargarMes() {
         const clave = `${filtroPortal || 'todos'}:${calAnio}-${calMes}`;
         try { calSes = cacheMes[clave] || (cacheMes[clave] = await sesionesDelMes(filtroPortal, calAnio, calMes)); }
         catch (e) { console.warn('LATAM calendario:', e); calSes = []; }
+        if (calAutoHoy) {
+            calAutoHoy = false;
+            const hoy = diaLocal(new Date().toISOString());
+            if (calSes.some(x => diaLocal(x.fecha) === hoy)) calSel = hoy;
+        }
         pintarCalendario();
     }
     function pintarCalendario() {
@@ -554,12 +591,14 @@
                 <div class="calendar-weekdays"><div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div></div>
                 <div class="calendar-grid">${g}</div>
             </div>
-            <h4 class="ses-titulo">${calSel && porDia[calSel] ? 'Entrenos del ' + fmtDia(calSel) : 'Últimos entrenos'}${calSel ? ' <button class="btn-mini" data-all="1">Ver todos</button>' : ''}</h4>
+            <h4 class="ses-titulo">${calSel && porDia[calSel] ? (calSel === diaLocal(new Date().toISOString()) ? 'Entrenos de hoy · ' : 'Entrenos del ') + fmtDia(calSel) : 'Últimos entrenos'}${calSel ? ' <button class="btn-mini" data-all="1">Ver todos</button>' : ''}</h4>
             <div class="res-lista">${lista.length ? lista.map(s => {
                 const p = POR_ID[s.portal] || { nombre: s.portal, color: '#999', url: '#' };
+                const acc = calConDescarga ? descargaSes(s) : `<a class="btn-mini" href="${p.url}">Ver</a>`;
+                const sub = calConDescarga ? esc(s.jornada || '') : esc(p.nombre) + (s.jornada ? ' · ' + esc(s.jornada) : '');
                 return `<div class="res-row" style="border-left-color:${p.color}">
-                    <div><b>${esc(s.titulo)}</b> ${fechaSes(s)}<small>${esc(p.nombre)}${s.jornada ? ' · ' + esc(s.jornada) : ''}</small></div>
-                    <div class="pg-ses-acc"><a class="btn-mini" href="${p.url}">Ver</a></div></div>`;
+                    <div><b>${esc(s.titulo)}</b> ${fechaSes(s)}<small>${sub}</small></div>
+                    <div class="pg-ses-acc">${acc}</div></div>`;
             }).join('') : '<p class="res-vacio"><i class="fa-solid fa-calendar-xmark"></i>Aún no hay entrenos LATAM registrados.</p>'}</div>`;
     }
     document.addEventListener('click', e => {
@@ -600,7 +639,13 @@
         });
 
         pintarKillers('gridKillers', r.killers, r.killersKills, false);
-        destacados(r.letales, r.activos, r.jugadores, false);
+        destacados(r.letales, r.activos, r.jugadores, false, undefined, r.topBooyah);
+
+        // Calendario de entrenos de este portal (con Descargar y hoy desplegado)
+        filtroPortal = portal; calConDescarga = true; calUltimos = r.ultimos;
+        if (r.ultimos.length) { const f0 = diaLocal(r.ultimos[0].fecha); calAnio = +f0.slice(0, 4); calMes = +f0.slice(5, 7) - 1; }
+        calSel = null; calAutoHoy = true;
+        if (document.getElementById('latamCalendario')) cargarMes();
 
         const ul = document.getElementById('listaSesiones');
         if (ul) ul.innerHTML = r.ultimos.length ? r.ultimos.map(s => `<div class="res-row">

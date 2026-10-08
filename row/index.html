@@ -2,18 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>ROW x Maya by Pumas · Resultados</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/latam.css?v=20261008g">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261008g">
+    <link rel="stylesheet" href="../portal-kit/latam.css?v=20261008l">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261008l">
     <link rel="icon" href="imagenes/row.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261008g" data-portal="row" data-modo="publico"></script>
-    <script src="../portal-kit/descargas.js?v=20261008g"></script>
+    <script src="../portal-kit/portal.js?v=20261008l" data-portal="row" data-modo="publico"></script>
+    <script src="../portal-kit/descargas.js?v=20261008l"></script>
 </head>
 <body data-tema="row">
 
@@ -28,6 +28,7 @@
         <nav class="main-nav" id="mainNav">
             <ul>
                 <li><a href="#semana" onclick="closeMenu()">Semana</a></li>
+                <li><a href="#calendario" onclick="closeMenu()">Calendario</a></li>
                 <li><a href="#historico" onclick="closeMenu()">Histórico</a></li>
                                 <li><a href="#killers" onclick="closeMenu()">Killers</a></li>
                 <li><a href="#destacados" onclick="closeMenu()">Destacados</a></li>
@@ -60,6 +61,7 @@
 
     <section id="semana">
         <h2 class="section-title">Top 50 de la semana</h2>
+        <div class="semana-grid">
         <div class="card-box">
             <h3 class="subtitulo-bloque" id="tituloTop50">Top 50 Equipos · Semana</h3>
             <p class="leyenda-tabla"><b>SES</b> entrenos jugados · <b>BOO</b> booyah · <b>KILL</b> kills · <b>PG</b> Puntos Generales · <b>PR</b> Puntos Reales (PG ÷ sesiones)</p>
@@ -73,6 +75,11 @@
                     <tbody id="bodySemanaB"></tbody>
                 </table>
             </div>
+        </div>
+        <aside class="card-box" id="calendario">
+            <h3 class="subtitulo-bloque"><i class="fa-solid fa-calendar-days"></i> Calendario de entrenos</h3>
+            <div id="latamCalendario"><p class="res-vacio">Cargando...</p></div>
+        </aside>
         </div>
     </section>
 
@@ -110,13 +117,6 @@
         <div class="dest-grid" id="latamDestacados"><p class="res-vacio">Cargando...</p></div>
     </section>
 
-    <section id="entrenos">
-        <div class="card-box">
-            <h3 class="subtitulo-bloque"><i class="fa-solid fa-calendar-days"></i> Últimos entrenos</h3>
-            <div class="res-lista" id="listaSesiones"><p class="res-vacio">Cargando...</p></div>
-        </div>
-    </section>
-
     <footer>
         <p>&copy; 2026 <b>ROW X MAYA</b> by PUMAS GAMING. Todos los derechos reservados.</p>
     </footer>
@@ -125,7 +125,7 @@
         function toggleMenu() { document.getElementById('mainNav').classList.toggle('is-active'); }
         function closeMenu() { document.getElementById('mainNav').classList.remove('is-active'); }
     </script>
-    <script src="../portal-kit/latam.js?v=20261008g"></script>
+    <script src="../portal-kit/latam.js?v=20261008l"></script>
     <script>Latam.iniciarResultadosPortal('row');</script>
 </body>
 </html>

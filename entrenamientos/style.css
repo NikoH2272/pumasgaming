@@ -934,7 +934,7 @@ footer {
 #modulo-equipos caption,#modulo-top100 caption{caption-side:top;padding:0 0 8px;color:var(--primary);font:800 .66rem 'Michroma',sans-serif;letter-spacing:.08em;text-align:left}
 .leyenda-tabla{margin:0 0 14px;color:var(--gray);font-size:.82rem;line-height:1.5}
 .leyenda-tabla b{color:var(--primary)}
-.killer-head,.killer-card.k5{display:grid;grid-template-columns:34px minmax(0,1fr) 54px 54px 60px;gap:8px;align-items:center}
+.killer-head,.killer-card.k5{display:grid;grid-template-columns:34px minmax(0,1fr) 54px 74px 60px;gap:8px;align-items:center}
 .killer-head{padding:0 14px 8px;border-bottom:2px solid rgba(216,195,149,.45);color:var(--primary);font:800 .74rem 'Trebuchet MS',sans-serif;letter-spacing:.05em}
 .killer-head span:nth-child(n+3),.killer-card.k5 .k-num{text-align:center}
 .killer-card.k5 .k-name{overflow:hidden;color:var(--light);font-weight:bold;text-overflow:ellipsis;white-space:nowrap}
@@ -1128,12 +1128,14 @@ footer {
 }
 
 /* ===== Top killers en dos tablas + destacados ===== */
-/* Orden: calendario | Top 50 · (vacío) | Top killers · Top 100 · Destacados */
-#modulo-equipos{grid-row:1}
-#modulo-killers{grid-column:2;grid-row:2}
+/* Orden: Top 50 | calendario · Top killers | (vacío) · Top 100 · Destacados */
+.dashboard-modulos{grid-template-columns:minmax(0,65fr) minmax(0,35fr)}
+#modulo-equipos{grid-column:1;grid-row:1}
+#modulo-calendario{grid-column:2;grid-row:1}
+#modulo-killers{grid-column:1;grid-row:2}
 #modulo-top100{grid-row:3}
 #modulo-destacados{grid-column:1/-1;grid-row:4}
-@media(max-width:1180px){#modulo-killers,#modulo-destacados,#modulo-equipos,#modulo-top100{grid-column:auto;grid-row:auto}}
+@media(max-width:1180px){.dashboard-modulos{grid-template-columns:1fr}#modulo-killers,#modulo-destacados,#modulo-equipos,#modulo-top100,#modulo-calendario{grid-column:auto;grid-row:auto}}
 .killers-doble{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
 .killers-sub{display:flex;align-items:baseline;gap:8px;margin:0 0 8px;color:var(--primary);font:800 .78rem var(--font-display)}
 .killers-sub small{color:var(--gray);font:400 .72rem 'Trebuchet MS',sans-serif}
@@ -1142,3 +1144,25 @@ footer {
 #pumasDestacados .subtitulo-bloque{margin:0 0 10px;color:var(--primary);font-size:.85rem}
 #pumasDestacados .muted{color:var(--gray);font-size:.8rem}
 @media(max-width:760px){.killers-doble{grid-template-columns:1fr}}
+
+/* ===== iPhone y celulares ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+.site-header,header{-webkit-backdrop-filter:blur(14px)}
+footer{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+.modal-vista{-webkit-backdrop-filter:blur(5px)}
+.killer-card.k5 .k-num{font-variant-numeric:tabular-nums}
+@media(max-width:760px){input,select,textarea{font-size:16px!important}.killer-head,.killer-card.k5{grid-template-columns:28px minmax(0,1fr) 40px 64px 48px;gap:4px;padding-left:8px;padding-right:8px}}
+#pumasDestacados{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1200px){#pumasDestacados{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){#pumasDestacados{grid-template-columns:1fr}}
+
+/* Celular: tablas largas solo con los primeros 10 hasta tocar "Ver los N" */
+.ver-mas{display:none}
+@media(max-width:640px){
+  .killer-head{font-size:.5rem!important;letter-spacing:0!important}
+  .tablas-pumas.recortar table+table{display:none!important}
+  .tablas-pumas.recortar tbody tr:nth-child(n+11){display:none!important}
+  .ver-mas{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;margin-top:8px;border:1px solid rgba(216,195,149,.5);border-radius:3px;color:var(--primary);background:rgba(216,195,149,.06);font:800 .72rem var(--font-display);cursor:pointer}
+  .ver-mas[hidden]{display:none}
+}

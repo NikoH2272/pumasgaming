@@ -20,6 +20,7 @@ Corre en Supabase → SQL Editor los SQL que falten, **en orden** (marca ☑ en 
 | 12 | Optimizar LATAM + respaldo | Muy recomendado: baja el consumo de datos del plan gratis y activa el botón **Generar respaldo** del panel |
 | 13 | Histórico ordenable | Botón PR / PG del histórico (sin él también funciona, calculando en el navegador) |
 | 14 | Top killers | Mínimo 3 salas y top 10 por kills totales (sin él, la tabla por kills muestra solo 5) |
+| 15 | Top Booyah | Destacado de equipos con más booyahs (sin él se calcula con el histórico) |
 
 Comprobaciones rápidas en Supabase:
 - [ ] `select usuario, rol, activo from usuarios_admin;` → cada admin con su rol; **coachniko = superadmin**.

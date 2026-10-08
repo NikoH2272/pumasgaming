@@ -902,3 +902,10 @@ footer {
 .latam-intro { max-width: 680px; margin: -18px auto 28px; color: #c3bdae; text-align: center; line-height: 1.7; }
 #latam .card-box h3 { letter-spacing: .02em; }
 .rank-row em small{display:block;margin-top:2px;color:var(--gray);font:400 .66rem var(--font-body);text-align:right}
+
+/* ===== iPhone y celulares ===== */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+.site-header,header{-webkit-backdrop-filter:blur(14px)}
+footer{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+@media(max-width:760px){input,select,textarea{font-size:16px!important}nav.main-nav{max-height:calc(100svh - 66px);overflow-y:auto;-webkit-overflow-scrolling:touch}}

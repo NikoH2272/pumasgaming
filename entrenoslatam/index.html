@@ -2,18 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Entrenos LATAM by Pumas · Resultados</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261008g">
-    <link rel="stylesheet" href="style.css?v=20261008g">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261008l">
+    <link rel="stylesheet" href="style.css?v=20261008l">
     <link rel="icon" href="imagenes/latam.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261008g" data-portal="entrenoslatam" data-modo="publico"></script>
-    <script src="../portal-kit/descargas.js?v=20261008g"></script>
+    <script src="../portal-kit/portal.js?v=20261008l" data-portal="entrenoslatam" data-modo="publico"></script>
+    <script src="../portal-kit/descargas.js?v=20261008l"></script>
 </head>
 <body>
 
@@ -65,7 +65,7 @@
 
     <main class="lt-modulos">
         <!-- 1. TOP 50 SEMANA -->
-        <article class="card-box lt-ancho" id="semana">
+        <article class="card-box" id="semana">
             <h3 class="subtitulo-bloque" id="tituloTop50">Top 50 Equipos · Semana</h3>
             <p class="leyenda-tabla"><b>SES</b> entrenos jugados · <b>BOO</b> booyah · <b>KILL</b> kills · <b>PG</b> Puntos Generales · <b>PR</b> Puntos Reales (PG ÷ sesiones)</p>
             <div class="tabla-doble">
@@ -78,6 +78,12 @@
                     <tbody id="bodySemanaB"></tbody>
                 </table>
             </div>
+        </article>
+
+        <!-- CALENDARIO (a la derecha del Top 50) -->
+        <article class="card-box" id="calendario">
+            <h3 class="subtitulo-bloque"><i class="fa-solid fa-calendar-days"></i> Calendario de sesiones</h3>
+            <div id="latamCalendario"><p class="res-vacio">Cargando...</p></div>
         </article>
 
         <!-- 2. TOP 100 HISTÓRICO -->
@@ -104,12 +110,6 @@
             <div class="lt-killers" id="gridKillers"><p class="res-vacio">Cargando...</p></div>
         </article>
 
-        <!-- CALENDARIO (abajo, junto a killers) -->
-        <article class="card-box lt-ancho" id="calendario">
-            <h3 class="subtitulo-bloque"><i class="fa-solid fa-calendar-days"></i> Calendario de sesiones</h3>
-            <div id="latamCalendario"><p class="res-vacio">Cargando...</p></div>
-        </article>
-
     </main>
 
     <!-- 5. DESTACADOS -->
@@ -128,7 +128,7 @@
         <p>&copy; 2026 <b>ENTRENOS LATAM</b> by PUMAS GAMING. Todos los derechos reservados.</p>
     </footer>
 
-    <script src="../portal-kit/latam.js?v=20261008g"></script>
+    <script src="../portal-kit/latam.js?v=20261008l"></script>
     <script>Latam.iniciarPortal();</script>
 </body>
 </html>

@@ -18,6 +18,7 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 12 | `12_optimizar_latam_y_respaldo.sql` | LATAM calculado en la base (pocos KB por visita) + respaldo para superadmin | ☐ |
 | 13 | `13_historico_ordenable.sql` | Histórico Top 100 ordenable por PR o PG (portales y LATAM) | ☐ |
 | 14 | `14_top_killers.sql` | Top killers con mínimo 3 salas + top por kills totales | ☐ |
+| 15 | `15_top_booyah.sql` | Destacado Top Booyah (5 equipos con más booyahs) | ☐ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 

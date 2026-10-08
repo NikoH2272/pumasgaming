@@ -39,7 +39,7 @@
 .latam-pronto { opacity: .5; cursor: default; pointer-events: none; }
 
 /* Destacados */
-.dest-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.dest-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
 .dest-card { display: flex; flex-direction: column; gap: 6px; max-width: none !important; margin: 0 !important; }
 .dest-card .muted { margin: -6px 0 8px; }
 .dest-fila { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 9px 10px; border: 1px solid rgba(216, 195, 149, .14); border-radius: 2px; background: rgba(14, 14, 14, .7); }
@@ -63,5 +63,6 @@
 .ind-head small { color: #8f897d; }
 
 @media (max-width: 1200px) { .latam-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 1000px) { .dest-grid { grid-template-columns: 1fr; } }
+@media (max-width: 1200px) { .dest-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 700px)  { .dest-grid { grid-template-columns: 1fr; } }
 @media (max-width: 700px)  { .latam-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
