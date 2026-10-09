@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C79JND219Y');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Pumas Gaming | Match Day Manager</title>
@@ -13,7 +22,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="portal-kit/portal.js?v=20261008p" data-modo="publico"></script>
+    <script src="portal-kit/portal.js?v=20261009n" data-modo="publico"></script>
 </head>
 <body>
 
@@ -31,8 +40,8 @@
 
     <nav class="main-nav" id="mainNav">
         <ul>
-            <li><a href="index.html" onclick="closeMenu()">Portal Principal</a></li>
-            <li><a href="index.html#resultados" onclick="closeMenu()">Herramienta FF</a></li>
+            <li><a href="./" onclick="closeMenu()">Portal Principal</a></li>
+            <li><a href="./#resultados" onclick="closeMenu()">Herramienta FF</a></li>
             <li><a href="lista_sorteo.html" onclick="closeMenu()" style="color: var(--primary);"><i class="fa-solid fa-lock"></i> Admin</a></li>
         </ul>
     </nav>

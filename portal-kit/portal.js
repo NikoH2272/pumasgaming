@@ -42,6 +42,39 @@
         nieve:     { nombre: 'Copos de nieve', icono: '❄' }
     };
 
+    /* ---------------- Dirección limpia en la barra del navegador ---------------- */
+    // · nunca se muestra "index.html" (la carpeta abre su index)
+    // · en producción (GitHub Pages) tampoco ".html": /row/admin.html → /row/admin
+    // · los enlaces del menú (#semana, #historico...) bajan a la sección sin ensuciar la dirección
+    (function () {
+        const prod = /(^|\.)pumasgaming\.com$|github\.io$/i.test(location.hostname);
+        let ruta = location.pathname.replace(/\/index\.html$/i, '/');
+        if (prod) ruta = ruta.replace(/\.html$/i, '');
+        const hash = location.hash;
+        if (ruta !== location.pathname || hash) {
+            try { history.replaceState(history.state, '', ruta + location.search); } catch (e) { }
+        }
+        // si se llegó con #sección (ej. desde otra página), se baja a ella y se quita de la dirección
+        if (hash && hash.length > 1) {
+            // las tablas cargan después y empujan la sección: se re-alinea unos segundos, salvo que el usuario ya haya movido la página
+            let quieto = true;
+            const parar = () => { quieto = false; };
+            ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(ev => addEventListener(ev, parar, { once: true, passive: true }));
+            const ir = () => { if (!quieto) return; const el = document.getElementById(decodeURIComponent(hash.slice(1))); if (el) el.scrollIntoView({ behavior: 'instant', block: 'start' }); };
+            const arrancar = () => [60, 500, 1200, 2200, 3500].forEach(t => setTimeout(ir, t));
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', arrancar);
+            else arrancar();
+        }
+        document.addEventListener('click', e => {
+            const a = e.target.closest && e.target.closest('a[href^="#"]');
+            if (!a || a.getAttribute('href') === '#' || e.defaultPrevented) return;
+            const el = document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1)));
+            if (!el) return;
+            e.preventDefault();
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    })();
+
     const script = document.currentScript;
     const PORTAL = script ? script.dataset.portal : null;
     const MODO = script ? (script.dataset.modo || 'publico') : 'publico';
@@ -338,6 +371,80 @@ html.pg-verificando body{visibility:hidden}
         if (script && script.dataset.sinEfecto === undefined) aplicarEfecto(await cargarEfecto());
     }
 
+    /* ---------------- Botón "Compartir página" (vista móvil, solo páginas públicas) ---------------- */
+    // Aparece al lado del botón del menú (☰) cuando este se ve. En páginas sin ☰ va al final del header en móvil.
+    function montarCompartir() {
+        if (MODO !== 'publico' || /^\/admin\//.test(location.pathname)) return;
+        const header = document.querySelector('header');
+        if (!header || header.querySelector('.pg-compartir')) return;
+        if (!document.getElementById('pgCompartirCss')) {
+            const st = document.createElement('style');
+            st.id = 'pgCompartirCss';
+            st.textContent = `
+.pg-compartir{display:none;flex:0 0 auto;align-items:center;gap:5px;height:40px;margin-left:auto;padding:0 8px;
+  border:1px solid var(--line,#333);background:#171717;color:var(--primary,#D8C395);cursor:pointer;
+  font:700 .48rem/1.25 var(--font-display,'Michroma',sans-serif);letter-spacing:0;text-align:left;text-transform:uppercase;white-space:nowrap;
+  -webkit-tap-highlight-color:transparent}
+.pg-compartir.visible{display:inline-flex}
+.pg-compartir i{font-size:.85rem}
+.pg-compartir + .menu-toggle{margin-left:8px;flex:0 0 auto}
+.pg-midiendo > *{flex-shrink:0 !important}
+.site-header.pg-apretado,header.pg-apretado{gap:6px !important}
+.pg-compartir-aviso{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:3000;
+  padding:10px 16px;border:1px solid var(--line,#333);background:#111;color:#f4eedc;font:600 .85rem system-ui,sans-serif;
+  box-shadow:0 10px 24px rgba(0,0,0,.5);pointer-events:none}
+/* si no cabe el texto junto al logo, queda solo el ícono */
+.pg-compartir.compacto span{display:none}.pg-compartir.compacto{width:42px;justify-content:center;padding:0}`;
+            document.head.appendChild(st);
+        }
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pg-compartir';
+        btn.setAttribute('aria-label', 'Compartir página');
+        btn.innerHTML = '<i class="fa-solid fa-share-nodes"></i><span>Compartir<br>página</span>';
+        const toggle = header.querySelector('.menu-toggle');
+        // sin ☰: justo después del logo, para que se vea aunque el menú de la página sea ancho
+        if (toggle) toggle.before(btn); else if (header.firstElementChild) header.firstElementChild.after(btn); else header.appendChild(btn);
+        // visible solo cuando el ☰ se muestra (o en pantallas de móvil si la página no tiene ☰)
+        const actualizar = () => {
+            btn.classList.toggle('visible',
+                toggle ? getComputedStyle(toggle).display !== 'none' : matchMedia('(max-width: 760px)').matches);
+            btn.classList.remove('compacto');
+            header.classList.remove('pg-apretado');
+            if (!btn.classList.contains('visible')) return;
+            // se mide con nada encogido: si el header se desborda, el texto no cabe
+            const desborda = () => {
+                header.classList.add('pg-midiendo');
+                const ult = toggle || btn;
+                const limite = header.getBoundingClientRect().right - parseFloat(getComputedStyle(header).paddingRight || 0);
+                const d = header.scrollWidth > header.clientWidth + 1 || ult.getBoundingClientRect().right > limite + 1;
+                header.classList.remove('pg-midiendo');
+                return d;
+            };
+            if (desborda()) btn.classList.add('compacto');
+            // logos muy anchos (ej. LATAM): aun solo con el ícono, se junta un poco el espacio entre logo y botones
+            if (btn.classList.contains('compacto') && desborda()) header.classList.add('pg-apretado');
+        };
+        actualizar();
+        addEventListener('resize', actualizar);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(actualizar);
+        btn.addEventListener('click', async () => {
+            const url = location.href.split('#')[0];
+            const titulo = document.title;
+            if (navigator.share) {
+                try { await navigator.share({ title: titulo, url }); } catch (e) { }
+                return;
+            }
+            let ok = false;
+            try { await navigator.clipboard.writeText(url); ok = true; } catch (e) { }
+            const aviso = document.createElement('div');
+            aviso.className = 'pg-compartir-aviso';
+            aviso.textContent = ok ? '✔ Enlace copiado' : url;
+            document.body.appendChild(aviso);
+            setTimeout(() => aviso.remove(), 2200);
+        });
+    }
+
     window.PumasPortal = {
         PORTALES, EFECTOS, portal: PORTAL,
         login, logout, validar, guard, puede, tiene, inicioDe, db, sesion: leerSesion,
@@ -346,4 +453,6 @@ html.pg-verificando body{visibility:hidden}
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
     else iniciar();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montarCompartir);
+    else montarCompartir();
 })();

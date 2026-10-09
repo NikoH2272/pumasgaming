@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C79JND219Y');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Panel Admin | Pumas Gaming</title>
@@ -9,7 +18,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styleadmin.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261008p" data-portal="entrenamientos" data-modo="admin"></script>
+    <script src="../portal-kit/portal.js?v=20261009n" data-portal="entrenamientos" data-modo="admin"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
 
@@ -28,7 +37,7 @@
             <li><a href="#" onclick="cambiarPestanaAdmin('registrarVip')" id="navVipReg" style="color: var(--secondary);"><i class="fa-solid fa-user-plus"></i> Registrar VIP</a></li>
             <li><a href="#" onclick="cambiarPestanaAdmin('borrarEntrenos')" id="navBorrar" style="color: var(--secondary);"><i class="fa-solid fa-trash-can"></i> Borrar</a></li>
             <li><a href="#" onclick="cambiarPestanaAdmin('metricas')" id="navMetricas" style="color: var(--secondary);"><i class="fa-solid fa-chart-pie"></i> Métricas</a></li>
-            <li><a href="index.html" style="color: #fff;" target="_blank"><i class="fa-solid fa-list"></i> Público</a></li><li><a href="#" onclick="cambiarPestanaAdmin('programar')" id="navProgramar" style="color: var(--secondary);"><i class="fa-solid fa-calendar-plus"></i> Programar Cupos</a></li>
+            <li><a href="./" style="color: #fff;" target="_blank"><i class="fa-solid fa-list"></i> Público</a></li><li><a href="#" onclick="cambiarPestanaAdmin('programar')" id="navProgramar" style="color: var(--secondary);"><i class="fa-solid fa-calendar-plus"></i> Programar Cupos</a></li>
             <li><a href="#" onclick="cerrarSesion()" style="color: #ff5555;"><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
             
         </ul>

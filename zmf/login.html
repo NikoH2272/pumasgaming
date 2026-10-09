@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-C79JND219Y');
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Iniciar sesión | ZMF by Pumas</title>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261008p">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261009n">
     <link rel="icon" href="imagenes/zmf.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261008p" data-portal="zmf" data-modo="login"></script>
+    <script src="../portal-kit/portal.js?v=20261009n" data-portal="zmf" data-modo="login"></script>
 </head>
 <body data-tema="zmf" class="auth-body">
     <main class="auth-card">
@@ -28,8 +37,8 @@
             <button type="submit" class="btn-generar">Ingresar</button>
             <p id="authMsg" class="auth-msg" role="alert"></p>
         </form>
-        <a href="index.html" class="auth-back">← Volver al portal</a>
+        <a href="./" class="auth-back">← Volver al portal</a>
     </main>
-    <script src="../portal-kit/login.js?v=20261008p"></script>
+    <script src="../portal-kit/login.js?v=20261009n"></script>
 </body>
 </html>
