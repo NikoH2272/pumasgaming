@@ -13,12 +13,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Registro VIP | Entrenamientos Pumas Gaming</title>
+    <!-- Página privada: no se enlaza en el sitio y no aparece en buscadores. Se entra con un código del admin. -->
+    <meta name="robots" content="noindex, nofollow">
     <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=20261010c">
+    <link rel="stylesheet" href="style.css?v=20261010d">
     <link rel="icon" href="imagenes/LOGO PUMAS WEB.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261010c" data-portal="entrenamientos" data-modo="publico" data-sin-sorteo></script>
+    <script src="../portal-kit/portal.js?v=20261010d" data-portal="entrenamientos" data-modo="publico" data-sin-sorteo></script>
     <style>
         .vip-caja { max-width: 620px; margin: 0 auto 60px; padding: clamp(20px, 4vw, 34px); background: var(--dark-card); border: 1px solid rgba(216,195,149,.25); border-top: 3px solid var(--primary); border-radius: 10px; }
         .vip-caja label { display: block; margin: 0 0 6px; color: var(--primary); font-family: 'Michroma'; font-size: .72rem; letter-spacing: .06em; }
@@ -59,7 +61,20 @@
 </section>
 
 <main style="padding: 0 16px;">
-    <div class="vip-caja" id="vipCaja">
+    <div class="vip-caja" id="vipCodigoCaja">
+        <form id="vipCodigoForm" autocomplete="off">
+            <p style="text-align:center;margin:0 0 16px"><i class="fa-solid fa-lock" style="font-size:2rem;color:var(--primary)"></i></p>
+            <label for="vipCodigo">CÓDIGO DE ACCESO</label>
+            <input id="vipCodigo" required maxlength="20" placeholder="VIP-XXXXXX" autocapitalize="characters" spellcheck="false" style="text-align:center;letter-spacing:.12em;font-family:'Michroma'">
+            <button type="submit" class="btn-access" style="width:100%; padding:14px; border:none; font-size:1rem; cursor:pointer;">
+                <i class="fa-solid fa-key"></i> CONTINUAR
+            </button>
+            <p class="vip-msg" id="vipCodigoMsg" role="alert"></p>
+            <p style="color:var(--gray);text-align:center;font-size:.85rem;margin:6px 0 0">El código te lo da el staff de Pumas Gaming.</p>
+        </form>
+    </div>
+
+    <div class="vip-caja" id="vipCaja" hidden>
         <form id="vipForm" autocomplete="on">
             <div class="vip-fila">
                 <div><label for="vipNombre">NOMBRE DEL EQUIPO</label><input id="vipNombre" required maxlength="60" placeholder="Ej: DCN ACD" autocapitalize="characters"></div>
@@ -97,11 +112,36 @@
 (function () {
     const P = PumasPortal, esc = P.escaparHtml;
     const form = document.getElementById('vipForm'), msg = document.getElementById('vipMsg');
+    let codigo = '';
+
+    // 1) El código de acceso (también puede venir en el link: vip.html?c=VIP-XXXXXX)
+    const fCod = document.getElementById('vipCodigoForm'), inCod = document.getElementById('vipCodigo'), msgCod = document.getElementById('vipCodigoMsg');
+    async function probarCodigo(valor) {
+        const c = String(valor || '').trim().toUpperCase();
+        if (!c) return;
+        const btn = fCod.querySelector('button');
+        btn.disabled = true; msgCod.className = 'vip-msg'; msgCod.textContent = 'Revisando código...';
+        try {
+            const r = await P.vip.validar(c);
+            if (!r || !r.ok) throw new Error('El código no es válido, ya se usó o venció. Pide uno nuevo al staff de Pumas.');
+            codigo = c;
+            document.getElementById('vipCodigoCaja').hidden = true;
+            document.getElementById('vipCaja').hidden = false;
+            document.getElementById('vipNombre').focus();
+        } catch (err) { msgCod.className = 'vip-msg error'; msgCod.textContent = err.message; }
+        finally { btn.disabled = false; }
+    }
+    fCod.addEventListener('submit', e => { e.preventDefault(); probarCodigo(inCod.value); });
+    const enLink = new URLSearchParams(location.search).get('c');
+    if (enLink) { inCod.value = enLink.toUpperCase(); history.replaceState(null, '', location.pathname); probarCodigo(enLink); }
+
+    // 2) El registro
     form.addEventListener('submit', async e => {
         e.preventDefault();
         const horarios = [...form.querySelectorAll('input[name="horario"]:checked')].map(i => i.value);
         const tel = document.getElementById('vipTel').value.replace(/[^\d]/g, '');
         const d = {
+            codigo,
             nombre: document.getElementById('vipNombre').value.trim().toUpperCase(),
             tag: document.getElementById('vipTag').value.trim().toUpperCase(),
             telefono: document.getElementById('vipPais').value + ' ' + tel,

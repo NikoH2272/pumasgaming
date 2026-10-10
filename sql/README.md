@@ -25,6 +25,7 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 19 | `19_moderadores_aza_y_vip.sql` | Moderadores de Ascensos AZA (los crea el Administrador Ascensos; IA apagada por defecto y eventos habilitados por moderador) y registro VIP de Entrenos Pumas (`/entrenamientos/vip.html`) | ☐ |
 | 20 | `20_aza_moderadores_y_baneados_cupos.sql` | El usuario de AZA también crea, modifica y elimina moderadores; los equipos baneados no pueden inscribirse a cupos (ni como staff) | ☐ |
 | 21 | `21_corregir_hora_entreno.sql` | Corregir entrenos: también la fecha/hora y la jornada (ej. BLOQUE A de Dragon Fest) | ☐ |
+| 22 | `22_vip_codigos.sql` | Registro VIP solo con código de acceso que genera el admin de Pumas (la página ya no está en los menús) | ☐ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 

@@ -255,7 +255,7 @@
         const m = String((error && (error.message || error.code)) || error || '');
         return /PGRST202|PGRST205|42883|42P01|Could not find the (function|table)|does not exist|schema cache/i.test(m);
     }
-    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/19).';
+    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/22).';
     async function rpcPublico(nombre, params) {
         const c = db();
         if (!c) throw new Error('No se pudo conectar con la base de datos.');
@@ -450,7 +450,13 @@
     };
     /* ---------------- Registro VIP de Pumas (sql/19) ---------------- */
     const vip = {
-        registrar: d => rpcPublico('vip_registrar', { p_nombre: d.nombre, p_tag: d.tag, p_telefono: d.telefono, p_horarios: d.horarios }),
+        validar: codigo => rpcPublico('vip_validar_codigo', { p_codigo: codigo }),
+        registrar: d => rpcPublico('vip_registrar', { p_codigo: d.codigo, p_nombre: d.nombre, p_tag: d.tag, p_telefono: d.telefono, p_horarios: d.horarios }),
+        codigos: {
+            crear: (usos, dias, nota) => rpcAdmin('admin_vip_codigo_crear', { p_usos: usos, p_dias: dias, p_nota: nota || null }),
+            listar: () => rpcAdmin('admin_vip_codigos'),
+            desactivar: codigo => rpcAdmin('admin_vip_codigo_desactivar', { p_codigo: codigo })
+        },
         listar: () => rpcAdmin('admin_vip_registros'),
         estado: (id, estado) => rpcAdmin('admin_vip_estado', { p_id: id, p_estado: estado }),
         borrar: id => rpcAdmin('admin_vip_borrar', { p_id: id })
