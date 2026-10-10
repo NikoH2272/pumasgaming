@@ -251,6 +251,10 @@ function renderizarResultados() {
     let nombreModerador = inputModerador && inputModerador.value.trim() !== "" ? inputModerador.value.trim().toUpperCase() : "ERERRE";
 
     let horasZona = formatearFechaHoraZonas(inputFechaHora);
+    // Bloque doble a la misma hora: BLOQUE A / BLOQUE B
+    const selBloque = document.getElementById('selectBloque');
+    const bloque = selBloque ? selBloque.value : '';
+    const htmlBloque = bloque ? `<span style="position: relative; display: inline-block; background: #FFD54A; color: #111; padding: 1px 8px; border-radius: 3px; font-weight: 900; margin-right: 6px; font-size: calc(0.79rem * 1.10);">BLOQUE ${bloque}</span>` : '';
 
     let colorFondoBase = "rgba(20, 20, 30, 0.75)";
     let colorTituloTema = "#ffffff";
@@ -410,7 +414,7 @@ function renderizarResultados() {
             <div class="table-general-box" style="background: #121520;">
                 <div class="table-general-overlay">
                     <div style="text-align: center; margin-bottom: 8px;">
-                        <p style="color: var(--gray); font-size: calc(0.8rem * 1.10);"><strong>${horasZona.fecha}</strong> — ${horasZona.mex} | ${horasZona.col} | ${horasZona.arg}</p>
+                        <p style="color: var(--gray); font-size: calc(0.8rem * 1.10);">${htmlBloque}<strong>${horasZona.fecha}</strong> — ${horasZona.mex} | ${horasZona.col} | ${horasZona.arg}</p>
                     </div>
                     <table><thead>${thead}</thead><tbody>${tbody}</tbody></table>
                 </div>
@@ -469,6 +473,7 @@ function renderizarResultados() {
                             <h3 style="font-size: calc(1.155rem * 1.10); font-family: 'Orbitron'; margin-bottom: 1px; color: ${colorTituloTema};">${tituloModo} - MODERADOR: <strong style="font-size:calc(1.155rem * 1.10); font-weight:900; color:${colorTituloTema};">${nombreModerador}</strong></h3>
                             <!-- position: relative evita que la descarga pinte el fondo encima del texto -->
                             <div style="position: relative; font-size: calc(0.89rem * 1.10) !important; font-weight: 700; line-height: 1.35; background: rgba(0, 0, 0, 0.6); display: inline-block; padding: 3px 10px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.25); margin-top: 2px; margin-bottom: 3px; color: #ffffff;">
+                                ${htmlBloque}
                                 <span style="position: relative; display: inline-block; background: #111; color: #fff; padding: 1px 6px; border-radius: 3px; font-weight: bold; margin-right: 4px; font-size: calc(0.79rem * 1.10);">★ HORARIOS</span>
                                 <strong>${horasZona.fecha}</strong> — ${horasZona.mex} | ${horasZona.col} | ${horasZona.arg}
                             </div>
@@ -565,7 +570,8 @@ function descargarTablaReducida() {
     html2canvas(elemento, opciones)
         .then(canvas => {
             const enlace = document.createElement('a');
-            enlace.download = 'resultados-pumas-gaming.png';
+            const bq = document.getElementById('selectBloque');
+            enlace.download = 'resultados-pumas-gaming' + (bq && bq.value ? '-bloque-' + bq.value.toLowerCase() : '') + '.png';
             enlace.href = canvas.toDataURL('image/png', 1.0);
             document.body.appendChild(enlace);
             enlace.click();

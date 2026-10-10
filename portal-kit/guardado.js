@@ -63,7 +63,7 @@
 
     const fmtFecha = d => d.toLocaleString('es', { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 
-    // op: { contenedor, portal(), nombrePortal(), tituloPorDefecto(), datos() → { salas:[Map], nombreVisible, fecha:Date, moderador } | null }
+    // op: { contenedor, portal(), nombrePortal(), tituloPorDefecto(), jornadaPorDefecto()?, datos() → { salas:[Map], nombreVisible, fecha:Date, moderador } | null }
     function montar(op) {
         const cont = typeof op.contenedor === 'string' ? document.getElementById(op.contenedor) : op.contenedor;
         if (!cont) return;
@@ -96,7 +96,7 @@
                     <div class="form-group"><label for="gTitulo">Título del entreno</label>
                         <input id="gTitulo" data-campo="titulo" type="text" maxlength="120" value="${esc(op.tituloPorDefecto())}"></div>
                     <div class="form-group"><label for="gJornada">Jornada / tipo</label>
-                        <input id="gJornada" data-campo="jornada" type="text" maxlength="60" value="NORMAL"></div>`,
+                        <input id="gJornada" data-campo="jornada" type="text" maxlength="60" value="${esc(op.jornadaPorDefecto ? op.jornadaPorDefecto() : 'NORMAL')}"></div>`,
                 si: 'Sí, cargar', no: 'No, cancelar'
             });
             if (!r.ok) { avisar('Carga cancelada. No se guardó nada.'); return; }

@@ -17,11 +17,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261009z">
-    <link rel="stylesheet" href="style.css?v=20261009z">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261010c">
+    <link rel="stylesheet" href="style.css?v=20261010c">
     <link rel="icon" href="imagenes/LOGO PUMAS WEB.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261009z" data-portal="ascensosaza" data-modo="publico"></script>
+    <script src="../portal-kit/portal.js?v=20261010c" data-portal="ascensosaza" data-modo="publico"></script>
 </head>
 <body data-tema="aza">
 
@@ -36,6 +36,7 @@
         <nav class="main-nav" id="mainNav">
             <ul>
                 <li><a href="#jornadas" onclick="closeMenu()">Jornadas</a></li>
+                <li><a href="#calendario" onclick="closeMenu()">Calendario</a></li>
                 <li><a href="#equipos" onclick="closeMenu()">Equipos</a></li>
                 <li><a href="#baneados" onclick="closeMenu()">Baneados</a></li>
                 <li><a href="cupos.html"><i class="fa-solid fa-ticket"></i> Cupos</a></li>
@@ -71,22 +72,30 @@
     </section>
 
     <section id="jornadas">
-        <h2 class="section-title">Últimas jornadas</h2>
-        <div class="asc-filtro" id="ascFiltro" role="group" aria-label="Filtrar por categoría"></div>
-        <div class="jornadas-grid" id="ascJornadas"><p class="res-vacio"><i class="fa-solid fa-spinner fa-spin"></i>Cargando jornadas...</p></div>
-        <p style="text-align:center;margin-top:20px"><button class="btn-access btn-outline" id="ascVerMas" hidden>Ver todas</button></p>
+        <h2 class="section-title">Jornadas</h2>
+        <div class="asc-filtro" id="ascFiltro" role="group" aria-label="Filtrar por evento"></div>
+        <div class="asc-jornadas-layout">
+            <aside class="card-box asc-cal" id="calendario" aria-label="Calendario de ascensos">
+                <h3 class="subtitulo-bloque"><i class="fa-solid fa-calendar-days"></i> Calendario</h3>
+                <div id="ascCalendario"><p class="res-vacio">Cargando...</p></div>
+            </aside>
+            <div class="asc-jornadas-col">
+                <div class="asc-dia" id="ascDia" hidden></div>
+                <div class="jornadas-grid" id="ascJornadas"><p class="res-vacio"><i class="fa-solid fa-spinner fa-spin"></i>Cargando jornadas...</p></div>
+                <p class="asc-mas"><button class="btn-access btn-outline" id="ascVerMas" hidden>Ver más</button></p>
+            </div>
+        </div>
     </section>
 
     <section id="equipos">
-        <h2 class="section-title">Equipos y categorías</h2>
-        <div class="card-box">
-            <p class="leyenda-tabla">Cada equipo con las categorías en que jugó (y cuántas veces), sus ascensos (👑) y el total de puntos. Usa el filtro de arriba para ver una sola categoría.</p>
-            <div class="pg-tabla-wrap">
-                <table class="pg-tabla lt-tabla asc-equipos">
-                    <thead><tr><th>#</th><th>Equipo</th><th>Tag</th><th>Jornadas</th><th>Ascensos</th><th>Total</th><th>Categorías</th></tr></thead>
-                    <tbody id="ascEquiposBody"><tr class="vacio"><td colspan="7"><i class="fa-solid fa-spinner fa-spin"></i>Calculando...</td></tr></tbody>
-                </table>
+        <h2 class="section-title">Equipos y eventos</h2>
+        <div class="card-box asc-eq-card">
+            <div class="asc-eq-top">
+                <p class="leyenda-tabla">Cada equipo con los eventos en que jugó (el número es cuántas veces), sus ascensos 👑 y el total de puntos. El filtro de eventos de arriba también aplica aquí.</p>
+                <input type="search" id="ascBuscar" placeholder="Buscar equipo o tag" aria-label="Buscar equipo o tag" autocomplete="off">
             </div>
+            <div class="asc-equipos" id="ascEquipos"><p class="res-vacio"><i class="fa-solid fa-spinner fa-spin"></i>Calculando...</p></div>
+            <p class="asc-mas"><button class="btn-access btn-outline" id="ascVerEquipos" hidden>Ver más</button></p>
         </div>
     </section>
 
@@ -116,9 +125,9 @@
         function toggleMenu() { document.getElementById('mainNav').classList.toggle('is-active'); }
         function closeMenu() { document.getElementById('mainNav').classList.remove('is-active'); }
     </script>
-    <script src="categorias.js?v=20261009z"></script>
-    <script src="../portal-kit/baneados.js?v=20261009z"></script>
-    <script src="logos.js?v=20261009z"></script>
-    <script src="publico.js?v=20261009z"></script>
+    <script src="categorias.js?v=20261010c"></script>
+    <script src="../portal-kit/baneados.js?v=20261010c"></script>
+    <script src="logos.js?v=20261010c"></script>
+    <script src="publico.js?v=20261010c"></script>
 </body>
 </html>

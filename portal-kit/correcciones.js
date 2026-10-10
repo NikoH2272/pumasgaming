@@ -54,6 +54,7 @@
         raiz.querySelector('#cCorregir').addEventListener('click', corregir);
         raiz.querySelector('#cEntrenos').addEventListener('click', e => {
             const b = e.target.closest('[data-borrar]'); if (b) borrar(b.dataset.borrar);
+            const ed = e.target.closest('[data-editar]'); if (ed) editar(ed.dataset.editar);
         });
         await cargar();
     }
@@ -73,7 +74,8 @@
                 <td>${fmt(s.fecha)}</td>
                 <td>${esc(s.titulo)}<small class="muted" style="display:block">${esc(s.jornada || '')}${s.moderador ? ' · Mod: ' + esc(s.moderador) : ''}</small></td>
                 <td>${s.equipos}</td><td>${s.salas}</td>
-                <td><button class="btn-mini btn-borrar" data-borrar="${esc(s.id)}" title="Borrar este entreno"><i class="fa-solid fa-trash"></i></button></td>
+                <td style="white-space:nowrap"><button class="btn-mini" data-editar="${esc(s.id)}" title="Corregir fecha, hora o jornada"><i class="fa-solid fa-clock"></i></button>
+                    <button class="btn-mini btn-borrar" data-borrar="${esc(s.id)}" title="Borrar este entreno"><i class="fa-solid fa-trash"></i></button></td>
             </tr>`).join('')
             : `<tr class="vacio"><td colspan="5">${esc(nombreDe(portal))} no tiene entrenos guardados.</td></tr>`;
         document.getElementById('cEquipos').innerHTML = equipos.map(e => `<option value="${esc(e.equipo)}">${e.entrenos} entreno${e.entrenos === 1 ? '' : 's'}</option>`).join('');
@@ -97,6 +99,30 @@
             avisar(`Entreno "${s.titulo}" borrado.`, true);
             cargar();
         } catch (err) { avisar('No se pudo borrar: ' + err.message); }
+    }
+
+    // Corregir la fecha/hora (y la jornada, ej. BLOQUE A) de un entreno guardado
+    const aLocal = iso => { const d = new Date(iso); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
+    async function editar(id) {
+        const s = entrenos.find(x => String(x.id) === String(id));
+        if (!s) return;
+        const r = await P.confirmar({
+            titulo: 'Corregir fecha y hora',
+            html: `<p><b>${esc(s.titulo)}</b> · ${esc(nombreDe(portal))}<br><span class="muted">Ahora: ${fmt(s.fecha)}</span></p>
+                <div class="form-group"><label>Fecha y hora correctas (tu hora local)</label><input type="datetime-local" data-campo="fecha" value="${aLocal(s.fecha)}"></div>
+                <div class="form-group"><label>Jornada / tipo</label><input type="text" data-campo="jornada" maxlength="60" value="${esc(s.jornada || '')}" placeholder="NORMAL, BLOQUE A..."></div>`,
+            si: 'Guardar cambios', no: 'Cancelar'
+        });
+        if (!r.ok) return;
+        const fecha = new Date(r.campos.fecha);
+        if (!r.campos.fecha || isNaN(fecha)) { avisar('Elige una fecha y hora válidas.'); return; }
+        try {
+            await P.entrenos.editar(portal, id, fecha, r.campos.jornada.trim());
+            avisar(`Listo: "${s.titulo}" quedó el ${fmt(fecha.toISOString())}.`, true);
+            cargar();
+        } catch (err) {
+            avisar('No se pudo corregir: ' + (/admin_editar_entreno|PGRST202|Could not find/i.test(err.message) ? 'falta correr sql/21_corregir_hora_entreno.sql en Supabase.' : err.message));
+        }
     }
 
     async function corregir() {

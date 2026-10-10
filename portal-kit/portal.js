@@ -238,6 +238,10 @@
         listar: portal => rpcAdmin('admin_entrenos', { p_portal: portal }),
         equipos: portal => rpcAdmin('admin_equipos_portal', { p_portal: portal }),
         borrar: (portal, id) => rpcAdmin('admin_borrar_entreno', { p_portal: portal, p_sesion: String(id) }),
+        // corregir fecha/hora y (opcional) jornada de un entreno guardado (sql/21)
+        editar: (portal, id, fecha, jornada) => rpcAdmin('admin_editar_entreno', {
+            p_portal: portal, p_sesion: String(id), p_fecha: fecha.toISOString(), p_jornada: jornada ?? null
+        }),
         renombrar: (portal, viejo, nuevo, sesion) => rpcAdmin('admin_renombrar_equipo', {
             p_portal: portal, p_viejo: viejo, p_nuevo: nuevo, p_sesion: sesion ? String(sesion) : null
         })

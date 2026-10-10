@@ -135,6 +135,7 @@
                 ${opt('selectTemaVisual', h.tema || '')}
                 ${opt('selectCategoria', h.cat || '')}
                 ${opt('selectTipoPartida', d.jornada)}
+                ${opt('selectBloque', ((/^BLOQUE\s+([AB])$/i.exec(d.jornada || '') || [])[1] || '').toUpperCase())}
                 <input id="inputFechaHora" type="datetime-local" value="${fechaLocal(s.fecha)}">
                 <input id="inputFechaHoraEntreno" type="datetime-local" value="${fechaLocal(s.fecha)}">
                 <input id="inputModerador" value="${esc(d.moderador)}">
