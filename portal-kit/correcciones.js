@@ -21,6 +21,8 @@
         if (!s) return;
         document.querySelectorAll('[data-pg-usuario]').forEach(n => { n.textContent = s.nombre || s.usuario; });
         document.querySelectorAll('[data-pg-salir]').forEach(n => n.addEventListener('click', e => { e.preventDefault(); P.logout(loginUrl); }));
+        // + módulos creados desde el panel
+        try { (await P.cargarModulos()).filter(r => r.tipo === 'modulo').forEach(r => PORTALES.push([r.id, r.nombre])); } catch (e) { }
         raiz.innerHTML = `
             <div class="corr-portales" role="group" aria-label="Portal">${PORTALES.map(([id, n]) =>
                 `<button class="chip${id === portal ? ' on' : ''}" data-portal="${id}">${esc(n)}</button>`).join('')}</div>

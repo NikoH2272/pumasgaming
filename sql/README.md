@@ -20,6 +20,8 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 14 | `14_top_killers.sql` | Top killers con mínimo 3 salas + top por kills totales | ☐ |
 | 15 | `15_top_booyah.sql` | Destacado Top Booyah (5 equipos con más booyahs) | ☐ |
 | 16 | `16_ranking_pr_pg_kills.sql` | Top 50 e Histórico ordenables por PR, PG o KILLS | ☐ |
+| 17 | `17_ascensos_modulos_sorteos.sql` | Ascensos AZA y Pruebas (base aparte), baneados, módulos creados desde el panel, torneos aliados, sorteos por portal y cupos para cualquier portal. Crea el usuario `pruebas` | ☐ |
+| 18 | `18_roles_ascensos_ia.sql` | Rol **Administrador Ascensos** (todos los ascensos) con sub roles por ascenso (AZA, QFD, Pruebas); permiso y límite diario de la lectura con IA (solo Ascensos AZA) y motores activos (Gemini, privado, Claude) que elige el superadmin (ver `docs/IA_ASCENSOS.md`) | ☐ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 
@@ -49,4 +51,14 @@ LATAM (solo vistas, no copian datos; leen portales.latam = true):
 v_latam_sesiones  → entrenos LATAM (calendario)
 v_latam_equipos   → 1 fila por equipo por entreno (PG, kills, booyahs, salas)
 v_latam_killers   → 1 fila por jugador por entreno (kills, salas → KDA)
+
+ASCENSOS (base aparte, sql/17; no entra a LATAM):
+asc_jornadas   → 1 fila por jornada (equipos y clasificados en jsonb, categoría)
+asc_baneados   → equipos baneados por portal (lista pública)
+
+SITIO Y SORTEOS (sql/17):
+portales.logo/titulo/color_tema/color2/tipo → personalización y módulos (tipo 'modulo' → /modulo/?p=<id>)
+sitio_config, torneos_aliados               → sección "Torneos aliados" del inicio
+sorteos ──< sorteo_registros                → un sorteo por portal (contacto privado)
+portal_programados ──< portal_cupos         → cupos de cualquier portal (vía funciones)
 ```

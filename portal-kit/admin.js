@@ -12,6 +12,23 @@
     let efecto = null;
     let pendiente = false;
 
+    // Emojis para el efecto "Iconos cayendo": un toque agrega el emoji, los combos reemplazan todo
+    const EMOJIS = {
+        'Free Fire y gaming': '🔥 🎮 🕹️ 🎯 💥 🔫 🪂 🏹 🗡️ ⚔️ 🛡️ 💣 🧨 🚁 🏍️ 🚙 💀 ☠️ 👾 🤖',
+        'Premios y victoria': '🏆 🥇 🥈 🥉 🏅 🎖️ 👑 💎 💰 💸 🪙 ⭐ 🌟 ✨ 💫 ⚡ 🚀 📈 ✅ 💯',
+        'Fiesta': '🎉 🎊 🥳 🎈 🎁 🎂 🍾 🥂 🪅 🎆 🎇 🪩 🎶 🎵 📣',
+        'Amor y amistad': '❤️ 🧡 💛 💚 💙 💜 🖤 🤍 💖 💘 💝 💕 🌹 🤝 🫶',
+        'Animales': '🐆 🐯 🦁 🐺 🦅 🐉 🐲 🦈 🐍 🦂 🐝 🦋 🐾 🦊 🐻',
+        'Naturaleza y clima': '❄️ ☃️ 🌨️ 💧 🌧️ ⛈️ 🌈 ☀️ 🌙 🍂 🍁 🌸 🌺 🌻 🍀',
+        'Fechas especiales': '🎃 👻 🦇 🕸️ 🕷️ 🎄 🎅 🤶 🦌 🔔 🕯️ 🐣 🐰 🥚 🇲🇽 🇨🇴 🇦🇷 🇵🇪 🇨🇱 🇪🇨',
+        'Deportes': '⚽ 🏀 🏈 ⚾ 🎾 🏐 🥊 🏁 🚩 🎳'
+    };
+    const COMBOS = [
+        ['🔥 Fuego', '🔥 💥 ⚡'], ['🏆 Campeones', '🏆 👑 🥇 ⭐'], ['🎉 Fiesta', '🎉 🎊 🥳 🎈'], ['💸 Premios', '💰 💸 💎 🪙'],
+        ['❤️ Amor', '❤️ 💖 💕 🌹'], ['🎄 Navidad', '🎄 🎅 🎁 ❄️ 🔔'], ['🎃 Halloween', '🎃 👻 🦇 🕸️'], ['🐆 Pumas', '🐆 🐾 👑 🔥'],
+        ['🎮 Gaming', '🎮 🕹️ 🎯 👾'], ['🌸 Primavera', '🌸 🌺 🌻 🦋'], ['🍂 Otoño', '🍂 🍁 🍄'], ['🇲🇽 México', '🇲🇽 🌮 🎉'], ['🇨🇴 Colombia', '🇨🇴 ☕ ⚽']
+    ];
+
     async function arrancar() {
         const sesion = await P.guard('principal', loginUrl, 'personalizar');
         if (!sesion) return;
@@ -38,6 +55,12 @@
                 <label for="efIcono">Icono(s) que caen</label>
                 <input id="efIcono" type="text" value="${esc(efecto.efecto_icono || '🔥')}" placeholder="🔥 ⭐ 🏆  o  fa-crown fa-skull">
                 <p class="muted">Emojis o iconos de Font Awesome separados por espacio. Se elige uno al azar por partícula.</p>
+                <label style="margin-top:14px">Combos rápidos</label>
+                <div class="emoji-presets">${COMBOS.map(([n, e]) => `<button type="button" data-combo="${esc(e)}">${esc(n)}</button>`).join('')}
+                    <button type="button" data-combo="">✕ Vaciar</button></div>
+                <label>Toca para agregar</label>
+                <div class="emoji-grupos">${Object.entries(EMOJIS).map(([g, l]) => `<div class="emoji-grupo"><b>${esc(g)}</b>
+                    <div class="emoji-fila">${l.split(' ').map(x => `<button type="button" data-emoji="${esc(x)}" title="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`).join('')}</div>
             </div>
             <div class="form-group">
                 <label for="efCantidad">Cantidad: <b id="efCantidadTxt">${efecto.efecto_cantidad}</b></label>
@@ -55,6 +78,19 @@
         }));
         const icono = raiz.querySelector('#efIcono');
         icono.addEventListener('input', () => { efecto.efecto_icono = icono.value.trim() || '🔥'; vistaPrevia(); });
+        // Paleta: agrega emojis (máx. 60 caracteres, lo que guarda la base) o pone un combo completo
+        const ponerIconos = texto => {
+            let t = texto.trim();
+            while (t.length > 60) t = t.split(' ').slice(0, -1).join(' ');
+            icono.value = t;
+            efecto.efecto_icono = t || '🔥';
+            vistaPrevia();
+        };
+        raiz.querySelectorAll('[data-emoji]').forEach(b => b.addEventListener('click', () => {
+            const actuales = icono.value.split(/\s+/).filter(Boolean);
+            if (!actuales.includes(b.dataset.emoji)) ponerIconos(actuales.concat(b.dataset.emoji).join(' '));
+        }));
+        raiz.querySelectorAll('[data-combo]').forEach(b => b.addEventListener('click', () => ponerIconos(b.dataset.combo)));
         const cant = raiz.querySelector('#efCantidad');
         cant.addEventListener('input', () => {
             efecto.efecto_cantidad = Number(cant.value);

@@ -63,11 +63,20 @@
                 <td><button class="btn-mini" data-accion="guardar-usuario"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></td>
             </tr>`).join('');
 
-        const tarjetasRoles = datos.roles.map(r => `
-            <article class="card-box rol-card" data-rol="${esc(r.id)}">
+        // Roles padre primero y cada sub rol justo debajo de su padre
+        const nombreRol = id => (datos.roles.find(x => x.id === id) || { nombre: id }).nombre;
+        const ordenados = datos.roles.filter(r => !r.padre || !datos.roles.some(x => x.id === r.padre))
+            .flatMap(r => [r, ...datos.roles.filter(h => h.padre === r.id)]);
+        const opcionesPadre = r => `<option value="">— Rol principal —</option>` + datos.roles.filter(x => x.id !== r.id && x.padre !== r.id)
+            .map(x => `<option value="${esc(x.id)}" ${x.id === r.padre ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('');
+        const tarjetasRoles = ordenados.map(r => `
+            <article class="card-box rol-card${r.padre ? ' sub-rol' : ''}" data-rol="${esc(r.id)}" data-padre="${esc(r.padre || '')}">
                 <div class="rol-head"><code>${esc(r.id)}</code><small class="muted">${r.usuarios} usuario(s)</small></div>
+                ${r.padre ? `<p class="muted" style="margin:-4px 0 8px"><i class="fa-solid fa-turn-up fa-rotate-90"></i> Sub rol de <b>${esc(nombreRol(r.padre))}</b></p>` : ''}
+                ${datos.roles.some(h => h.padre === r.id) ? `<p class="muted" style="margin:-4px 0 8px"><i class="fa-solid fa-sitemap"></i> Sub roles: ${datos.roles.filter(h => h.padre === r.id).map(h => esc(h.nombre)).join(', ')}</p>` : ''}
                 <div class="form-group"><label>Nombre</label><input type="text" data-campo="nombre" value="${esc(r.nombre)}"></div>
                 <div class="form-group"><label>Portales que puede ver</label><div class="chks" data-campo="portales">${checksPortales(r)}</div></div>
+                ${'padre' in r ? `<div class="form-group"><label>Sub rol de</label><select data-campo="padre">${opcionesPadre(r)}</select></div>` : ''}
                 <div class="chks">
                     <label class="chk"><input type="checkbox" data-campo="personalizar" ${r.personalizar ? 'checked' : ''}> Personalizar efecto</label>
                     <label class="chk"><input type="checkbox" data-campo="gestionar" ${r.gestionar ? 'checked' : ''}> Gestionar usuarios y roles</label>
@@ -153,7 +162,11 @@
             };
             if (r.portales.includes('*')) r.portales = ['*'];
             if (!card.dataset.rol && datos.roles.some(x => x.id === r.id)) { avisar('Ya existe un rol con ese código.'); return; }
-            ejecutar(btn, () => P.usuarios.guardarRol(r), `Rol ${r.id} guardado.`);
+            const padre = campo('padre') ? campo('padre').value : null;
+            ejecutar(btn, async () => {
+                await P.usuarios.guardarRol(r);
+                if (padre !== null && padre !== (card.dataset.padre || '')) await P.usuarios.padreRol(r.id, padre);
+            }, `Rol ${r.id} guardado.`);
         }));
 
         raiz.querySelectorAll('[data-accion="eliminar-rol"]').forEach(btn => btn.addEventListener('click', () => {

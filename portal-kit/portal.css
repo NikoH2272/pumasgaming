@@ -398,6 +398,7 @@ footer b { color: var(--primary); }
 .roles-grid .card-box { max-width: none; }
 .rol-card { display: flex; flex-direction: column; gap: 4px; }
 .rol-card.nuevo-rol { border-style: dashed; }
+.rol-card.sub-rol { border-left: 3px solid var(--accent); background: linear-gradient(145deg, rgba(var(--accent-rgb), .05), transparent 40%), #141414; }
 .rol-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .rol-head code { color: var(--accent); font-size: .95rem; }
 .chks { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 10px; }
@@ -548,6 +549,7 @@ footer b { color: var(--primary); }
   .lt-tabla td[data-l]::before { display: block; content: attr(data-l); color: var(--gray); font: 700 .52rem var(--font-display); letter-spacing: .08em; }
   .lt-tabla td.c-pr::before { color: var(--primary); }
   .lt-tabla .part-det { display: block; }
+  .asc-equipos td.cats { grid-row: 3; grid-column: 1 / -1; padding-top: 6px; text-align: left; }
   .killer-head, .killer-card { grid-template-columns: 28px minmax(0, 1fr) 40px 64px 48px; gap: 4px; padding: 8px 6px; font-size: .8rem; }
   .tabla-cabecera { flex-direction: column; }
   .orden-btn { min-height: 42px; min-width: 56px; }
@@ -596,6 +598,77 @@ footer { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
 }
 
 /* ---------- Responsive ---------- */
+body[data-tema="aza"] {   /* Ascensos AZA: turquesa y fucsia */
+  --primary: #00E0C6; --primary-rgb: 0, 224, 198;
+  --accent: #FF2E6E;  --accent-rgb: 255, 46, 110;
+  --on-primary: #04110F;
+  --light: #EFFFFC; --gray: #9DB7B3;
+  --bg-a: #05090B; --bg-b: #0A1418;
+}
+body[data-tema="pruebas"] {   /* Módulo de pruebas: verde lima y amarillo */
+  --primary: #9BE15D; --primary-rgb: 155, 225, 93;
+  --accent: #F5D90A;  --accent-rgb: 245, 217, 10;
+  --on-primary: #0B1203;
+  --light: #F4FBEA; --gray: #AAB59E;
+  --bg-a: #070906; --bg-b: #10150C;
+}
+
+/* ---------- Cupos (cualquier portal) ---------- */
+.cupos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 18px; max-width: 1180px; margin: 0 auto; }
+.cupo-card { display: flex; flex-direction: column; gap: 12px; max-width: none; border-left: 4px solid var(--primary); }
+.cupo-card h3 { margin: 0 0 4px; color: var(--light); font-size: 1rem; }
+.cupo-card p { margin: 0; }
+.cupo-top { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.cupo-cuenta { text-align: center; }
+.cupo-cuenta b { display: block; color: var(--primary); font: 900 1.8rem/1 var(--font-display); }
+.cupo-cuenta small { color: var(--gray); font-size: .7rem; }
+.cupo-barra { height: 6px; background: rgba(var(--primary-rgb), .15); }
+.cupo-barra span { display: block; height: 100%; background: var(--primary); }
+.cupo-lista { display: flex; flex-wrap: wrap; gap: 6px; }
+.cupo-eq { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .04); font-size: .82rem; }
+.cupo-eq.staff { border-color: var(--primary); background: rgba(var(--primary-rgb), .12); }
+.cupo-eq a { color: #25D366; }
+.cupo-x { padding: 0 2px; border: 0; color: #ff8a8d; background: none; font-size: 1rem; line-height: 1; cursor: pointer; }
+.cupo-admin { margin-bottom: 10px; padding: 12px; border: 1px solid rgba(var(--primary-rgb), .18); background: rgba(14, 14, 14, .7); }
+.cupo-admin .cupo-lista { margin-top: 8px; }
+.cupo-acciones { display: flex; flex-wrap: wrap; gap: 6px; }
+.cupo-estado { padding: 2px 7px; border-radius: 2px; font: 700 .58rem var(--font-display); letter-spacing: .06em; }
+.cupo-estado.e-abierto { color: #04110F; background: #6ee7a8; }
+.cupo-estado.e-cerrado { color: #fff; background: #e5484d; }
+.cupo-estado.e-finalizado { color: #ddd; background: #444; }
+.cupo-estado.e-programado { color: #1a1300; background: #FFD54A; }
+
+/* ---------- Baneados ---------- */
+.ban-form { grid-template-columns: 1.4fr .7fr 1.4fr 1fr .9fr; align-items: end; }
+.ban-tabla { min-width: 560px; }
+.ban-tabla td:nth-child(2) { color: #ff8a8d; }
+.ban-tabla tr.ban-vencido td { opacity: .45; }
+@media (max-width: 900px) { .ban-form { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- Módulos (admin) ---------- */
+.mod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 18px; max-width: 1180px; margin: 0 auto; }
+.mod-card { display: flex; flex-direction: column; gap: 10px; max-width: none; border-top: 3px solid var(--c, var(--primary)); }
+.mod-card.nuevo { border-style: dashed; }
+.mod-head { display: flex; align-items: center; gap: 12px; }
+.mod-head img { width: 48px; height: 48px; object-fit: contain; background: #0c0c0c; border: 1px solid rgba(255, 255, 255, .1); }
+.mod-head h3 { margin: 0; color: var(--c, var(--primary)); font-size: .9rem; }
+.mod-head small { color: var(--gray); }
+.mod-card .form-grid { gap: 10px; margin-bottom: 0; }
+.mod-card .form-group input, .mod-card .form-group select { min-height: 40px; padding: 8px 10px; font-size: .88rem; }
+.mod-card input[type="color"] { padding: 2px; height: 40px; cursor: pointer; }
+.mod-card .acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.mod-tipo { padding: 2px 7px; border: 1px solid rgba(255, 255, 255, .2); font: 700 .55rem var(--font-display); color: var(--gray); }
+
+/* ---------- Paleta de emojis (personalización) ---------- */
+.emoji-grupos { display: grid; gap: 10px; margin-top: 10px; }
+.emoji-grupo b { display: block; margin-bottom: 4px; color: var(--gray); font: 700 .6rem var(--font-display); letter-spacing: .08em; text-transform: uppercase; }
+.emoji-fila { display: flex; flex-wrap: wrap; gap: 4px; }
+.emoji-fila button { width: 40px; height: 40px; border: 1px solid rgba(var(--primary-rgb), .2); border-radius: 3px; background: #101010; font-size: 1.3rem; cursor: pointer; }
+.emoji-fila button:hover { border-color: var(--primary); background: rgba(var(--primary-rgb), .12); }
+.emoji-presets { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.emoji-presets button { padding: 7px 11px; border: 1px solid rgba(var(--primary-rgb), .35); border-radius: 20px; color: var(--light); background: #111; font-size: .85rem; cursor: pointer; }
+.emoji-presets button:hover { color: var(--on-primary); background: var(--primary); }
+
 @media (max-width: 900px) {
   .admin-grid { grid-template-columns: 1fr; }
   .form-grid.tres { grid-template-columns: 1fr 1fr; }

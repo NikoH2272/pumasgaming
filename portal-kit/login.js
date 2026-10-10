@@ -16,8 +16,8 @@
     const destino = destinoSeguro();
     // Páginas que piden un permiso especial del rol
     const ruta = destino.split('?')[0];
-    const permiso = /\/admin\/config\.html$/.test(ruta) ? 'personalizar'
-                  : /\/admin\/usuarios\.html$/.test(ruta) ? 'gestionar' : null;
+    const permiso = /\/admin\/(config|inicio)(\.html)?$/.test(ruta) ? 'personalizar'
+                  : /\/admin\/(usuarios|modulos|entrenos|ia)(\.html)?$/.test(ruta) ? 'gestionar' : null;
     const textoPermiso = { personalizar: 'personalizar el sitio', gestionar: 'gestionar usuarios y roles' }[permiso];
 
     if (params.get('denegado')) {
@@ -56,6 +56,7 @@
             msg.textContent = 'Bienvenido, ' + (s.nombre || s.usuario) + '.';
             // Sin página pedida (?next=) el panel general manda a cada uno a su inicio según su rol
             const pidioPagina = params.get('next') || form.dataset.destino !== '/admin/';
+            if (!pidioPagina) await PumasPortal.cargarModulos();   // los módulos del panel también tienen su herramienta
             window.location.href = pidioPagina ? destino : PumasPortal.inicioDe(s);
         } catch (err) {
             msg.textContent = 'No se pudo iniciar sesión: ' + err.message;

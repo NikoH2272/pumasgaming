@@ -27,6 +27,27 @@
         { id: 'zmffem',         nombre: 'ZMF Fem',         color: '#B620E0', logo: '/zmf/imagenes/zmffem.png',               url: '/zmf/femenino.html' }
     ];
     const POR_ID = Object.fromEntries(PORTALES.map(p => [p.id, p]));
+
+    // Módulos creados en el panel (sql/17) + color/logo que el superadmin cambió en los portales fijos
+    let modulosListos = null;
+    function sumarModulos() {
+        return modulosListos || (modulosListos = (async () => {
+            let filas = [];
+            try { filas = await P.cargarModulos(); } catch (e) { return; }
+            filas.forEach(r => {
+                const p = POR_ID[r.id];
+                if (p) {
+                    if (r.color_tema) p.color = r.color_tema;
+                    if (r.logo) p.logo = r.logo;
+                    return;
+                }
+                if (r.tipo !== 'modulo' || r.activo === false || !r.latam) return;
+                const m = { id: r.id, nombre: r.nombre, color: r.color_tema || r.color || '#9AA0A6', logo: r.logo || LOGO_PUMAS, url: '/modulo/?p=' + r.id, modulo: true };
+                PORTALES.push(m);
+                POR_ID[r.id] = m;
+            });
+        })());
+    }
     const LOGO_PUMAS = '/imagenes/LOGO PUMAS WEB.png';
     // Grupos de WhatsApp de cada entreno. Si la base (portales.link) tiene otro link, manda el de la base.
     const LINKS_POR_DEFECTO = {
@@ -179,7 +200,8 @@
 
     /* ---------------- Tarjetas de cada entreno (index principal) ---------------- */
     function tarjetasPortales(links) {
-        const grupos = [['entrenamientos'], ['rusheo'], ['row'], ['ascensosqfd'], ['dragonfest', 'dragonfestfem'], ['zmf', 'zmffem']];
+        const grupos = [['entrenamientos'], ['rusheo'], ['row'], ['ascensosqfd'], ['dragonfest', 'dragonfestfem'], ['zmf', 'zmffem']]
+            .concat(PORTALES.filter(p => p.modulo).map(p => [p.id]));
         return grupos.map(ids => {
             const p = POR_ID[ids[0]];
             const doble = ids.length > 1;   // Dragon Fest y ZMF: mixto + femenino
@@ -328,6 +350,7 @@
     }
 
     async function iniciarIndex() {
+        await sumarModulos();
         const cont = document.getElementById('latamPortales');
         if (cont) cont.innerHTML = tarjetasPortales(LINKS_POR_DEFECTO);
         cargarLinks().then(links => { if (cont) cont.innerHTML = tarjetasPortales(links); });
@@ -517,6 +540,7 @@
     const cacheResumen = {};
 
     async function iniciarPortal() {
+        await sumarModulos();
         const ley = document.getElementById('latamLeyenda');
         if (ley) ley.innerHTML = leyendaHTML();
         const chips = document.getElementById('latamFiltro');
@@ -643,6 +667,7 @@
     });
 
     async function iniciarResultadosPortal(portal) {
+        await sumarModulos();
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Number(v || 0).toLocaleString('es'); };
         let r;
         try { r = await resumen(portal, true); }

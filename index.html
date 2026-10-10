@@ -18,12 +18,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=20261009n">
-    <link rel="stylesheet" href="portal-kit/latam.css?v=20261007l">
+    <link rel="stylesheet" href="style.css?v=20261009x">
+    <link rel="stylesheet" href="portal-kit/latam.css?v=20261009x">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="portal-kit/portal.js?v=20261007l" data-portal="principal" data-modo="publico"></script>
-    <script src="portal-kit/descargas.js?v=20261009n"></script>
+    <script src="portal-kit/portal.js?v=20261009x" data-portal="principal" data-modo="publico"></script>
+    <script src="portal-kit/descargas.js?v=20261009x"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
 </head>
 <body>
@@ -46,6 +46,7 @@
             <li><a href="#jersey" onclick="closeMenu()">Jerseys</a></li>
             <li><a href="#comunidad" onclick="closeMenu()">Comunidad</a></li>
             <li><a href="#latam" onclick="closeMenu()">LATAM</a></li>
+            <li data-nav-aliados hidden><a href="#aliados" onclick="closeMenu()">Aliados</a></li>
             <li><a href="#rankings" onclick="closeMenu()">Rankings</a></li>
             <li><a href="#resultados" onclick="closeMenu()">Herramienta FF</a></li>
             <li><a href="/admin/login.html" class="btn-admin-nav" onclick="closeMenu()" style="color: var(--primary);"><i class="fa-solid fa-lock"></i> Admin</a></li>
@@ -106,6 +107,13 @@
     <p class="train-more"><a href="entrenoslatam/">Ver resultados LATAM: calendario, semana e histórico <i class="fa-solid fa-arrow-right"></i></a></p>
 </section>
 
+<!-- Torneos aliados: solo sale si se activa en Admin → Inicio -->
+<section id="aliados" hidden>
+    <h2 class="section-title">Torneos aliados</h2>
+    <p class="aliados-intro">Torneos de nuestras ligas aliadas. Entra, revisa las bases e inscribe a tu equipo.</p>
+    <div class="aliados-grid" id="aliadosGrid"></div>
+</section>
+
 <section id="jersey">
     <h2 class="section-title">Jerseys Oficiales 2026</h2>
     <div class="jersey-grid">
@@ -161,6 +169,9 @@
         </article>
     </div>
 </section>
+
+<!-- Sorteo del inicio: sale aquí solo cuando está activo (Admin → Inicio o Sorteos) -->
+<div id="pgSorteo" hidden></div>
 
 <section id="rankings">
     <h2 class="section-title">Rankings Pumas</h2>
@@ -284,8 +295,9 @@
         }
     </script>
     <script src="script.js"></script>
-    <script src="entrenamientos.js?v=20261009n"></script>
-    <script src="portal-kit/latam.js?v=20261007l"></script>
+    <script src="entrenamientos.js?v=20261009x"></script>
+    <script src="portal-kit/latam.js?v=20261009x"></script>
     <script>Latam.iniciarIndex();</script>
+    <script src="portal-kit/aliados.js?v=20261009x"></script>
 </body>
 </html>

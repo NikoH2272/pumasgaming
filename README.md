@@ -18,7 +18,10 @@ Portal de **Pumas Gaming** (Free Fire): entrenamientos, rankings y herramientas 
 | `/rusheo/` | Rusheo | Portal público + herramienta |
 | `/dragonfest/` | Dragon Fest: `index.html` mixto · `femenino.html` femenino · `admin.html` herramienta compartida | Público + herramienta |
 | `/zmf/` | ZMF: `index.html` mixto · `femenino.html` femenino · `admin.html` herramienta compartida | Público + herramienta |
-| `/admin/` | Panel central: portales de cada usuario, personalización, usuarios y roles, corregir entrenos | Con login |
+| `/ascensos/` | **Ascensos AZA**: jornadas por categoría, equipos, baneados, cupos (`cupos.html`). Herramienta `admin.html` con borrador que no se pierde | Público + herramienta |
+| `/pruebas/` | Módulo de pruebas: igual a Ascensos, con su propia base, para probar sin tocar lo real (usuario `pruebas`) | Público + herramienta |
+| `/modulo/?p=<id>` | Módulos creados desde el panel (resultados, herramienta, cupos) | Público + herramienta |
+| `/admin/` | Panel central: portales, personalización, inicio (torneos aliados), módulos, sorteos, usuarios y roles, corregir entrenos | Con login |
 
 ### Fórmulas de resultados (iguales en todo el sitio)
 - **PG** (Puntos Generales) = suma de puntos.
@@ -40,11 +43,17 @@ portal-kit/           código compartido por todos los portales
   correcciones.js     borrar entrenos y corregir nombres de equipos (superadmin)
   guardado.js         botón "Cargar a la base de datos" de las herramientas
   descargas.js        descargar la imagen de un entreno igual que en su herramienta (solo en su portal)
+  sorteo.js           sorteo de cualquier portal: formulario público (sale solo si está activo) y panel
+  cupos.js            cupos de cualquier portal (como los de Pumas)
+  baneados.js         lista de baneados (ascensos)
+  modulos.js          crear/editar/borrar módulos y cambiar color, logo y título de portales (superadmin)
+  aliados.js          sección "Torneos aliados" del inicio · inicio-admin.js: su administración
   latam.js / .css     resultados: Entrenos LATAM, index y portal público de cada entreno
                       (Top 50 semana, Histórico 100 ordenable PR/PG, killers)
 admin/                panel central
 <portal>/             index.html (resultados) · admin.html (herramienta) · login.html · imagenes/
 sql/                  cambios de base de datos numerados (ver sql/README.md)
+supabase/functions/   ascensos-ia: lectura de capturas con IA (ver docs/IA_ASCENSOS.md)
 docs/                 guías: trabajo en paralelo y paso a producción
 ```
 

@@ -17,12 +17,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/latam.css?v=20261009n">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261009n">
+    <link rel="stylesheet" href="../portal-kit/latam.css?v=20261009x">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261009x">
     <link rel="icon" href="imagenes/qfd.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261009n" data-portal="ascensosqfd" data-modo="publico"></script>
-    <script src="../portal-kit/descargas.js?v=20261009n"></script>
+    <script src="../portal-kit/portal.js?v=20261009x" data-portal="ascensosqfd" data-modo="publico"></script>
+    <script src="../portal-kit/descargas.js?v=20261009x"></script>
 </head>
 <body data-tema="qfd">
 
@@ -41,6 +41,7 @@
                 <li><a href="#historico" onclick="closeMenu()">Histórico</a></li>
                                 <li><a href="#killers" onclick="closeMenu()">Killers</a></li>
                 <li><a href="#destacados" onclick="closeMenu()">Destacados</a></li>
+                <li><a href="#baneados" onclick="closeMenu()">Baneados</a></li>
                 <li><a href="/">Pumas Gaming</a></li>
                 <li><a href="admin.html"><i class="fa-solid fa-lock"></i> Admin</a></li>
             </ul>
@@ -129,6 +130,11 @@
         <div class="dest-grid" id="latamDestacados"><p class="res-vacio">Cargando...</p></div>
     </section>
 
+    <section id="baneados">
+        <h2 class="section-title">Equipos baneados</h2>
+        <div class="card-box" id="qfdBaneados"><p class="res-vacio"><i class="fa-solid fa-spinner fa-spin"></i>Cargando...</p></div>
+    </section>
+
     <footer>
         <p>&copy; 2026 <b>ASCENSOS QFD</b> by PUMAS GAMING. Todos los derechos reservados.</p>
     </footer>
@@ -137,7 +143,9 @@
         function toggleMenu() { document.getElementById('mainNav').classList.toggle('is-active'); }
         function closeMenu() { document.getElementById('mainNav').classList.remove('is-active'); }
     </script>
-    <script src="../portal-kit/latam.js?v=20261009n"></script>
+    <script src="../portal-kit/latam.js?v=20261009x"></script>
+    <script src="../portal-kit/baneados.js?v=20261009x"></script>
+    <script>PumasBaneados.montarPublico('qfdBaneados', 'ascensosqfd');</script>
     <script>Latam.iniciarResultadosPortal('ascensosqfd');</script>
 </body>
 </html>

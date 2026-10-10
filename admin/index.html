@@ -15,10 +15,10 @@
     <title>Admin | Pumas Gaming</title>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261009n">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261009x">
     <link rel="icon" type="image/x-icon" href="../imagenes/LOGO PUMAS WEB.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261009n" data-modo="login"></script>
+    <script src="../portal-kit/portal.js?v=20261009x" data-modo="login"></script>
 </head>
 <body>
     <header class="site-header">
@@ -68,8 +68,10 @@
             aviso.textContent = 'coachniko tiene el rol "' + (s.rol_nombre || s.rol) + '" y no puede gestionar usuarios. Corre sql/04_corregir_usuarios.sql para dejarlo como superadmin.';
         }
         document.getElementById('btnSalir').addEventListener('click', e => { e.preventDefault(); P.logout('login.html'); });
+        const filasPortales = await P.cargarModulos();   // + módulos creados desde el panel
+        const datoDe = id => filasPortales.find(r => r.id === id) || {};
 
-        const colores = { principal: '#D8C395', entrenamientos: '#D8C395', ascensosqfd: '#4FC3F7', row: '#E53935', rusheo: '#FF8A00', zmf: '#E10600', dragonfest: '#2E6BFF', dragonfestfem: '#FF4FA3', zmffem: '#F0306E' };
+        const colores = { principal: '#D8C395', entrenamientos: '#D8C395', ascensosqfd: '#4FC3F7', row: '#E53935', rusheo: '#FF8A00', zmf: '#E10600', dragonfest: '#2E6BFF', dragonfestfem: '#FF4FA3', zmffem: '#F0306E', ascensosaza: '#00E0C6', pruebas: '#9BE15D' };
         const textos = {
             principal: 'Página de inicio de Pumas Gaming.',
             entrenamientos: 'Carga de resultados, cupos, VIP y métricas de entrenos.',
@@ -79,7 +81,9 @@
             zmf: 'ZMF mixto. Herramienta compartida con femenino.',
             zmffem: 'ZMF femenino. Herramienta compartida con mixto.',
             dragonfest: 'Dragon Fest mixto. Herramienta compartida con femenino.',
-            dragonfestfem: 'Dragon Fest femenino. Herramienta compartida con mixto.'
+            dragonfestfem: 'Dragon Fest femenino. Herramienta compartida con mixto.',
+            ascensosaza: 'Ascensos AZA: anotación por salas, imagen 2000×2000, baneados y cupos.',
+            pruebas: 'Módulo de pruebas (igual a Ascensos) para probar sin tocar lo real.'
         };
         const tarjetas = Object.entries(P.PORTALES).filter(([k]) => P.puede(s, k)).map(([k, p]) => {
             const principal = k === 'principal', entrenos = k === 'entrenamientos';
@@ -87,10 +91,29 @@
                 ? `<a class="btn-access" href="${p.url}"><i class="fa-solid fa-house"></i> Ver</a>`
                 : `<a class="btn-access" href="${p.admin}"><i class="fa-solid fa-screwdriver-wrench"></i> ${entrenos ? 'Panel' : 'Herramienta'}</a>` +
                   `<a class="btn-access btn-outline" href="${p.url}"><i class="fa-solid fa-trophy"></i> Portal</a>`;
-            return `<article class="card-box hub-card" style="--c:${colores[k]}">
-                <h3>${P.escaparHtml(p.nombre)}</h3><p>${textos[k]}</p>
+            const d = datoDe(k);
+            const color = d.color_tema || colores[k] || d.color || '#D8C395';
+            const texto = textos[k] || d.subtitulo || 'Módulo creado desde el panel: entrenos, cupos y sorteo.';
+            return `<article class="card-box hub-card" style="--c:${color}">
+                <h3>${P.escaparHtml(d.nombre || p.nombre)}</h3><p>${P.escaparHtml(texto)}</p>
                 <div class="acciones">${abrir}</div></article>`;
         });
+        tarjetas.unshift(`<article class="card-box hub-card" style="--c:#FFD54A">
+                <h3><i class="fa-solid fa-dice"></i> Sorteos</h3>
+                <p>Equipos anotados y sorteo en vivo de tus portales.${P.tiene(s, 'gestionar') ? ' Activa o desactiva el sorteo de cualquier portal.' : ''}</p>
+                <div class="acciones"><a class="btn-access" href="sorteo.html"><i class="fa-solid fa-dice"></i> Sorteos</a></div></article>`);
+        if (P.tiene(s, 'personalizar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#7FD1FF">
+                <h3><i class="fa-solid fa-house"></i> Inicio</h3>
+                <p>Torneos aliados y sorteo del inicio: se activan aquí y solo salen cuando están activos.</p>
+                <div class="acciones"><a class="btn-access" href="inicio.html"><i class="fa-solid fa-sliders"></i> Editar inicio</a></div></article>`);
+        if (P.tiene(s, 'gestionar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#4285F4">
+                <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Motores de IA</h3>
+                <p>Activa Gemini, el motor privado o Claude para la lectura de capturas de Ascensos AZA.</p>
+                <div class="acciones"><a class="btn-access" href="ia.html"><i class="fa-solid fa-microchip"></i> Motores</a></div></article>`);
+        if (P.tiene(s, 'gestionar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#B04DD6">
+                <h3><i class="fa-solid fa-cubes"></i> Módulos</h3>
+                <p>Crea módulos nuevos con su color y logo, o cambia color, logo y título de cualquier portal.</p>
+                <div class="acciones"><a class="btn-access" href="modulos.html"><i class="fa-solid fa-palette"></i> Módulos</a></div></article>`);
         if (P.tiene(s, 'personalizar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#D8C395">
                 <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Personalización</h3>
                 <p>Efecto para todas las páginas: calabazas, fantasmas, nieve o iconos.</p>
