@@ -22,6 +22,8 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 16 | `16_ranking_pr_pg_kills.sql` | Top 50 e Histórico ordenables por PR, PG o KILLS | ☐ |
 | 17 | `17_ascensos_modulos_sorteos.sql` | Ascensos AZA y Pruebas (base aparte), baneados, módulos creados desde el panel, torneos aliados, sorteos por portal y cupos para cualquier portal. Crea el usuario `pruebas` | ☐ |
 | 18 | `18_roles_ascensos_ia.sql` | Rol **Administrador Ascensos** (todos los ascensos) con sub roles por ascenso (AZA, QFD, Pruebas); permiso y límite diario de la lectura con IA (solo Ascensos AZA) y motores activos (Gemini, privado, Claude) que elige el superadmin (ver `docs/IA_ASCENSOS.md`) | ☐ |
+| 19 | `19_moderadores_aza_y_vip.sql` | Moderadores de Ascensos AZA (los crea el Administrador Ascensos; IA apagada por defecto y eventos habilitados por moderador) y registro VIP de Entrenos Pumas (`/entrenamientos/vip.html`) | ☐ |
+| 20 | `20_aza_moderadores_y_baneados_cupos.sql` | El usuario de AZA también crea, modifica y elimina moderadores; los equipos baneados no pueden inscribirse a cupos (ni como staff) | ☐ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 

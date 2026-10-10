@@ -161,7 +161,7 @@ button, input, select, textarea { font: inherit; }
   font: 900 clamp(9rem, 24vw, 22rem)/.8 var(--font-display); letter-spacing: -.1em;
   pointer-events: none;
 }
-.hero-copy { position: relative; z-index: 1; max-width: 860px; }
+.hero-copy { position: relative; z-index: 1; min-width: 0; max-width: 860px; }
 
 .eyebrow {
   display: flex; width: fit-content; align-items: center; gap: 12px;

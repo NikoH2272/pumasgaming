@@ -398,7 +398,7 @@
     function montarIA() {
         const cont = $('iaPanel');
         if (!cont) return;
-        if (!CON_IA) {   // otros portales (ej. Pruebas): sin pestaña de IA
+        if (!CON_IA || !permisos.ia) {   // otros portales (ej. Pruebas) o moderador sin IA habilitada: sin pestaña
             const tab = document.querySelector('.asc-tabs [data-tab="panelIA"]');
             if (tab) tab.remove();
             cont.closest('.asc-panel').remove();
@@ -414,7 +414,7 @@
             </div>
             <div class="form-grid">
                 <div class="form-group"><label for="iaCategoria">Evento de estos resultados</label>
-                    <select id="iaCategoria">${window.ASC_OPCIONES(estado.categoria)}</select></div>
+                    <select id="iaCategoria">${window.ASC_OPCIONES(estado.categoria, permisos.eventos)}</select></div>
                 <div class="form-group"><label for="iaMotor">Motor de IA</label>
                     <select id="iaMotor" disabled><option>Buscando motores...</option></select></div>
             </div>
@@ -634,13 +634,125 @@
         tabs.forEach(t => t.addEventListener('click', () => abrir(t.dataset.tab)));
         let ultima = 'panelResultados';
         try { ultima = sessionStorage.getItem('pg_asc_tab') || ultima; } catch (e) { }
-        abrir(document.getElementById(ultima) ? ultima : 'panelResultados');
+        abrir(document.querySelector('.asc-tabs [data-tab="' + ultima + '"]:not([hidden])') && document.getElementById(ultima) ? ultima : 'panelResultados');
     }
 
-    async function iniciar() {
-        $('selectCategoria').innerHTML = window.ASC_OPCIONES();
+    /* ---------------- Permisos (moderadores, sql/19) ----------------
+       jefe = Administrador Ascensos o superadmin (maneja moderadores) ·
+       moderador: IA solo si se la habilitaron y solo sus eventos (null = todos) */
+    let permisos = { jefe: false, moderador: false, ia: true, eventos: null, nombre: '' };
+    async function cargarPermisos(ses) {
+        try { permisos = Object.assign(permisos, await P.ascensos.permisos(PORTAL)); }
+        catch (e) {   // sin sql/19: como antes (todo permitido); el jefe se deduce del rol
+            permisos.jefe = P.tiene(ses, 'gestionar') || (ses && ['administradorascensos', 'aza'].includes(ses.rol));
+            permisos.nombre = (ses && (ses.nombre || ses.usuario)) || '';
+        }
+    }
+    function aplicarPermisos() {
+        const lista = permisos.eventos;
+        if (lista && !lista.includes(estado.categoria)) estado.categoria = lista[0] || '';
+        $('selectCategoria').innerHTML = window.ASC_OPCIONES(estado.categoria, lista) || '<option value="">Sin eventos habilitados</option>';
+        if (lista && !lista.length) {
+            $('btnGuardarJornada').disabled = true;
+            aviso('No tienes eventos habilitados. Pídele al Administrador Ascensos que te habilite al menos uno.', 'error');
+        }
+        // Por defecto el moderador de la imagen es quien entra
+        if (!estado.moderador && permisos.nombre) { estado.moderador = permisos.nombre; guardarBorrador(); }
+        const tab = document.querySelector('.asc-tabs [data-tab="panelModeradores"]');
+        if (tab) tab.hidden = !permisos.jefe;
+        if (permisos.jefe) montarModeradores();
+    }
+
+    /* ---------------- Moderadores (solo Administrador Ascensos) ---------------- */
+    async function montarModeradores() {
+        const cont = $('moderadoresAdmin');
+        if (!cont) return;
+        const eventos = window.ASC_CATEGORIAS.filter(c => c.tipo === 'evento');
+        const checks = (sel, nombre) => eventos.map(c => `<label class="chk mod-ev"><input type="checkbox" name="${nombre}" value="${c.id}" ${!sel || sel.includes(c.id) ? 'checked' : ''}>
+            <img src="${c.logo}" alt=""> ${esc(c.nombre)}</label>`).join('');
+        const leerEventos = (raiz, nombre) => {
+            const marcados = [...raiz.querySelectorAll(`input[name="${nombre}"]:checked`)].map(i => i.value);
+            return marcados.length === eventos.length ? null : marcados;   // todos marcados = null (también los eventos nuevos)
+        };
+        let lista = [];
+        try { lista = await P.ascensos.moderadores.listar(); }
+        catch (e) { cont.innerHTML = `<p class="res-vacio">${esc(e.message)}</p>`; return; }
+        cont.innerHTML = `
+            <article class="card-box mod-nuevo">
+                <h3 class="subtitulo-bloque"><i class="fa-solid fa-user-plus"></i> Nuevo moderador</h3>
+                <form id="modForm">
+                    <div class="form-grid cuatro">
+                        <div class="form-group"><label for="modUsuario">Usuario (sin @)</label><input id="modUsuario" required autocapitalize="none" spellcheck="false" placeholder="modjuan" pattern="[a-zA-Z0-9._\-]{3,30}"></div>
+                        <div class="form-group"><label for="modNombre">Nombre (sale como moderador)</label><input id="modNombre" required maxlength="40" placeholder="Mod · Juan"></div>
+                        <div class="form-group"><label for="modClave">Contraseña</label><input id="modClave" type="password" required minlength="6" autocomplete="new-password"></div>
+                        <div class="form-group"><label>&nbsp;</label><label class="chk"><input type="checkbox" id="modIa"> Puede usar la IA</label></div>
+                    </div>
+                    <label>Eventos que puede hacer</label>
+                    <div class="mod-eventos">${checks(null, 'modEvNuevo')}</div>
+                    <button class="btn-access" type="submit" style="margin-top:14px"><i class="fa-solid fa-user-plus"></i> Crear moderador</button>
+                    <p class="asc-estado" id="modMsg" role="status"></p>
+                </form>
+            </article>
+            <h3 class="subtitulo-bloque" style="margin-top:24px"><i class="fa-solid fa-users"></i> Moderadores (${lista.length})</h3>
+            ${lista.length ? lista.map(m => `
+            <article class="card-box mod-fila${m.activo ? '' : ' inactivo'}" data-usuario="${esc(m.usuario)}">
+                <div class="mod-cab">
+                    <div><b>${esc(m.nombre || m.usuario)}</b> <code>${esc(m.usuario)}</code>${m.activo ? '' : ' <span class="cupo-estado e-cerrado">INACTIVO</span>'}</div>
+                    <div class="mod-opc">
+                        <label class="chk"><input type="checkbox" data-f="ia" ${m.ia ? 'checked' : ''}> IA</label>
+                        <label class="chk"><input type="checkbox" data-f="activo" ${m.activo ? 'checked' : ''}> Activo</label>
+                        <input type="text" data-f="nombre" value="${esc(m.nombre || '')}" maxlength="40" aria-label="Nombre">
+                        <input type="password" data-f="clave" placeholder="Nueva clave (opcional)" autocomplete="new-password" aria-label="Nueva clave">
+                    </div>
+                </div>
+                <div class="mod-eventos">${checks(m.eventos, 'ev_' + m.usuario)}</div>
+                <div class="mod-acc"><button class="btn-mini" data-guardar><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                    <button class="btn-mini btn-borrar" data-eliminar><i class="fa-solid fa-trash"></i> Eliminar</button><span class="muted" data-msg></span></div>
+            </article>`).join('') : '<p class="res-vacio">Todavía no hay moderadores.</p>'}`;
+
+        $('modForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const msg = $('modMsg');
+            msg.textContent = 'Creando...'; msg.className = 'asc-estado';
+            try {
+                await P.ascensos.moderadores.guardar({
+                    usuario: $('modUsuario').value.trim().toLowerCase(), nombre: $('modNombre').value.trim(), clave: $('modClave').value,
+                    ia: $('modIa').checked, eventos: leerEventos(cont, 'modEvNuevo')
+                });
+                await montarModeradores();
+                const n = $('modMsg'); n.textContent = '✔ Moderador creado. Ya puede entrar en /ascensos/login.html'; n.className = 'asc-estado ok';
+            } catch (err) { msg.textContent = err.message; msg.className = 'asc-estado error'; }
+        });
+        cont.querySelectorAll('.mod-fila [data-eliminar]').forEach(b => b.addEventListener('click', async () => {
+            const fila = b.closest('.mod-fila'), u = fila.dataset.usuario;
+            const ok = await P.confirmar({ titulo: '¿Eliminar al moderador ' + u + '?', peligro: true, si: 'Sí, eliminar',
+                html: '<p>Se borra su usuario y ya no podrá entrar. Las jornadas y cupos que creó se quedan.</p><p class="muted">Si solo quieres quitarle el acceso un tiempo, desmarca "Activo".</p>' });
+            if (!ok) return;
+            try { await P.ascensos.moderadores.borrar(u); await montarModeradores(); }
+            catch (err) { fila.querySelector('[data-msg]').textContent = err.message; }
+        }));
+        cont.querySelectorAll('.mod-fila').forEach(fila => fila.querySelector('[data-guardar]').addEventListener('click', async () => {
+            const u = fila.dataset.usuario, f = c => fila.querySelector(`[data-f="${c}"]`);
+            const msg = fila.querySelector('[data-msg]');
+            msg.textContent = 'Guardando...';
+            try {
+                await P.ascensos.moderadores.guardar({ usuario: u, nombre: f('nombre').value.trim(), clave: f('clave').value || null,
+                    activo: f('activo').checked, ia: f('ia').checked, eventos: leerEventos(fila, 'ev_' + u) });
+                msg.textContent = '✔ Guardado';
+                f('clave').value = '';
+            } catch (err) { msg.textContent = err.message; }
+        }));
+    }
+
+    async function iniciar(ev) {
+        const ses = ev && ev.detail;
+        await cargarPermisos(ses);
+        $('selectCategoria').innerHTML = window.ASC_OPCIONES(undefined, permisos.eventos);
         leerBorrador();
         enlazarCampos();
+        aplicarPermisos();
+        $('inputModerador').value = estado.moderador;
+        $('selectCategoria').value = estado.categoria;
         pintarBarraBorrador();
         pestañas();
         construirTabla();

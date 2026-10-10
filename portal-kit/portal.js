@@ -251,7 +251,7 @@
         const m = String((error && (error.message || error.code)) || error || '');
         return /PGRST202|PGRST205|42883|42P01|Could not find the (function|table)|does not exist|schema cache/i.test(m);
     }
-    const AVISO_SQL = 'Falta correr sql/17_ascensos_modulos_sorteos.sql en Supabase.';
+    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/19).';
     async function rpcPublico(nombre, params) {
         const c = db();
         if (!c) throw new Error('No se pudo conectar con la base de datos.');
@@ -432,7 +432,24 @@
         jornadas: (portal, limite) => leerTabla(db().from('asc_jornadas').select('*').eq('portal', portal)
             .order('fecha', { ascending: false }).limit(limite || 60)),
         guardar: (portal, datos) => rpcAdmin('asc_guardar_jornada', { p_portal: portal, p_datos: datos }),
-        borrar: (portal, id) => rpcAdmin('asc_borrar_jornada', { p_portal: portal, p_id: id })
+        borrar: (portal, id) => rpcAdmin('asc_borrar_jornada', { p_portal: portal, p_id: id }),
+        // qué puede hacer el usuario: { jefe, moderador, ia, eventos (null = todos) } (sql/19)
+        permisos: portal => rpcAdmin('asc_mis_permisos', { p_portal: portal }),
+        moderadores: {
+            listar: () => rpcAdmin('asc_mod_listar'),
+            guardar: m => rpcAdmin('asc_mod_guardar', {
+                p_usuario: m.usuario, p_nombre: m.nombre || null, p_clave: m.clave || null,
+                p_activo: m.activo !== false, p_ia: !!m.ia, p_eventos: m.eventos === undefined ? null : m.eventos
+            }),
+            borrar: usuario => rpcAdmin('asc_mod_borrar', { p_usuario: usuario })
+        }
+    };
+    /* ---------------- Registro VIP de Pumas (sql/19) ---------------- */
+    const vip = {
+        registrar: d => rpcPublico('vip_registrar', { p_nombre: d.nombre, p_tag: d.tag, p_telefono: d.telefono, p_horarios: d.horarios }),
+        listar: () => rpcAdmin('admin_vip_registros'),
+        estado: (id, estado) => rpcAdmin('admin_vip_estado', { p_id: id, p_estado: estado }),
+        borrar: id => rpcAdmin('admin_vip_borrar', { p_id: id })
     };
     const baneados = {
         listar: portal => leerTabla(db().from('asc_baneados').select('*').eq('portal', portal).order('equipo')),
@@ -685,7 +702,7 @@ html.pg-verificando body{visibility:hidden}
         login, logout, validar, guard, puede, tiene, inicioDe, db, sesion: leerSesion,
         cargarEfecto, guardarEfecto, aplicarEfecto, usuarios, entrenos, respaldo, confirmar, escaparHtml,
         cargarModulos, olvidarModulos, datosPortal, modulos, aplicarColores, aplicarPersonalizacion, rgbDe, textoSobre,
-        sitio, sorteo, cupos, ascensos, baneados, ia, cargarKit, faltaSql
+        sitio, sorteo, cupos, ascensos, baneados, ia, vip, cargarKit, faltaSql
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
