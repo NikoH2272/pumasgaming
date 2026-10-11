@@ -6,6 +6,27 @@ const normEquipo = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f
 
 window.addEventListener('DOMContentLoaded', cargarEntrenamientosActivos);
 
+// Contador hasta que se abren las inscripciones ("2d 03:14:22")
+function tiempoRestante(ms) {
+    const t = Math.max(0, Math.floor(ms / 1000));
+    const d = Math.floor(t / 86400), h = Math.floor(t % 86400 / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+    const z = n => String(n).padStart(2, '0');
+    return (d ? d + 'd ' : '') + z(h) + ':' + z(m) + ':' + z(s);
+}
+let relojCupos = null;
+function arrancarRelojCupos() {
+    clearInterval(relojCupos);
+    const tic = () => {
+        let abrio = false;
+        document.querySelectorAll('[data-abre]').forEach(el => {
+            const falta = Number(el.dataset.abre) - Date.now();
+            if (falta <= 0) abrio = true; else el.textContent = tiempoRestante(falta);
+        });
+        if (abrio) { clearInterval(relojCupos); cargarEntrenamientosActivos(); }
+    };
+    if (document.querySelector('[data-abre]')) { tic(); relojCupos = setInterval(tic, 1000); }
+}
+
 async function cargarEntrenamientosActivos() {
     const contenedor = document.getElementById('contenedorEntrenamientos');
     
@@ -15,7 +36,8 @@ async function cargarEntrenamientosActivos() {
             .select('*')
             
             .eq('estado', 'ABIERTO')
-            .or('publicar_en.is.null,publicar_en.lte.' + new Date().toISOString())
+            // También los programados (se abren dentro de 7 días) para mostrar su contador
+            .or('publicar_en.is.null,publicar_en.lte.' + new Date(Date.now() + 7 * 86400000).toISOString())
             .order('fecha', { ascending: true });
 
         if (error) throw error;
@@ -64,12 +86,23 @@ async function cargarEntrenamientosActivos() {
                 listaHTML += `</div></div>`;
             }
 
-            let btnInscribir = cuposRestantes > 0 
+            const abre = ent.publicar_en ? new Date(ent.publicar_en).getTime() : 0;
+            const pendiente = abre > Date.now();
+            const contador = pendiente ? `
+                <div style="margin-top: 15px; padding: 14px; text-align: center; border: 1px dashed rgba(255,213,74,0.55); background: rgba(255,213,74,0.07); border-radius: 8px;">
+                    <div style="color: var(--gray); font-size: 0.8rem;"><i class="fa-solid fa-hourglass-half" style="color:#FFD54A"></i> LAS INSCRIPCIONES SE ABREN EN</div>
+                    <div data-abre="${abre}" style="color: #FFE38A; font-family: 'Michroma'; font-size: clamp(1.4rem, 5vw, 2rem); font-weight: bold; margin: 6px 0; font-variant-numeric: tabular-nums;">${tiempoRestante(abre - Date.now())}</div>
+                    <div style="color: var(--gray); font-size: 0.8rem;">${new Date(abre).toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' })}</div>
+                </div>` : '';
+
+            let btnInscribir = pendiente
+                ? `<button disabled style="background: rgba(255,213,74,0.15); color: #FFE38A; padding: 10px 20px; border-radius: 6px; font-family: 'Michroma'; font-weight: bold; border: 1px solid rgba(255,213,74,0.5);"><i class="fa-solid fa-lock"></i> AÚN NO ABRE</button>`
+                : cuposRestantes > 0 
                 ? `<button onclick="abrirModalInscripcion('${ent.id}', '${ent.titulo.replace(/'/g, "\\'")}', '${ent.link_grupo}')" class="btn-access" style="padding: 10px 20px; border:none; cursor:pointer;">INSCRIBIR EQUIPO</button>`
                 : `<button disabled style="background: var(--secondary); color: var(--dark); padding: 10px 20px; border-radius: 6px; font-family: 'Michroma'; font-weight: bold; border:none;">CUPOS AGOTADOS</button>`;
 
             contenedor.innerHTML += `
-                <div style="background: var(--dark-card); border: 1px solid rgba(216,195,149, 0.2); border-left: 4px solid var(--primary); border-radius: 10px; padding: 25px; margin-bottom: 20px;">
+                <div style="background: var(--dark-card); border: 1px solid rgba(216,195,149, 0.2); border-left: 4px solid ${pendiente ? '#FFD54A' : 'var(--primary)'}; border-radius: 10px; padding: 25px; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                         <div>
                             <h2 style="color: var(--light); font-family: 'Michroma'; font-size: 1.4rem; margin:0 0 10px 0;">${ent.titulo}</h2>
@@ -78,10 +111,12 @@ async function cargarEntrenamientosActivos() {
                         </div>
                         <div>${btnInscribir}</div>
                     </div>
+                    ${contador}
                     ${listaHTML}
                 </div>
             `;
         });
+        arrancarRelojCupos();
 
     } catch (err) {
         console.error("Error al cargar cupos:", err);
@@ -154,15 +189,40 @@ async function procesarInscripcion() {
                 .eq('id', idEntreno);
         }
 
-        alert("¡Inscripción exitosa! Haz clic en Aceptar para unirte al grupo de coordinación.");
         cerrarModal();
         cargarEntrenamientosActivos();
-        
-        // Redirigir al grupo de WhatsApp
-        window.open(linkGrupo, '_blank');
+        // Antes de unirse al grupo: recordar que escriban el nombre del equipo
+        mostrarIngresoGrupo(nombre, linkGrupo);
 
     } catch (err) {
         console.error("Error al registrar:", err);
         alert(err && err.code === "23505" ? "Ese equipo ya está inscrito en este entrenamiento." : "Ocurrió un error. Es posible que los cupos se hayan agotado.");
     }
+}
+
+// Ventana después de inscribirse: aviso del nombre del equipo y botón "ABRIR" para unirse al grupo
+function mostrarIngresoGrupo(equipo, link) {
+    const esc = t => String(t || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const valido = /^https:\/\//.test(String(link || ''));
+    const fondo = document.createElement('div');
+    fondo.style.cssText = 'position:fixed;inset:0;z-index:2100;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.85);backdrop-filter:blur(5px)';
+    fondo.innerHTML = `
+        <div role="dialog" aria-modal="true" style="width:100%;max-width:440px;padding:26px;background:var(--dark-card);border:1px solid rgba(216,195,149,.35);border-radius:12px;text-align:center">
+            <div style="font-size:2.2rem;color:#6ee7a8"><i class="fa-solid fa-circle-check"></i></div>
+            <h3 style="color:var(--primary);font-family:'Michroma';font-size:1.1rem;margin:8px 0 6px">¡INSCRIPCIÓN EXITOSA!</h3>
+            <p style="color:var(--light);margin:0 0 14px"><b>${esc(equipo)}</b> quedó inscrito.</p>
+            ${valido ? `
+            <div style="display:flex;gap:10px;align-items:flex-start;text-align:left;padding:12px;border:1px solid rgba(255,213,74,.55);background:rgba(255,213,74,.08);border-radius:8px;color:#FFE38A;margin-bottom:14px">
+                <i class="fa-solid fa-circle-exclamation" style="margin-top:3px"></i>
+                <div><b>Antes de unirte:</b> al entrar al grupo escribe el <b>nombre de tu equipo</b> (<b>${esc(equipo)}</b>) para que el staff te identifique y te pase la sala.</div>
+            </div>
+            <p style="color:var(--gray);font-size:.9rem;margin:0 0 16px">Para unirte al grupo toca <b>ABRIR</b>.</p>
+            <a href="${esc(link)}" target="_blank" rel="noopener" data-abrir class="btn-access" style="display:block;padding:12px 20px;text-decoration:none"><i class="fa-brands fa-whatsapp"></i> ABRIR</a>` : ''}
+            <button type="button" data-cerrar style="margin-top:10px;width:100%;padding:10px;background:transparent;color:var(--gray);border:1px solid rgba(255,255,255,.15);border-radius:6px;cursor:pointer">Cerrar</button>
+        </div>`;
+    const cerrar = () => fondo.remove();
+    fondo.querySelector('[data-cerrar]').onclick = cerrar;
+    const abrir = fondo.querySelector('[data-abrir]');
+    if (abrir) abrir.addEventListener('click', () => setTimeout(cerrar, 300));
+    document.body.appendChild(fondo);
 }

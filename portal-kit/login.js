@@ -17,7 +17,7 @@
     // Páginas que piden un permiso especial del rol
     const ruta = destino.split('?')[0];
     const permiso = /\/admin\/(config|inicio)(\.html)?$/.test(ruta) ? 'personalizar'
-                  : /\/admin\/(usuarios|modulos|entrenos|ia)(\.html)?$/.test(ruta) ? 'gestionar' : null;
+                  : /\/admin\/(usuarios|modulos|entrenos|ia|exportar)(\.html)?$/.test(ruta) ? 'gestionar' : null;
     const textoPermiso = { personalizar: 'personalizar el sitio', gestionar: 'gestionar usuarios y roles' }[permiso];
 
     if (params.get('denegado')) {

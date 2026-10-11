@@ -26,6 +26,8 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 20 | `20_aza_moderadores_y_baneados_cupos.sql` | El usuario de AZA también crea, modifica y elimina moderadores; los equipos baneados no pueden inscribirse a cupos (ni como staff) | ☐ |
 | 21 | `21_corregir_hora_entreno.sql` | Corregir entrenos: también la fecha/hora y la jornada (ej. BLOQUE A de Dragon Fest) | ☐ |
 | 22 | `22_vip_codigos.sql` | Registro VIP solo con código de acceso que genera el admin de Pumas (la página ya no está en los menús) | ☐ |
+| 23 | `23_resultados_completos.sql` | Resultados completos de la sala (.csv): estadísticas por jugador (daño, headshots, gloo, revividas, tiempo vivo, armas). Solo Entrenos Pumas; el superadmin habilita más eventos | ☐ |
+| 24 | `24_cupos_contador.sql` | Cupos: los programados salen con contador hasta que se abren, y la inscripción revisa que el cupo sea del portal de la página | ☐ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 

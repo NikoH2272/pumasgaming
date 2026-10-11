@@ -702,6 +702,26 @@
         calSel = null; calAutoHoy = true;
         if (document.getElementById('latamCalendario')) cargarMes();
 
+        // Estadísticas avanzadas (resultados completos): solo si el superadmin las habilitó para este evento y hay datos
+        if (document.getElementById('destacados')) {
+            P.cargarKit('completos.js').then(async () => {
+                if (!window.PumasCompletos || !(await PumasCompletos.habilitado(portal)) || document.getElementById('avanzadas')) return;
+                const sec = document.createElement('section');
+                sec.id = 'avanzadas'; sec.hidden = true; sec.setAttribute('data-stats-avanzadas', '');
+                sec.innerHTML = '<h2 class="section-title">Análisis de entrenos</h2><div class="card-box"><div id="ltAvanzadas"></div></div>';
+                document.getElementById('destacados').after(sec);
+                await PumasCompletos.montarPublico('ltAvanzadas', portal);
+                // Con datos, se agrega "Análisis" al menú, junto a Destacados
+                const enlace = document.querySelector('.main-nav a[href="#destacados"]');
+                if (!sec.hidden && enlace && !document.querySelector('.main-nav a[href="#avanzadas"]')) {
+                    const li = enlace.closest('li').cloneNode(true);
+                    const a = li.querySelector('a');
+                    a.href = '#avanzadas'; a.textContent = 'Análisis';
+                    enlace.closest('li').after(li);
+                }
+            }).catch(() => { });
+        }
+
         const ul = document.getElementById('listaSesiones');
         if (ul) ul.innerHTML = r.ultimos.length ? r.ultimos.map(s => `<div class="res-row">
                 <div><b>${esc(s.titulo)}</b> ${fechaSes(s)}<small>${esc(s.jornada || '')}</small></div>

@@ -468,6 +468,8 @@ footer b { color: var(--primary); }
 .guardar-bd .estado { flex-basis: 100%; min-height: 1.2em; margin: 0; font-size: .88rem; }
 .guardar-bd .estado.ok { color: #6ee7a8; }
 .guardar-bd .estado.error { color: #ff8a8d; }
+.guardar-csv { display: flex; flex-direction: column; gap: 6px; flex-basis: 100%; max-width: 520px; margin: 0 auto; color: var(--gray); font: .82rem var(--font-body); text-transform: none; letter-spacing: 0; text-align: left; }
+.guardar-csv i { color: var(--accent); }
 
 /* Corregir entrenos (superadmin) */
 .corr-portales { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 1180px; margin: 0 auto 6px; }
@@ -622,6 +624,12 @@ body[data-tema="pruebas"] {   /* Módulo de pruebas: verde lima y amarillo */
 .cupo-cuenta { text-align: center; }
 .cupo-cuenta b { display: block; color: var(--primary); font: 900 1.8rem/1 var(--font-display); }
 .cupo-cuenta small { color: var(--gray); font-size: .7rem; }
+.cupo-pendiente { border-left-color: #FFD54A; }
+.cupo-contador { display: grid; gap: 2px; padding: 12px; text-align: center; border: 1px dashed rgba(255, 213, 74, .55); background: rgba(255, 213, 74, .07); }
+.cupo-contador b { color: #FFE38A; font: 900 clamp(1.4rem, 5vw, 2rem)/1.1 var(--font-display); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.cupo-contador small { color: var(--gray); font-size: .74rem; }
+.cupo-aviso-grupo { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; padding: 10px 12px; border: 1px solid rgba(255, 213, 74, .55); background: rgba(255, 213, 74, .08); color: #FFE38A; text-align: left; }
+.cupo-aviso-grupo i { margin-top: 3px; }
 .cupo-barra { height: 6px; background: rgba(var(--primary-rgb), .15); }
 .cupo-barra span { display: block; height: 100%; background: var(--primary); }
 .cupo-lista { display: flex; flex-wrap: wrap; gap: 6px; }

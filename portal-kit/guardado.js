@@ -73,6 +73,18 @@
             <p class="estado" role="status"></p>`;
         const btn = cont.querySelector('[data-guardar]');
         const estado = cont.querySelector('.estado');
+
+        // Resultados completos (.csv): solo si el superadmin los habilitó para este evento (sql/23)
+        let inputCsv = null;
+        P.cargarKit('completos.js').then(() => window.PumasCompletos && PumasCompletos.habilitados()).then(lista => {
+            if (!lista || !lista.some(p => p === op.portal() || (op.portales && op.portales().includes(p)))) return;
+            const caja = document.createElement('label');
+            caja.className = 'guardar-csv';
+            caja.innerHTML = `<span><i class="fa-solid fa-chart-simple"></i> Resultados completos (.csv) · opcional: daño, headshots, revividas, paredes gloo</span>
+                <input type="file" accept=".csv" multiple>`;
+            btn.before(caja);
+            inputCsv = caja.querySelector('input');
+        }).catch(() => { });
         const avisar = (t, tipo) => { estado.textContent = t; estado.className = 'estado' + (tipo ? ' ' + tipo : ''); };
 
         btn.addEventListener('click', async () => {
@@ -109,6 +121,21 @@
                     fecha, moderador: d.moderador, salas, killers
                 });
                 avisar(`✔ Entreno guardado (#${res.id}). Ya aparece en el portal y en Entrenos LATAM.`, 'ok');
+                // Estadísticas avanzadas con el id del entreno (se emparejan por el id de la partida o por orden)
+                if (inputCsv && inputCsv.files.length) {
+                    try {
+                        const csvs = await Promise.all(Array.from(inputCsv.files).map(async f => ({ nombre: f.name, texto: await f.text() })));
+                        const logs = document.querySelector('input[type="file"][accept*=".log"]');
+                        const nombres = logs && logs.files.length === d.salas.length ? Array.from(logs.files).map(f => f.name) : d.salas.map((_, i) => 'sala' + (i + 1));
+                        const ren = {};
+                        d.salas.forEach(sala => { if (sala instanceof Map) sala.forEach((v, nombre) => { const vis = (d.nombreVisible || (n => n))(nombre); if (vis) ren[nombre] = vis; }); });
+                        const { salas: conStats } = PumasCompletos.emparejar(nombres, csvs, ren);
+                        if (conStats.length) {
+                            const r2 = await PumasCompletos.guardar(portal, res.id, PumasCompletos.filasBD(conStats));
+                            avisar(`✔ Entreno guardado (#${res.id}) con estadísticas avanzadas de ${conStats.length} sala(s) (${r2.filas} jugadores).`, 'ok');
+                        } else avisar(`✔ Entreno guardado (#${res.id}). ⚠ Los .csv no coinciden con las salas: no se guardaron estadísticas avanzadas.`, 'ok');
+                    } catch (e2) { avisar(`✔ Entreno guardado (#${res.id}). ⚠ Estadísticas avanzadas no guardadas: ${e2.message}`, 'ok'); }
+                }
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Guardado';
                 // Si cargan otros archivos, se puede volver a guardar
                 setTimeout(() => { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Cargar a la base de datos'; }, 4000);

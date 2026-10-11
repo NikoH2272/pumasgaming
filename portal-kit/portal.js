@@ -255,7 +255,7 @@
         const m = String((error && (error.message || error.code)) || error || '');
         return /PGRST202|PGRST205|42883|42P01|Could not find the (function|table)|does not exist|schema cache/i.test(m);
     }
-    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/22).';
+    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/24).';
     async function rpcPublico(nombre, params) {
         const c = db();
         if (!c) throw new Error('No se pudo conectar con la base de datos.');
@@ -383,7 +383,14 @@
     /* ---------------- Cupos (como los de Pumas) ---------------- */
     const cupos = {
         publicos: portal => rpcPublico('cupos_publicos', { p_portal: portal }),
-        inscribir: (id, equipo, telefono) => rpcPublico('cupo_inscribir', { p_programado: id, p_equipo: equipo, p_telefono: telefono }),
+        // Con el portal (sql/24) la base revisa que el cupo sea de ese portal; sin sql/24 usa la función anterior
+        inscribir: async (id, equipo, telefono, portal) => {
+            if (portal) {
+                try { return await rpcPublico('cupo_inscribir_portal', { p_portal: portal, p_programado: id, p_equipo: equipo, p_telefono: telefono }); }
+                catch (e) { if (e.message !== AVISO_SQL) throw e; }
+            }
+            return rpcPublico('cupo_inscribir', { p_programado: id, p_equipo: equipo, p_telefono: telefono });
+        },
         listar: portal => rpcAdmin('admin_cupos_listar', { p_portal: portal }),
         guardar: (portal, d) => rpcAdmin('admin_cupo_guardar', {
             p_portal: portal, p_titulo: d.titulo, p_fecha: d.fecha.toISOString(), p_cupos: d.cupos, p_link: d.link || null,
@@ -447,6 +454,13 @@
             }),
             borrar: usuario => rpcAdmin('asc_mod_borrar', { p_usuario: usuario })
         }
+    };
+    /* ---------------- Resultados completos (exportado de la sala, sql/23) ---------------- */
+    const stats = {
+        guardar: (portal, sesion, filas) => rpcAdmin('guardar_stats', { p_portal: portal, p_sesion: String(sesion), p_filas: filas }),
+        // superadmin: eventos donde está habilitado
+        borrar: (portal, sesion) => rpcAdmin('borrar_stats', { p_portal: portal, p_sesion: String(sesion) }),
+        configurar: portales => rpcAdmin('admin_export_completo', { p_portales: portales })
     };
     /* ---------------- Registro VIP de Pumas (sql/19) ---------------- */
     const vip = {
@@ -712,7 +726,7 @@ html.pg-verificando body{visibility:hidden}
         login, logout, validar, guard, puede, tiene, inicioDe, db, sesion: leerSesion,
         cargarEfecto, guardarEfecto, aplicarEfecto, usuarios, entrenos, respaldo, confirmar, escaparHtml,
         cargarModulos, olvidarModulos, datosPortal, modulos, aplicarColores, aplicarPersonalizacion, rgbDe, textoSobre,
-        sitio, sorteo, cupos, ascensos, baneados, ia, vip, cargarKit, faltaSql
+        sitio, sorteo, cupos, ascensos, baneados, ia, vip, stats, cargarKit, faltaSql
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);

@@ -501,6 +501,11 @@ async function guardarEntrenamientoEnSupabase() {
             await supabaseClient.from('top_killers').insert(killersRows);
         }
 
+        // Resultados completos (.csv): se guardan con el id de este entreno (completos_admin.js)
+        if (typeof window.alGuardarEntreno === 'function') {
+            try { await window.alGuardarEntreno(sesionId); } catch (e) { console.warn('Estadísticas avanzadas:', e); }
+        }
+
         alert("¡Resultados procesados y guardados exitosamente!");
     } catch (error) {
         console.error("Error crítico:", error);

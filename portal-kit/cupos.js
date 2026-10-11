@@ -10,6 +10,30 @@
     const PAISES = ['+57', '+52', '+54', '+56', '+51', '+593', '+58', '+591', '+595', '+598', '+502', '+504', '+503', '+505', '+506', '+507', '+1', '+34'];
     const fmt = iso => new Date(iso).toLocaleString('es', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
+    // "2d 03:14:22" · "03:14:22"
+    function restante(ms) {
+        const t = Math.max(0, Math.floor(ms / 1000));
+        const d = Math.floor(t / 86400), h = Math.floor(t % 86400 / 3600), m = Math.floor(t % 3600 / 60), sg = t % 60;
+        const z = n => String(n).padStart(2, '0');
+        return (d ? d + 'd ' : '') + z(h) + ':' + z(m) + ':' + z(sg);
+    }
+    // Un solo reloj por página: actualiza los contadores y recarga cuando un cupo se abre
+    let reloj = null;
+    function arrancarReloj(cont, alAbrir) {
+        clearInterval(reloj);
+        const tic = () => {
+            const ahora = Date.now();
+            let abrio = false;
+            cont.querySelectorAll('[data-abre]').forEach(el => {
+                const falta = Number(el.dataset.abre) - ahora;
+                if (falta <= 0) abrio = true;
+                else el.textContent = restante(falta);
+            });
+            if (abrio) { clearInterval(reloj); alAbrir(); }
+        };
+        if (cont.querySelector('[data-abre]')) { tic(); reloj = setInterval(tic, 1000); }
+    }
+
     function chips(lista) {
         return lista.map(e => `<span class="cupo-eq${e.staff ? ' staff' : ''}">${esc(e.equipo)}${e.staff ? ' <i class="fa-solid fa-shield-halved" title="Asegurado por staff"></i>' : ''}</span>`).join('');
     }
@@ -23,8 +47,24 @@
         try { lista = await P.cupos.publicos(portal); }
         catch (e) { cont.innerHTML = `<p class="res-vacio">${esc(e.message)}</p>`; return; }
         if (!lista.length) { cont.innerHTML = `<p class="res-vacio"><i class="fa-regular fa-calendar"></i>No hay cupos abiertos en este momento. Vuelve pronto.</p>`; return; }
+        // Solo los cupos de ESTE portal (la base ya filtra; esto es por si acaso)
+        lista = lista.filter(g => !g.portal || g.portal === portal);
+        if (!lista.length) { cont.innerHTML = `<p class="res-vacio"><i class="fa-regular fa-calendar"></i>No hay cupos abiertos en este momento. Vuelve pronto.</p>`; return; }
         cont.innerHTML = `<div class="cupos-grid">${lista.map(g => {
             const quedan = g.cupos - g.inscritos.length;
+            const abre = g.abre_en ? new Date(g.abre_en).getTime() : 0;
+            if (g.pendiente || abre > Date.now()) {
+                return `<article class="card-box cupo-card cupo-pendiente">
+                <div class="cupo-top">
+                    <div><h3>${esc(g.titulo)}</h3><p class="muted"><i class="fa-regular fa-clock"></i> ${fmt(g.fecha)}</p></div>
+                    <div class="cupo-cuenta"><b>${Math.max(quedan, 0)}</b><small>de ${g.cupos} cupos</small></div>
+                </div>
+                <div class="cupo-contador"><small><i class="fa-solid fa-hourglass-half"></i> Las inscripciones se abren en</small>
+                    <b data-abre="${abre}">${restante(abre - Date.now())}</b><small>${esc(fmt(g.abre_en))}</small></div>
+                ${g.inscritos.length ? `<div class="cupo-lista">${chips(g.inscritos)}</div>` : ''}
+                <button class="btn-access" disabled><i class="fa-solid fa-lock"></i> Aún no abre</button>
+            </article>`;
+            }
             return `<article class="card-box cupo-card">
                 <div class="cupo-top">
                     <div><h3>${esc(g.titulo)}</h3><p class="muted"><i class="fa-regular fa-clock"></i> ${fmt(g.fecha)}</p></div>
@@ -35,10 +75,11 @@
                 <button class="btn-access" data-inscribir="${g.id}" ${quedan > 0 ? '' : 'disabled'}>${quedan > 0 ? '<i class="fa-solid fa-ticket"></i> Inscribir equipo' : 'Cupos agotados'}</button>
             </article>`;
         }).join('')}</div>`;
-        cont.querySelectorAll('[data-inscribir]').forEach(b => b.addEventListener('click', () => inscribir(lista.find(g => String(g.id) === b.dataset.inscribir), () => montarPublico(contId, portal))));
+        cont.querySelectorAll('[data-inscribir]').forEach(b => b.addEventListener('click', () => inscribir(lista.find(g => String(g.id) === b.dataset.inscribir), portal, () => montarPublico(contId, portal))));
+        arrancarReloj(cont, () => montarPublico(contId, portal));
     }
 
-    async function inscribir(g, recargar) {
+    async function inscribir(g, portal, recargar) {
         const r = await P.confirmar({
             titulo: 'Inscripción · ' + g.titulo, si: 'Confirmar inscripción', no: 'Cancelar',
             html: `<div class="form-group"><label>Nombre del equipo</label><input data-campo="equipo" maxlength="60" placeholder="Ej: Pumas Squad"></div>
@@ -50,9 +91,13 @@
         const equipo = (r.campos.equipo || '').trim(), tel = (r.campos.tel || '').replace(/[^\d]/g, '');
         if (!equipo || tel.length < 6) { alert('Completa el nombre del equipo y un WhatsApp válido.'); return; }
         try {
-            const res = await P.cupos.inscribir(g.id, equipo, r.campos.pais + ' ' + tel);
-            const ir = await P.confirmar({ titulo: '¡Inscripción exitosa!', si: res.link ? 'Unirme al grupo' : 'Listo', no: 'Cerrar',
-                html: `<p><b>${esc(equipo)}</b> quedó inscrito en <b>${esc(g.titulo)}</b>.</p>${res.link ? '<p>Únete al grupo de coordinación para recibir la sala.</p>' : ''}` });
+            const res = await P.cupos.inscribir(g.id, equipo, r.campos.pais + ' ' + tel, portal);
+            const ir = await P.confirmar({ titulo: '¡Inscripción exitosa!', si: res.link ? 'Abrir' : 'Listo', no: 'Cerrar',
+                html: `<p><b>${esc(equipo)}</b> quedó inscrito en <b>${esc(g.titulo)}</b>.</p>${res.link ? `
+                    <div class="cupo-aviso-grupo"><i class="fa-solid fa-circle-exclamation"></i>
+                        <div><b>Antes de unirte:</b> al entrar al grupo escribe el <b>nombre de tu equipo</b>
+                        (<b>${esc(equipo)}</b>) para que el staff te identifique y te pase la sala.</div></div>
+                    <p>Para unirte al grupo toca <b>Abrir</b>.</p>` : ''}` });
             if (ir && res.link) window.open(res.link, '_blank', 'noopener');
         } catch (e) { alert(e.message); }
         recargar();

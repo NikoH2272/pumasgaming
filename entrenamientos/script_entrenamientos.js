@@ -12,23 +12,15 @@ function toggleMenu() {
 }
 
 function cambiarPestanaPublica(pestana) {
-    const vistaGeneral = document.getElementById('vistaGeneral');
-    const vistaVip = document.getElementById('vistaVip');
-    const navGlobal = document.getElementById('navGlobal');
-    const navVip = document.getElementById('navVip');
-
-    if (pestana === 'global') {
-        if (vistaGeneral) vistaGeneral.style.display = 'grid';
-        if (vistaVip) vistaVip.style.display = 'none';
-        if (navGlobal) navGlobal.style.color = 'var(--primary)';
-        if (navVip) navVip.style.color = 'var(--secondary)';
-    } else {
-        if (vistaGeneral) vistaGeneral.style.display = 'none';
-        if (vistaVip) vistaVip.style.display = 'block';
-        if (navVip) navVip.style.color = 'var(--primary)';
-        if (navGlobal) navGlobal.style.color = 'var(--secondary)';
-        cargarResultadosVipPublicos();
-    }
+    if (window.event && window.event.preventDefault) window.event.preventDefault();
+    const vistas = { global: ['vistaGeneral', 'navGlobal', 'grid'], analisis: ['vistaAnalisis', 'navAnalisis', 'block'], vip: ['vistaVip', 'navVip', 'block'] };
+    const elegida = vistas[pestana] ? pestana : 'global';
+    Object.entries(vistas).forEach(([k, [vista, nav, display]]) => {
+        const v = document.getElementById(vista), n = document.getElementById(nav);
+        if (v) v.style.display = k === elegida ? display : 'none';
+        if (n) n.style.color = k === elegida ? 'var(--primary)' : 'var(--secondary)';
+    });
+    if (elegida === 'vip') cargarResultadosVipPublicos();
 }
 
 const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";

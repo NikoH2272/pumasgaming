@@ -15,10 +15,10 @@
     <title>Admin | Pumas Gaming</title>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261010d">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261011i">
     <link rel="icon" type="image/x-icon" href="../imagenes/LOGO PUMAS WEB.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261010d" data-modo="login"></script>
+    <script src="../portal-kit/portal.js?v=20261011i" data-modo="login"></script>
 </head>
 <body>
     <header class="site-header">
@@ -106,6 +106,10 @@
                 <h3><i class="fa-solid fa-house"></i> Inicio</h3>
                 <p>Torneos aliados y sorteo del inicio: se activan aquí y solo salen cuando están activos.</p>
                 <div class="acciones"><a class="btn-access" href="inicio.html"><i class="fa-solid fa-sliders"></i> Editar inicio</a></div></article>`);
+        if (P.tiene(s, 'gestionar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#FF8A00">
+                <h3><i class="fa-solid fa-chart-simple"></i> Resultados completos</h3>
+                <p>Elige qué eventos suben el .csv completo de la sala (daño, headshots, gloo, revividas). Por defecto: Entrenos Pumas.</p>
+                <div class="acciones"><a class="btn-access" href="exportar.html"><i class="fa-solid fa-file-csv"></i> Configurar</a></div></article>`);
         if (P.tiene(s, 'gestionar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#4285F4">
                 <h3><i class="fa-solid fa-wand-magic-sparkles"></i> Motores de IA</h3>
                 <p>Activa Gemini, el motor privado o Claude para la lectura de capturas de Ascensos AZA.</p>
