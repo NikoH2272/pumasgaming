@@ -74,7 +74,13 @@
 
     <section class="tool-section" id="cupos">
         <h2 class="section-title">Cupos</h2>
-        <div class="tool-container" id="cuposAdmin"></div>
+        <div class="tool-container">
+            <div id="cuposAdmin"></div>
+            <h3 class="subtitulo-bloque" style="margin-top:30px">VIP · horarios y equipos autorizados</h3>
+            <div id="vipCuposAdmin"></div>
+            <h3 class="subtitulo-bloque" style="margin-top:30px">Baneos por equipo o teléfono</h3>
+            <div id="baneosCuposAdmin"></div>
+        </div>
     </section>
     </main>
 
@@ -86,11 +92,14 @@
     <script src="script.js?v=20261012b"></script>
     <script src="../portal-kit/guardado.js?v=20261012b"></script>
     <script src="../portal-kit/cupos.js?v=20261012b"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261012b"></script>
     <script>
         moduloListo.then(m => {
             if (!m) return;
             window.MODULO = m;
             PumasCupos.montarAdmin('cuposAdmin', m.id);
+            PumasControl.montarVip('vipCuposAdmin', m.id, { agregar: true });
+            PumasControl.montarBaneos('baneosCuposAdmin', m.id);
             PumasGuardado.montar({
                 contenedor: 'guardarBD',
                 portal: () => m.id,

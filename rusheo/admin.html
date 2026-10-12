@@ -37,6 +37,7 @@
         <nav class="main-nav" id="mainNav">
             <ul>
                 <li><a href="#resultados" onclick="closeMenu()">Herramienta</a></li>
+                <li><a href="#gestionCupos" onclick="closeMenu()"><i class="fa-solid fa-ticket"></i> Cupos</a></li>
                 <li><a href="./"><i class="fa-solid fa-trophy"></i> Ver portal</a></li>
                 <li data-pg-hub hidden><a href="/admin/"><i class="fa-solid fa-table-cells-large"></i> Portales</a></li>
                 <li><span class="pg-user"><i class="fa-solid fa-user-shield"></i> <span data-pg-usuario></span></span></li>
@@ -102,6 +103,18 @@
         </div>
     </section>
 
+    <section id="gestionCupos" class="tool-section">
+        <h2 class="section-title">Cupos de Rusheo</h2>
+        <div class="tool-container">
+            <p class="tool-desc">Programa jornadas y administra las inscripciones de este portal.</p>
+            <div id="cuposAdmin"></div>
+            <h3 class="subtitulo-bloque" style="margin-top:30px">VIP · horarios y equipos autorizados</h3>
+            <div id="vipCuposAdmin"></div>
+            <h3 class="subtitulo-bloque" style="margin-top:30px">Baneos por equipo o teléfono</h3>
+            <div id="baneosCuposAdmin"></div>
+        </div>
+    </section>
+
     <footer>
         <p>&copy; 2026 <b>RUSHEO</b> by PUMAS GAMING. Todos los derechos reservados.</p>
     </footer>
@@ -112,6 +125,8 @@
     </script>
     <script src="script.js?v=20261012b"></script>
     <script src="../portal-kit/guardado.js?v=20261012b"></script>
+    <script src="../portal-kit/cupos.js?v=20261012b"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261012b"></script>
     <script>
         // Botón "Cargar a la base de datos" (usa los logs subidos y los nombres corregidos)
         PumasGuardado.montar({
@@ -133,5 +148,10 @@
             }
         });
     </script>
+    <script>window.addEventListener('pg:sesion', () => {
+        PumasCupos.montarAdmin('cuposAdmin', 'rusheo');
+        PumasControl.montarVip('vipCuposAdmin', 'rusheo', { agregar: true });
+        PumasControl.montarBaneos('baneosCuposAdmin', 'rusheo');
+    }, { once: true });</script>
 </body>
 </html>

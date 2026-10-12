@@ -37,6 +37,7 @@
         <nav class="main-nav" id="mainNav">
             <ul>
                 <li><a href="#resultados" onclick="closeMenu()">Herramienta</a></li>
+                <li><a href="#gestionCupos" onclick="closeMenu()"><i class="fa-solid fa-ticket"></i> Cupos</a></li>
                 <li><a href="./"><i class="fa-solid fa-trophy"></i> Portal mixto</a></li>
                 <li><a href="femenino.html"><i class="fa-solid fa-trophy"></i> Portal femenino</a></li>
                 <li data-pg-hub hidden><a href="/admin/"><i class="fa-solid fa-table-cells-large"></i> Portales</a></li>
@@ -111,6 +112,22 @@
         </div>
     </section>
 
+    <section id="gestionCupos" class="tool-section">
+        <h2 class="section-title">Cupos de ZMF</h2>
+        <div class="tool-container">
+            <h3 class="subtitulo-bloque">Mixto</h3>
+            <div id="cuposAdminMixto"></div>
+            <h4 class="subtitulo-bloque">Mixto · VIP y baneos</h4>
+            <div id="vipCuposMixto"></div>
+            <div id="baneosCuposMixto"></div>
+            <h3 class="subtitulo-bloque" style="margin-top:32px">Femenino</h3>
+            <div id="cuposAdminFemenino"></div>
+            <h4 class="subtitulo-bloque">Femenino · VIP y baneos</h4>
+            <div id="vipCuposFemenino"></div>
+            <div id="baneosCuposFemenino"></div>
+        </div>
+    </section>
+
     <footer>
         <p>&copy; 2026 <b>ZMF</b> by PUMAS GAMING. Todos los derechos reservados.</p>
     </footer>
@@ -137,6 +154,8 @@
     </script>
     <script src="script.js?v=20261012b"></script>
     <script src="../portal-kit/guardado.js?v=20261012b"></script>
+    <script src="../portal-kit/cupos.js?v=20261012b"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261012b"></script>
     <script>
         // Botón "Cargar a la base de datos" (usa los logs subidos y los nombres corregidos)
         PumasGuardado.montar({
@@ -158,5 +177,13 @@
             }
         });
     </script>
+    <script>window.addEventListener('pg:sesion', () => {
+        PumasCupos.montarAdmin('cuposAdminMixto', 'zmf');
+        PumasCupos.montarAdmin('cuposAdminFemenino', 'zmffem');
+        PumasControl.montarVip('vipCuposMixto', 'zmf', { agregar: true });
+        PumasControl.montarBaneos('baneosCuposMixto', 'zmf');
+        PumasControl.montarVip('vipCuposFemenino', 'zmffem', { agregar: true });
+        PumasControl.montarBaneos('baneosCuposFemenino', 'zmffem');
+    }, { once: true });</script>
 </body>
 </html>

@@ -12,15 +12,15 @@ Portal de **Pumas Gaming** (Free Fire): entrenamientos, rankings y herramientas 
 |------|--------|--------|
 | `/` | Portal principal: entrenamientos, Entrenos LATAM, jerseys, comunidad, rankings y creador de resultados | Público |
 | `/entrenamientos/` | Entrenamientos oficiales de Pumas (calendario, top semanal, histórico, cupos) | Público · panel con login |
-| `/entrenoslatam/` | **Entrenos LATAM**: junta los resultados de Pumas, Rusheo, ROW, QFD, Dragon Fest y ZMF | Público |
-| `/ascensosqfd/` | Ascensos QFD | Portal público + herramienta (`admin.html`) |
-| `/row/` | ROW x Maya | Portal público + herramienta |
-| `/rusheo/` | Rusheo | Portal público + herramienta |
-| `/dragonfest/` | Dragon Fest: `index.html` mixto · `femenino.html` femenino · `admin.html` herramienta compartida | Público + herramienta |
-| `/zmf/` | ZMF: `index.html` mixto · `femenino.html` femenino · `admin.html` herramienta compartida | Público + herramienta |
-| `/ascensos/` | **Ascensos AZA**: jornadas por categoría, equipos, baneados, cupos (`cupos.html`). Herramienta `admin.html` con borrador que no se pierde | Público + herramienta |
-| `/pruebas/` | Módulo de pruebas: igual a Ascensos, con su propia base, para probar sin tocar lo real (usuario `pruebas`) | Público + herramienta |
-| `/modulo/?p=<id>` | Módulos creados desde el panel (resultados, herramienta, cupos) | Público + herramienta |
+| `/entrenoslatam/` | **Entrenos LATAM**: junta resultados de Pumas, Rusheo, ROW, QFD, Dragon Fest y ZMF; no mezcla cupos | Público |
+| `/ascensosqfd/` | Ascensos QFD, con cupos públicos/VIP y baneos propios | Portal público + herramienta y gestión (`admin.html`)
+| `/row/` | ROW x Maya, con cupos públicos/VIP y baneos propios | Portal público + herramienta y gestión |
+| `/rusheo/` | Rusheo, con cupos públicos/VIP y baneos propios | Portal público + herramienta y gestión |
+| `/dragonfest/` | Dragon Fest: `index.html` mixto · `femenino.html` femenino · cupos/VIP/baneos separados por categoría · `admin.html` compartido | Público + herramienta y gestión |
+| `/zmf/` | ZMF: `index.html` mixto · `femenino.html` femenino · cupos/VIP/baneos separados por categoría · `admin.html` compartido | Público + herramienta y gestión |
+| `/ascensos/` | **Ascensos AZA**: jornadas por categoría, baneados, cupos públicos y generación de equipos que cumplen parámetros de ascenso. No usa VIP | Público + herramienta |
+| `/pruebas/` | Módulo de pruebas con su propia base, cupos públicos/VIP y baneos (usuario `pruebas`) | Público + herramienta |
+| `/modulo/?p=<id>` | Módulos creados desde el panel (resultados, cupos públicos/VIP y baneos por ID) | Público + herramienta |
 | `/admin/` | Panel central: portales, personalización, inicio (torneos aliados), módulos, sorteos, usuarios y roles, corregir entrenos | Con login |
 
 ### Fórmulas de resultados (iguales en todo el sitio)
@@ -83,6 +83,7 @@ Luego abre `http://localhost:5173`. Usa la misma base de Supabase que producció
 Guías:
 - [Trabajo en paralelo](docs/TRABAJO_EN_PARALELO.md): quién toca qué carpeta, ramas, SQL e imágenes de cada portal.
 - [Paso a producción](docs/PRODUCCION.md): checklist antes y después de subir.
+- [Cupos, VIP y baneos por portal](docs/CUPOS_VIP_BANEOS.md): flujo por portal, aislamiento, roles, SQL 30 y pruebas manuales.
 
 ---
 

@@ -151,6 +151,8 @@
         <div class="tool-container asc-panel" id="panelCupos" hidden>
             <p class="tool-desc">Abre cupos para la próxima jornada, igual que en Pumas. Los equipos se inscriben en <a href="cupos.html">la página de cupos</a>.</p>
             <div id="cuposAdmin"></div>
+            <h3 class="subtitulo-bloque" style="margin-top:30px">Baneos por equipo o teléfono</h3>
+            <div id="baneosCuposAdmin"></div>
         </div>
     </section>
 
@@ -164,6 +166,10 @@
     <script src="categorias.js?v=20261012b"></script>
     <script src="../portal-kit/baneados.js?v=20261012b"></script>
     <script src="../portal-kit/cupos.js?v=20261012b"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261012b"></script>
     <script src="ascensos.js?v=20261012b"></script>
+    <script>window.addEventListener('pg:sesion', () => {
+        PumasControl.montarBaneos('baneosCuposAdmin', 'ascensosaza');
+    }, { once: true });</script>
 </body>
 </html>

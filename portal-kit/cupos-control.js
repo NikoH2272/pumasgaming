@@ -1,6 +1,6 @@
 /* =====================================================================
    PUMAS GAMING · Control de cupos: VIP, baneados y "Generar baneo" (sql/25)
-   Solo en Entrenos Pumas y en el módulo de Pruebas.
+    Disponible en cada portal con cupos, con datos separados por portal.
    PumasControl.montarVip(contId, portal, {agregar}) → horarios VIP + lista VIP (verificar y copiar)
    PumasControl.montarBaneos(contId, portal)   → baneo por equipo y/o número
    PumasControl.revisarSalas(portal, equipos)  → ventana GENERAR BANEO con los
@@ -14,7 +14,17 @@
     const fecha = d => d ? new Date(String(d).length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Indefinido';
     const hoy = () => new Date().toISOString().slice(0, 10);
     // Páginas ocultas de cupos VIP (solo con el link, como Registrar VIP)
-    const LINK_VIP = { entrenamientos: '/entrenamientos/cupos-vip.html', pruebas: '/pruebas/cupos-vip.html' };
+    const LINK_VIP = {
+        entrenamientos: '/entrenamientos/cupos-vip.html',
+        pruebas: '/pruebas/cupos-vip.html',
+        ascensosqfd: '/ascensosqfd/cupos-vip.html',
+        row: '/row/cupos-vip.html',
+        rusheo: '/rusheo/cupos-vip.html',
+        dragonfest: '/dragonfest/cupos-vip.html',
+        dragonfestfem: '/dragonfest/cupos-vip-femenino.html',
+        zmf: '/zmf/cupos-vip.html',
+        zmffem: '/zmf/cupos-vip-femenino.html'
+    };
     const errorSql = e => /admin_vip|admin_baneo|PGRST202|Could not find/i.test(e.message) ? 'Falta correr sql/25_cupos_vip_y_baneos.sql en Supabase.' : e.message;
 
     const CSS = `
@@ -87,11 +97,12 @@
         if (!cont) return;
         estilos();
         const agregar = !!(opts && opts.agregar);
+        const linkVip = LINK_VIP[portal] || `/modulo/cupos-vip.html?p=${encodeURIComponent(portal)}`;
         cont.innerHTML = `
-            ${LINK_VIP[portal] ? `<div class="cc-link"><div><small><i class="fa-solid fa-link"></i> LINK OCULTO DE CUPOS VIP · no sale en el portal ni en el menú: compártelo solo con los VIP</small>
-                <code data-v="link">${esc(location.origin + LINK_VIP[portal])}</code></div>
+            <div class="cc-link"><div><small><i class="fa-solid fa-link"></i> LINK OCULTO DE CUPOS VIP · no sale en el portal ni en el menú: compártelo solo con los VIP</small>
+                <code data-v="link">${esc(location.origin + linkVip)}</code></div>
                 <div style="display:flex;gap:6px"><button class="cc-btn lleno" data-v="copiar" type="button"><i class="fa-solid fa-copy"></i> Copiar</button>
-                <a class="cc-btn" href="${esc(LINK_VIP[portal])}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir</a></div></div>` : ''}
+                <a class="cc-btn" href="${esc(linkVip)}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir</a></div></div>
 
             <div class="cc-h"><i class="fa-solid fa-clock"></i> HORARIOS VIP <small>· hora Colombia</small></div>
             <div class="cc-form">

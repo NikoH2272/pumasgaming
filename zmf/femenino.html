@@ -42,6 +42,8 @@
                                 <li><a href="#killers" onclick="closeMenu()">Killers</a></li>
                 <li><a href="#destacados" onclick="closeMenu()">Destacados</a></li>
                 <li><a href="./">Mixto</a></li>
+                <li><a href="#baneados" onclick="closeMenu()">Baneados</a></li>
+                <li><a href="cupos-femenino.html"><i class="fa-solid fa-ticket"></i> Cupos</a></li>
                 <li><a href="/">Pumas Gaming</a></li>
                 <li><a href="admin.html"><i class="fa-solid fa-lock"></i> Admin</a></li>
             </ul>
@@ -53,6 +55,7 @@
             <div class="eyebrow">Resultados oficiales · Free Fire</div>
             <h1><span class="t-a">ZMF</span><small>by <b>PUMAS</b> · Femenino</small></h1>
             <p>Tabla general, últimos entrenos y top killers de ZMF Femenino, actualizados con cada sala procesada.</p>
+            <div class="hero-actions"><a href="cupos-femenino.html" class="btn-access"><i class="fa-solid fa-ticket"></i> Apartar cupo</a></div>
             <div class="stat-row">
                 <div><b id="statEntrenos">0</b><small>Entrenos</small></div>
                 <div><b id="statEquipos">0</b><small>Equipos</small></div>
@@ -130,6 +133,11 @@
         <div class="dest-grid" id="latamDestacados"><p class="res-vacio">Cargando...</p></div>
     </section>
 
+    <section id="baneados">
+        <h2 class="section-title">Equipos baneados</h2>
+        <div class="card-box" id="baneadosPublicos"><p class="res-vacio">Cargando...</p></div>
+    </section>
+
     <footer>
         <p>&copy; 2026 <b>ZMF FEMENINO</b> by PUMAS GAMING. Todos los derechos reservados.</p>
     </footer>
@@ -138,7 +146,9 @@
         function toggleMenu() { document.getElementById('mainNav').classList.toggle('is-active'); }
         function closeMenu() { document.getElementById('mainNav').classList.remove('is-active'); }
     </script>
+    <script src="../portal-kit/baneados.js?v=20261012b"></script>
     <script src="../portal-kit/latam.js?v=20261012b"></script>
+    <script>PumasBaneados.montarPublico('baneadosPublicos', 'zmffem');</script>
     <script>Latam.iniciarResultadosPortal('zmffem');</script>
 </body>
 </html>

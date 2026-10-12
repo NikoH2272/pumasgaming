@@ -39,6 +39,7 @@
                 <li><a href="#historico" onclick="closeMenu()">Histórico</a></li>
                 <li><a href="#killers" onclick="closeMenu()">Killers</a></li>
                 <li><a href="#destacados" onclick="closeMenu()">Destacados</a></li>
+                <li><a href="#baneados" onclick="closeMenu()">Baneados</a></li>
                 <li><a data-mod-href="cupos.html" href="cupos.html"><i class="fa-solid fa-ticket"></i> Cupos</a></li>
                 <li><a href="/">Pumas Gaming</a></li>
                 <li><a data-mod-href="admin.html" href="admin.html"><i class="fa-solid fa-lock"></i> Admin</a></li>
@@ -128,6 +129,10 @@
         <h2 class="section-title">Destacados</h2>
         <div class="dest-grid" id="latamDestacados"><p class="res-vacio">Cargando...</p></div>
     </section>
+    <section id="baneados">
+        <h2 class="section-title">Equipos baneados</h2>
+        <div class="card-box" id="baneadosPublicos"><p class="res-vacio">Cargando...</p></div>
+    </section>
     </main>
 
     <footer>
@@ -139,7 +144,11 @@
         function closeMenu() { document.getElementById('mainNav').classList.remove('is-active'); }
     </script>
     <script src="modulo.js?v=20261012b"></script>
+    <script src="../portal-kit/baneados.js?v=20261012b"></script>
     <script src="../portal-kit/latam.js?v=20261012b"></script>
-    <script>moduloListo.then(m => { if (m) Latam.iniciarResultadosPortal(m.id); });</script>
+    <script>moduloListo.then(m => { if (m) {
+        PumasBaneados.montarPublico('baneadosPublicos', m.id);
+        Latam.iniciarResultadosPortal(m.id);
+    } });</script>
 </body>
 </html>

@@ -108,13 +108,10 @@
     }
 
     /* ---------------- Admin ---------------- */
-    // VIP y baneo por número: solo en Pumas y en el módulo de Pruebas (sql/25)
-    const CON_CONTROL = ['entrenamientos', 'pruebas'];
-
     async function montarAdmin(contId, portal) {
         const cont = document.getElementById(contId);
         if (!cont) return;
-        const conTipo = CON_CONTROL.includes(portal);
+        const conTipo = portal !== 'ascensosaza';
         cont.innerHTML = `
             <div class="form-grid">
                 <div class="form-group"><label for="cpTitulo">Título</label><input id="cpTitulo" maxlength="120" placeholder="Ej: Jornada de ascensos · Lunes"></div>
