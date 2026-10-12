@@ -39,7 +39,9 @@
     }
 
     /* ---------------- Público ---------------- */
-    async function montarPublico(contId, portal) {
+    // opts.tipo: 'PUBLICO' (cupos.html, por defecto) o 'VIP' (cupos-vip.html: página oculta, se entra con el link)
+    async function montarPublico(contId, portal, opts) {
+        const soloVip = !!(opts && opts.tipo === 'VIP');
         const cont = document.getElementById(contId);
         if (!cont) return;
         cont.innerHTML = `<p class="res-vacio"><i class="fa-solid fa-spinner fa-spin"></i>Buscando cupos abiertos...</p>`;
@@ -48,15 +50,15 @@
         catch (e) { cont.innerHTML = `<p class="res-vacio">${esc(e.message)}</p>`; return; }
         if (!lista.length) { cont.innerHTML = `<p class="res-vacio"><i class="fa-regular fa-calendar"></i>No hay cupos abiertos en este momento. Vuelve pronto.</p>`; return; }
         // Solo los cupos de ESTE portal (la base ya filtra; esto es por si acaso)
-        lista = lista.filter(g => !g.portal || g.portal === portal);
-        if (!lista.length) { cont.innerHTML = `<p class="res-vacio"><i class="fa-regular fa-calendar"></i>No hay cupos abiertos en este momento. Vuelve pronto.</p>`; return; }
+        lista = lista.filter(g => (!g.portal || g.portal === portal) && (g.tipo === 'VIP') === soloVip);
+        if (!lista.length) { cont.innerHTML = `<p class="res-vacio"><i class="fa-regular fa-calendar"></i>${soloVip ? 'No hay cupos VIP abiertos en este momento.' : 'No hay cupos abiertos en este momento. Vuelve pronto.'}</p>`; return; }
         cont.innerHTML = `<div class="cupos-grid">${lista.map(g => {
             const quedan = g.cupos - g.inscritos.length;
             const abre = g.abre_en ? new Date(g.abre_en).getTime() : 0;
             if (g.pendiente || abre > Date.now()) {
                 return `<article class="card-box cupo-card cupo-pendiente">
                 <div class="cupo-top">
-                    <div><h3>${esc(g.titulo)}</h3><p class="muted"><i class="fa-regular fa-clock"></i> ${fmt(g.fecha)}</p></div>
+                    <div><h3>${g.tipo === 'VIP' ? '<span class="cupo-vip"><i class="fa-solid fa-crown"></i> SOLO VIP</span> ' : ''}${esc(g.titulo)}</h3><p class="muted"><i class="fa-regular fa-clock"></i> ${fmt(g.fecha)}</p></div>
                     <div class="cupo-cuenta"><b>${Math.max(quedan, 0)}</b><small>de ${g.cupos} cupos</small></div>
                 </div>
                 <div class="cupo-contador"><small><i class="fa-solid fa-hourglass-half"></i> Las inscripciones se abren en</small>
@@ -67,7 +69,7 @@
             }
             return `<article class="card-box cupo-card">
                 <div class="cupo-top">
-                    <div><h3>${esc(g.titulo)}</h3><p class="muted"><i class="fa-regular fa-clock"></i> ${fmt(g.fecha)}</p></div>
+                    <div><h3>${g.tipo === 'VIP' ? '<span class="cupo-vip"><i class="fa-solid fa-crown"></i> SOLO VIP</span> ' : ''}${esc(g.titulo)}</h3><p class="muted"><i class="fa-regular fa-clock"></i> ${fmt(g.fecha)}</p></div>
                     <div class="cupo-cuenta"><b>${Math.max(quedan, 0)}</b><small>de ${g.cupos} cupos</small></div>
                 </div>
                 <div class="cupo-barra"><span style="width:${Math.min(100, g.inscritos.length / g.cupos * 100)}%"></span></div>
@@ -75,14 +77,15 @@
                 <button class="btn-access" data-inscribir="${g.id}" ${quedan > 0 ? '' : 'disabled'}>${quedan > 0 ? '<i class="fa-solid fa-ticket"></i> Inscribir equipo' : 'Cupos agotados'}</button>
             </article>`;
         }).join('')}</div>`;
-        cont.querySelectorAll('[data-inscribir]').forEach(b => b.addEventListener('click', () => inscribir(lista.find(g => String(g.id) === b.dataset.inscribir), portal, () => montarPublico(contId, portal))));
-        arrancarReloj(cont, () => montarPublico(contId, portal));
+        cont.querySelectorAll('[data-inscribir]').forEach(b => b.addEventListener('click', () => inscribir(lista.find(g => String(g.id) === b.dataset.inscribir), portal, () => montarPublico(contId, portal, opts))));
+        arrancarReloj(cont, () => montarPublico(contId, portal, opts));
     }
 
     async function inscribir(g, portal, recargar) {
         const r = await P.confirmar({
             titulo: 'Inscripción · ' + g.titulo, si: 'Confirmar inscripción', no: 'Cancelar',
-            html: `<div class="form-group"><label>Nombre del equipo</label><input data-campo="equipo" maxlength="60" placeholder="Ej: Pumas Squad"></div>
+            html: `${g.tipo === 'VIP' ? `<div class="cupo-aviso-grupo"><i class="fa-solid fa-crown"></i><div><b>Cupo solo para VIP:</b> escribe el <b>mismo nombre de equipo</b> y el <b>mismo número</b> con que te anotaron como VIP. Si no coinciden, no te da el cupo.</div></div>` : ''}
+                   <div class="form-group"><label>Nombre del equipo</label><input data-campo="equipo" maxlength="60" placeholder="Ej: Pumas Squad"></div>
                    <div class="form-group"><label>WhatsApp de contacto</label><div style="display:grid;grid-template-columns:100px 1fr;gap:8px">
                    <select data-campo="pais">${PAISES.map(p => `<option>${p}</option>`).join('')}</select>
                    <input data-campo="tel" inputmode="tel" maxlength="16" placeholder="Número sin espacios"></div></div>`
@@ -104,9 +107,13 @@
     }
 
     /* ---------------- Admin ---------------- */
+    // VIP y baneo por número: solo en Pumas y en el módulo de Pruebas (sql/25)
+    const CON_CONTROL = ['entrenamientos', 'pruebas'];
+
     async function montarAdmin(contId, portal) {
         const cont = document.getElementById(contId);
         if (!cont) return;
+        const conTipo = CON_CONTROL.includes(portal);
         cont.innerHTML = `
             <div class="form-grid">
                 <div class="form-group"><label for="cpTitulo">Título</label><input id="cpTitulo" maxlength="120" placeholder="Ej: Jornada de ascensos · Lunes"></div>
@@ -114,6 +121,8 @@
             </div>
             <div class="form-grid">
                 <div class="form-group"><label for="cpCupos">Cupos totales</label><input id="cpCupos" type="number" min="1" max="100" value="12"></div>
+                ${conTipo ? `<div class="form-group"><label for="cpTipo">Tipo de cupo</label><select id="cpTipo">
+                    <option value="PUBLICO">PÚBLICO (cualquier equipo)</option><option value="VIP">VIP (solo la lista VIP · sale solo en el link oculto)</option></select></div>` : ''}
                 <div class="form-group"><label for="cpLink">Link del grupo (WhatsApp / Discord)</label><input id="cpLink" type="url" placeholder="https://chat.whatsapp.com/..."></div>
             </div>
             <div class="form-grid">
@@ -139,8 +148,14 @@
             if (!d.titulo || !d.fecha) { msg('Completa título y fecha.'); return; }
             msg('Guardando...');
             try {
-                await P.cupos.guardar(portal, d);
-                msg('✔ Cupos abiertos.');
+                const res = await P.cupos.guardar(portal, d);
+                const tipo = conTipo ? cont.querySelector('#cpTipo').value : 'PUBLICO';
+                if (tipo === 'VIP' && res && res.id) {
+                    try { await P.cupos.tipo(portal, res.id, 'VIP'); }
+                    catch (e) { msg('Se abrieron como PÚBLICOS: para VIP falta correr sql/25_cupos_vip_y_baneos.sql. ' + e.message); lista(); return; }
+                }
+                msg(tipo === 'VIP' ? '✔ Cupos VIP abiertos (solo la lista VIP).' : '✔ Cupos abiertos.');
+                if (conTipo) cont.querySelector('#cpTipo').value = 'PUBLICO';
                 ['cpTitulo', 'cpStaff', 'cpPub'].forEach(id => { cont.querySelector('#' + id).value = ''; });
                 lista();
             } catch (e) { msg(e.message); }
@@ -160,7 +175,7 @@
                 const estado = programado ? 'PROGRAMADO' : g.estado;
                 return `<article class="cupo-admin">
                     <div class="cupo-top">
-                        <div><b>${esc(g.titulo)}</b> <span class="cupo-estado e-${estado.toLowerCase()}">${estado}</span>
+                        <div>${g.tipo === 'VIP' ? '<span class="cupo-vip">VIP</span> ' : ''}<b>${esc(g.titulo)}</b> <span class="cupo-estado e-${estado.toLowerCase()}">${estado}</span>
                             <p class="muted">${fmt(g.fecha)} · ${g.inscritos.length}/${g.cupos} inscritos${programado ? ' · se publica ' + fmt(g.publicar_en) : ''}</p></div>
                         <div class="cupo-acciones">
                             ${programado ? `<button class="btn-mini" data-acc="PUBLICAR" data-id="${g.id}">Publicar ya</button>` : ''}

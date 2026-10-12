@@ -255,7 +255,7 @@
         const m = String((error && (error.message || error.code)) || error || '');
         return /PGRST202|PGRST205|42883|42P01|Could not find the (function|table)|does not exist|schema cache/i.test(m);
     }
-    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/24).';
+    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/25).';
     async function rpcPublico(nombre, params) {
         const c = db();
         if (!c) throw new Error('No se pudo conectar con la base de datos.');
@@ -398,7 +398,19 @@
         }),
         estado: (portal, id, estado) => rpcAdmin('admin_cupo_estado', { p_portal: portal, p_id: id, p_estado: estado }),
         borrar: (portal, id) => rpcAdmin('admin_cupo_borrar', { p_portal: portal, p_id: id }),
-        quitar: (portal, cupo) => rpcAdmin('admin_cupo_quitar', { p_portal: portal, p_cupo: cupo })
+        quitar: (portal, cupo) => rpcAdmin('admin_cupo_quitar', { p_portal: portal, p_cupo: cupo }),
+        tipo: (portal, id, tipo) => rpcAdmin('admin_cupo_tipo', { p_portal: portal, p_id: id, p_tipo: tipo })
+    };
+
+    /* ---------------- Cupos VIP y baneo por equipo / número (sql/25) ---------------- */
+    const control = {
+        vipLista: portal => rpcAdmin('admin_vip_lista', { p_portal: portal }),
+        vipGuardar: (portal, equipo, telefono) => rpcAdmin('admin_vip_guardar', { p_portal: portal, p_equipo: equipo, p_telefono: telefono }),
+        vipBorrar: (portal, id) => rpcAdmin('admin_vip_borrar', { p_portal: portal, p_id: id }),
+        baneos: portal => rpcAdmin('admin_baneos_lista', { p_portal: portal }),
+        banear: (portal, b) => rpcAdmin('admin_baneo_guardar', { p_portal: portal, p_equipo: b.equipo || null, p_telefono: b.telefono || null, p_motivo: b.motivo || null, p_hasta: b.hasta || null }),
+        desbanear: (portal, tipo, id) => rpcAdmin('admin_baneo_borrar', { p_portal: portal, p_tipo: tipo, p_id: id }),
+        banearResultados: (portal, equipo, motivo, hasta) => rpcAdmin('admin_baneo_resultados', { p_portal: portal, p_equipo: equipo, p_motivo: motivo || null, p_hasta: hasta || null })
     };
 
     /* ---------------- Motores de IA (función ascensos-ia + sql/18) ---------------- */
@@ -726,7 +738,7 @@ html.pg-verificando body{visibility:hidden}
         login, logout, validar, guard, puede, tiene, inicioDe, db, sesion: leerSesion,
         cargarEfecto, guardarEfecto, aplicarEfecto, usuarios, entrenos, respaldo, confirmar, escaparHtml,
         cargarModulos, olvidarModulos, datosPortal, modulos, aplicarColores, aplicarPersonalizacion, rgbDe, textoSobre,
-        sitio, sorteo, cupos, ascensos, baneados, ia, vip, stats, cargarKit, faltaSql
+        sitio, sorteo, cupos, control, ascensos, baneados, ia, vip, stats, cargarKit, faltaSql
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);

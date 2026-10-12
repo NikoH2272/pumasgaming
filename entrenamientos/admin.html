@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styleadmin.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261011i" data-portal="entrenamientos" data-modo="admin"></script>
+    <script src="../portal-kit/portal.js?v=20261011j" data-portal="entrenamientos" data-modo="admin"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
     <style>
@@ -80,7 +80,15 @@
             </li>
             <li><a href="#" onclick="cambiarPestanaAdmin('borrarEntrenos')" id="navBorrar" style="color: var(--secondary);"><i class="fa-solid fa-trash-can"></i> Borrar</a></li>
             <li><a href="#" onclick="cambiarPestanaAdmin('metricas')" id="navMetricas" style="color: var(--secondary);"><i class="fa-solid fa-chart-pie"></i> Métricas</a></li>
-            <li><a href="./" style="color: #fff;" target="_blank"><i class="fa-solid fa-list"></i> Público</a></li><li><a href="#" onclick="cambiarPestanaAdmin('programar')" id="navProgramar" style="color: var(--secondary);"><i class="fa-solid fa-calendar-plus"></i> Programar Cupos</a></li>
+            <li><a href="./" style="color: #fff;" target="_blank"><i class="fa-solid fa-list"></i> Público</a></li>
+            <li class="nav-grupo" id="grupoCupos">
+                <a href="#" class="nav-grupo-btn" onclick="abrirSubmenu(event, 'grupoCupos')" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-calendar-plus"></i> Programar Cupos <i class="fa-solid fa-caret-down"></i></a>
+                <ul class="nav-sub">
+                    <li><a href="#" onclick="cambiarPestanaAdmin('programar')" id="navProgramar"><i class="fa-solid fa-calendar-plus"></i> Programar</a></li>
+                    <li><a href="#" onclick="cambiarPestanaAdmin('cuposVip')" id="navCuposVip"><i class="fa-solid fa-crown"></i> VIP</a></li>
+                    <li><a href="#" onclick="cambiarPestanaAdmin('baneados')" id="navBaneados"><i class="fa-solid fa-ban"></i> Baneados</a></li>
+                </ul>
+            </li>
             <li><a href="#" onclick="cerrarSesion()" style="color: #ff5555;"><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
             
         </ul>
@@ -187,6 +195,9 @@
                     <div id="contenedorBotonGuardarFinal" style="display: none; margin-top: 20px; width: 100%;">
                         <button class="btn-generar" onclick="procesarArchivosLog()">
                             <i class="fa-solid fa-gears"></i> PROCESAR Y GUARDAR EN BASE DE DATOS
+                        </button>
+                        <button class="btn-generar" onclick="abrirGenerarBaneo(true)" style="margin-top: 10px; background: rgba(255,85,85,.15); color: #ff8a8d; border: 1px solid rgba(255,85,85,.5);">
+                            <i class="fa-solid fa-gavel"></i> GENERAR BANEO (no jugaron 2 salas o la última)
                         </button>
                     </div>
                 </div>
@@ -348,6 +359,19 @@
 
             <div class="form-grid" style="margin-top: 15px;">
                 <div class="form-group">
+                    <label>TIPO DE CUPO</label>
+                    <select id="progTipo">
+                        <option value="PUBLICO">PÚBLICO (cualquier equipo)</option>
+                        <option value="VIP">VIP (solo equipos VIP · sale solo en el link oculto)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="form-hint" style="margin-top: 28px;"><i class="fa-solid fa-circle-info"></i> Los equipos y números <b>baneados</b> no consiguen cupo en ninguno de los dos.</div>
+                </div>
+            </div>
+
+            <div class="form-grid" style="margin-top: 15px;">
+                <div class="form-group">
                     <label>¿SE REQUIERE STAFF?</label>
                     <select id="progStaff" onchange="document.getElementById('contenedorStaffEquipos').style.display = this.value === 'SI' ? 'block' : 'none';">
                         <option value="NO">NO</option>
@@ -402,6 +426,18 @@
         </div>
     </section>
 
+    <!-- CUPOS VIP (sql/25) -->
+    <section id="seccionCuposVip" class="tool-section" style="padding-top: 40px; display: none;">
+        <h2 class="section-title">Cupos VIP</h2>
+        <div class="tool-container"><div id="cuposVipAdmin"></div></div>
+    </section>
+
+    <!-- BANEADOS: por equipo y por número (sql/25) -->
+    <section id="seccionBaneados" class="tool-section" style="padding-top: 40px; display: none;">
+        <h2 class="section-title">Baneados</h2>
+        <div class="tool-container"><div id="baneadosAdmin"></div></div>
+    </section>
+
     <!-- SECCIÓN 5: MÉTRICAS GLOBALES (4:5) -->
     <section id="seccionMetricas" class="tool-section" style="padding-top: 40px; display: none;">
         <h2 class="section-title">Métricas Globales (Formato 4:5)</h2>
@@ -452,7 +488,9 @@
             registrarVip:        { sec: 'seccionRegistrarVip', nav: 'navVipReg', alAbrir: () => cargarListaEquiposVipAdmin() },
             borrarEntrenos:      { sec: 'seccionBorrarEntrenos', nav: 'navBorrar', alAbrir: () => cargarListaEntrenamientosParaBorrar() },
             metricas:            { sec: 'seccionMetricas', nav: 'navMetricas' },
-            programar:           { sec: 'seccionProgramar', nav: 'navProgramar', alAbrir: () => cargarEntrenamientosProgramadosAdmin() }
+            programar:           { sec: 'seccionProgramar', nav: 'navProgramar', alAbrir: () => cargarEntrenamientosProgramadosAdmin() },
+            cuposVip:            { sec: 'seccionCuposVip', nav: 'navCuposVip', alAbrir: () => PumasControl.montarVip('cuposVipAdmin', 'entrenamientos') },
+            baneados:            { sec: 'seccionBaneados', nav: 'navBaneados', alAbrir: () => PumasControl.montarBaneos('baneadosAdmin', 'entrenamientos') }
         };
 
         function cerrarSubmenus(excepto) {
@@ -517,11 +555,25 @@
             cambiarPestanaAdmin('cargar');
         });
     </script>
-    <script src="../portal-kit/completos.js?v=20261011i"></script>
+    <script src="../portal-kit/completos.js?v=20261011j"></script>
     <script src="admin_logica.js"></script>
-    <script src="completos_admin.js?v=20261011i"></script>
-    <script src="../portal-kit/generador-csv.js?v=20261011i"></script>
+    <script src="completos_admin.js?v=20261011j"></script>
+    <script src="../portal-kit/generador-csv.js?v=20261011j"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261011j"></script>
+    <script>
+        // GENERAR BANEO: equipos que no jugaron 2 salas o no jugaron la última (con los .log cargados)
+        function equiposParaBaneo() {
+            if (typeof globalEquipos === 'undefined' || !globalEquipos.length) return [];
+            return globalEquipos.map(e => ({ equipo: e.name, salas: Array.from({ length: globalNumSalas }, (_, i) => e.salasPuntos[i] !== undefined) }));
+        }
+        function abrirGenerarBaneo(avisar) {
+            const hay = PumasControl.revisarSalas('entrenamientos', equiposParaBaneo());
+            if (!hay && avisar) alert(globalNumSalas < 2 ? 'Carga al menos 2 salas para revisar.' : 'Todos los equipos jugaron 2 o más salas y la última. No hay a quién banear.');
+        }
+        // Después de guardar los resultados se abre sola si hay equipos para revisar
+        window.alTerminarEntreno = () => abrirGenerarBaneo(false);
+    </script>
     <script>PumasGenerador.montar('generadorCsv');</script>
-    <script src="vip_admin.js?v=20261011i"></script>
+    <script src="vip_admin.js?v=20261011j"></script>
 </body>
 </html>

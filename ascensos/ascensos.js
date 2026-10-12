@@ -343,6 +343,10 @@
             return;
         }
         aviso('✔ Jornada guardada. Generando la imagen...', 'ok');
+        // GENERAR BANEO (solo donde se cargó cupos-control.js: módulo de Pruebas): equipos que no jugaron 2 salas o la última
+        if (window.PumasControl && PORTAL === 'pruebas') {
+            PumasControl.revisarSalas(PORTAL, filas.map(f => ({ equipo: f.n, salas: activas.map(i => f.p[i] !== null && f.p[i] !== undefined) })));
+        }
         try { await descargarImagen(); } catch (e) { aviso('✔ Jornada guardada, pero la imagen falló: ' + e.message + '. Descárgala con el otro botón antes de seguir.', 'error'); btn.disabled = false; return; }
         // Jornada guardada: se limpia lo anotado (se mantienen equipos y configuración)
         estado.celdas = {}; estado.texto = '';

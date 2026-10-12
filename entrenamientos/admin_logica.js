@@ -507,6 +507,8 @@ async function guardarEntrenamientoEnSupabase() {
         }
 
         alert("¡Resultados procesados y guardados exitosamente!");
+        // Revisión de equipos que no cumplieron las salas (GENERAR BANEO, admin.html)
+        if (typeof window.alTerminarEntreno === 'function') window.alTerminarEntreno();
     } catch (error) {
         console.error("Error crítico:", error);
         alert("Ocurrió un error al guardar en la base de datos.");
@@ -1060,6 +1062,8 @@ async function guardarProgramacion() {
     const pubVal = document.getElementById('progPublicarEn').value;
     if (requierePub && !pubVal) { alert('Indica la hora en que se publicará el entrenamiento.'); return; }
     const extra = requierePub ? { publicar_en: new Date(pubVal).toISOString() } : {};
+    const tipoCupo = document.getElementById('progTipo') ? document.getElementById('progTipo').value : 'PUBLICO';
+    if (tipoCupo === 'VIP') extra.tipo = 'VIP';   // sin la columna (sql/25) solo se pueden crear públicos
 
     if (!titulo || !fecha || !link) {
         alert("Por favor, completa el título, la fecha y el link del grupo.");
@@ -1107,7 +1111,8 @@ async function guardarProgramacion() {
             }
         }
         
-        alert(requierePub ? "¡Entrenamiento guardado! Quedará pendiente y se abrirá solo a la hora indicada." : "¡Entrenamiento publicado exitosamente! Ya está disponible en la página de cupos.");
+        if (document.getElementById('progTipo')) document.getElementById('progTipo').value = 'PUBLICO';
+        alert((tipoCupo === 'VIP' ? 'Cupo VIP: solo entran los equipos de la lista VIP con su nombre y número. ' : '') + (requierePub ? "¡Entrenamiento guardado! Quedará pendiente y se abrirá solo a la hora indicada." : "¡Entrenamiento publicado exitosamente! Ya está disponible en la página de cupos."));
         
         // Limpiar formulario
         document.getElementById('progTitulo').value = '';
@@ -1120,7 +1125,7 @@ async function guardarProgramacion() {
         document.getElementById('contenedorStaffEquipos').style.display = 'none';
     } catch (err) {
         console.error("Error al programar entrenamiento:", err);
-        alert("Ocurrió un error al guardar la programación.");
+        alert(/tipo/i.test((err && err.message) || '') ? "Para crear cupos VIP falta correr sql/25_cupos_vip_y_baneos.sql en Supabase." : "Ocurrió un error al guardar la programación.");
     }
 }
 
@@ -1185,7 +1190,7 @@ function pintarCupos() {
         return `<div class="cupo-row ${e.est}">
             <div class="cupo-main" onclick="document.getElementById('eq_${e.id}').classList.toggle('open')">
                 <span class="cupo-badge ${e.est}">${_CUPO_LBL[e.est]}</span>
-                <div class="cupo-info"><b>${_escC(e.titulo)}</b><small><i class="fa-regular fa-clock"></i> ${_fmtC(e.fecha)}${e.est === 'pendiente' ? ' · <i class="fa-solid fa-bolt"></i> Se publica: ' + _fmtC(e.publicar_en) : ''}</small></div>
+                <div class="cupo-info"><b>${e.tipo === 'VIP' ? '<span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:3px;background:#FFD54A;color:#1a1400;font-size:.65rem;vertical-align:middle">VIP</span>' : ''}${_escC(e.titulo)}</b><small><i class="fa-regular fa-clock"></i> ${_fmtC(e.fecha)}${e.est === 'pendiente' ? ' · <i class="fa-solid fa-bolt"></i> Se publica: ' + _fmtC(e.publicar_en) : ''}</small></div>
                 <div class="cupo-meter"><b>${e.inscritos}/${e.cupos_totales}</b><div class="bar"><i style="width:${pct}%"></i></div></div>
                 <i class="fa-solid fa-chevron-down cupo-chev"></i>
             </div>

@@ -31,7 +31,7 @@ async function cargarEntrenamientosActivos() {
     const contenedor = document.getElementById('contenedorEntrenamientos');
     
     try {
-        const { data: entrenamientos, error } = await supabaseClient
+        let { data: entrenamientos, error } = await supabaseClient
             .from('entrenamientos_programados')
             .select('*')
             
@@ -42,8 +42,12 @@ async function cargarEntrenamientosActivos() {
 
         if (error) throw error;
 
+        // cupos.html muestra solo los PÚBLICOS; cupos-vip.html (oculta, con link) solo los VIP
+        const soloVip = window.CUPOS_TIPO === 'VIP';
+        entrenamientos = (entrenamientos || []).filter(e => (e.tipo === 'VIP') === soloVip);
+
         if (!entrenamientos || entrenamientos.length === 0) {
-            contenedor.innerHTML = `<div style="text-align:center; color:var(--gray); padding:40px; background: var(--dark-card); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">No hay entrenamientos programados en este momento. Vuelve pronto.</div>`;
+            contenedor.innerHTML = `<div style="text-align:center; color:var(--gray); padding:40px; background: var(--dark-card); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">${window.CUPOS_TIPO === 'VIP' ? 'No hay cupos VIP abiertos en este momento.' : 'No hay entrenamientos programados en este momento. Vuelve pronto.'}</div>`;
             return;
         }
 
@@ -98,14 +102,14 @@ async function cargarEntrenamientosActivos() {
             let btnInscribir = pendiente
                 ? `<button disabled style="background: rgba(255,213,74,0.15); color: #FFE38A; padding: 10px 20px; border-radius: 6px; font-family: 'Michroma'; font-weight: bold; border: 1px solid rgba(255,213,74,0.5);"><i class="fa-solid fa-lock"></i> AÚN NO ABRE</button>`
                 : cuposRestantes > 0 
-                ? `<button onclick="abrirModalInscripcion('${ent.id}', '${ent.titulo.replace(/'/g, "\\'")}', '${ent.link_grupo}')" class="btn-access" style="padding: 10px 20px; border:none; cursor:pointer;">INSCRIBIR EQUIPO</button>`
+                ? `<button onclick="abrirModalInscripcion('${ent.id}', '${ent.titulo.replace(/'/g, "\\'")}', '${ent.link_grupo}', '${ent.tipo === 'VIP' ? 'VIP' : 'PUBLICO'}')" class="btn-access" style="padding: 10px 20px; border:none; cursor:pointer;">INSCRIBIR EQUIPO</button>`
                 : `<button disabled style="background: var(--secondary); color: var(--dark); padding: 10px 20px; border-radius: 6px; font-family: 'Michroma'; font-weight: bold; border:none;">CUPOS AGOTADOS</button>`;
 
             contenedor.innerHTML += `
                 <div style="background: var(--dark-card); border: 1px solid rgba(216,195,149, 0.2); border-left: 4px solid ${pendiente ? '#FFD54A' : 'var(--primary)'}; border-radius: 10px; padding: 25px; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
                         <div>
-                            <h2 style="color: var(--light); font-family: 'Michroma'; font-size: 1.4rem; margin:0 0 10px 0;">${ent.titulo}</h2>
+                            <h2 style="color: var(--light); font-family: 'Michroma'; font-size: 1.4rem; margin:0 0 10px 0;">${ent.tipo === 'VIP' ? '<span style="display:inline-block;padding:3px 8px;margin-right:8px;border-radius:4px;background:#FFD54A;color:#1a1400;font-size:.7rem;vertical-align:middle"><i class="fa-solid fa-crown"></i> SOLO VIP</span>' : ''}${ent.titulo}</h2>
                             <div style="color: var(--gray); font-size: 0.95rem; margin-bottom: 5px;"><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${fechaStr}</div>
                             <div style="color: var(--gray); font-size: 0.95rem;"><i class="fa-solid fa-users" style="color: var(--primary);"></i> Cupos disponibles: <strong style="color: #D8C395; font-family:'Michroma'; font-size:1.1rem;">${cuposRestantes} / ${ent.cupos_totales}</strong></div>
                         </div>
@@ -124,8 +128,18 @@ async function cargarEntrenamientosActivos() {
     }
 }
 
-function abrirModalInscripcion(id, titulo, link) {
+function abrirModalInscripcion(id, titulo, link, tipo) {
     document.getElementById('entrenamientoId').value = id;
+    // Cupo VIP: avisar que deben usar el mismo nombre y número con que se registraron como VIP
+    let nota = document.getElementById('notaVip');
+    if (!nota) {
+        nota = document.createElement('div');
+        nota.id = 'notaVip';
+        nota.style.cssText = 'margin-bottom:14px;padding:10px 12px;border:1px solid rgba(255,213,74,.55);background:rgba(255,213,74,.08);border-radius:6px;color:#FFE38A;font-size:.9rem';
+        nota.innerHTML = '<i class="fa-solid fa-crown"></i> <b>Cupo solo para VIP:</b> escribe el <b>mismo nombre de equipo</b> y el <b>mismo número</b> con que te registraste como VIP. Si no coinciden, no te da el cupo.';
+        document.getElementById('modalTitulo').after(nota);
+    }
+    nota.style.display = tipo === 'VIP' ? 'block' : 'none';
     document.getElementById('linkGrupoSecreto').value = link;
     document.getElementById('modalTitulo').textContent = `Inscripción: ${titulo}`;
     document.getElementById('modalRegistro').style.display = 'flex';
@@ -196,7 +210,10 @@ async function procesarInscripcion() {
 
     } catch (err) {
         console.error("Error al registrar:", err);
-        alert(err && err.code === "23505" ? "Ese equipo ya está inscrito en este entrenamiento." : "Ocurrió un error. Es posible que los cupos se hayan agotado.");
+        const m = (err && err.message) || '';
+        alert(err && err.code === "23505" ? "Ese equipo ya está inscrito en este entrenamiento."
+            : /baneado|VIP/i.test(m) ? m   // la base no lo dejó: equipo o número baneado, o no es VIP
+            : "Ocurrió un error. Es posible que los cupos se hayan agotado.");
     }
 }
 

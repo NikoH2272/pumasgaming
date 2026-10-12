@@ -625,6 +625,7 @@ body[data-tema="pruebas"] {   /* Módulo de pruebas: verde lima y amarillo */
 .cupo-cuenta b { display: block; color: var(--primary); font: 900 1.8rem/1 var(--font-display); }
 .cupo-cuenta small { color: var(--gray); font-size: .7rem; }
 .cupo-pendiente { border-left-color: #FFD54A; }
+.cupo-vip { display: inline-block; padding: 2px 7px; margin-right: 4px; border-radius: 3px; background: #FFD54A; color: #1a1400; font: 700 .62rem var(--font-display); letter-spacing: .05em; vertical-align: middle; }
 .cupo-contador { display: grid; gap: 2px; padding: 12px; text-align: center; border: 1px dashed rgba(255, 213, 74, .55); background: rgba(255, 213, 74, .07); }
 .cupo-contador b { color: #FFE38A; font: 900 clamp(1.4rem, 5vw, 2rem)/1.1 var(--font-display); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
 .cupo-contador small { color: var(--gray); font-size: .74rem; }
