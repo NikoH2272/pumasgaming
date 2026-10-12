@@ -746,4 +746,30 @@ html.pg-verificando body{visibility:hidden}
     else iniciar();
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montarCompartir);
     else montarCompartir();
+
+    // Créditos del creador en el pie de página (todas las páginas; las que no tienen pie, menos el login, reciben uno)
+    const CREADOR = { usuario: '@coach.nikoh', url: 'https://www.instagram.com/coach.nikoh/' };
+    function montarCreditos() {
+        if (document.querySelector('.pg-creditos')) return;
+        let pie = document.querySelector('footer');
+        if (!pie) {
+            if (document.getElementById('formLogin')) return;
+            pie = document.createElement('footer');
+            document.body.appendChild(pie);
+        }
+        if (!document.getElementById('pgCreditosCss')) {
+            const st = document.createElement('style');
+            st.id = 'pgCreditosCss';
+            st.textContent = `.pg-creditos{margin:8px 0 0;font-size:.82rem;opacity:.85;text-align:center}
+.pg-creditos a{display:inline-flex;align-items:center;gap:5px;color:var(--primary,#D8C395);font-weight:bold;text-decoration:none}
+.pg-creditos a:hover{text-decoration:underline}`;
+            document.head.appendChild(st);
+        }
+        const p = document.createElement('p');
+        p.className = 'pg-creditos';
+        p.innerHTML = `Página creada por <a href="${CREADOR.url}" target="_blank" rel="noopener" aria-label="Instagram de ${CREADOR.usuario}"><i class="fa-brands fa-instagram"></i> ${CREADOR.usuario}</a>`;
+        pie.appendChild(p);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montarCreditos);
+    else montarCreditos();
 })();

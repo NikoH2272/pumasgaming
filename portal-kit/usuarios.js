@@ -10,6 +10,12 @@
 
     let datos = { usuarios: [], roles: [], portales: [] };
     let yo = null;
+    let vista = 'principal';   // 'principal' · 'aza'
+
+    // Ascensos AZA es un portal aparte: sus roles (solo ven ese portal) y sus usuarios
+    // (admins y moderadores creados allá) NO salen en el panel principal: se manejan en su propia ventana.
+    const esRolAza = r => !!r && Array.isArray(r.portales) && r.portales.length === 1 && r.portales[0] === 'ascensosaza';
+    const nombreEvento = id => { const c = window.ASC_CATEGORIA && window.ASC_CATEGORIA(id); return c ? c.nombre : id; };
 
     async function arrancar() {
         yo = await P.guard('principal', loginUrl, 'gestionar');
@@ -42,7 +48,7 @@
         catch (err) { avisar('Error: ' + err.message); btn.disabled = false; }
     }
 
-    const opcionesRol = sel => datos.roles.map(r =>
+    const opcionesRol = (sel, soloAza) => datos.roles.filter(r => soloAza ? esRolAza(r) && r.id !== 'moderador_aza' : !esRolAza(r) || r.id === sel).map(r =>
         `<option value="${esc(r.id)}" ${r.id === sel ? 'selected' : ''}>${esc(r.nombre)}</option>`).join('');
 
     function checksPortales(r) {
@@ -53,15 +59,20 @@
     }
 
     function pintar() {
-        const filasUsuarios = datos.usuarios.map(u => `
+        const rolesAza = new Set(datos.roles.filter(esRolAza).map(r => r.id));
+        const usuariosAza = datos.usuarios.filter(u => rolesAza.has(u.rol));
+        const filaUsuario = (u, soloAza) => `
             <tr data-usuario="${esc(u.usuario)}">
                 <td><b>${esc(u.usuario)}</b>${u.usuario === yo.usuario ? ' <small class="muted">(tú)</small>' : ''}</td>
                 <td><input type="text" data-campo="nombre" value="${esc(u.nombre || '')}" aria-label="Nombre de ${esc(u.usuario)}"></td>
-                <td><select data-campo="rol" aria-label="Rol de ${esc(u.usuario)}">${u.rol ? '' : '<option value="">— sin rol —</option>'}${opcionesRol(u.rol)}</select></td>
+                <td><select data-campo="rol" aria-label="Rol de ${esc(u.usuario)}">${u.rol ? '' : '<option value="">— sin rol —</option>'}${opcionesRol(u.rol, soloAza)}</select></td>
                 <td style="text-align:center"><input type="checkbox" data-campo="activo" ${u.activo ? 'checked' : ''} aria-label="Activo"></td>
                 <td><input type="password" data-campo="clave" placeholder="Nueva clave (opcional)" autocomplete="new-password" aria-label="Nueva clave de ${esc(u.usuario)}"></td>
                 <td><button class="btn-mini" data-accion="guardar-usuario"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></td>
-            </tr>`).join('');
+            </tr>`;
+        const filasUsuarios = datos.usuarios.filter(u => !rolesAza.has(u.rol)).map(u => filaUsuario(u)).join('');
+        // En la ventana de AZA: sus admins (los moderadores van en su propia tabla)
+        const filasAdminsAza = usuariosAza.filter(u => u.rol !== 'moderador_aza').map(u => filaUsuario(u, true)).join('');
 
         // Roles padre primero y cada sub rol justo debajo de su padre
         const nombreRol = id => (datos.roles.find(x => x.id === id) || { nombre: id }).nombre;
@@ -69,7 +80,7 @@
             .flatMap(r => [r, ...datos.roles.filter(h => h.padre === r.id)]);
         const opcionesPadre = r => `<option value="">— Rol principal —</option>` + datos.roles.filter(x => x.id !== r.id && x.padre !== r.id)
             .map(x => `<option value="${esc(x.id)}" ${x.id === r.padre ? 'selected' : ''}>${esc(x.nombre)}</option>`).join('');
-        const tarjetasRoles = ordenados.map(r => `
+        const tarjeta = r => `
             <article class="card-box rol-card${r.padre ? ' sub-rol' : ''}" data-rol="${esc(r.id)}" data-padre="${esc(r.padre || '')}">
                 <div class="rol-head"><code>${esc(r.id)}</code><small class="muted">${r.usuarios} usuario(s)</small></div>
                 ${r.padre ? `<p class="muted" style="margin:-4px 0 8px"><i class="fa-solid fa-turn-up fa-rotate-90"></i> Sub rol de <b>${esc(nombreRol(r.padre))}</b></p>` : ''}
@@ -85,10 +96,20 @@
                     <button class="btn-mini" data-accion="guardar-rol"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
                     ${r.id !== 'superadmin' && !r.usuarios ? '<button class="btn-mini" data-accion="eliminar-rol"><i class="fa-solid fa-trash"></i> Borrar</button>' : ''}
                 </div>
-            </article>`).join('');
+            </article>`;
+        const tarjetasRoles = ordenados.filter(r => !rolesAza.has(r.id)).map(tarjeta).join('');
+        const tarjetasAza = ordenados.filter(r => rolesAza.has(r.id)).map(tarjeta).join('');
+        const nMods = usuariosAza.filter(u => u.rol === 'moderador_aza').length;
 
         raiz.innerHTML = `
         <p id="gestionMsg" class="auth-msg" role="status" style="text-align:center"></p>
+
+        <div class="us-tabs" role="tablist">
+            <button type="button" class="us-tab${vista === 'principal' ? ' on' : ''}" data-vista-btn="principal"><i class="fa-solid fa-users"></i> Panel principal</button>
+            <button type="button" class="us-tab${vista === 'aza' ? ' on' : ''}" data-vista-btn="aza"><i class="fa-solid fa-wand-magic-sparkles"></i> Ascensos AZA · subusuarios <b>${usuariosAza.length}</b></button>
+        </div>
+
+        <div data-vista="principal"${vista === 'principal' ? '' : ' hidden'}>
 
         <h3 class="bloque-titulo"><i class="fa-solid fa-users"></i> Usuarios</h3>
         <article class="card-box">
@@ -121,7 +142,69 @@
                 </div>
                 <div class="acciones"><button class="btn-mini" data-accion="guardar-rol"><i class="fa-solid fa-plus"></i> Crear rol</button></div>
             </article>
+        </div>
+        </div>
+
+        <div data-vista="aza"${vista === 'aza' ? '' : ' hidden'}>
+            <p class="tool-desc">Ascensos AZA es un portal aparte: sus usuarios <b>solo entran a ese portal</b> y no ven el panel principal ni otros portales.
+                Aquí, solo desde el superadmin, ves y manejas a todos (admins de AZA y los moderadores que ellos crean).</p>
+
+            <h3 class="bloque-titulo"><i class="fa-solid fa-user-tie"></i> Admins de Ascensos AZA</h3>
+            <article class="card-box">
+                <form id="formNuevoAza" class="form-grid nuevo">
+                    <div class="form-group"><label for="azUsuario">Usuario (sin @)</label><input id="azUsuario" required autocapitalize="none" spellcheck="false" placeholder="adminaza2" pattern="[a-zA-Z0-9._\\-]{3,30}"></div>
+                    <div class="form-group"><label for="azNombre">Nombre</label><input id="azNombre" placeholder="Admin AZA"></div>
+                    <div class="form-group"><label for="azRol">Rol</label><select id="azRol" required>${opcionesRol(undefined, true)}</select></div>
+                    <div class="form-group"><label for="azClave">Contraseña</label><input id="azClave" type="password" required minlength="6" autocomplete="new-password"></div>
+                    <div class="form-group"><label>&nbsp;</label><button class="btn-access" type="submit" style="width:100%"><i class="fa-solid fa-user-plus"></i> Crear</button></div>
+                </form>
+                <div class="pg-tabla-wrap" style="margin-top:18px">
+                    <table class="pg-tabla tabla-usuarios">
+                        <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th>Activo</th><th>Cambiar clave</th><th></th></tr></thead>
+                        <tbody>${filasAdminsAza || '<tr><td colspan="6" class="muted" style="text-align:center">Sin admins de AZA.</td></tr>'}</tbody>
+                    </table>
+                </div>
+            </article>
+
+            <h3 class="bloque-titulo"><i class="fa-solid fa-user-shield"></i> Moderadores de Ascensos AZA <small class="muted">(${nMods})</small></h3>
+            <article class="card-box">
+                <form id="formNuevoMod" class="form-grid nuevo">
+                    <div class="form-group"><label for="moUsuario">Usuario (sin @)</label><input id="moUsuario" required autocapitalize="none" spellcheck="false" placeholder="mod.aza1" pattern="[a-zA-Z0-9._\\-]{3,30}"></div>
+                    <div class="form-group"><label for="moNombre">Nombre</label><input id="moNombre" placeholder="Mod AZA"></div>
+                    <div class="form-group"><label for="moClave">Contraseña</label><input id="moClave" type="password" required minlength="6" autocomplete="new-password"></div>
+                    <div class="form-group"><label class="chk" style="margin-top:28px"><input type="checkbox" id="moIa"> Puede usar IA</label></div>
+                    <div class="form-group"><label>&nbsp;</label><button class="btn-access" type="submit" style="width:100%"><i class="fa-solid fa-user-plus"></i> Crear moderador</button></div>
+                </form>
+                <div id="tablaMods" style="margin-top:18px"><p class="muted" style="text-align:center">Cargando moderadores...</p></div>
+            </article>
+
+            <h3 class="bloque-titulo"><i class="fa-solid fa-id-badge"></i> Roles de Ascensos AZA</h3>
+            <div class="roles-grid">${tarjetasAza || '<p class="muted">No hay roles solo de AZA.</p>'}</div>
         </div>`;
+
+        raiz.querySelectorAll('[data-vista-btn]').forEach(b => b.addEventListener('click', () => {
+            vista = b.dataset.vistaBtn;
+            raiz.querySelectorAll('[data-vista-btn]').forEach(x => x.classList.toggle('on', x === b));
+            raiz.querySelectorAll('[data-vista]').forEach(v => { v.hidden = v.dataset.vista !== vista; });
+        }));
+        raiz.querySelector('#formNuevoAza').addEventListener('submit', e => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const u = { usuario: raiz.querySelector('#azUsuario').value.trim().toLowerCase(), nombre: raiz.querySelector('#azNombre').value.trim(),
+                rol: raiz.querySelector('#azRol').value, clave: raiz.querySelector('#azClave').value };
+            if (!u.rol) { avisar('No hay un rol de AZA para asignar.'); return; }
+            if (datos.usuarios.some(x => x.usuario.toLowerCase() === u.usuario)) { avisar('Ese usuario ya existe.'); return; }
+            ejecutar(btn, () => P.usuarios.guardarUsuario(u), `Usuario ${u.usuario} creado en Ascensos AZA.`);
+        });
+        raiz.querySelector('#formNuevoMod').addEventListener('submit', e => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const m = { usuario: raiz.querySelector('#moUsuario').value.trim().toLowerCase(), nombre: raiz.querySelector('#moNombre').value.trim(),
+                clave: raiz.querySelector('#moClave').value, ia: raiz.querySelector('#moIa').checked, activo: true, eventos: null };
+            if (datos.usuarios.some(x => x.usuario.toLowerCase() === m.usuario)) { avisar('Ese usuario ya existe.'); return; }
+            ejecutar(btn, () => P.ascensos.moderadores.guardar(m), `Moderador ${m.usuario} creado.`);
+        });
+        pintarModeradores();
 
         raiz.querySelector('#formNuevoUsuario').addEventListener('submit', e => {
             e.preventDefault();
@@ -173,6 +256,51 @@
             const id = btn.closest('.rol-card').dataset.rol;
             if (!confirm(`¿Borrar el rol "${id}"?`)) return;
             ejecutar(btn, () => P.usuarios.eliminarRol(id), `Rol ${id} borrado.`);
+        }));
+    }
+
+    async function pintarModeradores() {
+        const caja = raiz.querySelector('#tablaMods');
+        if (!caja) return;
+        let mods;
+        try { mods = await P.ascensos.moderadores.listar(); }
+        catch (e) { caja.innerHTML = `<p class="muted" style="text-align:center">${esc(P.faltaSql(e) ? 'Falta correr sql/19 a sql/20 en Supabase.' : e.message)}</p>`; return; }
+        if (!mods.length) { caja.innerHTML = '<p class="muted" style="text-align:center">Todavía no hay moderadores.</p>'; return; }
+        const cats = window.ASC_CATEGORIAS || [];
+        const eventosHtml = m => `<details class="us-eventos"><summary>${m.eventos ? m.eventos.length + ' evento(s)' : 'Todos los eventos'}</summary>
+            <label class="chk"><input type="checkbox" data-todos ${m.eventos ? '' : 'checked'}> <b>Todos</b></label>
+            ${cats.map(c => `<label class="chk"><input type="checkbox" data-ev="${esc(c.id)}" ${!m.eventos || m.eventos.includes(c.id) ? 'checked' : ''}> ${esc(c.nombre)}</label>`).join('')}</details>`;
+        caja.innerHTML = `<div class="pg-tabla-wrap"><table class="pg-tabla tabla-usuarios">
+            <thead><tr><th>Usuario</th><th>Nombre</th><th>Activo</th><th>IA</th><th>Eventos que puede cargar</th><th>Cambiar clave</th><th></th></tr></thead>
+            <tbody>${mods.map(m => `<tr data-mod="${esc(m.usuario)}">
+                <td><b>${esc(m.usuario)}</b></td>
+                <td><input type="text" data-campo="nombre" value="${esc(m.nombre || '')}"></td>
+                <td style="text-align:center"><input type="checkbox" data-campo="activo" ${m.activo ? 'checked' : ''}></td>
+                <td style="text-align:center"><input type="checkbox" data-campo="ia" ${m.ia ? 'checked' : ''}></td>
+                <td>${cats.length ? eventosHtml(m) : esc(m.eventos ? m.eventos.map(nombreEvento).join(', ') : 'Todos')}</td>
+                <td><input type="password" data-campo="clave" placeholder="Nueva clave (opcional)" autocomplete="new-password"></td>
+                <td style="white-space:nowrap"><button class="btn-mini" data-mod-accion="guardar"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                    <button class="btn-mini" data-mod-accion="borrar"><i class="fa-solid fa-trash"></i></button></td></tr>`).join('')}</tbody></table></div>`;
+        caja.querySelectorAll('[data-todos]').forEach(t => t.addEventListener('change', () => {
+            t.closest('details').querySelectorAll('[data-ev]').forEach(c => { c.checked = t.checked; });
+        }));
+        caja.querySelectorAll('[data-mod-accion]').forEach(btn => btn.addEventListener('click', () => {
+            const fila = btn.closest('tr'), usuario = fila.dataset.mod;
+            const campo = c => fila.querySelector(`[data-campo="${c}"]`);
+            if (btn.dataset.modAccion === 'borrar') {
+                if (!confirm(`¿Borrar al moderador "${usuario}"? Pierde el acceso a Ascensos AZA.`)) return;
+                ejecutar(btn, () => P.ascensos.moderadores.borrar(usuario), `Moderador ${usuario} borrado.`);
+                return;
+            }
+            const m = mods.find(x => x.usuario === usuario);
+            let eventos = m.eventos;
+            const det = fila.querySelector('details');
+            if (det) {
+                const marcados = [...det.querySelectorAll('[data-ev]:checked')].map(c => c.dataset.ev);
+                eventos = det.querySelector('[data-todos]').checked || marcados.length === cats.length ? null : marcados;
+            }
+            ejecutar(btn, () => P.ascensos.moderadores.guardar({ usuario, nombre: campo('nombre').value.trim(), clave: campo('clave').value || null,
+                activo: campo('activo').checked, ia: campo('ia').checked, eventos }), `Moderador ${usuario} actualizado.`);
         }));
     }
 
