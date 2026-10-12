@@ -21,6 +21,19 @@
 .cc-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px;align-items:end}
 .cc-tel{display:grid;grid-template-columns:96px 1fr;gap:8px}
 .cc-form input,.cc-form select{width:100%}
+.cc-form [hidden],.cc-form .form-group[hidden]{display:none!important}
+.cc-tabla input[type=number],.cc-tabla input[type=url],.cc-tabla input[type=text],.cc-form input:not([type=checkbox]),.cc-form select{background:#0a0b10;color:#fff;border:1px solid rgba(216,195,149,.3);border-radius:4px;padding:9px 10px;font-size:15px}
+.cc-tabla input[type=checkbox]{width:18px;height:18px;accent-color:#D8C395}
+@media (max-width:640px){
+  .cc-horarios thead{display:none}
+  .cc-horarios,.cc-horarios tbody{display:block}
+  .cc-horarios tr{display:grid;grid-template-columns:32px 1fr 90px;gap:8px 10px;align-items:center;padding:10px;border-top:1px solid rgba(255,255,255,.08)}
+  .cc-horarios td{padding:0;border:0}
+  .cc-horarios td:nth-child(4){grid-column:1/-1}
+  .cc-horarios td:nth-child(4) input{min-width:0!important}
+  .cc-horarios td:nth-child(5){grid-column:1/-1;font-size:.8rem}
+  .cc-horarios td:nth-child(3) input{width:100%!important}
+}
 .cc-msg{margin:10px 0 0;font-size:.88rem}
 .cc-link{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;padding:12px 14px;border:1px solid rgba(255,213,74,.55);border-radius:8px;background:rgba(255,213,74,.07)}
 .cc-link small{display:block;color:#FFE38A;font-size:.72rem;letter-spacing:.04em;margin-bottom:4px}
@@ -84,7 +97,7 @@
             <div class="cc-form">
                 <div class="form-group"><label>Día</label><input type="date" data-v="dia" value="${hoyCol()}"></div>
             </div>
-            <div class="cc-tabla-wrap" style="margin-top:12px"><table class="cc-tabla"><thead><tr>
+            <div class="cc-tabla-wrap" style="margin-top:12px"><table class="cc-tabla cc-horarios"><thead><tr>
                 <th style="width:40px"><input type="checkbox" data-v="todos" title="Habilitar todos"></th><th>HORARIO</th><th>CUPOS</th><th>LINK DEL GRUPO DE ESE HORARIO</th><th>INSCRIPCIONES HASTA</th></tr></thead>
                 <tbody>${HORARIOS_VIP.map(([hh, txt], i) => `<tr data-h="${i}">
                     <td><input type="checkbox" data-hab></td><td><b>${txt} COL</b></td>
@@ -167,6 +180,7 @@
                 }
                 msg(`✔ ${hechos} cupo(s) VIP creados. Salen solo en el link oculto.`, '#6ee7a8', 'msgH');
                 filas.forEach(tr => { tr.querySelector('[data-hab]').checked = false; }); $('todos').checked = false; horarios();
+                if (opts && typeof opts.alCrear === 'function') opts.alCrear();
             } catch (e) {
                 msg((hechos ? `Se crearon ${hechos}; los demás no: ` : '') + (/tipo|cierra_en|admin_cupo_vip|PGRST/i.test(e.message || '') ? 'falta correr sql/25_cupos_vip_y_baneos.sql en Supabase.' : e.message), '#ff8a8d', 'msgH');
             } finally { $('crear').disabled = false; }

@@ -15,6 +15,9 @@
     // Ascensos AZA es un portal aparte: sus roles (solo ven ese portal) y sus usuarios
     // (admins y moderadores creados allá) NO salen en el panel principal: se manejan en su propia ventana.
     const esRolAza = r => !!r && Array.isArray(r.portales) && r.portales.length === 1 && r.portales[0] === 'ascensosaza';
+    // Entrenos Pumas también es aparte: su staff (rol que solo ve 'entrenamientos') se maneja en su propia ventana
+    const esRolPumas = r => !!r && Array.isArray(r.portales) && r.portales.length === 1 && r.portales[0] === 'entrenamientos';
+    const esRolAparte = r => esRolAza(r) || esRolPumas(r);
     const nombreEvento = id => { const c = window.ASC_CATEGORIA && window.ASC_CATEGORIA(id); return c ? c.nombre : id; };
 
     async function arrancar() {
@@ -48,7 +51,7 @@
         catch (err) { avisar('Error: ' + err.message); btn.disabled = false; }
     }
 
-    const opcionesRol = (sel, soloAza) => datos.roles.filter(r => soloAza ? esRolAza(r) && r.id !== 'moderador_aza' : !esRolAza(r) || r.id === sel).map(r =>
+    const opcionesRol = (sel, soloAza) => datos.roles.filter(r => soloAza ? esRolAza(r) && r.id !== 'moderador_aza' : !esRolAparte(r) || r.id === sel).map(r =>
         `<option value="${esc(r.id)}" ${r.id === sel ? 'selected' : ''}>${esc(r.nombre)}</option>`).join('');
 
     function checksPortales(r) {
@@ -60,6 +63,8 @@
 
     function pintar() {
         const rolesAza = new Set(datos.roles.filter(esRolAza).map(r => r.id));
+        const rolesPumas = new Set(datos.roles.filter(esRolPumas).map(r => r.id));
+        const nPumas = datos.usuarios.filter(u => rolesPumas.has(u.rol)).length;
         const usuariosAza = datos.usuarios.filter(u => rolesAza.has(u.rol));
         const filaUsuario = (u, soloAza) => `
             <tr data-usuario="${esc(u.usuario)}">
@@ -70,7 +75,7 @@
                 <td><input type="password" data-campo="clave" placeholder="Nueva clave (opcional)" autocomplete="new-password" aria-label="Nueva clave de ${esc(u.usuario)}"></td>
                 <td><button class="btn-mini" data-accion="guardar-usuario"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></td>
             </tr>`;
-        const filasUsuarios = datos.usuarios.filter(u => !rolesAza.has(u.rol)).map(u => filaUsuario(u)).join('');
+        const filasUsuarios = datos.usuarios.filter(u => !rolesAza.has(u.rol) && !rolesPumas.has(u.rol)).map(u => filaUsuario(u)).join('');
         // En la ventana de AZA: sus admins (los moderadores van en su propia tabla)
         const filasAdminsAza = usuariosAza.filter(u => u.rol !== 'moderador_aza').map(u => filaUsuario(u, true)).join('');
 
@@ -97,7 +102,7 @@
                     ${r.id !== 'superadmin' && !r.usuarios ? '<button class="btn-mini" data-accion="eliminar-rol"><i class="fa-solid fa-trash"></i> Borrar</button>' : ''}
                 </div>
             </article>`;
-        const tarjetasRoles = ordenados.filter(r => !rolesAza.has(r.id)).map(tarjeta).join('');
+        const tarjetasRoles = ordenados.filter(r => !rolesAza.has(r.id) && !rolesPumas.has(r.id)).map(tarjeta).join('');
         const tarjetasAza = ordenados.filter(r => rolesAza.has(r.id)).map(tarjeta).join('');
         const nMods = usuariosAza.filter(u => u.rol === 'moderador_aza').length;
 
@@ -107,6 +112,7 @@
         <div class="us-tabs" role="tablist">
             <button type="button" class="us-tab${vista === 'principal' ? ' on' : ''}" data-vista-btn="principal"><i class="fa-solid fa-users"></i> Panel principal</button>
             <button type="button" class="us-tab${vista === 'aza' ? ' on' : ''}" data-vista-btn="aza"><i class="fa-solid fa-wand-magic-sparkles"></i> Ascensos AZA · subusuarios <b>${usuariosAza.length}</b></button>
+            <button type="button" class="us-tab${vista === 'pumas' ? ' on' : ''}" data-vista-btn="pumas"><i class="fa-solid fa-paw"></i> Entrenos Pumas · subusuarios <b>${nPumas}</b></button>
         </div>
 
         <div data-vista="principal"${vista === 'principal' ? '' : ' hidden'}>
@@ -143,6 +149,12 @@
                 <div class="acciones"><button class="btn-mini" data-accion="guardar-rol"><i class="fa-solid fa-plus"></i> Crear rol</button></div>
             </article>
         </div>
+        </div>
+
+        <div data-vista="pumas"${vista === 'pumas' ? '' : ' hidden'}>
+            <p class="tool-desc">Entrenos Pumas es un portal aparte: su staff <b>solo entra al panel de Pumas</b>, a los módulos que le habiliten.
+                Esto mismo lo tienen los admins de Pumas en <a href="/entrenamientos/admin.html" style="color:var(--primary)">Admin Pumas → Configuración</a>.</p>
+            <div class="card-box" style="max-width:1180px;margin:0 auto"><div id="pumasConfigSuper"><p class="muted" style="text-align:center">Cargando...</p></div></div>
         </div>
 
         <div data-vista="aza"${vista === 'aza' ? '' : ' hidden'}>
@@ -186,7 +198,9 @@
             vista = b.dataset.vistaBtn;
             raiz.querySelectorAll('[data-vista-btn]').forEach(x => x.classList.toggle('on', x === b));
             raiz.querySelectorAll('[data-vista]').forEach(v => { v.hidden = v.dataset.vista !== vista; });
+            if (vista === 'pumas') montarPumas();
         }));
+        if (vista === 'pumas') montarPumas();
         raiz.querySelector('#formNuevoAza').addEventListener('submit', e => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
@@ -257,6 +271,14 @@
             if (!confirm(`¿Borrar el rol "${id}"?`)) return;
             ejecutar(btn, () => P.usuarios.eliminarRol(id), `Rol ${id} borrado.`);
         }));
+    }
+
+    function montarPumas() {
+        const caja = raiz.querySelector('#pumasConfigSuper');
+        if (!caja || caja.dataset.listo) return;
+        caja.dataset.listo = '1';
+        if (window.PumasConfig) window.PumasConfig.montar('pumasConfigSuper');
+        else caja.innerHTML = '<p class="muted" style="text-align:center">No se pudo cargar la configuración de Pumas.</p>';
     }
 
     async function pintarModeradores() {

@@ -16,11 +16,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/latam.css?v=20261011m">
-    <link rel="stylesheet" href="style.css?v=20261011m">
+    <link rel="stylesheet" href="../portal-kit/latam.css?v=20261011o">
+    <link rel="stylesheet" href="style.css?v=20261011o">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261011m" data-portal="entrenamientos" data-modo="publico"></script>
-    <script src="../portal-kit/descargas.js?v=20261011m"></script>
+    <script src="../portal-kit/portal.js?v=20261011o" data-portal="entrenamientos" data-modo="publico"></script>
+    <script src="../portal-kit/descargas.js?v=20261011o"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
 </head>
 <body>
@@ -234,10 +234,31 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="../portal-kit/latam.js?v=20261011m"></script>
-    <script src="script_entrenamientos.js?v=20261011m"></script>
-    <script src="vista_sesion.js"></script>
-    <script src="../portal-kit/completos.js?v=20261011m"></script>
+    <script src="../portal-kit/latam.js?v=20261011o"></script>
+    <script src="script_entrenamientos.js?v=20261011o"></script>
+    <script src="vista_sesion.js?v=20261011o"></script>
+    <script src="../portal-kit/completos.js?v=20261011o"></script>
     <script>PumasCompletos.montarPublico('pumasAvanzadas', 'entrenamientos');</script>
+    <script>
+        // Secciones que el admin de Pumas ocultó (Admin Pumas → Configuración → Portal público)
+        (async function () {
+            let cfg;
+            try { cfg = await PumasPortal.pumas.portal(); } catch (e) { return; }
+            const ocultos = new Set(cfg.ocultos || []);
+            const ocultar = el => { if (el) { el.hidden = true; el.style.setProperty('display', 'none', 'important'); } };
+            const li = sel => { const a = document.querySelector(sel); return a && a.closest('li'); };
+            const mapa = {
+                apartar_cupo: () => ocultar(li('.main-nav a[href="cupos.html"]')),
+                calendario: () => ocultar(document.getElementById('modulo-calendario')),
+                equipos: () => ocultar(document.getElementById('modulo-equipos')),
+                killers: () => ocultar(document.getElementById('modulo-killers')),
+                top100: () => ocultar(document.getElementById('modulo-top100')),
+                destacados: () => ocultar(document.getElementById('modulo-destacados')),
+                analisis: () => { ocultar(li('#navAnalisis')); ocultar(document.getElementById('vistaAnalisis')); },
+                vip: () => { ocultar(li('#navVip')); ocultar(document.getElementById('vistaVip')); }
+            };
+            ocultos.forEach(id => mapa[id] && mapa[id]());
+        })();
+    </script>
 </body>
 </html>

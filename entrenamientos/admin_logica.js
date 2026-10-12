@@ -1133,7 +1133,10 @@ async function guardarProgramacion() {
 // GESTIÓN EN VIVO DE CUPOS (ADMIN)
 // ==========================================
 
-let _cuposData = [], _filtroCupos = 'todos';
+// Historial en dos lugares: Programar (cupos PÚBLICOS) y Programar → VIP (cupos VIP)
+let _cuposData = [], _vistaCupos = 'PUBLICO';
+const _filtroCupos = { PUBLICO: 'todos', VIP: 'todos' };
+const _CAJAS_CUPOS = { PUBLICO: ['listaProgramadosAdmin', 'tabsCupos'], VIP: ['listaVipAdmin', 'tabsCuposVip'] };
 const _CUPO_LBL = { activo: 'ACTIVO', lleno: 'LLENO / CERRADO', pendiente: 'PENDIENTE A ABRIR' };
 const _escC = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const _fmtC = iso => new Date(iso).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'medium', timeStyle: 'short' });
@@ -1144,8 +1147,9 @@ function estadoCupo(ent, ins) {
     return 'activo';
 }
 
-async function cargarEntrenamientosProgramadosAdmin() {
-    const cont = document.getElementById('listaProgramadosAdmin');
+async function cargarEntrenamientosProgramadosAdmin(vista) {
+    if (vista) _vistaCupos = vista;
+    const cont = document.getElementById(_CAJAS_CUPOS[_vistaCupos][0]);
     if (!cont || !supabaseClient) return;
     cont.innerHTML = '<div class="cupos-empty">Consultando base de datos...</div>';
     try {
@@ -1168,15 +1172,19 @@ async function cargarEntrenamientosProgramadosAdmin() {
     }
 }
 
-function cambiarFiltroCupos(f) { _filtroCupos = f; pintarCupos(); }
+function cambiarFiltroCupos(f) { _filtroCupos[_vistaCupos] = f; pintarCupos(); }
 
 function pintarCupos() {
-    const cont = document.getElementById('listaProgramadosAdmin'), tabs = document.getElementById('tabsCupos');
-    const n = k => _cuposData.filter(e => e.est === k).length;
-    const T = [['todos', 'Todos', _cuposData.length], ['activo', 'Activos', n('activo')], ['lleno', 'Llenos', n('lleno')], ['pendiente', 'Pendientes a abrir', n('pendiente')]];
-    tabs.innerHTML = T.map(([k, l, c]) => `<button class="cupos-tab ${_filtroCupos === k ? 'on' : ''}" onclick="cambiarFiltroCupos('${k}')">${l} <b>${c}</b></button>`).join('');
-    const lista = _cuposData.filter(e => _filtroCupos === 'todos' || e.est === _filtroCupos);
-    if (!lista.length) { cont.innerHTML = '<div class="cupos-empty">No hay entrenamientos en esta categoría.</div>'; return; }
+    const [idLista, idTabs] = _CAJAS_CUPOS[_vistaCupos];
+    const cont = document.getElementById(idLista), tabs = document.getElementById(idTabs);
+    if (!cont || !tabs) return;
+    const filtro = _filtroCupos[_vistaCupos];
+    const datos = _cuposData.filter(e => (e.tipo === 'VIP') === (_vistaCupos === 'VIP'));
+    const n = k => datos.filter(e => e.est === k).length;
+    const T = [['todos', 'Todos', datos.length], ['activo', 'Activos', n('activo')], ['lleno', 'Llenos', n('lleno')], ['pendiente', 'Pendientes a abrir', n('pendiente')]];
+    tabs.innerHTML = T.map(([k, l, c]) => `<button class="cupos-tab ${filtro === k ? 'on' : ''}" onclick="cambiarFiltroCupos('${k}')">${l} <b>${c}</b></button>`).join('');
+    const lista = datos.filter(e => filtro === 'todos' || e.est === filtro);
+    if (!lista.length) { cont.innerHTML = `<div class="cupos-empty">${_vistaCupos === 'VIP' ? 'No hay cupos VIP en esta categoría.' : 'No hay entrenamientos en esta categoría.'}</div>`; return; }
     cont.innerHTML = lista.map(e => {
         const pct = Math.min(100, e.inscritos / e.cupos_totales * 100);
         const acciones = [
@@ -1190,7 +1198,7 @@ function pintarCupos() {
         return `<div class="cupo-row ${e.est}">
             <div class="cupo-main" onclick="document.getElementById('eq_${e.id}').classList.toggle('open')">
                 <span class="cupo-badge ${e.est}">${_CUPO_LBL[e.est]}</span>
-                <div class="cupo-info"><b>${e.tipo === 'VIP' ? '<span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:3px;background:#FFD54A;color:#1a1400;font-size:.65rem;vertical-align:middle">VIP</span>' : ''}${_escC(e.titulo)}</b><small><i class="fa-regular fa-clock"></i> ${_fmtC(e.fecha)}${e.est === 'pendiente' ? ' · <i class="fa-solid fa-bolt"></i> Se publica: ' + _fmtC(e.publicar_en) : ''}</small></div>
+                <div class="cupo-info"><b>${e.tipo === 'VIP' && _vistaCupos !== 'VIP' ? '<span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:3px;background:#FFD54A;color:#1a1400;font-size:.65rem;vertical-align:middle">VIP</span>' : ''}${_escC(e.titulo)}</b><small><i class="fa-regular fa-clock"></i> ${_fmtC(e.fecha)}${e.est === 'pendiente' ? ' · <i class="fa-solid fa-bolt"></i> Se publica: ' + _fmtC(e.publicar_en) : ''}${e.cierra_en ? ' · <i class="fa-solid fa-hourglass-end"></i> Inscripciones hasta: ' + _fmtC(e.cierra_en) : ''}</small></div>
                 <div class="cupo-meter"><b>${e.inscritos}/${e.cupos_totales}</b><div class="bar"><i style="width:${pct}%"></i></div></div>
                 <i class="fa-solid fa-chevron-down cupo-chev"></i>
             </div>

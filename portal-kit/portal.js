@@ -255,7 +255,7 @@
         const m = String((error && (error.message || error.code)) || error || '');
         return /PGRST202|PGRST205|42883|42P01|Could not find the (function|table)|does not exist|schema cache/i.test(m);
     }
-    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/25).';
+    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/28).';
     async function rpcPublico(nombre, params) {
         const c = db();
         if (!c) throw new Error('No se pudo conectar con la base de datos.');
@@ -401,6 +401,23 @@
         quitar: (portal, cupo) => rpcAdmin('admin_cupo_quitar', { p_portal: portal, p_cupo: cupo }),
         tipo: (portal, id, tipo) => rpcAdmin('admin_cupo_tipo', { p_portal: portal, p_id: id, p_tipo: tipo }),
         vip: (portal, id, cierraEn) => rpcAdmin('admin_cupo_vip', { p_portal: portal, p_id: id, p_cierra_en: cierraEn ? new Date(cierraEn).toISOString() : null })
+    };
+
+    /* ---------------- Entrenos Pumas como portal aparte (sql/28) ---------------- */
+    const pumas = {
+        misPermisos: () => rpcAdmin('pumas_mis_permisos'),
+        portal: async () => {
+            const { data, error } = await db().from('sitio_config').select('valor').eq('clave', 'portal_entrenamientos').maybeSingle();
+            if (error) throw new Error(error.message);
+            return (data && data.valor) || { ocultos: [] };
+        },
+        guardarPortal: ocultos => rpcAdmin('pumas_portal_guardar', { p_ocultos: ocultos }),
+        usuarios: {
+            listar: () => rpcAdmin('pumas_usr_listar'),
+            guardar: u => rpcAdmin('pumas_usr_guardar', { p_usuario: u.usuario, p_nombre: u.nombre || null, p_clave: u.clave || null,
+                p_activo: u.activo !== false, p_modulos: u.modulos || [] }),
+            borrar: usuario => rpcAdmin('pumas_usr_borrar', { p_usuario: usuario })
+        }
     };
 
     /* ---------------- Cupos VIP y baneo por equipo / número (sql/25) ---------------- */
@@ -739,7 +756,7 @@ html.pg-verificando body{visibility:hidden}
         login, logout, validar, guard, puede, tiene, inicioDe, db, sesion: leerSesion,
         cargarEfecto, guardarEfecto, aplicarEfecto, usuarios, entrenos, respaldo, confirmar, escaparHtml,
         cargarModulos, olvidarModulos, datosPortal, modulos, aplicarColores, aplicarPersonalizacion, rgbDe, textoSobre,
-        sitio, sorteo, cupos, control, ascensos, baneados, ia, vip, stats, cargarKit, faltaSql
+        sitio, sorteo, cupos, control, pumas, ascensos, baneados, ia, vip, stats, cargarKit, faltaSql
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);

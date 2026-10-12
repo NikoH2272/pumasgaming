@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styleadmin.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261011m" data-portal="entrenamientos" data-modo="admin"></script>
+    <script src="../portal-kit/portal.js?v=20261011o" data-portal="entrenamientos" data-modo="admin"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
     <style>
@@ -36,6 +36,42 @@
         .main-nav .nav-sub a i { width: 18px; text-align: center; }
         @media (max-width: 900px) {
             .main-nav .nav-sub { position: static; transform: none; min-width: 0; margin-top: 6px; box-shadow: none; }
+        }
+        /* ===== Celular ===== */
+        .menu-admin { display: none; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid rgba(216,195,149,.4); border-radius: 4px;
+            background: rgba(216,195,149,.08); color: var(--primary); font: 700 .72rem 'Michroma', sans-serif; letter-spacing: .06em; cursor: pointer; }
+        @media (max-width: 900px) {
+            body { width: 100%; }
+            header.site-header { flex-wrap: wrap; gap: 10px; padding: 10px 14px !important; }
+            header.site-header .logo-img { width: 34px; height: 34px; }
+            header.site-header .logo { font-size: 1rem; letter-spacing: 1px; }
+            .menu-admin { display: inline-flex; }
+            #navAdmin { display: none; width: 100%; max-height: calc(100vh - 70px); overflow-y: auto; }
+            #navAdmin.abierto { display: block; }
+            #navAdmin > ul { flex-direction: column; align-items: stretch; gap: 0; padding: 4px 0 8px; }
+            #navAdmin > ul > li > a { display: flex; align-items: center; gap: 10px; padding: 13px 4px; font-size: .78rem; border-bottom: 1px solid rgba(216,195,149,.12); }
+            #navAdmin .nav-grupo-btn .fa-caret-down { margin-left: auto; }
+            #navAdmin .nav-sub { margin: 0 0 6px; padding: 4px; border-radius: 4px; }
+            #navAdmin .nav-sub a { padding: 12px 10px; font-size: .74rem; }
+
+            .tool-section { padding: 18px 10px !important; }
+            .tool-container { padding: 18px 14px !important; }
+            .section-title { font-size: 1.15rem !important; margin-bottom: 16px !important; }
+            .tool-desc { font-size: .95rem; }
+            /* Cuadrículas de 2 columnas escritas en la página → una columna */
+            [style*="grid-template-columns: 1fr 1fr"], [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+            .form-group input, .form-group select, .form-group textarea { width: 100%; max-width: 100%; font-size: 16px; }
+            .btn-generar { width: 100%; max-width: none !important; }
+            /* Vistas previas e imágenes: se desplazan de lado en vez de cortarse */
+            .results-wrapper, #outputTablasLadoALado, #outputAvanzado, .result-box, #outputMetricasPreview, .an-imgs { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            #outputTablasLadoALado { justify-content: flex-start !important; }
+            #outputAvanzado > div { align-items: flex-start !important; }
+            table { font-size: .85rem; }
+            .cupos-head { flex-wrap: wrap; }
+            .cupo-actions .btn-mini { flex: 1 1 auto; }
+            .cupo-meter { min-width: 0; }
+            .cc-form { grid-template-columns: 1fr; }
+            .gen-acciones .btn-generar { flex-basis: 100%; }
         }
         .bloque-stats { margin-top: 15px; padding: 16px; border: 1px solid rgba(216,195,149,.3); border-radius: 8px; background: rgba(216,195,149,.05); }
         .bloque-stats h3 { margin: 0 0 6px; color: #D8C395; font-family: 'Michroma'; font-size: .85rem; }
@@ -61,7 +97,10 @@
         <img src="imagenes/LOGO PUMAS WEB.png" alt="Logo Pumas Gaming" class="logo-img">
         <div class="logo">ADMIN PANEL</div>
     </div>
-    <nav class="main-nav is-active" style="position: static; background: transparent; box-shadow: none;">
+    <button type="button" class="menu-admin" id="btnMenuAdmin" aria-label="Abrir menú" aria-expanded="false" onclick="alternarMenuAdmin()">
+        <i class="fa-solid fa-bars"></i><span>Menú</span>
+    </button>
+    <nav class="main-nav is-active" id="navAdmin" style="position: static; background: transparent; box-shadow: none;">
         <ul>
             <li class="nav-grupo" id="grupoCargar">
                 <a href="#" class="nav-grupo-btn" onclick="abrirSubmenu(event, 'grupoCargar')" aria-haspopup="true" aria-expanded="false"><i class="fa-solid fa-upload"></i> Cargar <i class="fa-solid fa-caret-down"></i></a>
@@ -89,6 +128,7 @@
                     <li><a href="#" onclick="cambiarPestanaAdmin('baneados')" id="navBaneados"><i class="fa-solid fa-ban"></i> Baneados</a></li>
                 </ul>
             </li>
+            <li id="navConfigLi" hidden><a href="#" onclick="cambiarPestanaAdmin('config')" id="navConfig" style="color: var(--secondary);"><i class="fa-solid fa-gear"></i> Configuración</a></li>
             <li><a href="#" onclick="cerrarSesion()" style="color: #ff5555;"><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
             
         </ul>
@@ -416,8 +456,8 @@
 
         <div class="tool-container" style="margin-top: 30px;">
             <div class="cupos-head">
-                <h3><i class="fa-solid fa-list-check"></i> Historial de Cupos</h3>
-                <button class="btn-mini" onclick="cargarEntrenamientosProgramadosAdmin()"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
+                <h3><i class="fa-solid fa-list-check"></i> Historial de cupos públicos</h3>
+                <button class="btn-mini" onclick="cargarEntrenamientosProgramadosAdmin('PUBLICO')"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
             </div>
             <div class="cupos-tabs" id="tabsCupos"></div>
             <div id="listaProgramadosAdmin" class="cupos-list">
@@ -426,10 +466,27 @@
         </div>
     </section>
 
+    <!-- CONFIGURACIÓN DEL PORTAL DE PUMAS (sql/28): secciones públicas y usuarios del staff -->
+    <section id="seccionConfig" class="tool-section" style="padding-top: 40px; display: none;">
+        <h2 class="section-title">Configuración de Entrenos Pumas</h2>
+        <div class="tool-container"><div id="configPumas"></div></div>
+    </section>
+
     <!-- CUPOS VIP (sql/25) -->
     <section id="seccionCuposVip" class="tool-section" style="padding-top: 40px; display: none;">
         <h2 class="section-title">Cupos VIP</h2>
         <div class="tool-container"><div id="cuposVipAdmin"></div></div>
+
+        <div class="tool-container" style="margin-top: 30px;">
+            <div class="cupos-head">
+                <h3><i class="fa-solid fa-crown"></i> Historial de cupos VIP</h3>
+                <button class="btn-mini" onclick="cargarEntrenamientosProgramadosAdmin('VIP')"><i class="fa-solid fa-rotate-right"></i> Refrescar</button>
+            </div>
+            <div class="cupos-tabs" id="tabsCuposVip"></div>
+            <div id="listaVipAdmin" class="cupos-list">
+                <div class="cupos-empty">Cargando cupos VIP...</div>
+            </div>
+        </div>
     </section>
 
     <!-- BANEADOS: por equipo y por número (sql/25) -->
@@ -488,9 +545,13 @@
             registrarVip:        { sec: 'seccionRegistrarVip', nav: 'navVipReg', alAbrir: () => cargarListaEquiposVipAdmin() },
             borrarEntrenos:      { sec: 'seccionBorrarEntrenos', nav: 'navBorrar', alAbrir: () => cargarListaEntrenamientosParaBorrar() },
             metricas:            { sec: 'seccionMetricas', nav: 'navMetricas' },
-            programar:           { sec: 'seccionProgramar', nav: 'navProgramar', alAbrir: () => cargarEntrenamientosProgramadosAdmin() },
-            cuposVip:            { sec: 'seccionCuposVip', nav: 'navCuposVip', alAbrir: () => PumasControl.montarVip('cuposVipAdmin', 'entrenamientos') },
-            baneados:            { sec: 'seccionBaneados', nav: 'navBaneados', alAbrir: () => PumasControl.montarBaneos('baneadosAdmin', 'entrenamientos') }
+            programar:           { sec: 'seccionProgramar', nav: 'navProgramar', alAbrir: () => cargarEntrenamientosProgramadosAdmin('PUBLICO') },
+            cuposVip:            { sec: 'seccionCuposVip', nav: 'navCuposVip', alAbrir: () => {
+                PumasControl.montarVip('cuposVipAdmin', 'entrenamientos', { alCrear: () => cargarEntrenamientosProgramadosAdmin('VIP') });
+                cargarEntrenamientosProgramadosAdmin('VIP');
+            } },
+            baneados:            { sec: 'seccionBaneados', nav: 'navBaneados', alAbrir: () => PumasControl.montarBaneos('baneadosAdmin', 'entrenamientos') },
+            config:              { sec: 'seccionConfig', nav: 'navConfig', alAbrir: () => PumasConfig.montar('configPumas') }
         };
 
         function cerrarSubmenus(excepto) {
@@ -511,8 +572,16 @@
         document.addEventListener('click', e => { if (!e.target.closest('.nav-grupo')) cerrarSubmenus(); });
         document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarSubmenus(); });
 
+        function alternarMenuAdmin(forzar) {
+            const nav = document.getElementById('navAdmin'), btn = document.getElementById('btnMenuAdmin');
+            const abierto = nav.classList.toggle('abierto', forzar);
+            btn.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+            btn.querySelector('i').className = abierto ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+        }
+
         function cambiarPestanaAdmin(pestana) {
             if (window.event && window.event.preventDefault) window.event.preventDefault();
+            if (document.getElementById('navAdmin').classList.contains('abierto')) { alternarMenuAdmin(false); window.scrollTo(0, 0); }
             const elegida = PESTANAS[pestana] || PESTANAS.cargar;
             cerrarSubmenus();
             new Set(Object.values(PESTANAS).map(p => p.sec)).forEach(id => {
@@ -555,11 +624,16 @@
             cambiarPestanaAdmin('cargar');
         });
     </script>
-    <script src="../portal-kit/completos.js?v=20261011m"></script>
-    <script src="admin_logica.js"></script>
-    <script src="completos_admin.js?v=20261011m"></script>
-    <script src="../portal-kit/generador-csv.js?v=20261011m"></script>
-    <script src="../portal-kit/cupos-control.js?v=20261011m"></script>
+    <script src="../portal-kit/completos.js?v=20261011o"></script>
+    <script src="admin_logica.js?v=20261011o"></script>
+    <script src="completos_admin.js?v=20261011o"></script>
+    <script src="../portal-kit/generador-csv.js?v=20261011o"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261011o"></script>
+    <script src="config_portal.js?v=20261011o"></script>
+    <script>
+        // Permisos por usuario (staff de Pumas): solo los módulos habilitados; Configuración solo para los admins
+        window.addEventListener('pg:sesion', () => PumasConfig.aplicarPermisos(PESTANAS, cambiarPestanaAdmin), { once: true });
+    </script>
     <script>
         // GENERAR BANEO: equipos que no jugaron 2 salas o no jugaron la última (con los .log cargados)
         function equiposParaBaneo() {
@@ -574,6 +648,6 @@
         window.alTerminarEntreno = () => abrirGenerarBaneo(false);
     </script>
     <script>PumasGenerador.montar('generadorCsv');</script>
-    <script src="vip_admin.js?v=20261011m"></script>
+    <script src="vip_admin.js?v=20261011o"></script>
 </body>
 </html>
