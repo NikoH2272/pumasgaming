@@ -32,6 +32,7 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 26 | `26_datos_prueba_pruebas.sql` | **Opcional.** Datos de ejemplo SOLO para el módulo de Pruebas: lista VIP, baneados (equipo y número) y cupos públicos, VIP y programados. Se borran con el bloque del final | ☐ |
 | 27 | `27_aza_portal_aparte.sql` | Ascensos AZA como portal aparte: sus usuarios (admins y moderadores) solo los ve el superadmin, en su ventana "Ascensos AZA · subusuarios"; los moderadores solo los manejan el superadmin y los admins de AZA | ☐ |
 | 28 | `28_pumas_portal_aparte.sql` | Entrenos Pumas como portal aparte: Configuración (qué secciones ve el público) y usuarios del staff de Pumas con los módulos del panel que cada uno puede usar. Solo el superadmin los ve en Usuarios y roles | ☐ |
+| 29 | `29_latam_semana_actual.sql` | Entrenos: la tabla de la semana (lunes a domingo) siempre muestra la semana actual; si todavía no hay resultados, sale vacía con aviso (ya no salta a la semana pasada) | ☐ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 

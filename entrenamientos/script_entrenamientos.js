@@ -181,8 +181,10 @@ function seleccionarDia(dateStr, el) {
 const ZONA_HORARIA='America/Bogota';
 const diaLocal=iso=>new Date(iso).toLocaleDateString('en-CA',{timeZone:ZONA_HORARIA});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// Semana de LUNES a DOMINGO (hora Colombia)
+function inicioSemana(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()||7)-1));}
 function semanaISO(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=t.getUTCFullYear();return y+'-'+Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7);}
-function rangoSemana(d){const l=new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()||7)-1)),f=new Date(l.getFullYear(),l.getMonth(),l.getDate()+6),o={day:'numeric',month:'short'};return l.toLocaleDateString('es',o)+' – '+f.toLocaleDateString('es',o);}
+function rangoSemana(d){const l=inicioSemana(d),f=new Date(l.getFullYear(),l.getMonth(),l.getDate()+6),o={day:'numeric',month:'short'};return l.toLocaleDateString('es',o)+' – '+f.toLocaleDateString('es',o);}
 const MIN_SALAS_KILLER=3; // mínimo de salas jugadas para entrar a los top killers
 async function parsearSesion(s){
   const vacio={teams:{},players:{},salas:0,kills:0};
@@ -223,12 +225,12 @@ async function parsearTodas(sesiones,alAvanzar){
   }
   return res;
 }
+// Siempre la semana ACTUAL (lunes a domingo), aunque todavía no tenga entrenos
 function semanaObjetivo(parsed){
   const key=p=>semanaISO(new Date(diaLocal(p[0].fecha)+'T00:00:00'));
-  let k=semanaISO(new Date()), lista=parsed.filter(p=>key(p)===k), actual=true;
-  if(!lista.length&&parsed.length){k=key(parsed[0]);lista=parsed.filter(p=>key(p)===k);actual=false;}
-  const f=lista.length?new Date(diaLocal(lista[0][0].fecha)+'T00:00:00'):new Date();
-  return {num:k.split('-')[1],lista,actual,rango:rangoSemana(f)};
+  const hoy=new Date(diaLocal(new Date().toISOString())+'T00:00:00');
+  const k=semanaISO(hoy), lista=parsed.filter(p=>key(p)===k);
+  return {num:k.split('-')[1],lista,actual:true,rango:rangoSemana(hoy)};
 }
 
 const _col=i=>i===0?'#D8C395':i===1?'#B9B2A4':i===2?'#cd7f32':'var(--light)';
@@ -249,11 +251,12 @@ function ordenarSemana(orden){
   document.querySelectorAll('#ordenSemana .orden-btn').forEach(x=>x.classList.toggle('on',x.dataset.orden===orden));
   const tit=document.getElementById('tituloTop50');
   if(tit&&_semInfo) tit.innerHTML=`Top 50 Equipos · Semana ${_semInfo.num}<span class="wk-range">${_semInfo.rango}${_semInfo.actual?'':' · última semana con datos'} · ${_textoOrden(orden)}</span>`;
-  _llenar('bodyTablaGlobal1','bodyTablaGlobal2',[..._semanaPumas].sort(_ordenPumas[orden]).slice(0,50));
+  _llenar('bodyTablaGlobal1','bodyTablaGlobal2',[..._semanaPumas].sort(_ordenPumas[orden]).slice(0,50),SIN_SEMANA);
 }
-function _llenar(idA,idB,lista){
+const SIN_SEMANA='No tenemos resultados de la semana. Puedes consultar en el calendario los entrenos anteriores o más abajo el histórico.';
+function _llenar(idA,idB,lista,vacio){
   const A=document.getElementById(idA),B=document.getElementById(idB); if(!A||!B) return;
-  if(!lista.length){A.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--gray);">Sin registros.</td></tr>';B.innerHTML='';return;}
+  if(!lista.length){A.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--gray);padding:18px;">${vacio||'Sin registros.'}</td></tr>`;B.innerHTML='';return;}
   const m=Math.ceil(lista.length/2);
   A.innerHTML=lista.slice(0,m).map((e,i)=>_filaEq(e,i)).join('');
   B.innerHTML=lista.slice(m).map((e,i)=>_filaEq(e,i+m)).join('');

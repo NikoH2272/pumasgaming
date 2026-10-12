@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styleadmin.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261011o" data-portal="entrenamientos" data-modo="admin"></script>
+    <script src="../portal-kit/portal.js?v=20261012b" data-portal="entrenamientos" data-modo="admin"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
     <style>
@@ -624,12 +624,12 @@
             cambiarPestanaAdmin('cargar');
         });
     </script>
-    <script src="../portal-kit/completos.js?v=20261011o"></script>
-    <script src="admin_logica.js?v=20261011o"></script>
-    <script src="completos_admin.js?v=20261011o"></script>
-    <script src="../portal-kit/generador-csv.js?v=20261011o"></script>
-    <script src="../portal-kit/cupos-control.js?v=20261011o"></script>
-    <script src="config_portal.js?v=20261011o"></script>
+    <script src="../portal-kit/completos.js?v=20261012b"></script>
+    <script src="admin_logica.js?v=20261012b"></script>
+    <script src="completos_admin.js?v=20261012b"></script>
+    <script src="../portal-kit/generador-csv.js?v=20261012b"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261012b"></script>
+    <script src="config_portal.js?v=20261012b"></script>
     <script>
         // Permisos por usuario (staff de Pumas): solo los módulos habilitados; Configuración solo para los admins
         window.addEventListener('pg:sesion', () => PumasConfig.aplicarPermisos(PESTANAS, cambiarPestanaAdmin), { once: true });
@@ -648,6 +648,6 @@
         window.alTerminarEntreno = () => abrirGenerarBaneo(false);
     </script>
     <script>PumasGenerador.montar('generadorCsv');</script>
-    <script src="vip_admin.js?v=20261011o"></script>
+    <script src="vip_admin.js?v=20261012b"></script>
 </body>
 </html>

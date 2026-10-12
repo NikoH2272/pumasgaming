@@ -79,12 +79,12 @@ async function parsearTodas(sesiones,alAvanzar){
   }
   return res;
 }
+// Siempre la semana ACTUAL (lunes a domingo), aunque todavía no tenga entrenos
 function semanaObjetivo(parsed){
   const key=p=>semanaISO(new Date(diaLocal(p[0].fecha)+'T00:00:00'));
-  let k=semanaISO(new Date()), lista=parsed.filter(p=>key(p)===k), actual=true;
-  if(!lista.length&&parsed.length){k=key(parsed[0]);lista=parsed.filter(p=>key(p)===k);actual=false;}
-  const f=lista.length?new Date(diaLocal(lista[0][0].fecha)+'T00:00:00'):new Date();
-  return {num:k.split('-')[1],lista,actual,rango:rangoSemana(f)};
+  const hoy=new Date(diaLocal(new Date().toISOString())+'T00:00:00');
+  const k=semanaISO(hoy), lista=parsed.filter(p=>key(p)===k);
+  return {num:k.split('-')[1],lista,actual:true,rango:rangoSemana(hoy)};
 }
 
   const set=(id,v)=>{const el=$(id); if(el) el.textContent=v;};
@@ -99,8 +99,8 @@ function semanaObjetivo(parsed){
     const te=$('tituloTopEq'), tk=$('tituloTopKill');
     if(te) te.innerHTML=`Top 10 Equipos · Semana ${sem.num}<span class="wk-range">${sem.rango}${nota} · PR = PG ÷ sesiones</span>`;
     if(tk) tk.innerHTML=`Top 10 Killers · Semana ${sem.num}<span class="wk-range">${sem.rango}${nota} · KDA = kills ÷ salas</span>`;
-    rank('contenedorTopEquiposPublicos',w.eq.slice(0,10),x=>`${x.pr} PR <small>${x.pts} PG · ${x.ses} ses.</small>`,'Aún no hay entrenamientos esta semana.');
-    rank('contenedorTopKillersPublicos',w.pl.slice(0,10),x=>`${x.kda.toFixed(2)} KDA <small>${x.k} kills</small>`,'Aún no hay entrenamientos esta semana.');
+    rank('contenedorTopEquiposPublicos',w.eq.slice(0,10),x=>`${x.pr} PR <small>${x.pts} PG · ${x.ses} ses.</small>`,'No tenemos resultados de la semana. Puedes consultar en el calendario los entrenos anteriores o más abajo el histórico.');
+    rank('contenedorTopKillersPublicos',w.pl.slice(0,10),x=>`${x.kda.toFixed(2)} KDA <small>${x.k} kills</small>`,'No tenemos resultados de la semana. Puedes consultar en el calendario los entrenos anteriores o más abajo el histórico.');
   }
 
   document.addEventListener("DOMContentLoaded",async()=>{

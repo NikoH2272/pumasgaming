@@ -126,8 +126,9 @@
             .sort((a, b) => b.kda - a.kda || b.k - a.k);
     }
 
-    /* ---------------- Semana (ISO, hora Colombia, igual que Pumas) ---------------- */
+    /* ---------------- Semana: de LUNES a DOMINGO, hora Colombia (igual que Pumas) ---------------- */
     const diaLocal = iso => new Date(iso).toLocaleDateString('en-CA', { timeZone: ZONA });
+    const inicioSemana = d => new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() || 7) - 1));   // el lunes
     function semanaISO(d) {
         const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), n = t.getUTCDay() || 7;
         t.setUTCDate(t.getUTCDate() + 4 - n);
@@ -135,17 +136,16 @@
         return y + '-' + Math.ceil(((t - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7);
     }
     function rangoSemana(d) {
-        const l = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() || 7) - 1));
+        const l = inicioSemana(d);
         const f = new Date(l.getFullYear(), l.getMonth(), l.getDate() + 6), o = { day: 'numeric', month: 'short' };
         return l.toLocaleDateString('es', o) + ' – ' + f.toLocaleDateString('es', o);
     }
+    const hoyCol = () => new Date(diaLocal(new Date()) + 'T00:00:00');
     const semanaDe = fecha => semanaISO(new Date(diaLocal(fecha) + 'T00:00:00'));
-    // Semana actual; si no tiene datos, la última semana con entrenos
-    function semanaObjetivo(sesiones) {
-        let k = semanaISO(new Date()), actual = true;
-        if (!sesiones.some(s => semanaDe(s.fecha) === k) && sesiones.length) { k = semanaDe(sesiones[0].fecha); actual = false; }
-        const una = sesiones.find(s => semanaDe(s.fecha) === k);
-        return { clave: k, num: k.split('-')[1], actual, rango: rangoSemana(una ? new Date(diaLocal(una.fecha) + 'T00:00:00') : new Date()) };
+    // Siempre la semana ACTUAL (lunes a domingo), aunque todavía no tenga entrenos
+    function semanaObjetivo() {
+        const hoy = hoyCol(), k = semanaISO(hoy);
+        return { clave: k, num: k.split('-')[1], actual: true, rango: rangoSemana(hoy) };
     }
 
     /* ---------------- Participación: se ve al tocar la fila ---------------- */
@@ -272,7 +272,7 @@
     function resumenLocal(d, portal, completo) {
         const f = r => !portal || r.portal === portal;
         const ses = d.sesiones.filter(f), eqs = d.equipos.filter(f), kls = d.killers.filter(f);
-        const sem = semanaObjetivo(ses);
+        const sem = semanaObjetivo();
         const enSemana = r => semanaDe(r.fecha) === sem.clave;
         const out = {
             semana: sem,
@@ -366,8 +366,8 @@
             if (t1) t1.innerHTML = `Top 10 Equipos LATAM · Semana ${sem.num}<span class="wk-range">${sem.rango}${nota} · PR</span>`;
             if (t2) t2.innerHTML = `Top 10 Killers LATAM · Semana ${sem.num}<span class="wk-range">${sem.rango}${nota} · KDA</span>`;
             const eq = r.semanaEquipos.slice(0, 10), kl = r.semanaKillers.slice(0, 10);
-            eqEl.innerHTML = eq.length ? eq.map((x, i) => filaRank(x, i, `${x.pr} PR`)).join('') : '<p>Aún no hay entrenos LATAM registrados.</p>';
-            klEl.innerHTML = kl.length ? kl.map((x, i) => filaRank(x, i, `${x.kda.toFixed(2)} KDA`)).join('') : '<p>Aún no hay entrenos LATAM registrados.</p>';
+            eqEl.innerHTML = eq.length ? eq.map((x, i) => filaRank(x, i, `${x.pr} PR`)).join('') : `<p>${SIN_SEMANA}</p>`;
+            klEl.innerHTML = kl.length ? kl.map((x, i) => filaRank(x, i, `${x.kda.toFixed(2)} KDA`)).join('') : `<p>${SIN_SEMANA}</p>`;
         } catch (e) {
             console.warn('LATAM:', e);
             const msg = '<p>Los resultados LATAM estarán disponibles pronto.</p>';
@@ -383,6 +383,9 @@
     const MES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
     const fmtDia = d => new Date(d + 'T00:00:00').toLocaleDateString('es', { day: 'numeric', month: 'short', year: 'numeric' });
     const VACIO = '<tr class="vacio"><td colspan="7"><i class="fa-solid fa-database"></i>Sin registros todavía.</td></tr>';
+    // La tabla de la semana vacía (la semana va de lunes a domingo y siempre es la actual)
+    const SIN_SEMANA = 'No tenemos resultados de la semana. Puedes consultar en el calendario los entrenos anteriores o más abajo el histórico.';
+    const VACIO_SEMANA = `<tr class="vacio"><td colspan="7"><i class="fa-regular fa-calendar"></i>${SIN_SEMANA}</td></tr>`;
 
     // data-l = etiqueta que se ve en el celular (la tabla se muestra como ficha)
     function filaTabla(e, i, conPart) {
@@ -397,7 +400,7 @@
     function llenarDoble(idA, idB, lista, conPart) {
         const A = document.getElementById(idA), B = document.getElementById(idB);
         if (!A || !B) return;
-        if (!lista.length) { A.innerHTML = VACIO; B.innerHTML = ''; B.closest('table').hidden = true; A.closest('table').caption.textContent = ''; return; }
+        if (!lista.length) { A.innerHTML = /Semana/.test(idA) ? VACIO_SEMANA : VACIO; B.innerHTML = ''; B.closest('table').hidden = true; A.closest('table').caption.textContent = ''; return; }
         const m = Math.ceil(lista.length / 2);
         A.innerHTML = lista.slice(0, m).map((e, i) => filaTabla(e, i, conPart)).join('');
         B.innerHTML = lista.slice(m).map((e, i) => filaTabla(e, i + m, conPart)).join('');
