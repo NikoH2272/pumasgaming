@@ -44,7 +44,7 @@ async function cargarEntrenamientosActivos() {
 
         // cupos.html muestra solo los PÚBLICOS; cupos-vip.html (oculta, con link) solo los VIP
         const soloVip = window.CUPOS_TIPO === 'VIP';
-        entrenamientos = (entrenamientos || []).filter(e => (e.tipo === 'VIP') === soloVip);
+        entrenamientos = (entrenamientos || []).filter(e => (e.tipo === 'VIP') === soloVip && (!e.cierra_en || new Date(e.cierra_en) > new Date()));
 
         if (!entrenamientos || entrenamientos.length === 0) {
             contenedor.innerHTML = `<div style="text-align:center; color:var(--gray); padding:40px; background: var(--dark-card); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">${window.CUPOS_TIPO === 'VIP' ? 'No hay cupos VIP abiertos en este momento.' : 'No hay entrenamientos programados en este momento. Vuelve pronto.'}</div>`;
@@ -111,6 +111,7 @@ async function cargarEntrenamientosActivos() {
                         <div>
                             <h2 style="color: var(--light); font-family: 'Michroma'; font-size: 1.4rem; margin:0 0 10px 0;">${ent.tipo === 'VIP' ? '<span style="display:inline-block;padding:3px 8px;margin-right:8px;border-radius:4px;background:#FFD54A;color:#1a1400;font-size:.7rem;vertical-align:middle"><i class="fa-solid fa-crown"></i> SOLO VIP</span>' : ''}${ent.titulo}</h2>
                             <div style="color: var(--gray); font-size: 0.95rem; margin-bottom: 5px;"><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${fechaStr}</div>
+                            ${ent.cierra_en ? `<div style="color: #FFE38A; font-size: 0.9rem; margin-bottom: 5px;"><i class="fa-solid fa-hourglass-end"></i> Inscripciones hasta las ${new Date(ent.cierra_en).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' })} (hora Colombia)</div>` : ''}
                             <div style="color: var(--gray); font-size: 0.95rem;"><i class="fa-solid fa-users" style="color: var(--primary);"></i> Cupos disponibles: <strong style="color: #D8C395; font-family:'Michroma'; font-size:1.1rem;">${cuposRestantes} / ${ent.cupos_totales}</strong></div>
                         </div>
                         <div>${btnInscribir}</div>

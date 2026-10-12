@@ -69,7 +69,8 @@
             }
             return `<article class="card-box cupo-card">
                 <div class="cupo-top">
-                    <div><h3>${g.tipo === 'VIP' ? '<span class="cupo-vip"><i class="fa-solid fa-crown"></i> SOLO VIP</span> ' : ''}${esc(g.titulo)}</h3><p class="muted"><i class="fa-regular fa-clock"></i> ${fmt(g.fecha)}</p></div>
+                    <div><h3>${g.tipo === 'VIP' ? '<span class="cupo-vip"><i class="fa-solid fa-crown"></i> SOLO VIP</span> ' : ''}${esc(g.titulo)}</h3><p class="muted"><i class="fa-regular fa-clock"></i> ${fmt(g.fecha)}</p>
+                        ${g.cierra_en ? `<p style="color:#FFE38A;font-size:.85rem"><i class="fa-solid fa-hourglass-end"></i> Inscripciones hasta ${fmt(g.cierra_en)}</p>` : ''}</div>
                     <div class="cupo-cuenta"><b>${Math.max(quedan, 0)}</b><small>de ${g.cupos} cupos</small></div>
                 </div>
                 <div class="cupo-barra"><span style="width:${Math.min(100, g.inscritos.length / g.cupos * 100)}%"></span></div>

@@ -19,6 +19,9 @@
 -- 1) Tipo de cupo -------------------------------------------------------
 alter table public.portal_programados add column if not exists tipo text not null default 'PUBLICO';
 alter table public.entrenamientos_programados add column if not exists tipo text not null default 'PUBLICO';
+-- Hasta cuándo se puede inscribir (null = hasta la hora del entreno). Lo usan los horarios VIP.
+alter table public.portal_programados add column if not exists cierra_en timestamptz;
+alter table public.entrenamientos_programados add column if not exists cierra_en timestamptz;
 
 -- 2) Lista VIP por portal (privada) --------------------------------------
 create table if not exists public.cupos_vip (
@@ -103,10 +106,11 @@ create or replace function public._trg_registro_cupos()
 returns trigger language plpgsql security definer
 set search_path = public
 as $$
-declare v_tipo text;
+declare v_tipo text; v_cierra timestamptz;
 begin
     if new.telefono = 'REGISTRO STAFF' then return new; end if;   -- los de staff los pone el admin
-    select tipo into v_tipo from entrenamientos_programados where id = new.entrenamiento_id;
+    select tipo, cierra_en into v_tipo, v_cierra from entrenamientos_programados where id = new.entrenamiento_id;
+    if v_cierra is not null and v_cierra <= now() then raise exception 'Las inscripciones de este cupo ya cerraron'; end if;
     perform _revisar_cupo('entrenamientos', v_tipo, new.nombre_jugador, new.telefono);
     return new;
 end $$;
@@ -122,6 +126,7 @@ declare g portal_programados;
 begin
     if new.telefono = 'REGISTRO STAFF' then return new; end if;
     select * into g from portal_programados where id = new.programado_id;
+    if g.cierra_en is not null and g.cierra_en <= now() then raise exception 'Las inscripciones de este cupo ya cerraron'; end if;
     perform _revisar_cupo(g.portal, g.tipo, new.nombre_equipo, new.telefono);
     return new;
 end $$;
@@ -136,14 +141,15 @@ set search_path = public
 as $$
     select coalesce(json_agg(json_build_object(
                'id', g.id, 'portal', g.portal, 'titulo', g.titulo, 'fecha', g.fecha, 'cupos', g.cupos_totales,
-               'tipo', g.tipo, 'abre_en', g.publicar_en,
+               'tipo', g.tipo, 'abre_en', g.publicar_en, 'cierra_en', g.cierra_en,
                'pendiente', g.publicar_en is not null and g.publicar_en > now(),
                'inscritos', (select coalesce(json_agg(json_build_object('equipo', c.nombre_equipo, 'staff', c.telefono = 'REGISTRO STAFF') order by c.creado), '[]'::json)
                                from portal_cupos c where c.programado_id = g.id)) order by coalesce(g.publicar_en, g.fecha), g.fecha), '[]'::json)
       from portal_programados g
      where g.portal = p_portal and g.estado = 'ABIERTO'
        and (g.publicar_en is null or g.publicar_en <= now() + interval '7 days')
-       and g.fecha > now() - interval '6 hours';
+       and g.fecha > now() - interval '6 hours'
+       and (g.cierra_en is null or g.cierra_en > now());
 $$;
 
 -- 7) Admin -------------------------------------------------------------------
@@ -157,7 +163,7 @@ begin
     perform _exigir_permiso(p_token, 'portal:' || p_portal);
     return (select coalesce(json_agg(json_build_object(
                'id', g.id, 'titulo', g.titulo, 'fecha', g.fecha, 'cupos', g.cupos_totales, 'estado', g.estado,
-               'publicar_en', g.publicar_en, 'link', g.link_grupo, 'tipo', g.tipo,
+               'publicar_en', g.publicar_en, 'link', g.link_grupo, 'tipo', g.tipo, 'cierra_en', g.cierra_en,
                'inscritos', (select coalesce(json_agg(json_build_object('id', c.id, 'equipo', c.nombre_equipo, 'telefono', c.telefono,
                                     'staff', c.telefono = 'REGISTRO STAFF') order by c.creado), '[]'::json)
                                from portal_cupos c where c.programado_id = g.id)) order by g.fecha desc), '[]'::json)
@@ -174,6 +180,17 @@ begin
     perform _exigir_permiso(p_token, 'portal:' || p_portal);
     if p_tipo not in ('PUBLICO', 'VIP') then raise exception 'Tipo inválido'; end if;
     update portal_programados set tipo = p_tipo where id = p_id and portal = p_portal;
+    return json_build_object('ok', true);
+end $$;
+
+-- Horarios VIP: deja el cupo como VIP y con su hora de cierre de inscripciones
+create or replace function public.admin_cupo_vip(p_token uuid, p_portal text, p_id bigint, p_cierra_en timestamptz)
+returns json language plpgsql security definer
+set search_path = public
+as $$
+begin
+    perform _exigir_permiso(p_token, 'portal:' || p_portal);
+    update portal_programados set tipo = 'VIP', cierra_en = p_cierra_en where id = p_id and portal = p_portal;
     return json_build_object('ok', true);
 end $$;
 
@@ -306,6 +323,7 @@ end $$;
 
 grant execute on function public.cupos_publicos(text) to anon, authenticated;
 grant execute on function public.admin_cupo_tipo(uuid, text, bigint, text) to anon, authenticated;
+grant execute on function public.admin_cupo_vip(uuid, text, bigint, timestamptz) to anon, authenticated;
 grant execute on function public.admin_vip_lista(uuid, text) to anon, authenticated;
 grant execute on function public.admin_vip_guardar(uuid, text, text, text) to anon, authenticated;
 grant execute on function public.admin_vip_borrar(uuid, text, bigint) to anon, authenticated;

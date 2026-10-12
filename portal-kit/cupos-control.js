@@ -1,7 +1,7 @@
 /* =====================================================================
    PUMAS GAMING · Control de cupos: VIP, baneados y "Generar baneo" (sql/25)
    Solo en Entrenos Pumas y en el módulo de Pruebas.
-   PumasControl.montarVip(contId, portal)      → lista VIP (equipo + número)
+   PumasControl.montarVip(contId, portal, {agregar}) → horarios VIP + lista VIP (verificar y copiar)
    PumasControl.montarBaneos(contId, portal)   → baneo por equipo y/o número
    PumasControl.revisarSalas(portal, equipos)  → ventana GENERAR BANEO con los
         equipos que no jugaron 2 salas o no jugaron la última.
@@ -58,44 +58,142 @@
         <input data-${pref}="tel" inputmode="tel" maxlength="16" placeholder="Número sin espacios"></div>`;
 
     /* ---------------- VIP ---------------- */
-    async function montarVip(contId, portal) {
+    // Horarios fijos de los cupos VIP (hora Colombia, UTC-5)
+    const HORARIOS_VIP = [['11:00', '11 AM'], ['14:00', '2 PM'], ['17:00', '5 PM'], ['19:00', '7 PM'], ['20:00', '8 PM']];
+    const hoyCol = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
+    const enCol = (dia, hhmm) => new Date(`${dia}T${hhmm}:00-05:00`);
+    // El link de cada horario se recuerda en este navegador (cada horario tiene su grupo)
+    const claveLink = (portal, hh) => `pg_vip_link_${portal}_${hh}`;
+    const linkGuardado = (portal, hh) => { try { return localStorage.getItem(claveLink(portal, hh)) || ''; } catch (e) { return ''; } };
+    const guardarLink = (portal, hh, v) => { try { localStorage.setItem(claveLink(portal, hh), v); } catch (e) { /* sin almacenamiento */ } };
+    const horaCol = d => d.toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' });
+
+    // opts.agregar: true = aquí se agregan equipos VIP (Pruebas). En Pumas se agregan en VIP → Registrar VIP.
+    async function montarVip(contId, portal, opts) {
         const cont = document.getElementById(contId);
         if (!cont) return;
         estilos();
+        const agregar = !!(opts && opts.agregar);
         cont.innerHTML = `
             ${LINK_VIP[portal] ? `<div class="cc-link"><div><small><i class="fa-solid fa-link"></i> LINK OCULTO DE CUPOS VIP · no sale en el portal ni en el menú: compártelo solo con los VIP</small>
                 <code data-v="link">${esc(location.origin + LINK_VIP[portal])}</code></div>
                 <div style="display:flex;gap:6px"><button class="cc-btn lleno" data-v="copiar" type="button"><i class="fa-solid fa-copy"></i> Copiar</button>
                 <a class="cc-btn" href="${esc(LINK_VIP[portal])}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir</a></div></div>` : ''}
-            <p class="tool-desc">Equipos que pueden inscribirse a los cupos <b>VIP</b>. Al inscribirse deben usar <b>el mismo nombre de equipo y el mismo número</b> que están aquí${portal === 'entrenamientos' ? ' (o los de su registro VIP aprobado)' : ''}; si no coinciden, no les da el cupo.</p>
+
+            <div class="cc-h"><i class="fa-solid fa-clock"></i> HORARIOS VIP <small>· hora Colombia</small></div>
+            <div class="cc-form">
+                <div class="form-group"><label>Día</label><input type="date" data-v="dia" value="${hoyCol()}"></div>
+            </div>
+            <div class="cc-tabla-wrap" style="margin-top:12px"><table class="cc-tabla"><thead><tr>
+                <th style="width:40px"><input type="checkbox" data-v="todos" title="Habilitar todos"></th><th>HORARIO</th><th>CUPOS</th><th>LINK DEL GRUPO DE ESE HORARIO</th><th>INSCRIPCIONES HASTA</th></tr></thead>
+                <tbody>${HORARIOS_VIP.map(([hh, txt], i) => `<tr data-h="${i}">
+                    <td><input type="checkbox" data-hab></td><td><b>${txt} COL</b></td>
+                    <td><input type="number" data-cupos min="1" max="50" value="12" style="width:90px"></td>
+                    <td><input type="url" data-link placeholder="https://chat.whatsapp.com/..." value="${esc(linkGuardado(portal, hh))}" style="min-width:230px;width:100%"></td>
+                    <td data-hasta class="muted">—</td></tr>`).join('')}</tbody></table></div>
+            <p class="muted" style="margin:6px 0 0;font-size:.8rem"><i class="fa-solid fa-circle-info"></i> Cada horario tiene su propio grupo. El último link de cada horario queda guardado en este navegador para la próxima vez.</p>
+            <div class="cc-form" style="margin-top:12px">
+                <div class="form-group"><label>Cierre de inscripciones</label>
+                    <select data-v="cierre"><option value="entreno">Hasta la hora de cada entreno</option><option value="fija">Todos hasta una hora fija</option></select></div>
+                <div class="form-group" data-v="cajaFija" hidden><label>Hora de cierre (Colombia)</label><input type="time" data-v="horaFija" value="10:00"></div>
+                <div class="form-group"><button class="btn-generar" data-v="crear" type="button"><i class="fa-solid fa-crown"></i> Crear cupos VIP</button></div>
+            </div>
+            <p class="cc-msg" data-v="msgH" role="status"></p>
+
+            ${agregar ? `<div class="cc-h"><i class="fa-solid fa-user-plus"></i> AGREGAR EQUIPO VIP</div>
             <div class="cc-form">
                 <div class="form-group"><label>Nombre del equipo</label><input data-v="equipo" maxlength="60" placeholder="Ej: LOS TIGRES"></div>
                 <div class="form-group"><label>Número con el que se anotó</label>${campoTel('v')}</div>
                 <div class="form-group"><button class="btn-generar" data-v="agregar" type="button"><i class="fa-solid fa-crown"></i> Agregar a VIP</button></div>
-            </div>
+            </div>` : ''}
             <p class="cc-msg" data-v="msg" role="status"></p>
             <div data-v="lista"><p class="cc-vacio">Cargando...</p></div>`;
         const $ = k => cont.querySelector(`[data-v="${k}"]`);
-        const msg = (t, c) => { $('msg').textContent = t; $('msg').style.color = c || ''; };
-        if ($('copiar')) $('copiar').onclick = async () => {
-            try { await navigator.clipboard.writeText($('link').textContent); msg('✔ Link copiado.', '#6ee7a8'); }
-            catch (e) { msg('Copia el link a mano: ' + $('link').textContent); }
+        const msg = (t, c, k) => { const n = $(k || 'msg'); n.textContent = t; n.style.color = c || ''; };
+        const copiar = async (texto, k) => {
+            try { await navigator.clipboard.writeText(texto); msg('✔ Copiado.', '#6ee7a8', k); }
+            catch (e) { window.prompt('Copia el texto:', texto); }
         };
+        if ($('copiar')) $('copiar').onclick = () => copiar($('link').textContent);
+
+        /* --- Horarios --- */
+        const filas = [...cont.querySelectorAll('[data-h]')];
+        function horarios() {
+            const dia = $('dia').value, fija = $('cierre').value === 'fija';
+            $('cajaFija').hidden = !fija;
+            return filas.map(tr => {
+                const [hh, txt] = HORARIOS_VIP[Number(tr.dataset.h)];
+                const fecha = enCol(dia, hh);
+                // Con hora fija, nunca después de que empiece el entreno
+                let cierre = fecha;
+                if (fija && $('horaFija').value) { const f = enCol(dia, $('horaFija').value); if (f < fecha) cierre = f; }
+                const hab = tr.querySelector('[data-hab]').checked;
+                tr.querySelector('[data-hasta]').textContent = hab && dia ? (cierre < fecha ? horaCol(cierre) + ' COL' : 'Hasta las ' + txt + ' (inicio)') : '—';
+                return { hab, hh, txt, fecha, cierre, cupos: Number(tr.querySelector('[data-cupos]').value), link: tr.querySelector('[data-link]').value.trim() };
+            });
+        }
+        cont.querySelectorAll('[data-hab],[data-cupos]').forEach(i => i.addEventListener('input', horarios));
+        ['dia', 'cierre', 'horaFija'].forEach(k => $(k).addEventListener('input', horarios));
+        $('todos').onchange = () => { filas.forEach(tr => { tr.querySelector('[data-hab]').checked = $('todos').checked; }); horarios(); };
+        horarios();
+
+        $('crear').onclick = async () => {
+            const lista = horarios().filter(h => h.hab);
+            if (!$('dia').value) { msg('Elige el día.', '#ff8a8d', 'msgH'); return; }
+            if (!lista.length) { msg('Habilita al menos un horario.', '#ff8a8d', 'msgH'); return; }
+            const sinLink = lista.filter(h => !/^https:\/\//.test(h.link));
+            if (sinLink.length) { msg('Pon el link del grupo de: ' + sinLink.map(h => h.txt).join(', ') + ' (debe empezar con https://).', '#ff8a8d', 'msgH'); return; }
+            if (lista.some(h => !(h.cupos >= 1 && h.cupos <= 50))) { msg('Los cupos van de 1 a 50.', '#ff8a8d', 'msgH'); return; }
+            if (lista.some(h => h.cierre <= new Date())) { msg('Hay horarios que ya cerraron (revisa el día o la hora de cierre).', '#ff8a8d', 'msgH'); return; }
+            const diaTxt = new Date($('dia').value + 'T12:00:00').toLocaleDateString('es', { day: '2-digit', month: '2-digit' });
+            if (!confirm(`¿Crear ${lista.length} cupo(s) VIP para el ${diaTxt}?\n\n` + lista.map(h => `· ${h.txt} COL · ${h.cupos} cupos · inscripciones hasta ${horaCol(h.cierre)}`).join('\n'))) return;
+            $('crear').disabled = true;
+            msg('Creando...', '', 'msgH');
+            let hechos = 0;
+            try {
+                for (const h of lista) {
+                    const titulo = `VIP ${h.txt} COL · ${diaTxt}`;
+                    if (portal === 'entrenamientos') {
+                        // Pumas: sus cupos están en entrenamientos_programados (igual que Programar)
+                        const { error } = await P.db().from('entrenamientos_programados').insert([{ titulo, fecha: h.fecha.toISOString(), hay_staff: 'NO',
+                            cupos_totales: h.cupos, link_grupo: h.link, tipo: 'VIP', cierra_en: h.cierre < h.fecha ? h.cierre.toISOString() : null }]);
+                        if (error) throw error;
+                    } else {
+                        const r = await P.cupos.guardar(portal, { titulo, fecha: h.fecha, cupos: h.cupos, link: h.link, publicar_en: null, staff: [] });
+                        await P.cupos.vip(portal, r.id, h.cierre < h.fecha ? h.cierre : null);
+                    }
+                    guardarLink(portal, h.hh, h.link);
+                    hechos++;
+                }
+                msg(`✔ ${hechos} cupo(s) VIP creados. Salen solo en el link oculto.`, '#6ee7a8', 'msgH');
+                filas.forEach(tr => { tr.querySelector('[data-hab]').checked = false; }); $('todos').checked = false; horarios();
+            } catch (e) {
+                msg((hechos ? `Se crearon ${hechos}; los demás no: ` : '') + (/tipo|cierra_en|admin_cupo_vip|PGRST/i.test(e.message || '') ? 'falta correr sql/25_cupos_vip_y_baneos.sql en Supabase.' : e.message), '#ff8a8d', 'msgH');
+            } finally { $('crear').disabled = false; }
+        };
+
+        /* --- Lista VIP (verificar y copiar) --- */
         async function pintar() {
             let r;
             try { r = await P.control.vipLista(portal); } catch (e) { $('lista').innerHTML = `<p class="cc-vacio">${esc(errorSql(e))}</p>`; return; }
-            const tabla = (filas, borrar) => filas.length ? `<div class="cc-tabla-wrap"><table class="cc-tabla"><thead><tr><th>#</th><th>EQUIPO</th>${filas.some(f => f.tag) ? '<th>TAG</th>' : ''}<th>NÚMERO</th>${borrar ? '<th></th>' : ''}</tr></thead><tbody>
-                ${filas.map((f, i) => `<tr><td>${i + 1}</td><td><b>${esc(f.equipo)}</b></td>${filas.some(x => x.tag) ? `<td>${esc(f.tag || '')}</td>` : ''}<td>${esc(f.telefono)}</td>
-                ${borrar ? `<td style="text-align:right"><button class="cc-btn rojo" data-borrar="${f.id}"><i class="fa-solid fa-trash"></i> Quitar</button></td>` : ''}</tr>`).join('')}</tbody></table></div>`
-                : '<p class="cc-vacio">Todavía no hay equipos en esta lista.</p>';
-            $('lista').innerHTML = `<div class="cc-h"><i class="fa-solid fa-crown"></i> LISTA VIP <small>(${r.lista.length})</small></div>${tabla(r.lista, true)}
-                ${portal === 'entrenamientos' ? `<div class="cc-h"><i class="fa-solid fa-id-card"></i> REGISTROS VIP APROBADOS <small>(${r.registros.length}) · también pueden entrar a los cupos VIP · se manejan en VIP → Registrar VIP</small></div>${tabla(r.registros, false)}` : ''}`;
+            // Una sola lista: registros aprobados (Pumas) + la lista del portal
+            const todos = [...(r.registros || []).map(f => Object.assign({ origen: 'Registro VIP' }, f)), ...r.lista.map(f => Object.assign({ origen: 'Lista' }, f))];
+            const conTag = todos.some(f => f.tag);
+            $('lista').innerHTML = `<div class="cc-h"><i class="fa-solid fa-list-check"></i> LISTA VIP <small>(${todos.length}) · así deben inscribirse: mismo nombre y mismo número</small>
+                    <button class="cc-btn" data-v="copiarLista" type="button" style="margin-left:auto"><i class="fa-solid fa-copy"></i> Copiar lista</button></div>
+                ${!agregar ? '<p class="muted" style="margin:0 0 10px;font-size:.85rem"><i class="fa-solid fa-circle-info"></i> Aquí solo se verifica. Los equipos VIP se agregan en <b>VIP → Registrar VIP</b> (solicitudes aprobadas).</p>' : ''}
+                ${todos.length ? `<div class="cc-tabla-wrap"><table class="cc-tabla"><thead><tr><th>#</th><th>EQUIPO</th>${conTag ? '<th>TAG</th>' : ''}<th>NÚMERO</th>${portal === 'entrenamientos' ? '<th>ORIGEN</th>' : ''}${agregar ? '<th></th>' : ''}</tr></thead><tbody>
+                    ${todos.map((f, i) => `<tr><td>${i + 1}</td><td><b>${esc(f.equipo)}</b></td>${conTag ? `<td>${esc(f.tag || '')}</td>` : ''}<td>${esc(f.telefono)}</td>
+                    ${portal === 'entrenamientos' ? `<td class="muted">${esc(f.origen)}</td>` : ''}
+                    ${agregar ? `<td style="text-align:right">${f.id ? `<button class="cc-btn rojo" data-borrar="${f.id}"><i class="fa-solid fa-trash"></i> Quitar</button>` : ''}</td>` : ''}</tr>`).join('')}</tbody></table></div>`
+                    : '<p class="cc-vacio">Todavía no hay equipos VIP.</p>'}`;
+            $('copiarLista').onclick = () => copiar(`LISTA VIP (${todos.length})\n` + todos.map((f, i) => `${i + 1}. ${f.equipo}${f.tag ? ' (' + f.tag + ')' : ''} · ${f.telefono}`).join('\n'));
             $('lista').querySelectorAll('[data-borrar]').forEach(b => b.onclick = async () => {
                 if (!confirm('¿Quitar este equipo de la lista VIP?')) return;
                 try { await P.control.vipBorrar(portal, Number(b.dataset.borrar)); pintar(); } catch (e) { msg(errorSql(e), '#ff8a8d'); }
             });
         }
-        $('agregar').onclick = async () => {
+        if (agregar) $('agregar').onclick = async () => {
             const equipo = $('equipo').value.trim(), tel = $('tel').value.replace(/[^\d]/g, '');
             if (!equipo || tel.length < 7) { msg('Escribe el nombre del equipo y un número válido.', '#ff8a8d'); return; }
             try {

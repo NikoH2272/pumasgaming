@@ -399,7 +399,8 @@
         estado: (portal, id, estado) => rpcAdmin('admin_cupo_estado', { p_portal: portal, p_id: id, p_estado: estado }),
         borrar: (portal, id) => rpcAdmin('admin_cupo_borrar', { p_portal: portal, p_id: id }),
         quitar: (portal, cupo) => rpcAdmin('admin_cupo_quitar', { p_portal: portal, p_cupo: cupo }),
-        tipo: (portal, id, tipo) => rpcAdmin('admin_cupo_tipo', { p_portal: portal, p_id: id, p_tipo: tipo })
+        tipo: (portal, id, tipo) => rpcAdmin('admin_cupo_tipo', { p_portal: portal, p_id: id, p_tipo: tipo }),
+        vip: (portal, id, cierraEn) => rpcAdmin('admin_cupo_vip', { p_portal: portal, p_id: id, p_cierra_en: cierraEn ? new Date(cierraEn).toISOString() : null })
     };
 
     /* ---------------- Cupos VIP y baneo por equipo / número (sql/25) ---------------- */
