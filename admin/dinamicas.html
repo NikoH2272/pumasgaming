@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="es" class="pg-verificando">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-C79JND219Y');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Dinámicas | Pumas Gaming</title>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="../portal-kit/portal.css?v=20261013e">
+<link rel="icon" type="image/x-icon" href="../imagenes/LOGO PUMAS WEB.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../portal-kit/portal.js?v=20261013e" data-modo="login" data-sin-efecto></script>
+<style>
+/* ── Selector de portal ── */
+.din-portal-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;padding:14px 18px;background:rgba(216,195,149,.06);border:1px solid rgba(216,195,149,.2);border-radius:8px}
+.din-portal-bar label{font:700 .72rem 'Michroma',sans-serif;letter-spacing:.1em;color:#D8C395;text-transform:uppercase;white-space:nowrap}
+.din-portal-bar select{background:#0c0c0c;border:1px solid rgba(216,195,149,.3);color:#F4EEDC;border-radius:5px;padding:7px 12px;font:inherit;font-size:.88rem;outline:none;min-width:200px}
+/* ── Layout ── */
+.din-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;margin-top:4px}
+.din-card{background:rgba(255,255,255,.04);border:1px solid rgba(216,195,149,.22);border-radius:10px;overflow:hidden}
+.din-card-head{display:flex;align-items:center;gap:12px;padding:16px 18px;background:rgba(216,195,149,.06);border-bottom:1px solid rgba(216,195,149,.14)}
+.din-card-head h3{flex:1;margin:0;font:700 .92rem 'Michroma',sans-serif;letter-spacing:.06em;color:#D8C395}
+.din-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.din-card-body{padding:16px 18px}
+/* Toggle switch */
+.din-toggle-wrap{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.din-toggle{position:relative;width:46px;height:26px;flex-shrink:0}
+.din-toggle input{opacity:0;width:0;height:0}
+.din-toggle-track{position:absolute;inset:0;border-radius:13px;background:rgba(255,255,255,.12);cursor:pointer;transition:background .25s}
+.din-toggle input:checked~.din-toggle-track{background:#4dff91}
+.din-toggle-track::after{content:'';position:absolute;width:20px;height:20px;border-radius:50%;top:3px;left:3px;background:#fff;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.din-toggle input:checked~.din-toggle-track::after{transform:translateX(20px)}
+.din-toggle input:disabled~.din-toggle-track{opacity:.4;cursor:not-allowed}
+.din-badge{font:600 .72rem 'Michroma',sans-serif;letter-spacing:.07em;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.1);color:#888}
+.din-badge.activo{background:rgba(77,255,145,.15);color:#4dff91}
+/* Form inputs inside cards */
+.din-form{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.din-form input,.din-form select,.din-form textarea{background:rgba(255,255,255,.07);border:1px solid rgba(216,195,149,.3);border-radius:6px;color:#F4EEDC;font:inherit;font-size:.88rem;padding:8px 10px;outline:none;width:100%;box-sizing:border-box}
+.din-form input:focus,.din-form select:focus,.din-form textarea:focus{border-color:#D8C395}
+.din-form textarea{resize:vertical;min-height:60px}
+.din-form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.din-opt-row{display:flex;gap:6px;align-items:center}
+.din-opt-row input{flex:1}
+.din-opt-row button{flex-shrink:0;background:rgba(255,77,77,.15);border:1px solid rgba(255,77,77,.3);color:#ff7070;border-radius:5px;padding:6px 10px;cursor:pointer;font-size:.8rem}
+.din-opt-row button:hover{background:rgba(255,77,77,.3)}
+/* Table */
+.din-table{width:100%;border-collapse:collapse;font-size:.83rem;margin-top:8px}
+.din-table th{color:#D8C395;font:600 .75rem 'Michroma',sans-serif;letter-spacing:.06em;padding:7px 8px;border-bottom:1px solid rgba(216,195,149,.25);text-align:left;white-space:nowrap}
+.din-table td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.06);color:#F4EEDC;vertical-align:middle}
+.din-table td .del-btn{background:none;border:none;color:#ff7070;cursor:pointer;font-size:.85rem;padding:2px 5px;opacity:.7;border-radius:4px}
+.din-table td .del-btn:hover{opacity:1;background:rgba(255,77,77,.15)}
+.din-table-wrap{max-height:220px;overflow-y:auto;border:1px solid rgba(216,195,149,.14);border-radius:6px}
+/* Poll results */
+.poll-opt-bar{margin:6px 0}
+.poll-opt-label{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:3px;color:#D8C395}
+.poll-bar-track{height:8px;border-radius:4px;background:rgba(255,255,255,.1)}
+.poll-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#D8C395,#FFD54A);transition:width .5s}
+.poll-timer{font:700 1.6rem 'Michroma',sans-serif;color:#FFD54A;text-align:center;letter-spacing:.08em;margin:8px 0}
+.poll-timer.urgente{color:#ff4d4d;animation:titilar .6s infinite alternate}
+@keyframes titilar{to{opacity:.4}}
+/* Game canvas */
+#snakeCanvas{border:2px solid rgba(216,195,149,.35);border-radius:6px;display:block;margin:0 auto;background:#050508}
+.game-controls{display:flex;gap:8px;justify-content:center;margin-top:8px}
+.game-hud{display:flex;justify-content:space-between;font:700 .85rem 'Michroma',sans-serif;color:#D8C395;letter-spacing:.07em;margin-bottom:6px}
+.score-rank{display:flex;align-items:center;gap:6px}
+.score-rank .pos{width:24px;height:24px;border-radius:50%;background:rgba(216,195,149,.15);display:flex;align-items:center;justify-content:center;font:700 .72rem 'Michroma',sans-serif;color:#D8C395;flex-shrink:0}
+.score-rank .pos.gold{background:rgba(255,213,74,.25);color:#FFD54A}
+.score-rank .pos.silver{background:rgba(192,192,192,.2);color:#ccc}
+.score-rank .pos.bronze{background:rgba(205,127,50,.2);color:#cd7f32}
+/* URL box */
+.din-url-box{background:rgba(255,255,255,.06);border:1px solid rgba(216,195,149,.2);border-radius:6px;padding:10px 12px;font-size:.8rem;color:#D8C395;word-break:break-all;display:flex;align-items:center;gap:8px;margin-top:10px}
+.din-url-box button{flex-shrink:0;background:rgba(216,195,149,.12);border:1px solid rgba(216,195,149,.3);color:#D8C395;border-radius:5px;padding:4px 10px;cursor:pointer;font-size:.78rem}
+.din-url-box button:hover{background:rgba(216,195,149,.25)}
+/* Section separator */
+.din-section-label{font:700 .72rem 'Michroma',sans-serif;letter-spacing:.12em;color:#888;text-transform:uppercase;margin:24px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(216,195,149,.14)}
+/* Empty state */
+.din-empty{text-align:center;color:#666;font-size:.85rem;padding:18px 0}
+/* Status message */
+.din-status{font-size:.8rem;color:#888;min-height:1.2em;margin:4px 0}
+.din-status.ok{color:#4dff91}
+.din-status.err{color:#ff7070}
+@media(max-width:500px){.din-form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="site-header">
+    <a class="logo-container" href="./">
+        <img src="../imagenes/LOGO PUMAS WEB.png" alt="Pumas Gaming" class="logo-img">
+        <div class="logo"><span class="t-a">PUMAS</span> DINÁMICAS</div>
+    </a>
+    <button class="menu-toggle" aria-label="Abrir menú" onclick="document.getElementById('mainNav').classList.toggle('is-active')">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+    <nav class="main-nav" id="mainNav">
+        <ul>
+            <li><a href="./"><i class="fa-solid fa-table-cells-large"></i> Portales</a></li>
+            <li><a href="sorteo.html"><i class="fa-solid fa-dice"></i> Sorteos</a></li>
+            <li><span class="pg-user"><i class="fa-solid fa-user-shield"></i> <span data-pg-usuario></span></span></li>
+            <li><a href="#" class="pg-salir" data-pg-salir><i class="fa-solid fa-right-from-bracket"></i> Salir</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section>
+    <h2 class="section-title">Dinámicas</h2>
+    <p class="tool-desc">Activa y gestiona dinámicas para tus eventos: registro de equipos, encuestas, sorteos y juego retro. Cada dinámica se activa de forma independiente por portal.</p>
+
+    <!-- Selector de portal -->
+    <div class="din-portal-bar">
+        <label for="selPortal"><i class="fa-solid fa-sitemap"></i> Portal:</label>
+        <select id="selPortal"></select>
+        <span id="msgPortal" style="font-size:.82rem;color:#888"></span>
+    </div>
+
+    <div class="din-grid">
+
+        <!-- ═══ REGISTRO DE EQUIPOS ═══ -->
+        <div class="din-card" id="card-registro">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(77,163,255,.15);color:#4da6ff"><i class="fa-solid fa-clipboard-list"></i></div>
+                <h3>Registro de equipos</h3>
+                <span class="din-badge" id="badge-registro">Inactivo</span>
+            </div>
+            <div class="din-card-body">
+                <div class="din-toggle-wrap">
+                    <label class="din-toggle"><input type="checkbox" id="toggle-registro"><span class="din-toggle-track"></span></label>
+                    <span style="font-size:.83rem;color:#aaa">Activar registro público</span>
+                </div>
+                <!-- Tiempos -->
+                <div class="din-form" style="margin-bottom:8px">
+                    <div class="din-form-row">
+                        <div>
+                            <label style="font-size:.75rem;color:#999;display:block;margin-bottom:4px">Hora de inicio (opcional)</label>
+                            <input type="datetime-local" id="reg-inicio">
+                        </div>
+                        <div style="display:flex;align-items:flex-end;gap:6px">
+                            <button class="btn-mini" id="btn-reg-inicio" style="flex:1"><i class="fa-solid fa-clock"></i> Guardar</button>
+                            <button class="btn-mini" id="btn-reg-noinicio" title="Quitar hora de inicio" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <div class="din-form-row">
+                        <div>
+                            <label style="font-size:.75rem;color:#999;display:block;margin-bottom:4px">Hora límite (opcional)</label>
+                            <input type="datetime-local" id="reg-deadline">
+                        </div>
+                        <div style="display:flex;align-items:flex-end;gap:6px">
+                            <button class="btn-mini" id="btn-reg-deadline" style="flex:1"><i class="fa-solid fa-clock"></i> Guardar</button>
+                            <button class="btn-mini" id="btn-reg-nodeadline" title="Quitar límite de tiempo" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Manual add (admin only) -->
+                <details style="margin-bottom:10px">
+                    <summary style="font-size:.8rem;color:#888;cursor:pointer;margin-bottom:6px"><i class="fa-solid fa-user-plus"></i> Agregar equipo manualmente</summary>
+                    <div class="din-form" style="margin-top:8px">
+                        <input type="text" id="reg-nombre" placeholder="Nombre del equipo *" maxlength="80">
+                        <input type="text" id="reg-rep" placeholder="Nombre del representante" maxlength="80">
+                        <div class="din-form-row">
+                            <input type="text" id="reg-ig" placeholder="IG del equipo (@)" maxlength="60">
+                            <input type="text" id="reg-numero" placeholder="WhatsApp (con código país)" maxlength="20">
+                        </div>
+                        <button class="btn-mini" id="btn-reg-add"><i class="fa-solid fa-plus"></i> Agregar</button>
+                    </div>
+                </details>
+                <p class="din-status" id="status-registro"></p>
+                <div class="din-table-wrap">
+                    <table class="din-table">
+                        <thead><tr><th>#</th><th>Equipo</th><th>Representante</th><th>Nº</th><th>IG</th><th></th></tr></thead>
+                        <tbody id="tbody-registro"><tr><td colspan="6" class="din-empty">Selecciona un portal</td></tr></tbody>
+                    </table>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+                    <button class="btn-mini" id="btn-reg-wa"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                    <button class="btn-mini" id="btn-reg-csv"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                    <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" id="btn-reg-clear"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                </div>
+                <div class="din-url-box" id="url-registro" style="display:none">
+                    <i class="fa-solid fa-link"></i>
+                    <span id="url-registro-txt"></span>
+                    <button onclick="copiarUrl('registro')">Copiar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ ENCUESTA ═══ -->
+        <div class="din-card" id="card-encuesta">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(255,184,77,.15);color:#ffb84d"><i class="fa-solid fa-square-poll-vertical"></i></div>
+                <h3>Encuesta</h3>
+                <span class="din-badge" id="badge-encuesta">Inactivo</span>
+            </div>
+            <div class="din-card-body">
+                <div class="din-toggle-wrap">
+                    <label class="din-toggle"><input type="checkbox" id="toggle-encuesta"><span class="din-toggle-track"></span></label>
+                    <span style="font-size:.83rem;color:#aaa">Activar encuesta</span>
+                </div>
+
+                <!-- Creador -->
+                <div id="panel-crear-encuesta">
+                    <div class="din-form">
+                        <textarea id="enc-pregunta" placeholder="¿Cuál es tu pregunta?" rows="2" maxlength="200"></textarea>
+                        <!-- Cargar opciones desde equipos o CSV -->
+                        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px">
+                            <button class="btn-mini" id="btn-enc-equipos" style="font-size:.78rem;padding:5px 10px" title="Carga los nombres de los equipos registrados como opciones">
+                                <i class="fa-solid fa-clipboard-list"></i> Usar equipos registrados
+                            </button>
+                            <label class="btn-mini" style="font-size:.78rem;padding:5px 10px;cursor:pointer" title="Sube un CSV con una opción por línea (primera columna)">
+                                <i class="fa-solid fa-file-csv"></i> Cargar CSV
+                                <input type="file" id="enc-csv-input" accept=".csv,text/csv,text/plain" style="display:none">
+                            </label>
+                        </div>
+                        <p class="din-status" id="status-enc-cargar" style="margin:0 0 4px"></p>
+                        <div id="enc-opciones">
+                            <div class="din-opt-row"><input type="text" class="enc-opt" placeholder="Opción 1" maxlength="80"><button onclick="borrarOpcion(this)"><i class="fa-solid fa-xmark"></i></button></div>
+                            <div class="din-opt-row"><input type="text" class="enc-opt" placeholder="Opción 2" maxlength="80"><button onclick="borrarOpcion(this)"><i class="fa-solid fa-xmark"></i></button></div>
+                        </div>
+                        <button class="btn-mini" id="btn-add-opt" style="align-self:flex-start"><i class="fa-solid fa-plus"></i> Agregar opción</button>
+                        <div class="din-form-row">
+                            <div>
+                                <label style="font-size:.78rem;color:#999;display:block;margin-bottom:4px">Hora de inicio (opcional)</label>
+                                <input type="datetime-local" id="enc-inicio">
+                            </div>
+                            <div>
+                                <label style="font-size:.78rem;color:#999;display:block;margin-bottom:4px">Duración</label>
+                                <select id="enc-duracion">
+                                    <option value="300">5 minutos</option>
+                                    <option value="600" selected>10 minutos</option>
+                                    <option value="900">15 minutos</option>
+                                    <option value="1800">30 minutos</option>
+                                    <option value="3600">1 hora</option>
+                                    <option value="0">Sin límite</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:flex-end">
+                            <button class="btn-mini" id="btn-iniciar-enc" style="width:100%"><i class="fa-solid fa-play"></i> Iniciar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activa -->
+                <div id="panel-encuesta-activa" style="display:none">
+                    <p id="enc-pregunta-activa" style="font-weight:700;color:#D8C395;margin-bottom:10px;font-size:.9rem"></p>
+                    <div id="enc-resultados"></div>
+                    <div class="poll-timer" id="enc-timer">--:--</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" id="btn-reset-enc"><i class="fa-solid fa-stop"></i> Terminar</button>
+                        <button class="btn-mini" id="btn-export-enc-wa"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                        <button class="btn-mini" id="btn-export-enc-csv"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                    </div>
+                </div>
+
+                <p class="din-status" id="status-encuesta"></p>
+                <div class="din-url-box" id="url-encuesta" style="display:none">
+                    <i class="fa-solid fa-link"></i>
+                    <span id="url-encuesta-txt"></span>
+                    <button onclick="copiarUrl('encuesta')">Copiar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ SORTEOS ═══ -->
+        <div class="din-card">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(255,213,74,.15);color:#FFD54A"><i class="fa-solid fa-dice"></i></div>
+                <h3>Sorteos</h3>
+                <span class="din-badge activo">Siempre activo</span>
+            </div>
+            <div class="din-card-body">
+                <p style="font-size:.85rem;color:#aaa;margin:0 0 14px">Los sorteos por portal se gestionan en su propia sección. Activa o desactiva el sorteo de cada portal desde ahí.</p>
+                <a class="btn-mini" href="sorteo.html"><i class="fa-solid fa-dice"></i> Ir a Sorteos</a>
+            </div>
+        </div>
+
+        <!-- ═══ JUEGO RETRO ═══ -->
+        <div class="din-card" id="card-juego" style="grid-column:1/-1">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(77,255,145,.15);color:#4dff91"><i class="fa-solid fa-gamepad"></i></div>
+                <h3>Juego Retro — Snake</h3>
+                <span class="din-badge" id="badge-juego">Inactivo</span>
+            </div>
+            <div class="din-card-body">
+                <div class="din-toggle-wrap">
+                    <label class="din-toggle"><input type="checkbox" id="toggle-juego"><span class="din-toggle-track"></span></label>
+                    <span style="font-size:.83rem;color:#aaa">Activar juego público</span>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
+                    <!-- Game area -->
+                    <div>
+                        <div class="game-hud">
+                            <span>PUNTUACIÓN: <span id="game-score">0</span></span>
+                            <span>RECORD: <span id="game-best">0</span></span>
+                        </div>
+                        <canvas id="snakeCanvas" width="320" height="320"></canvas>
+                        <div class="game-controls">
+                            <button class="btn-mini" id="btn-start-game"><i class="fa-solid fa-play"></i> Iniciar</button>
+                            <button class="btn-mini" id="btn-pause-game" disabled><i class="fa-solid fa-pause"></i> Pausar</button>
+                        </div>
+                        <!-- Registro antes de jugar -->
+                        <div id="game-reg-form" style="margin-top:12px;display:none">
+                            <p style="font-size:.83rem;color:#D8C395;margin-bottom:8px"><i class="fa-solid fa-user-plus"></i> Regístrate para guardar tu puntuación:</p>
+                            <div class="din-form">
+                                <div class="din-form-row">
+                                    <input type="text" id="game-reg-nombre" placeholder="Tu nombre" maxlength="40">
+                                    <input type="text" id="game-reg-num" placeholder="Número (p.ej. 7)" maxlength="20">
+                                </div>
+                                <button class="btn-mini" id="btn-game-reg-save"><i class="fa-solid fa-check"></i> Guardar y jugar</button>
+                            </div>
+                        </div>
+                        <p class="din-status" id="status-juego"></p>
+                        <p style="font-size:.78rem;color:#555;margin-top:8px;text-align:center">↑ ↓ ← → o WASD · Espacio = Pausa</p>
+                    </div>
+                    <!-- Leaderboard -->
+                    <div>
+                        <p class="din-section-label" style="margin-top:0"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
+                        <div class="din-table-wrap">
+                            <table class="din-table">
+                                <thead><tr><th>#</th><th>Jugador</th><th>Nº</th><th>Pts</th><th></th></tr></thead>
+                                <tbody id="tbody-leaderboard"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                            <button class="btn-mini" id="btn-export-lb-wa"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                            <button class="btn-mini" id="btn-export-lb-csv"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                            <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" id="btn-clear-lb"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="din-url-box" id="url-juego" style="display:none">
+                    <i class="fa-solid fa-link"></i>
+                    <span id="url-juego-txt"></span>
+                    <button onclick="copiarUrl('juego')">Copiar</button>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /din-grid -->
+</section>
+
+<footer><p>&copy; 2026 <b>PUMAS GAMING</b> · Dinámicas</p></footer>
+
+<script>
+(async function () {
+    const P = PumasPortal;
+    const s = await P.validar();
+    if (!s) { location.replace('login.html?next=' + encodeURIComponent('/admin/dinamicas.html')); return; }
+    document.documentElement.classList.remove('pg-verificando');
+    document.querySelector('[data-pg-usuario]').textContent = s.nombre || s.usuario;
+    document.querySelectorAll('[data-pg-salir]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); P.logout('login.html'); }));
+
+    const esc = P.escaparHtml;
+
+    /* ── Portal selector ── */
+    const selPortal = document.getElementById('selPortal');
+    const portalesDisponibles = Object.entries(P.PORTALES)
+        .filter(([k]) => P.puede(s, k) && k !== 'principal')
+        .map(([k, p]) => ({ id: k, nombre: p.nombre || k }));
+
+    if (!portalesDisponibles.length) {
+        selPortal.innerHTML = '<option>Sin portales disponibles</option>';
+        return;
+    }
+    portalesDisponibles.forEach(p => {
+        const op = document.createElement('option');
+        op.value = p.id; op.textContent = p.nombre;
+        selPortal.appendChild(op);
+    });
+
+    let portalActual = portalesDisponibles[0].id;
+    selPortal.value = portalActual;
+    selPortal.addEventListener('change', () => {
+        portalActual = selPortal.value;
+        cargarTodo();
+    });
+
+    /* ── URL pública base ── */
+    function urlPublica(tipo) {
+        // La página del portal incluye dinamicas.js y auto-monta la dinámica activa.
+        // Si el portal tiene varias dinámicas se puede forzar con ?din=tipo.
+        const base = location.origin + location.pathname.replace(/admin\/dinamicas\.html.*/, '');
+        return base + portalActual + '/';
+    }
+
+    function actualizarUrls() {
+        ['registro','encuesta','juego'].forEach(t => {
+            const box = document.getElementById('url-' + t);
+            const txt = document.getElementById('url-' + t + '-txt');
+            if (txt) txt.textContent = urlPublica(t);
+        });
+    }
+
+    window.copiarUrl = function(tipo) {
+        const txt = document.getElementById('url-' + tipo + '-txt').textContent;
+        navigator.clipboard.writeText(txt).then(() => alert('URL copiada.')).catch(() => alert(txt));
+    };
+
+    /* ── Estado por tipo ── */
+    // sesiones[tipo] = { activo, titulo, config, deadline, cerrado }
+    // entradas[tipo] = [{ id, nombre, numero, ig, metadata, creado }]
+    const sesiones = {};
+    const entradas = {};
+    let encInterval = null;
+
+    /* ── Cargar todo ── */
+    async function cargarTodo() {
+        actualizarUrls();
+        await Promise.all([
+            cargarDinamica('registro'),
+            cargarDinamica('encuesta'),
+            cargarDinamica('juego'),
+        ]);
+    }
+
+    async function cargarDinamica(tipo) {
+        try {
+            const data = await P.dinamica.listar(portalActual, tipo);
+            sesiones[tipo] = data.sesion ? {
+                activo:   data.sesion.activo,
+                titulo:   data.sesion.titulo,
+                config:   data.sesion.config || {},
+                deadline: data.sesion.deadline,
+                inicio:   data.sesion.inicio,
+            } : { activo: false, titulo: null, config: {}, deadline: null, inicio: null };
+            entradas[tipo] = data.entradas || [];
+        } catch(e) {
+            // sql/33 no está corrido o sin acceso
+            sesiones[tipo] = { activo: false, titulo: null, config: {}, deadline: null };
+            entradas[tipo] = [];
+        }
+        if (tipo === 'registro') renderRegistro();
+        if (tipo === 'encuesta') renderEncuesta();
+        if (tipo === 'juego')    renderLeaderboard();
+    }
+
+    /* ── Config helper ── */
+    async function config(tipo, cambios, statusId) {
+        const msg = statusId ? document.getElementById(statusId) : null;
+        try {
+            await P.dinamica.config(portalActual, tipo, cambios);
+            await cargarDinamica(tipo);
+            if (msg) { msg.textContent = '✔ Guardado'; msg.className = 'din-status ok'; setTimeout(() => msg.textContent = '', 2500); }
+        } catch(e) {
+            if (msg) { msg.textContent = e.message || 'Error al guardar'; msg.className = 'din-status err'; }
+        }
+    }
+
+    /* ══════════════════════════════════════
+       REGISTRO DE EQUIPOS
+    ══════════════════════════════════════ */
+    function renderRegistro() {
+        const ses = sesiones.registro || {};
+        const lista = entradas.registro || [];
+
+        const toggleReg = document.getElementById('toggle-registro');
+        const badgeReg  = document.getElementById('badge-registro');
+        const urlBox    = document.getElementById('url-registro');
+
+        toggleReg.checked = !!ses.activo;
+        badgeReg.textContent = ses.activo ? 'Activo' : 'Inactivo';
+        badgeReg.className = 'din-badge' + (ses.activo ? ' activo' : '');
+        urlBox.style.display = ses.activo ? 'flex' : 'none';
+
+        // Inicio + Deadline inputs
+        const toLocal = iso => iso ? new Date(new Date(iso).getTime() - new Date(iso).getTimezoneOffset()*60000).toISOString().slice(0,16) : '';
+        document.getElementById('reg-inicio').value   = toLocal(ses.inicio);
+        document.getElementById('reg-deadline').value = toLocal(ses.deadline);
+
+        const tb = document.getElementById('tbody-registro');
+        if (!lista.length) {
+            tb.innerHTML = '<tr><td colspan="6" class="din-empty">Sin equipos anotados</td></tr>';
+            return;
+        }
+        tb.innerHTML = lista.map((r, i) => {
+            const rep = r.metadata && r.metadata.representante ? esc(r.metadata.representante) : '—';
+            return `<tr>
+                <td>${i + 1}</td>
+                <td>${esc(r.nombre)}</td>
+                <td>${rep}</td>
+                <td>${r.numero ? esc(r.numero) : '—'}</td>
+                <td>${r.ig ? '<a href="https://instagram.com/'+esc(r.ig)+'" target="_blank" style="color:#D8C395">@'+esc(r.ig)+'</a>' : '—'}</td>
+                <td><button class="del-btn" onclick="borrarEntrada('registro',${r.id})"><i class="fa-solid fa-xmark"></i></button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    document.getElementById('toggle-registro').addEventListener('change', function() {
+        config('registro', { activo: this.checked }, 'status-registro');
+    });
+
+    document.getElementById('btn-reg-inicio').addEventListener('click', () => {
+        const val = document.getElementById('reg-inicio').value;
+        if (!val) { alert('Selecciona una fecha y hora de inicio.'); return; }
+        config('registro', { inicio: new Date(val).toISOString() }, 'status-registro');
+    });
+
+    document.getElementById('btn-reg-noinicio').addEventListener('click', () => {
+        if (!confirm('¿Quitar la hora de inicio?')) return;
+        config('registro', { quitarInicio: true }, 'status-registro');
+    });
+
+    document.getElementById('btn-reg-deadline').addEventListener('click', () => {
+        const val = document.getElementById('reg-deadline').value;
+        if (!val) { alert('Selecciona una fecha y hora.'); return; }
+        const iso = new Date(val).toISOString();
+        config('registro', { deadline: iso }, 'status-registro');
+    });
+
+    document.getElementById('btn-reg-nodeadline').addEventListener('click', () => {
+        if (!confirm('¿Quitar el límite de tiempo?')) return;
+        config('registro', { quitarDeadline: true }, 'status-registro');
+    });
+
+    document.getElementById('btn-reg-add').addEventListener('click', async () => {
+        const nombre        = document.getElementById('reg-nombre').value.trim();
+        const representante = document.getElementById('reg-rep').value.trim();
+        const numero        = document.getElementById('reg-numero').value.trim();
+        const ig            = document.getElementById('reg-ig').value.trim().replace(/^@/, '');
+        if (!nombre) { alert('Escribe el nombre del equipo.'); return; }
+        const st = document.getElementById('status-registro');
+        st.textContent = 'Agregando...'; st.className = 'din-status';
+        try {
+            await P.dinamica.registrar(portalActual, 'registro', { nombre, numero, ig, metadata: { representante } });
+            document.getElementById('reg-nombre').value = '';
+            document.getElementById('reg-rep').value    = '';
+            document.getElementById('reg-numero').value = '';
+            document.getElementById('reg-ig').value = '';
+            await cargarDinamica('registro');
+            st.textContent = '✔ Equipo agregado'; st.className = 'din-status ok';
+            setTimeout(() => st.textContent = '', 2500);
+        } catch(e) {
+            st.textContent = e.message || 'Error'; st.className = 'din-status err';
+        }
+    });
+
+    document.getElementById('btn-reg-wa').addEventListener('click', () => {
+        const lista = entradas.registro || [];
+        if (!lista.length) { alert('No hay equipos registrados.'); return; }
+        const portal = (P.PORTALES[portalActual] || {}).nombre || portalActual;
+        const fecha = new Date().toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric' });
+        let txt = `*Equipos registrados — ${portal} · ${fecha}*\n\n`;
+        lista.forEach((r, i) => {
+            const rep = r.metadata && r.metadata.representante ? r.metadata.representante : '';
+            txt += `${i + 1}. ${r.nombre}`;
+            if (rep) txt += ` (${rep})`;
+            if (r.numero) txt += ` — ${r.numero}`;
+            if (r.ig) txt += ` — @${r.ig}`;
+            txt += '\n';
+        });
+        txt += `\n_Total: ${lista.length} equipo${lista.length !== 1 ? 's' : ''}_`;
+        navigator.clipboard.writeText(txt).then(() => alert('Texto copiado para WhatsApp.')).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+            alert('Texto copiado.');
+        });
+    });
+
+    document.getElementById('btn-reg-csv').addEventListener('click', () => {
+        const lista = entradas.registro || [];
+        if (!lista.length) { alert('No hay equipos registrados.'); return; }
+        const rows = ['#,Equipo,Representante,WhatsApp,Instagram,Registrado'].concat(
+            lista.map((r, i) => {
+                const rep = r.metadata && r.metadata.representante ? r.metadata.representante : '';
+                return `${i+1},"${(r.nombre||'').replace(/"/g,'""')}","${rep.replace(/"/g,'""')}","${(r.numero||'').replace(/"/g,'""')}","${(r.ig||'').replace(/"/g,'""')}","${r.creado ? new Date(r.creado).toLocaleString('es-MX') : ''}"`;
+            })
+        ).join('\n');
+        descargar('registro_equipos_pumas.csv', rows, 'text/csv');
+    });
+
+    document.getElementById('btn-reg-clear').addEventListener('click', async () => {
+        if (!confirm('¿Borrar TODOS los equipos registrados?')) return;
+        const st = document.getElementById('status-registro');
+        st.textContent = 'Limpiando...'; st.className = 'din-status';
+        try {
+            await P.dinamica.vaciar(portalActual, 'registro');
+            await cargarDinamica('registro');
+            st.textContent = '✔ Lista limpiada'; st.className = 'din-status ok';
+            setTimeout(() => st.textContent = '', 2500);
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    });
+
+
+    /* ══════════════════════════════════════
+       ENCUESTA
+    ══════════════════════════════════════ */
+    function renderEncuesta() {
+        const ses = sesiones.encuesta || {};
+        const lista = entradas.encuesta || [];
+        const cfg   = ses.config || {};
+
+        const toggleEnc = document.getElementById('toggle-encuesta');
+        const badgeEnc  = document.getElementById('badge-encuesta');
+        const urlBox    = document.getElementById('url-encuesta');
+
+        toggleEnc.checked = !!ses.activo;
+        badgeEnc.textContent = ses.activo ? 'Activa' : 'Inactivo';
+        badgeEnc.className = 'din-badge' + (ses.activo ? ' activo' : '');
+        urlBox.style.display = ses.activo ? 'flex' : 'none';
+
+        const activa = ses.activo && cfg.pregunta;
+        document.getElementById('panel-crear-encuesta').style.display = activa ? 'none' : '';
+        document.getElementById('panel-encuesta-activa').style.display = activa ? '' : 'none';
+
+        if (activa) {
+            document.getElementById('enc-pregunta-activa').textContent = cfg.pregunta || '';
+            renderResultadosEnc(cfg.opciones || [], lista);
+            if (ses.deadline) iniciarTimerEnc(ses.deadline);
+            else document.getElementById('enc-timer').textContent = '∞';
+        }
+    }
+
+    function renderResultadosEnc(opciones, lista) {
+        const divR = document.getElementById('enc-resultados');
+        const votos = {};
+        lista.forEach(e => {
+            const idx = e.metadata && e.metadata.opcion_idx != null ? e.metadata.opcion_idx : -1;
+            if (idx >= 0) votos[idx] = (votos[idx] || 0) + 1;
+        });
+        const total = Object.values(votos).reduce((a, b) => a + b, 0) || 1;
+        divR.innerHTML = opciones.map((op, i) => {
+            const v = votos[i] || 0, pct = Math.round((v / total) * 100);
+            return `<div class="poll-opt-bar">
+                <div class="poll-opt-label"><span>${esc(op)}</span><span>${v} voto${v !== 1 ? 's' : ''} (${pct}%)</span></div>
+                <div class="poll-bar-track"><div class="poll-bar-fill" style="width:${pct}%"></div></div>
+            </div>`;
+        }).join('') + `<p style="font-size:.8rem;color:#777;margin-top:8px">Total votos: <b>${lista.length}</b></p>`;
+    }
+
+    function iniciarTimerEnc(deadline) {
+        if (encInterval) clearInterval(encInterval);
+        function tick() {
+            const el = document.getElementById('enc-timer');
+            if (!el) { clearInterval(encInterval); return; }
+            const rem = Math.max(0, Math.floor((new Date(deadline) - Date.now()) / 1000));
+            const m = Math.floor(rem / 60), sc = rem % 60;
+            el.textContent = String(m).padStart(2,'0') + ':' + String(sc).padStart(2,'0');
+            el.className = 'poll-timer' + (rem < 60 ? ' urgente' : '');
+            if (rem === 0) { clearInterval(encInterval); }
+        }
+        tick();
+        encInterval = setInterval(tick, 1000);
+    }
+
+    document.getElementById('toggle-encuesta').addEventListener('change', function() {
+        config('encuesta', { activo: this.checked }, 'status-encuesta');
+    });
+
+    document.getElementById('btn-add-opt').addEventListener('click', () => {
+        const cont = document.getElementById('enc-opciones');
+        if (cont.children.length >= 6) { alert('Máximo 6 opciones.'); return; }
+        const n = cont.children.length + 1;
+        const row = document.createElement('div');
+        row.className = 'din-opt-row';
+        row.innerHTML = `<input type="text" class="enc-opt" placeholder="Opción ${n}" maxlength="80"><button onclick="borrarOpcion(this)"><i class="fa-solid fa-xmark"></i></button>`;
+        cont.appendChild(row);
+    });
+
+    window.borrarOpcion = function(btn) {
+        const cont = document.getElementById('enc-opciones');
+        if (cont.children.length <= 2) { alert('Mínimo 2 opciones.'); return; }
+        btn.closest('.din-opt-row').remove();
+    };
+
+    /* ── Cargar opciones: equipos registrados ── */
+    document.getElementById('btn-enc-equipos').addEventListener('click', async () => {
+        const st = document.getElementById('status-enc-cargar');
+        st.textContent = 'Cargando equipos...'; st.className = 'din-status';
+        try {
+            const data = await P.dinamica.listar(portalActual, 'registro');
+            const equipos = (data.entradas || []).map(e => e.nombre).filter(Boolean);
+            if (!equipos.length) { st.textContent = 'No hay equipos registrados.'; st.className = 'din-status err'; return; }
+            poblarOpciones(equipos.slice(0, 6)); // max 6
+            st.textContent = `✔ ${equipos.length} equipo${equipos.length !== 1 ? 's' : ''} cargado${equipos.length !== 1 ? 's' : ''} como opciones.`; st.className = 'din-status ok';
+            setTimeout(() => st.textContent = '', 3000);
+        } catch(e) { st.textContent = e.message || 'Error al cargar equipos.'; st.className = 'din-status err'; }
+    });
+
+    /* ── Cargar opciones: CSV ── */
+    document.getElementById('enc-csv-input').addEventListener('change', function() {
+        const file = this.files && this.files[0];
+        if (!file) return;
+        const st = document.getElementById('status-enc-cargar');
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            // Una opción por línea; si hay comas toma la primera columna
+            const lineas = (ev.target.result || '').split(/\r?\n/).map(l => {
+                const col = l.split(',')[0].replace(/^["'\s]+|["'\s]+$/g, '');
+                return col;
+            }).filter(Boolean);
+            if (!lineas.length) { st.textContent = 'CSV vacío o sin datos.'; st.className = 'din-status err'; return; }
+            poblarOpciones(lineas.slice(0, 6));
+            st.textContent = `✔ ${lineas.length} opción${lineas.length !== 1 ? 'es' : ''} cargada${lineas.length !== 1 ? 's' : ''} desde CSV.`; st.className = 'din-status ok';
+            setTimeout(() => st.textContent = '', 3000);
+        };
+        reader.readAsText(file, 'UTF-8');
+        this.value = ''; // reset input
+    });
+
+    /* ── Poblar opciones: reemplaza los inputs con los valores dados ── */
+    function poblarOpciones(valores) {
+        const cont = document.getElementById('enc-opciones');
+        cont.innerHTML = '';
+        valores.forEach((v, i) => {
+            const row = document.createElement('div');
+            row.className = 'din-opt-row';
+            row.innerHTML = `<input type="text" class="enc-opt" placeholder="Opción ${i+1}" maxlength="80" value="${P.escaparHtml(v)}"><button onclick="borrarOpcion(this)"><i class="fa-solid fa-xmark"></i></button>`;
+            cont.appendChild(row);
+        });
+        // Asegurar mínimo 2 si vinieron menos
+        while (cont.children.length < 2) {
+            const n = cont.children.length + 1;
+            const row = document.createElement('div');
+            row.className = 'din-opt-row';
+            row.innerHTML = `<input type="text" class="enc-opt" placeholder="Opción ${n}" maxlength="80"><button onclick="borrarOpcion(this)"><i class="fa-solid fa-xmark"></i></button>`;
+            cont.appendChild(row);
+        }
+    }
+
+    document.getElementById('btn-iniciar-enc').addEventListener('click', async () => {
+        const pregunta = document.getElementById('enc-pregunta').value.trim();
+        const opciones = Array.from(document.querySelectorAll('.enc-opt')).map(i => i.value.trim()).filter(Boolean);
+        if (!pregunta) { alert('Escribe la pregunta.'); return; }
+        if (opciones.length < 2) { alert('Necesitas al menos 2 opciones válidas.'); return; }
+        const dur = parseInt(document.getElementById('enc-duracion').value);
+        const deadline = dur > 0 ? new Date(Date.now() + dur * 1000).toISOString() : null;
+        const inicioVal = document.getElementById('enc-inicio').value;
+        const inicio = inicioVal ? new Date(inicioVal).toISOString() : null;
+        const st = document.getElementById('status-encuesta');
+        st.textContent = 'Iniciando...'; st.className = 'din-status';
+        try {
+            // Vaciar votos anteriores
+            await P.dinamica.vaciar(portalActual, 'encuesta').catch(() => {});
+            await P.dinamica.config(portalActual, 'encuesta', {
+                activo: true,
+                config: { pregunta, opciones },
+                deadline: deadline,
+                quitarDeadline: !deadline,
+                inicio: inicio,
+                quitarInicio: !inicio,
+            });
+            await cargarDinamica('encuesta');
+            st.textContent = ''; st.className = 'din-status';
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    });
+
+    document.getElementById('btn-reset-enc').addEventListener('click', async () => {
+        if (!confirm('¿Terminar la encuesta y borrar resultados?')) return;
+        const st = document.getElementById('status-encuesta');
+        st.textContent = 'Terminando...'; st.className = 'din-status';
+        if (encInterval) clearInterval(encInterval);
+        try {
+            await P.dinamica.config(portalActual, 'encuesta', { activo: false, quitarDeadline: true });
+            await P.dinamica.vaciar(portalActual, 'encuesta').catch(() => {});
+            await cargarDinamica('encuesta');
+            st.textContent = ''; st.className = 'din-status';
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    });
+
+    document.getElementById('btn-export-enc-wa').addEventListener('click', () => {
+        const ses = sesiones.encuesta || {};
+        const cfg = ses.config || {};
+        const lista = entradas.encuesta || [];
+        if (!cfg.pregunta) { alert('No hay encuesta activa.'); return; }
+        const opciones = cfg.opciones || [];
+        const votos = {};
+        lista.forEach(e => {
+            const idx = e.metadata && e.metadata.opcion_idx != null ? e.metadata.opcion_idx : -1;
+            if (idx >= 0) votos[idx] = (votos[idx] || 0) + 1;
+        });
+        const total = lista.length || 1;
+        const portal = (P.PORTALES[portalActual] || {}).nombre || portalActual;
+        let txt = `*Resultados de encuesta — ${portal}*\n\n❓ ${cfg.pregunta}\n\n`;
+        opciones.forEach((op, i) => {
+            const v = votos[i] || 0, pct = Math.round((v / total) * 100);
+            const bar = '▓'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
+            txt += `${bar} ${pct}% — ${op} (${v} voto${v !== 1 ? 's' : ''})\n`;
+        });
+        txt += `\n_Total: ${total} voto${total !== 1 ? 's' : ''}_`;
+        navigator.clipboard.writeText(txt).then(() => alert('Texto copiado para WhatsApp.')).catch(() => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('Copiado.'); });
+    });
+
+    document.getElementById('btn-export-enc-csv').addEventListener('click', () => {
+        const ses = sesiones.encuesta || {};
+        const cfg = ses.config || {};
+        const lista = entradas.encuesta || [];
+        if (!cfg.pregunta || !lista.length) { alert('No hay resultados.'); return; }
+        const opciones = cfg.opciones || [];
+        const votos = {};
+        lista.forEach(e => {
+            const idx = e.metadata && e.metadata.opcion_idx != null ? e.metadata.opcion_idx : -1;
+            if (idx >= 0) votos[idx] = (votos[idx] || 0) + 1;
+        });
+        const total = lista.length || 1;
+        const rows = ['Opción,Votos,Porcentaje'].concat(
+            opciones.map((op, i) => {
+                const v = votos[i] || 0;
+                return `"${op.replace(/"/g,'""')}",${v},${Math.round((v/total)*100)}%`;
+            })
+        ).join('\n');
+        descargar('encuesta_resultados_pumas.csv', rows, 'text/csv');
+    });
+
+
+    /* ══════════════════════════════════════
+       LEADERBOARD DEL JUEGO
+    ══════════════════════════════════════ */
+    function renderLeaderboard() {
+        const ses = sesiones.juego || {};
+        const lista = (entradas.juego || []).slice(0, 20);
+
+        const toggleJ = document.getElementById('toggle-juego');
+        const badgeJ  = document.getElementById('badge-juego');
+        const urlBox  = document.getElementById('url-juego');
+
+        toggleJ.checked = !!ses.activo;
+        badgeJ.textContent = ses.activo ? 'Activo' : 'Inactivo';
+        badgeJ.className = 'din-badge' + (ses.activo ? ' activo' : '');
+        urlBox.style.display = ses.activo ? 'flex' : 'none';
+
+        const tb = document.getElementById('tbody-leaderboard');
+        if (!lista.length) { tb.innerHTML = '<tr><td colspan="5" class="din-empty">Sin registros</td></tr>'; return; }
+        // Sort by puntos desc
+        const sorted = [...lista].sort((a, b) => {
+            const pa = a.metadata && a.metadata.puntos ? parseInt(a.metadata.puntos) : 0;
+            const pb = b.metadata && b.metadata.puntos ? parseInt(b.metadata.puntos) : 0;
+            return pb - pa;
+        });
+        tb.innerHTML = sorted.map((r, i) => {
+            const pts = r.metadata && r.metadata.puntos ? r.metadata.puntos : 0;
+            const cls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+            return `<tr>
+                <td><div class="score-rank"><div class="pos ${cls}">${i+1}</div></div></td>
+                <td>${esc(r.nombre)}</td>
+                <td>${r.numero ? esc(r.numero) : '—'}</td>
+                <td style="color:#FFD54A;font-weight:700">${pts}</td>
+                <td><button class="del-btn" onclick="borrarEntrada('juego',${r.id})"><i class="fa-solid fa-xmark"></i></button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    document.getElementById('toggle-juego').addEventListener('change', function() {
+        config('juego', { activo: this.checked }, 'status-juego');
+    });
+
+    document.getElementById('btn-export-lb-wa').addEventListener('click', () => {
+        const lista = (entradas.juego || []).slice();
+        if (!lista.length) { alert('No hay registros.'); return; }
+        lista.sort((a, b) => (b.metadata?.puntos || 0) - (a.metadata?.puntos || 0));
+        const portal = (P.PORTALES[portalActual] || {}).nombre || portalActual;
+        let txt = `*Top jugadores Snake — ${portal}*\n\n`;
+        const medals = ['🥇','🥈','🥉'];
+        lista.slice(0, 20).forEach((r, i) => {
+            const pts = r.metadata?.puntos || 0;
+            txt += `${medals[i] || (i+1+'.')} ${r.nombre}`;
+            if (r.numero) txt += ` (#${r.numero})`;
+            txt += ` — ${pts} pts\n`;
+        });
+        navigator.clipboard.writeText(txt).then(() => alert('Copiado para WhatsApp.')).catch(() => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('Copiado.'); });
+    });
+
+    document.getElementById('btn-export-lb-csv').addEventListener('click', () => {
+        const lista = (entradas.juego || []).slice();
+        if (!lista.length) { alert('No hay registros.'); return; }
+        lista.sort((a, b) => (b.metadata?.puntos || 0) - (a.metadata?.puntos || 0));
+        const rows = ['#,Jugador,Número,Puntos,Fecha'].concat(
+            lista.map((r, i) => `${i+1},"${(r.nombre||'').replace(/"/g,'""')}","${(r.numero||'').replace(/"/g,'""')}",${r.metadata?.puntos||0},"${r.creado ? new Date(r.creado).toLocaleString('es-MX') : ''}"`)
+        ).join('\n');
+        descargar('leaderboard_pumas.csv', rows, 'text/csv');
+    });
+
+    document.getElementById('btn-clear-lb').addEventListener('click', async () => {
+        if (!confirm('¿Borrar todos los registros del leaderboard?')) return;
+        const st = document.getElementById('status-juego');
+        st.textContent = 'Limpiando...'; st.className = 'din-status';
+        try {
+            await P.dinamica.vaciar(portalActual, 'juego');
+            await cargarDinamica('juego');
+            st.textContent = '✔ Limpiado'; st.className = 'din-status ok';
+            setTimeout(() => st.textContent = '', 2500);
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    });
+
+    /* ── Borrar entrada individual ── */
+    window.borrarEntrada = async function(tipo, id) {
+        if (!confirm('¿Borrar este registro?')) return;
+        try {
+            await P.dinamica.borrar(portalActual, id);
+            await cargarDinamica(tipo);
+        } catch(e) { alert(e.message); }
+    };
+
+    /* ── Descarga helper ── */
+    function descargar(nombre, contenido, mime) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob(['﻿' + contenido], { type: mime + ';charset=utf-8' }));
+        a.download = nombre; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    }
+
+
+    /* ══════════════════════════════════════
+       SNAKE — motor del juego
+    ══════════════════════════════════════ */
+    const canvas  = document.getElementById('snakeCanvas');
+    const ctx     = canvas.getContext('2d');
+    const GRID    = 20;
+    const CELL    = canvas.width / GRID;
+    const COLORS  = { head: '#4dff91', body: '#2ab870', food: '#FFD54A', wall: '#1a1c26' };
+
+    let snake, dir, nextDir, food, score, gameLoop, gameRunning, gamePaused;
+    let juegoJugador = null;
+    try { juegoJugador = JSON.parse(localStorage.getItem('pg_din_jugador') || 'null'); } catch(e) {}
+
+    function resetGame() {
+        snake = [{ x: 10, y: 10 }];
+        dir = { x: 1, y: 0 }; nextDir = { x: 1, y: 0 };
+        food = spawnFood();
+        score = 0; gameRunning = false; gamePaused = false;
+        document.getElementById('game-score').textContent = '0';
+        renderCanvas();
+    }
+
+    function spawnFood() {
+        let pos;
+        do { pos = { x: Math.floor(Math.random() * GRID), y: Math.floor(Math.random() * GRID) }; }
+        while (snake.some(s => s.x === pos.x && s.y === pos.y));
+        return pos;
+    }
+
+    function renderCanvas() {
+        ctx.fillStyle = COLORS.wall; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Grid dots
+        ctx.fillStyle = 'rgba(255,255,255,.04)';
+        for (let x = 0; x < GRID; x++) for (let y = 0; y < GRID; y++)
+            ctx.fillRect(x * CELL + CELL/2 - 1, y * CELL + CELL/2 - 1, 2, 2);
+        // Food
+        ctx.fillStyle = COLORS.food;
+        ctx.shadowColor = COLORS.food; ctx.shadowBlur = 8;
+        ctx.beginPath(); ctx.arc(food.x * CELL + CELL/2, food.y * CELL + CELL/2, CELL/2 - 3, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+        // Snake
+        snake.forEach((s, i) => {
+            ctx.fillStyle = i === 0 ? COLORS.head : COLORS.body;
+            ctx.shadowColor = i === 0 ? COLORS.head : 'transparent';
+            ctx.shadowBlur = i === 0 ? 10 : 0;
+            const p = i === 0 ? 1 : 2;
+            ctx.beginPath();
+            ctx.roundRect(s.x * CELL + p, s.y * CELL + p, CELL - p*2, CELL - p*2, 4);
+            ctx.fill();
+        });
+        ctx.shadowBlur = 0;
+        if (!gameRunning) {
+            ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#D8C395'; ctx.font = 'bold 16px Michroma, monospace'; ctx.textAlign = 'center';
+            ctx.fillText(gamePaused ? 'PAUSADO' : 'PRESIONA INICIAR', canvas.width/2, canvas.height/2);
+            ctx.textAlign = 'left';
+        }
+    }
+
+    function step() {
+        dir = { ...nextDir };
+        const nx = snake[0].x + dir.x;
+        const ny = snake[0].y + dir.y;
+        // WALL collision = game over
+        if (nx < 0 || nx >= GRID || ny < 0 || ny >= GRID) { gameOver(); return; }
+        const head = { x: nx, y: ny };
+        // Self collision
+        if (snake.some(s => s.x === head.x && s.y === head.y)) { gameOver(); return; }
+        snake.unshift(head);
+        if (head.x === food.x && head.y === food.y) {
+            score += 10 + Math.floor(snake.length / 3);
+            document.getElementById('game-score').textContent = score;
+            food = spawnFood();
+        } else { snake.pop(); }
+        renderCanvas();
+    }
+
+    function gameOver() {
+        clearInterval(gameLoop); gameRunning = false;
+        document.getElementById('btn-start-game').disabled = false;
+        document.getElementById('btn-pause-game').disabled = true;
+        ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ff4d4d'; ctx.font = 'bold 22px Michroma, monospace'; ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2 - 14);
+        ctx.fillStyle = '#D8C395'; ctx.font = '14px Michroma, monospace';
+        ctx.fillText('Puntuación: ' + score, canvas.width/2, canvas.height/2 + 14);
+        ctx.textAlign = 'left';
+        // Update local best
+        const prev = parseInt(localStorage.getItem('pg_din_best_score') || '0');
+        if (score > prev) localStorage.setItem('pg_din_best_score', score);
+        document.getElementById('game-best').textContent = Math.max(score, prev);
+        if (score > 0) {
+            if (juegoJugador) guardarPuntuacion(juegoJugador.nombre, juegoJugador.numero, score);
+            else { setTimeout(() => document.getElementById('game-reg-form').style.display = '', 200); }
+        }
+    }
+
+    async function guardarPuntuacion(nombre, numero, pts) {
+        const st = document.getElementById('status-juego');
+        st.textContent = 'Guardando puntuación...'; st.className = 'din-status';
+        try {
+            await P.dinamica.registrar(portalActual, 'juego', { nombre, numero, metadata: { puntos: pts } });
+            await cargarDinamica('juego');
+            st.textContent = '✔ Puntuación guardada'; st.className = 'din-status ok';
+            setTimeout(() => st.textContent = '', 3000);
+        } catch(e) {
+            st.textContent = 'No se guardó: ' + (e.message || 'error'); st.className = 'din-status err';
+        }
+        document.getElementById('game-reg-form').style.display = 'none';
+    }
+
+    document.getElementById('btn-game-reg-save').addEventListener('click', () => {
+        const nombre = document.getElementById('game-reg-nombre').value.trim();
+        const numero = document.getElementById('game-reg-num').value.trim();
+        if (!nombre) { alert('Escribe tu nombre.'); return; }
+        juegoJugador = { nombre, numero };
+        try { localStorage.setItem('pg_din_jugador', JSON.stringify(juegoJugador)); } catch(e) {}
+        guardarPuntuacion(nombre, numero, score);
+    });
+
+    document.getElementById('btn-start-game').addEventListener('click', () => {
+        if (gameRunning) return;
+        if (!juegoJugador) {
+            document.getElementById('game-reg-form').style.display = '';
+            document.getElementById('game-reg-nombre').focus();
+            return;
+        }
+        document.getElementById('game-reg-form').style.display = 'none';
+        resetGame();
+        gameRunning = true; gamePaused = false;
+        document.getElementById('btn-start-game').disabled = true;
+        document.getElementById('btn-pause-game').disabled = false;
+        gameLoop = setInterval(step, 130);
+    });
+
+    document.getElementById('btn-pause-game').addEventListener('click', () => {
+        if (!gameRunning) return;
+        if (gamePaused) {
+            gamePaused = false;
+            gameLoop = setInterval(step, 130);
+            document.getElementById('btn-pause-game').innerHTML = '<i class="fa-solid fa-pause"></i> Pausar';
+        } else {
+            gamePaused = true;
+            clearInterval(gameLoop);
+            document.getElementById('btn-pause-game').innerHTML = '<i class="fa-solid fa-play"></i> Reanudar';
+            renderCanvas();
+        }
+    });
+
+    document.addEventListener('keydown', e => {
+        const map = { ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', w:'up', s:'down', a:'left', d:'right', W:'up', S:'down', A:'left', D:'right' };
+        const dirs = { up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0} };
+        if (e.key === ' ') { e.preventDefault(); document.getElementById('btn-pause-game').click(); return; }
+        const d = map[e.key];
+        if (!d) return;
+        e.preventDefault();
+        const nd = dirs[d];
+        if (nd.x !== -dir.x || nd.y !== -dir.y) nextDir = nd;
+    });
+
+    let touchStart = null;
+    canvas.addEventListener('touchstart', e => { touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY }; e.preventDefault(); }, { passive: false });
+    canvas.addEventListener('touchend', e => {
+        if (!touchStart) return;
+        const dx = e.changedTouches[0].clientX - touchStart.x;
+        const dy = e.changedTouches[0].clientY - touchStart.y;
+        if (Math.abs(dx) > Math.abs(dy)) nextDir = dx > 0 ? {x:1,y:0} : {x:-1,y:0};
+        else nextDir = dy > 0 ? {x:0,y:1} : {x:0,y:-1};
+        touchStart = null; e.preventDefault();
+    }, { passive: false });
+
+    // Init best score and player name
+    document.getElementById('game-best').textContent = localStorage.getItem('pg_din_best_score') || '0';
+    if (juegoJugador) {
+        document.getElementById('game-reg-nombre').value = juegoJugador.nombre;
+        document.getElementById('game-reg-num').value = juegoJugador.numero || '';
+    }
+
+    /* ── Arranque ── */
+    resetGame();
+    await cargarTodo();
+
+})();
+</script>
+</body>
+</html>

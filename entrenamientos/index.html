@@ -37,6 +37,8 @@
         <ul>
             <li><a href="../"><i class="fa-solid fa-house"></i> Portal</a></li>
             <li><a href="cupos.html"><i class="fa-solid fa-ticket"></i> Apartar Cupo</a></li>
+            <li id="navDinamicas" hidden><a href="dinamicas.html"><i class="fa-solid fa-bolt"></i> Dinámicas</a></li>
+            <li id="navJuegos" hidden><a href="juegos.html"><i class="fa-solid fa-gamepad"></i> Juegos</a></li>
             <li><a href="#" onclick="cambiarPestanaPublica('global')" id="navGlobal" style="color: var(--primary);"><i class="fa-solid fa-globe"></i> General</a></li>
             <li><a href="#" onclick="cambiarPestanaPublica('analisis')" id="navAnalisis" style="color: var(--secondary);"><i class="fa-solid fa-chart-simple"></i> Análisis de entrenos</a></li>
             <li><a href="#" onclick="cambiarPestanaPublica('vip')" id="navVip" style="color: var(--secondary);"><i class="fa-solid fa-shield-halved"></i> Resultados Equipos VIP</a></li>
@@ -222,6 +224,10 @@
         </div>
     </section>
 
+    <section id="seccionJuegos" style="width:100%;max-width:1100px;margin:0 auto">
+        <div id="pgJuego"></div>
+    </section>
+
     <div id="modalDetalleSesion" class="modal-vista" style="display: none;">
         <div class="modal-vista-box">
             <button class="modal-vista-x" onclick="cerrarModalDetalle()" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
@@ -234,11 +240,24 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="../portal-kit/dinamicas.js?v=20261014a"></script>
+    <script src="../portal-kit/juegos.js?v=20261014a"></script>
     <script src="../portal-kit/latam.js?v=20261013e"></script>
     <script src="script_entrenamientos.js?v=20261013e"></script>
     <script src="vista_sesion.js?v=20261013e"></script>
     <script src="../portal-kit/completos.js?v=20261013e"></script>
     <script>PumasCompletos.montarPublico('pumasAvanzadas', 'entrenamientos');</script>
+    <script>
+        // Mostrar links de nav cuando hay dinámica o juego activos
+        (async function () {
+            for (const tipo of ['registro', 'encuesta']) {
+                try {
+                    const r = await PumasPortal.dinamica.publico('entrenamientos', tipo);
+                    if (r && r.activo) { document.getElementById('navDinamicas').hidden = false; break; }
+                } catch(e) { break; }
+            }
+        })();
+    </script>
     <script>
         // Secciones que el admin de Pumas ocultó (Admin Pumas → Configuración → Portal público)
         (async function () {

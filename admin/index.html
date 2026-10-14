@@ -98,10 +98,18 @@
                 <h3>${P.escaparHtml(d.nombre || p.nombre)}</h3><p>${P.escaparHtml(texto)}</p>
                 <div class="acciones">${abrir}</div></article>`;
         });
+        tarjetas.unshift(`<article class="card-box hub-card" style="--c:#4dff91">
+                <h3><i class="fa-solid fa-bolt"></i> Dinámicas</h3>
+                <p>Registro de equipos, encuestas con temporizador, juego retro con tabla de líderes y sorteos. Activa cada dinámica de forma independiente.</p>
+                <div class="acciones"><a class="btn-access" href="dinamicas.html"><i class="fa-solid fa-bolt"></i> Dinámicas</a></div></article>`);
         tarjetas.unshift(`<article class="card-box hub-card" style="--c:#FFD54A">
                 <h3><i class="fa-solid fa-dice"></i> Sorteos</h3>
                 <p>Equipos anotados y sorteo en vivo de tus portales.${P.tiene(s, 'gestionar') ? ' Activa o desactiva el sorteo de cualquier portal.' : ''}</p>
                 <div class="acciones"><a class="btn-access" href="sorteo.html"><i class="fa-solid fa-dice"></i> Sorteos</a></div></article>`);
+        if (P.tiene(s, 'gestionar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#FF8A65;display:none" id="card-pumas-corp">
+                <h3><i class="fa-solid fa-building"></i> Pumas Corp · Eventos</h3>
+                <p>Gestión de eventos pagos y gratuitos — torneos, clínicas y activaciones. <span style="font:700 .7rem Michroma,sans-serif;color:#ffb84d;background:rgba(255,184,77,.15);padding:2px 8px;border-radius:12px;letter-spacing:.08em">BETA</span></p>
+                <div class="acciones"><a class="btn-access" href="eventos.html"><i class="fa-solid fa-calendar-days"></i> Abrir</a></div></article>`);
         if (P.tiene(s, 'personalizar')) tarjetas.unshift(`<article class="card-box hub-card" style="--c:#7FD1FF">
                 <h3><i class="fa-solid fa-house"></i> Inicio</h3>
                 <p>Torneos aliados y sorteo del inicio: se activan aquí y solo salen cuando están activos.</p>
