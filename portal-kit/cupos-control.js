@@ -39,18 +39,17 @@
 .cc-hora input[type=number]{width:64px!important;text-align:center}
 .cc-hora select{width:auto!important;min-width:64px}
 .cc-hora span{color:var(--primary,#D8C395);font-weight:800;font-size:.8rem;letter-spacing:.06em}
-.cc-tabla input[type=number],.cc-tabla input[type=url],.cc-tabla input[type=text],.cc-form input:not([type=checkbox]),.cc-form select{background:#0a0b10;color:#fff;border:1px solid rgba(216,195,149,.3);border-radius:4px;padding:9px 10px;font-size:15px}
+.cc-tabla input[type=number],.cc-tabla input[type=url],.cc-tabla input[type=text],.cc-tabla input[type=datetime-local],.cc-form input:not([type=checkbox]),.cc-form select{background:#0a0b10;color:#fff;border:1px solid rgba(216,195,149,.3);border-radius:4px;padding:9px 10px;font-size:15px}
 .cc-tabla input[type=checkbox]{width:18px;height:18px;accent-color:#D8C395}
 @media (max-width:640px){
   .cc-horarios thead{display:none}
   .cc-horarios,.cc-horarios tbody{display:block}
   .cc-horarios tr{display:grid;grid-template-columns:32px 1fr 90px;gap:8px 10px;align-items:center;padding:10px;border-top:1px solid rgba(255,255,255,.08)}
   .cc-horarios td{padding:0;border:0}
+  .cc-horarios td:nth-child(2) input{width:100%!important}
   .cc-horarios td:nth-child(4){grid-column:1/-1}
   .cc-horarios td:nth-child(4) input{min-width:0!important}
-  .cc-horarios td:nth-child(5){grid-column:1/-1;font-size:.8rem}
-  .cc-horarios td:nth-child(3) input{width:100%!important}
-  .cc-horarios td:nth-child(6){grid-column:1/-1;justify-self:end}
+  .cc-horarios td:nth-child(5){grid-column:1/-1;justify-self:end}
 }
 .cc-msg{margin:10px 0 0;font-size:.88rem}
 .cc-link{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;padding:12px 14px;border:1px solid rgba(255,213,74,.55);border-radius:8px;background:rgba(255,213,74,.07)}
@@ -89,24 +88,21 @@
         <input data-${pref}="tel" inputmode="tel" maxlength="16" placeholder="Número sin espacios"></div>`;
 
     /* ---------------- VIP ---------------- */
-    // Horarios fijos de los cupos VIP (hora Colombia, UTC-5)
-    // Horarios VIP por defecto (hora Colombia). Se pueden cambiar, agregar o quitar; quedan guardados en este navegador.
-    const HORARIOS_VIP = [{ h: 11, ap: 'AM' }, { h: 2, ap: 'PM' }, { h: 5, ap: 'PM' }, { h: 7, ap: 'PM' }, { h: 8, ap: 'PM' }];
-    const a24 = (h, ap) => { h = Math.min(12, Math.max(1, parseInt(h, 10) || 12)); const x = ap === 'AM' ? (h === 12 ? 0 : h) : (h === 12 ? 12 : h + 12); return String(x).padStart(2, '0') + ':00'; };
+    // Horas VIP por defecto (hora local del dispositivo — sin dependencia de timezone)
+    const HORAS_VIP = [11, 14, 17, 19, 20];
+    const toLocal = d => new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    const dtDefault = h => { const d = new Date(); d.setHours(h, 0, 0, 0); return toLocal(d); };
+    const fmtDt = v => new Date(v).toLocaleString('es', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
     const claveHorarios = portal => 'pg_vip_horarios_' + portal;
     const horariosGuardados = portal => {
-        try { const l = JSON.parse(localStorage.getItem(claveHorarios(portal))); if (Array.isArray(l) && l.length) return l; } catch (e) { /* sin almacenamiento */ }
-        return HORARIOS_VIP.map(x => Object.assign({}, x));
+        try { const l = JSON.parse(localStorage.getItem(claveHorarios(portal))); if (Array.isArray(l) && l.length && l[0].dt) return l; } catch (e) {}
+        return HORAS_VIP.map(h => ({ dt: dtDefault(h) }));
     };
-    const guardarHorarios = (portal, l) => { try { localStorage.setItem(claveHorarios(portal), JSON.stringify(l)); } catch (e) { /* sin almacenamiento */ } };
-    const selAP = (ap, attr) => `<select ${attr} aria-label="AM o PM"><option${ap === 'AM' ? ' selected' : ''}>AM</option><option${ap !== 'AM' ? ' selected' : ''}>PM</option></select>`;
-    const hoyCol = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
-    const enCol = (dia, hhmm) => new Date(`${dia}T${hhmm}:00-05:00`);
-    // El link de cada horario se recuerda en este navegador (cada horario tiene su grupo)
-    const claveLink = (portal, hh) => `pg_vip_link_${portal}_${hh}`;
-    const linkGuardado = (portal, hh) => { try { return localStorage.getItem(claveLink(portal, hh)) || ''; } catch (e) { return ''; } };
-    const guardarLink = (portal, hh, v) => { try { localStorage.setItem(claveLink(portal, hh), v); } catch (e) { /* sin almacenamiento */ } };
-    const horaCol = d => d.toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' });
+    const guardarHorarios = (portal, l) => { try { localStorage.setItem(claveHorarios(portal), JSON.stringify(l)); } catch (e) {} };
+    // El link de cada horario se recuerda en este navegador (indexado por HH:MM)
+    const claveLink = (portal, dt) => 'pg_vip_link_' + portal + '_' + (dt || '').slice(11, 16);
+    const linkGuardado = (portal, dt) => { try { return localStorage.getItem(claveLink(portal, dt)) || ''; } catch (e) { return ''; } };
+    const guardarLink = (portal, dt, v) => { try { localStorage.setItem(claveLink(portal, dt), v); } catch (e) {} };
 
     // opts.agregar: true = aquí se agregan equipos VIP (Pruebas). En Pumas se agregan en VIP → Registrar VIP.
     async function montarVip(contId, portal, opts) {
@@ -121,20 +117,17 @@
                 <div style="display:flex;gap:6px"><button class="cc-btn lleno" data-v="copiar" type="button"><i class="fa-solid fa-copy"></i> Copiar</button>
                 <a class="cc-btn" href="${esc(linkVip)}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir</a></div></div>
 
-            <div class="cc-h"><i class="fa-solid fa-clock"></i> HORARIOS VIP <small>· hora Colombia</small></div>
-            <div class="cc-form">
-                <div class="form-group"><label>Día</label><input type="date" data-v="dia" value="${hoyCol()}"></div>
-            </div>
-            <div class="cc-tabla-wrap" style="margin-top:12px"><table class="cc-tabla cc-horarios"><thead><tr>
-                <th style="width:40px"><input type="checkbox" data-v="todos" title="Habilitar todos"></th><th>HORARIO</th><th>CUPOS</th><th>LINK DEL GRUPO DE ESE HORARIO</th><th>INSCRIPCIONES HASTA</th><th></th></tr></thead>
+            <div class="cc-h"><i class="fa-solid fa-clock"></i> HORARIOS VIP</div>
+            <div class="cc-tabla-wrap" style="margin-top:6px"><table class="cc-tabla cc-horarios"><thead><tr>
+                <th style="width:40px"><input type="checkbox" data-v="todos" title="Habilitar todos"></th><th>FECHA Y HORA</th><th>CUPOS</th><th>LINK DEL GRUPO</th><th></th></tr></thead>
                 <tbody data-v="filas"></tbody></table></div>
             <button class="cc-btn" type="button" data-v="masHorario" style="margin-top:8px"><i class="fa-solid fa-plus"></i> Agregar horario</button>
-            <p class="muted" style="margin:6px 0 0;font-size:.8rem"><i class="fa-solid fa-circle-info"></i> Cada horario tiene su propio grupo. El último link de cada horario queda guardado en este navegador para la próxima vez.</p>
+            <p class="muted" style="margin:6px 0 0;font-size:.8rem"><i class="fa-solid fa-circle-info"></i> Cada horario tiene su propio grupo. El link queda guardado en este navegador para la próxima vez.</p>
             <div class="cc-form" style="margin-top:12px">
                 <div class="form-group"><label>Cierre de inscripciones</label>
-                    <select data-v="cierre"><option value="entreno">Hasta la hora de cada entreno</option><option value="fija">Todos hasta una hora fija</option></select></div>
-                <div class="form-group" data-v="cajaFija" hidden><label>Hora de cierre</label>
-                    <div class="cc-hora"><input type="number" data-v="horaFijaN" min="1" max="12" value="10" aria-label="Hora de cierre">${selAP('AM', 'data-v="horaFijaAP"')}<span>COL</span></div></div>
+                    <select data-v="cierre"><option value="entreno">Hasta la hora de cada entreno</option><option value="fija">Todos hasta una fecha/hora fija</option></select></div>
+                <div class="form-group" data-v="cajaFija" hidden><label>Fecha y hora de cierre</label>
+                    <input type="datetime-local" data-v="cierreFijo"></div>
                 <div class="form-group"><button class="btn-generar" data-v="crear" type="button"><i class="fa-solid fa-crown"></i> Crear cupos VIP</button></div>
             </div>
             <p class="cc-msg" data-v="msgH" role="status"></p>
@@ -155,62 +148,57 @@
         };
         if ($('copiar')) $('copiar').onclick = () => copiar($('link').textContent);
 
-        /* --- Horarios (número + AM/PM, siempre hora Colombia) --- */
+        /* --- Horarios (datetime-local, hora local del dispositivo) --- */
         const filaHorario = x => `<tr data-h>
             <td><input type="checkbox" data-hab></td>
-            <td><div class="cc-hora"><input type="number" data-hora min="1" max="12" value="${x.h}" aria-label="Hora">${selAP(x.ap, 'data-ap')}<span>COL</span></div></td>
+            <td><input type="datetime-local" data-dt value="${esc(x.dt || '')}" style="min-width:180px"></td>
             <td><input type="number" data-cupos min="1" max="50" value="12" style="width:90px"></td>
-            <td><input type="url" data-link placeholder="https://chat.whatsapp.com/..." value="${esc(linkGuardado(portal, a24(x.h, x.ap)))}" style="min-width:230px;width:100%"></td>
-            <td data-hasta class="muted">—</td>
+            <td><input type="url" data-link placeholder="https://chat.whatsapp.com/..." value="${esc(x.dt ? linkGuardado(portal, x.dt) : '')}" style="min-width:230px;width:100%"></td>
             <td><button class="cc-btn rojo" type="button" data-quitarh title="Quitar horario" aria-label="Quitar horario"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
         const tbody = $('filas');
         tbody.innerHTML = horariosGuardados(portal).map(filaHorario).join('');
         const filasH = () => [...tbody.querySelectorAll('[data-h]')];
-        const recordar = () => guardarHorarios(portal, filasH().map(tr => ({ h: parseInt(tr.querySelector('[data-hora]').value, 10) || 12, ap: tr.querySelector('[data-ap]').value })));
-        tbody.addEventListener('input', e => { if (e.target.matches('[data-hora],[data-ap]')) recordar(); horarios(); });
-        tbody.addEventListener('change', e => { if (e.target.matches('[data-ap]')) { recordar(); horarios(); } });
+        const recordar = () => guardarHorarios(portal, filasH().map(tr => ({ dt: tr.querySelector('[data-dt]').value })));
+        tbody.addEventListener('input', e => { if (e.target.matches('[data-dt]')) recordar(); horarios(); });
         tbody.addEventListener('click', e => {
             const b = e.target.closest('[data-quitarh]');
             if (!b) return;
             if (filasH().length <= 1) { msg('Deja al menos un horario.', '#ff8a8d', 'msgH'); return; }
             b.closest('tr').remove(); recordar(); horarios();
         });
-        $('masHorario').onclick = () => { tbody.insertAdjacentHTML('beforeend', filaHorario({ h: 9, ap: 'PM' })); recordar(); horarios(); };
+        $('masHorario').onclick = () => { tbody.insertAdjacentHTML('beforeend', filaHorario({ dt: dtDefault(20) })); recordar(); horarios(); };
         function horarios() {
-            const dia = $('dia').value, fija = $('cierre').value === 'fija';
+            const fija = $('cierre').value === 'fija';
             $('cajaFija').hidden = !fija;
+            const dtFijo = fija && $('cierreFijo').value ? new Date($('cierreFijo').value) : null;
             return filasH().map(tr => {
-                const h = Math.min(12, Math.max(1, parseInt(tr.querySelector('[data-hora]').value, 10) || 12)), ap = tr.querySelector('[data-ap]').value;
-                const hh = a24(h, ap), txt = `${h} ${ap}`;
-                const fecha = enCol(dia, hh);
-                // Con hora fija, nunca después de que empiece el entreno
-                let cierre = fecha;
-                if (fija && $('horaFijaN').value) { const f = enCol(dia, a24($('horaFijaN').value, $('horaFijaAP').value)); if (f < fecha) cierre = f; }
+                const dtVal = tr.querySelector('[data-dt]').value;
+                const fecha = dtVal ? new Date(dtVal) : null;
                 const hab = tr.querySelector('[data-hab]').checked;
-                tr.querySelector('[data-hasta]').textContent = hab && dia ? (cierre < fecha ? horaCol(cierre) + ' COL' : 'Hasta las ' + txt + ' (inicio)') : '—';
-                return { hab, hh, txt, fecha, cierre, cupos: Number(tr.querySelector('[data-cupos]').value), link: tr.querySelector('[data-link]').value.trim() };
+                let cierre = fecha;
+                if (dtFijo && fecha && dtFijo < fecha) cierre = dtFijo;
+                return { hab, dt: dtVal, txt: dtVal ? fmtDt(dtVal) : '—', fecha, cierre, cupos: Number(tr.querySelector('[data-cupos]').value), link: tr.querySelector('[data-link]').value.trim() };
             });
         }
-        ['dia', 'cierre', 'horaFijaN', 'horaFijaAP'].forEach(k => { $(k).addEventListener('input', horarios); $(k).addEventListener('change', horarios); });
+        ['cierre', 'cierreFijo'].forEach(k => { $(k).addEventListener('input', horarios); $(k).addEventListener('change', horarios); });
         $('todos').onchange = () => { filasH().forEach(tr => { tr.querySelector('[data-hab]').checked = $('todos').checked; }); horarios(); };
         horarios();
 
         $('crear').onclick = async () => {
             const lista = horarios().filter(h => h.hab);
-            if (!$('dia').value) { msg('Elige el día.', '#ff8a8d', 'msgH'); return; }
             if (!lista.length) { msg('Habilita al menos un horario.', '#ff8a8d', 'msgH'); return; }
+            if (lista.some(h => !h.dt)) { msg('Completa la fecha y hora de los horarios habilitados.', '#ff8a8d', 'msgH'); return; }
             const sinLink = lista.filter(h => !/^https:\/\//.test(h.link));
             if (sinLink.length) { msg('Pon el link del grupo de: ' + sinLink.map(h => h.txt).join(', ') + ' (debe empezar con https://).', '#ff8a8d', 'msgH'); return; }
             if (lista.some(h => !(h.cupos >= 1 && h.cupos <= 50))) { msg('Los cupos van de 1 a 50.', '#ff8a8d', 'msgH'); return; }
-            if (lista.some(h => h.cierre <= new Date())) { msg('Hay horarios que ya cerraron (revisa el día o la hora de cierre).', '#ff8a8d', 'msgH'); return; }
-            const diaTxt = new Date($('dia').value + 'T12:00:00').toLocaleDateString('es', { day: '2-digit', month: '2-digit' });
-            if (!confirm(`¿Crear ${lista.length} cupo(s) VIP para el ${diaTxt}?\n\n` + lista.map(h => `· ${h.txt} COL · ${h.cupos} cupos · inscripciones hasta ${horaCol(h.cierre)}`).join('\n'))) return;
+            if (lista.some(h => !h.fecha || h.cierre <= new Date())) { msg('Hay horarios con fecha/hora ya pasada (revisa la fecha o el cierre).', '#ff8a8d', 'msgH'); return; }
+            if (!confirm(`¿Crear ${lista.length} cupo(s) VIP?\n\n` + lista.map(h => `· ${h.txt} · ${h.cupos} cupos`).join('\n'))) return;
             $('crear').disabled = true;
             msg('Creando...', '', 'msgH');
             let hechos = 0;
             try {
                 for (const h of lista) {
-                    const titulo = `VIP ${h.txt} COL · ${diaTxt}`;
+                    const titulo = `VIP · ${h.txt}`;
                     if (portal === 'entrenamientos') {
                         // Pumas: sus cupos están en entrenamientos_programados (igual que Programar)
                         const { error } = await P.db().from('entrenamientos_programados').insert([{ titulo, fecha: h.fecha.toISOString(), hay_staff: 'NO',
@@ -220,11 +208,11 @@
                         const r = await P.cupos.guardar(portal, { titulo, fecha: h.fecha, cupos: h.cupos, link: h.link, publicar_en: null, staff: [] });
                         await P.cupos.vip(portal, r.id, h.cierre < h.fecha ? h.cierre : null);
                     }
-                    guardarLink(portal, h.hh, h.link);
+                    guardarLink(portal, h.dt, h.link);
                     hechos++;
                 }
                 msg(`✔ ${hechos} cupo(s) VIP creados. Salen solo en el link oculto.`, '#6ee7a8', 'msgH');
-                filasH().forEach(tr => { tr.querySelector('[data-hab]').checked = false; }); $('todos').checked = false; horarios();
+                filasH().forEach(tr => { tr.querySelector('[data-hab]').checked = false; }); $('todos').checked = false; recordar(); horarios();
                 if (opts && typeof opts.alCrear === 'function') opts.alCrear();
             } catch (e) {
                 msg((hechos ? `Se crearon ${hechos}; los demás no: ` : '') + (/tipo|cierra_en|admin_cupo_vip|PGRST/i.test(e.message || '') ? 'falta correr sql/25_cupos_vip_y_baneos.sql en Supabase.' : e.message), '#ff8a8d', 'msgH');

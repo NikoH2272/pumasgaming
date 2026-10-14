@@ -114,11 +114,14 @@ language plpgsql security definer
 set search_path = public
 as $$
 declare
-    ses   din_sesiones;
-    v_nom text := left(trim(coalesce(p_nombre, '')), 80);
-    v_num text := left(trim(coalesce(p_numero, '')), 20);
-    v_ig  text := left(trim(replace(coalesce(p_ig, ''), '@', '')), 60);
-    nuevo bigint;
+    ses      din_sesiones;
+    v_nom    text  := left(trim(coalesce(p_nombre, '')), 80);
+    v_num    text  := left(trim(coalesce(p_numero, '')), 20);
+    v_ig     text  := left(trim(replace(coalesce(p_ig, ''), '@', '')), 60);
+    nuevo    bigint;
+    v_id_ant bigint;
+    v_pts_ant int;
+    v_pts_new int;
 begin
     select * into ses from din_sesiones where portal = p_portal and tipo = p_tipo;
     if not found or not coalesce(ses.activo, false) then
@@ -138,6 +141,29 @@ begin
     end if;
     if (select count(*) from din_entradas where portal = p_portal and tipo = p_tipo) >= 5000 then
         raise exception 'Se alcanzó el límite de registros';
+    end if;
+
+    -- Juego: upsert por nombre — conservar solo la puntuación más alta
+    if p_tipo = 'juego' then
+        v_pts_new := coalesce((p_metadata->>'puntos')::int, 0);
+        select id, (metadata->>'puntos')::int
+        into v_id_ant, v_pts_ant
+        from din_entradas
+        where portal = p_portal and tipo = 'juego'
+          and lower(nombre) = lower(v_nom)
+        order by (metadata->>'puntos')::int desc nulls last
+        limit 1;
+        if found then
+            if v_pts_new > coalesce(v_pts_ant, 0) then
+                update din_entradas
+                   set metadata = coalesce(p_metadata, '{}'),
+                       ig       = nullif(v_ig, ''),
+                       creado   = now()
+                 where id = v_id_ant;
+            end if;
+            return json_build_object('ok', true, 'id', v_id_ant);
+        end if;
+        -- No existe entrada previa → continúa con el INSERT normal
     end if;
 
     -- Registro: no duplicar el mismo nombre
