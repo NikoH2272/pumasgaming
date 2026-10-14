@@ -17,12 +17,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Orbitron:wght@700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261012b">
-    <link rel="stylesheet" href="style.css?v=20261012b">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261013e">
+    <link rel="stylesheet" href="style.css?v=20261013e">
     <link rel="icon" href="../imagenes/LOGO PUMAS WEB.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261012b" data-portal="@p" data-modo="protegido"></script>
+    <script src="../portal-kit/portal.js?v=20261013e" data-portal="@p" data-modo="protegido"></script>
 </head>
 <body>
 
@@ -37,7 +37,10 @@
         <nav class="main-nav" id="mainNav">
             <ul>
                 <li><a data-mod-href="./" href="./"><i class="fa-solid fa-trophy"></i> Ver portal</a></li>
-                <li><a data-mod-href="cupos.html" href="cupos.html"><i class="fa-solid fa-ticket"></i> Cupos</a></li>
+                <li><a href="#resultados"><i class="fa-solid fa-table"></i> Herramienta</a></li>
+                <li><a href="#cupos"><i class="fa-solid fa-ticket"></i> Cupos</a></li>
+                <li><a data-mod-href="cupos.html" href="cupos.html"><i class="fa-solid fa-up-right-from-square"></i> Cupos públicos</a></li>
+                <li><a href="#usuariosPortal"><i class="fa-solid fa-users-gear"></i> Usuarios</a></li>
                 <li><a data-mod-href="/admin/sorteo.html" href="/admin/sorteo.html"><i class="fa-solid fa-dice"></i> Sorteo</a></li>
                 <li data-pg-hub hidden><a href="/admin/"><i class="fa-solid fa-table-cells-large"></i> Portales</a></li>
                 <li><span class="pg-user"><i class="fa-solid fa-user-shield"></i> <span data-pg-usuario></span></span></li>
@@ -75,12 +78,21 @@
     <section class="tool-section" id="cupos">
         <h2 class="section-title">Cupos</h2>
         <div class="tool-container">
-            <div id="cuposAdmin"></div>
-            <h3 class="subtitulo-bloque" style="margin-top:30px">VIP · horarios y equipos autorizados</h3>
-            <div id="vipCuposAdmin"></div>
-            <h3 class="subtitulo-bloque" style="margin-top:30px">Baneos por equipo o teléfono</h3>
-            <div id="baneosCuposAdmin"></div>
+            <div class="form-group" style="max-width:460px">
+                <label for="gestionCuposSeccion">Sección</label>
+                <select id="gestionCuposSeccion" data-segmentado><option value="cupos">Cupos</option><option value="vip">VIP</option><option value="baneos">Baneos</option></select>
+            </div>
+            <section class="panel-suave">
+                <div data-gestion-panel="cupos"><h3 class="subtitulo-bloque">Cupos</h3><div id="cuposAdmin"></div></div>
+                <div data-gestion-panel="vip" hidden><h3 class="subtitulo-bloque">VIP · horarios y equipos autorizados</h3><div id="vipCuposAdmin"></div></div>
+                <div data-gestion-panel="baneos" hidden><h3 class="subtitulo-bloque">Baneos por equipo o teléfono</h3><div id="baneosCuposAdmin"></div></div>
+            </section>
         </div>
+    </section>
+
+    <section id="usuariosPortal" class="tool-section">
+        <h2 class="section-title">Usuarios del portal</h2>
+        <div class="tool-container"><div id="usuariosPortalAdmin"></div></div>
     </section>
     </main>
 
@@ -88,18 +100,30 @@
         <p>&copy; 2026 <b data-mod-nombre>MÓDULO</b> by PUMAS GAMING. Todos los derechos reservados.</p>
     </footer>
 
-    <script src="modulo.js?v=20261012b"></script>
-    <script src="script.js?v=20261012b"></script>
-    <script src="../portal-kit/guardado.js?v=20261012b"></script>
-    <script src="../portal-kit/cupos.js?v=20261012b"></script>
-    <script src="../portal-kit/cupos-control.js?v=20261012b"></script>
+    <script src="modulo.js?v=20261013e"></script>
+    <script src="script.js?v=20261013e"></script>
+    <script src="../portal-kit/guardado.js?v=20261013e"></script>
+    <script src="../portal-kit/cupos.js?v=20261013e"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261013e"></script>
+    <script src="../portal-kit/usuarios-portal.js?v=20261013e"></script>
+    <script>window.addEventListener('pg:sesion', () => moduloListo.then(m => { if (m) PumasUsuariosPortal.montar('usuariosPortalAdmin', m.id); }), { once: true });</script>
     <script>
         moduloListo.then(m => {
             if (!m) return;
             window.MODULO = m;
-            PumasCupos.montarAdmin('cuposAdmin', m.id);
-            PumasControl.montarVip('vipCuposAdmin', m.id, { agregar: true });
-            PumasControl.montarBaneos('baneosCuposAdmin', m.id);
+            const seccion = document.getElementById('gestionCuposSeccion');
+            const montadas = new Set();
+            const paneles = {
+                cupos: () => PumasCupos.montarAdmin('cuposAdmin', m.id),
+                vip: () => PumasControl.montarVip('vipCuposAdmin', m.id, { agregar: true }),
+                baneos: () => PumasControl.montarBaneos('baneosCuposAdmin', m.id)
+            };
+            const actualizar = () => {
+                document.querySelectorAll('[data-gestion-panel]').forEach(panel => { panel.hidden = panel.dataset.gestionPanel !== seccion.value; });
+                if (!montadas.has(seccion.value)) { paneles[seccion.value](); montadas.add(seccion.value); }
+            };
+            seccion.addEventListener('change', actualizar);
+            actualizar();
             PumasGuardado.montar({
                 contenedor: 'guardarBD',
                 portal: () => m.id,

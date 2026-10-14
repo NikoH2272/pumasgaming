@@ -1167,3 +1167,14 @@ footer{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
   .ver-mas[hidden]{display:none}
 }
 @media(max-width:640px){.orden-btn{min-height:42px;min-width:56px}}
+
+/* Títulos largos ("ENTRENAMIENTOS") en celular: no deben ensanchar la página */
+section.hero { overflow-x: clip; }
+.hero h1 { overflow-wrap: break-word; }
+@media (max-width: 520px) { .hero h1 { font-size: clamp(1.15rem, 6.6vw, 1.7rem); letter-spacing: -.02em; } }
+
+/* Aire entre bloques de la vista general */
+.social-row { gap: 14px; }
+.ses-list, .latam-acciones { gap: 12px; }
+#contenedorTopEquiposPublicos, #contenedorTopKillersPublicos, #latamTopEquipos, #latamTopKillers { gap: 12px; }
+.calendar-grid { gap: 6px; }

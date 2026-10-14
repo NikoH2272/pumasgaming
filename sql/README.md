@@ -34,6 +34,8 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 28 | `28_pumas_portal_aparte.sql` | Entrenos Pumas como portal aparte: Configuración (qué secciones ve el público) y usuarios del staff de Pumas con los módulos del panel que cada uno puede usar. Solo el superadmin los ve en Usuarios y roles | ☐ |
 | 29 | `29_latam_semana_actual.sql` | Entrenos: la tabla de la semana (lunes a domingo) siempre muestra la semana actual; si todavía no hay resultados, sale vacía con aviso (ya no salta a la semana pasada) | ☐ |
 | 30 | `30_cupos_vip_baneos_portales.sql` | Habilita VIP y baneos por portal, repara permisos de roles, valida el portal al inscribirse y revoca el RPC sin ámbito; AZA queda sin VIP | ☐ |
+| 31 | `31_usuarios_por_portal.sql` | Usuarios propios de cada portal: el admin del portal crea su staff (solo entra a ese portal) y el superadmin ve los usuarios de cada portal y crea sus administradores | ☐ |
+| 32 | `32_secciones_por_usuario.sql` | Usuarios del portal: a cada usuario del staff se le eligen las secciones del panel que ve (herramienta, cupos, baneados…), además de su rol | ☐ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 

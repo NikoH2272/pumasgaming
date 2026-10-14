@@ -32,6 +32,13 @@
 .cc-tel{display:grid;grid-template-columns:96px 1fr;gap:8px}
 .cc-form input,.cc-form select{width:100%}
 .cc-form [hidden],.cc-form .form-group[hidden]{display:none!important}
+.cc-masivo{margin:14px 0 4px;padding:10px 14px;border:1px dashed rgba(var(--primary-rgb,216,195,149),.35)}
+.cc-masivo summary{cursor:pointer;color:var(--primary,#D8C395);font-weight:700}
+.cc-masivo textarea{background:#0a0b10;color:#fff;border:1px solid rgba(216,195,149,.3);border-radius:4px;padding:10px;font-family:inherit;font-size:15px}
+.cc-hora{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.cc-hora input[type=number]{width:64px!important;text-align:center}
+.cc-hora select{width:auto!important;min-width:64px}
+.cc-hora span{color:var(--primary,#D8C395);font-weight:800;font-size:.8rem;letter-spacing:.06em}
 .cc-tabla input[type=number],.cc-tabla input[type=url],.cc-tabla input[type=text],.cc-form input:not([type=checkbox]),.cc-form select{background:#0a0b10;color:#fff;border:1px solid rgba(216,195,149,.3);border-radius:4px;padding:9px 10px;font-size:15px}
 .cc-tabla input[type=checkbox]{width:18px;height:18px;accent-color:#D8C395}
 @media (max-width:640px){
@@ -43,6 +50,7 @@
   .cc-horarios td:nth-child(4) input{min-width:0!important}
   .cc-horarios td:nth-child(5){grid-column:1/-1;font-size:.8rem}
   .cc-horarios td:nth-child(3) input{width:100%!important}
+  .cc-horarios td:nth-child(6){grid-column:1/-1;justify-self:end}
 }
 .cc-msg{margin:10px 0 0;font-size:.88rem}
 .cc-link{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;padding:12px 14px;border:1px solid rgba(255,213,74,.55);border-radius:8px;background:rgba(255,213,74,.07)}
@@ -82,7 +90,16 @@
 
     /* ---------------- VIP ---------------- */
     // Horarios fijos de los cupos VIP (hora Colombia, UTC-5)
-    const HORARIOS_VIP = [['11:00', '11 AM'], ['14:00', '2 PM'], ['17:00', '5 PM'], ['19:00', '7 PM'], ['20:00', '8 PM']];
+    // Horarios VIP por defecto (hora Colombia). Se pueden cambiar, agregar o quitar; quedan guardados en este navegador.
+    const HORARIOS_VIP = [{ h: 11, ap: 'AM' }, { h: 2, ap: 'PM' }, { h: 5, ap: 'PM' }, { h: 7, ap: 'PM' }, { h: 8, ap: 'PM' }];
+    const a24 = (h, ap) => { h = Math.min(12, Math.max(1, parseInt(h, 10) || 12)); const x = ap === 'AM' ? (h === 12 ? 0 : h) : (h === 12 ? 12 : h + 12); return String(x).padStart(2, '0') + ':00'; };
+    const claveHorarios = portal => 'pg_vip_horarios_' + portal;
+    const horariosGuardados = portal => {
+        try { const l = JSON.parse(localStorage.getItem(claveHorarios(portal))); if (Array.isArray(l) && l.length) return l; } catch (e) { /* sin almacenamiento */ }
+        return HORARIOS_VIP.map(x => Object.assign({}, x));
+    };
+    const guardarHorarios = (portal, l) => { try { localStorage.setItem(claveHorarios(portal), JSON.stringify(l)); } catch (e) { /* sin almacenamiento */ } };
+    const selAP = (ap, attr) => `<select ${attr} aria-label="AM o PM"><option${ap === 'AM' ? ' selected' : ''}>AM</option><option${ap !== 'AM' ? ' selected' : ''}>PM</option></select>`;
     const hoyCol = () => new Date(Date.now() - 5 * 3600e3).toISOString().slice(0, 10);
     const enCol = (dia, hhmm) => new Date(`${dia}T${hhmm}:00-05:00`);
     // El link de cada horario se recuerda en este navegador (cada horario tiene su grupo)
@@ -109,17 +126,15 @@
                 <div class="form-group"><label>Día</label><input type="date" data-v="dia" value="${hoyCol()}"></div>
             </div>
             <div class="cc-tabla-wrap" style="margin-top:12px"><table class="cc-tabla cc-horarios"><thead><tr>
-                <th style="width:40px"><input type="checkbox" data-v="todos" title="Habilitar todos"></th><th>HORARIO</th><th>CUPOS</th><th>LINK DEL GRUPO DE ESE HORARIO</th><th>INSCRIPCIONES HASTA</th></tr></thead>
-                <tbody>${HORARIOS_VIP.map(([hh, txt], i) => `<tr data-h="${i}">
-                    <td><input type="checkbox" data-hab></td><td><b>${txt} COL</b></td>
-                    <td><input type="number" data-cupos min="1" max="50" value="12" style="width:90px"></td>
-                    <td><input type="url" data-link placeholder="https://chat.whatsapp.com/..." value="${esc(linkGuardado(portal, hh))}" style="min-width:230px;width:100%"></td>
-                    <td data-hasta class="muted">—</td></tr>`).join('')}</tbody></table></div>
+                <th style="width:40px"><input type="checkbox" data-v="todos" title="Habilitar todos"></th><th>HORARIO</th><th>CUPOS</th><th>LINK DEL GRUPO DE ESE HORARIO</th><th>INSCRIPCIONES HASTA</th><th></th></tr></thead>
+                <tbody data-v="filas"></tbody></table></div>
+            <button class="cc-btn" type="button" data-v="masHorario" style="margin-top:8px"><i class="fa-solid fa-plus"></i> Agregar horario</button>
             <p class="muted" style="margin:6px 0 0;font-size:.8rem"><i class="fa-solid fa-circle-info"></i> Cada horario tiene su propio grupo. El último link de cada horario queda guardado en este navegador para la próxima vez.</p>
             <div class="cc-form" style="margin-top:12px">
                 <div class="form-group"><label>Cierre de inscripciones</label>
                     <select data-v="cierre"><option value="entreno">Hasta la hora de cada entreno</option><option value="fija">Todos hasta una hora fija</option></select></div>
-                <div class="form-group" data-v="cajaFija" hidden><label>Hora de cierre (Colombia)</label><input type="time" data-v="horaFija" value="10:00"></div>
+                <div class="form-group" data-v="cajaFija" hidden><label>Hora de cierre</label>
+                    <div class="cc-hora"><input type="number" data-v="horaFijaN" min="1" max="12" value="10" aria-label="Hora de cierre">${selAP('AM', 'data-v="horaFijaAP"')}<span>COL</span></div></div>
                 <div class="form-group"><button class="btn-generar" data-v="crear" type="button"><i class="fa-solid fa-crown"></i> Crear cupos VIP</button></div>
             </div>
             <p class="cc-msg" data-v="msgH" role="status"></p>
@@ -140,25 +155,44 @@
         };
         if ($('copiar')) $('copiar').onclick = () => copiar($('link').textContent);
 
-        /* --- Horarios --- */
-        const filas = [...cont.querySelectorAll('[data-h]')];
+        /* --- Horarios (número + AM/PM, siempre hora Colombia) --- */
+        const filaHorario = x => `<tr data-h>
+            <td><input type="checkbox" data-hab></td>
+            <td><div class="cc-hora"><input type="number" data-hora min="1" max="12" value="${x.h}" aria-label="Hora">${selAP(x.ap, 'data-ap')}<span>COL</span></div></td>
+            <td><input type="number" data-cupos min="1" max="50" value="12" style="width:90px"></td>
+            <td><input type="url" data-link placeholder="https://chat.whatsapp.com/..." value="${esc(linkGuardado(portal, a24(x.h, x.ap)))}" style="min-width:230px;width:100%"></td>
+            <td data-hasta class="muted">—</td>
+            <td><button class="cc-btn rojo" type="button" data-quitarh title="Quitar horario" aria-label="Quitar horario"><i class="fa-solid fa-xmark"></i></button></td></tr>`;
+        const tbody = $('filas');
+        tbody.innerHTML = horariosGuardados(portal).map(filaHorario).join('');
+        const filasH = () => [...tbody.querySelectorAll('[data-h]')];
+        const recordar = () => guardarHorarios(portal, filasH().map(tr => ({ h: parseInt(tr.querySelector('[data-hora]').value, 10) || 12, ap: tr.querySelector('[data-ap]').value })));
+        tbody.addEventListener('input', e => { if (e.target.matches('[data-hora],[data-ap]')) recordar(); horarios(); });
+        tbody.addEventListener('change', e => { if (e.target.matches('[data-ap]')) { recordar(); horarios(); } });
+        tbody.addEventListener('click', e => {
+            const b = e.target.closest('[data-quitarh]');
+            if (!b) return;
+            if (filasH().length <= 1) { msg('Deja al menos un horario.', '#ff8a8d', 'msgH'); return; }
+            b.closest('tr').remove(); recordar(); horarios();
+        });
+        $('masHorario').onclick = () => { tbody.insertAdjacentHTML('beforeend', filaHorario({ h: 9, ap: 'PM' })); recordar(); horarios(); };
         function horarios() {
             const dia = $('dia').value, fija = $('cierre').value === 'fija';
             $('cajaFija').hidden = !fija;
-            return filas.map(tr => {
-                const [hh, txt] = HORARIOS_VIP[Number(tr.dataset.h)];
+            return filasH().map(tr => {
+                const h = Math.min(12, Math.max(1, parseInt(tr.querySelector('[data-hora]').value, 10) || 12)), ap = tr.querySelector('[data-ap]').value;
+                const hh = a24(h, ap), txt = `${h} ${ap}`;
                 const fecha = enCol(dia, hh);
                 // Con hora fija, nunca después de que empiece el entreno
                 let cierre = fecha;
-                if (fija && $('horaFija').value) { const f = enCol(dia, $('horaFija').value); if (f < fecha) cierre = f; }
+                if (fija && $('horaFijaN').value) { const f = enCol(dia, a24($('horaFijaN').value, $('horaFijaAP').value)); if (f < fecha) cierre = f; }
                 const hab = tr.querySelector('[data-hab]').checked;
                 tr.querySelector('[data-hasta]').textContent = hab && dia ? (cierre < fecha ? horaCol(cierre) + ' COL' : 'Hasta las ' + txt + ' (inicio)') : '—';
                 return { hab, hh, txt, fecha, cierre, cupos: Number(tr.querySelector('[data-cupos]').value), link: tr.querySelector('[data-link]').value.trim() };
             });
         }
-        cont.querySelectorAll('[data-hab],[data-cupos]').forEach(i => i.addEventListener('input', horarios));
-        ['dia', 'cierre', 'horaFija'].forEach(k => $(k).addEventListener('input', horarios));
-        $('todos').onchange = () => { filas.forEach(tr => { tr.querySelector('[data-hab]').checked = $('todos').checked; }); horarios(); };
+        ['dia', 'cierre', 'horaFijaN', 'horaFijaAP'].forEach(k => { $(k).addEventListener('input', horarios); $(k).addEventListener('change', horarios); });
+        $('todos').onchange = () => { filasH().forEach(tr => { tr.querySelector('[data-hab]').checked = $('todos').checked; }); horarios(); };
         horarios();
 
         $('crear').onclick = async () => {
@@ -190,7 +224,7 @@
                     hechos++;
                 }
                 msg(`✔ ${hechos} cupo(s) VIP creados. Salen solo en el link oculto.`, '#6ee7a8', 'msgH');
-                filas.forEach(tr => { tr.querySelector('[data-hab]').checked = false; }); $('todos').checked = false; horarios();
+                filasH().forEach(tr => { tr.querySelector('[data-hab]').checked = false; }); $('todos').checked = false; horarios();
                 if (opts && typeof opts.alCrear === 'function') opts.alCrear();
             } catch (e) {
                 msg((hechos ? `Se crearon ${hechos}; los demás no: ` : '') + (/tipo|cierra_en|admin_cupo_vip|PGRST/i.test(e.message || '') ? 'falta correr sql/25_cupos_vip_y_baneos.sql en Supabase.' : e.message), '#ff8a8d', 'msgH');
@@ -245,6 +279,18 @@
                 <div class="form-group"><label>Hasta (vacío = indefinido)</label><input data-b="hasta" type="date"></div>
                 <div class="form-group"><button class="btn-generar" data-b="agregar" type="button"><i class="fa-solid fa-ban"></i> Banear</button></div>
             </div>
+            <details class="cc-masivo" data-b="masivo"><summary><i class="fa-solid fa-list"></i> Carga masiva · pegar una lista o subir un archivo</summary>
+                <p class="muted" style="margin:8px 0">Una línea por baneo: <code>EQUIPO, +57 3001234567</code> · solo el equipo · o solo el número. Sirven coma, punto y coma, tabulación o guion.
+                    Las líneas que empiezan con # se ignoran.</p>
+                <textarea data-b="lista_txt" rows="6" style="width:100%;min-height:130px" placeholder="TOXIC SQUAD, +57 3009990001&#10;GHOST TEAM&#10;+52 5599990002"></textarea>
+                <div class="cc-form" style="margin-top:10px">
+                    <div class="form-group"><label>O sube un archivo (.txt o .csv)</label><input type="file" data-b="archivo" accept=".txt,.csv,text/plain,text/csv"></div>
+                    <div class="form-group"><label>Motivo para todos</label><input data-b="motivoM" maxlength="200" placeholder="Ej: No se presentaron"></div>
+                    <div class="form-group"><label>Hasta (vacío = indefinido)</label><input data-b="hastaM" type="date"></div>
+                    <div class="form-group"><button class="btn-generar" data-b="banearLista" type="button"><i class="fa-solid fa-ban"></i> Banear la lista</button></div>
+                </div>
+                <p class="cc-msg" data-b="msgM" role="status"></p>
+            </details>
             <p class="cc-msg" data-b="msg" role="status"></p>
             <div data-b="lista"><p class="cc-vacio">Cargando...</p></div>`;
         const $ = k => cont.querySelector(`[data-b="${k}"]`);
@@ -266,6 +312,46 @@
                 try { await P.control.desbanear(portal, b.dataset.tipo, Number(b.dataset.quitar)); pintar(); if (alCambiar) alCambiar(); } catch (e) { msg(errorSql(e), '#ff8a8d'); }
             });
         }
+        /* --- Carga masiva --- */
+        // Cada línea: equipo y/o número. El número es lo que tenga 7+ dígitos (con o sin +indicativo).
+        function leerLista(texto) {
+            return String(texto || '').split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#')).map(l => {
+                const partes = l.split(/\s*[,;\t]\s*|\s+-\s+/).map(x => x.trim()).filter(Boolean);
+                let telefono = '', equipo = [];
+                partes.forEach(x => {
+                    const dig = x.replace(/[^\d]/g, '');
+                    if (!telefono && dig.length >= 7 && /^[+\d\s().-]+$/.test(x)) telefono = (x.trim().startsWith('+') ? '+' : '') + dig;
+                    else equipo.push(x);
+                });
+                return { equipo: equipo.join(' ').slice(0, 60), telefono };
+            }).filter(x => x.equipo || x.telefono);
+        }
+        $('archivo').addEventListener('change', async () => {
+            const f = $('archivo').files[0];
+            if (!f) return;
+            const txt = await f.text();
+            $('lista_txt').value = ($('lista_txt').value.trim() ? $('lista_txt').value.trim() + '\n' : '') + txt.replace(/^\uFEFF/, '');
+            $('msgM').textContent = `${leerLista($('lista_txt').value).length} línea(s) listas para banear.`; $('msgM').style.color = '';
+        });
+        $('banearLista').onclick = async () => {
+            const lista = leerLista($('lista_txt').value), m = $('msgM');
+            if (!lista.length) { m.textContent = 'Pega la lista o sube un archivo.'; m.style.color = '#ff8a8d'; return; }
+            const nEq = lista.filter(x => x.equipo).length, nTel = lista.filter(x => x.telefono).length;
+            if (!confirm(`¿Banear ${lista.length} línea(s)? (${nEq} equipo(s) y ${nTel} número(s))`)) return;
+            const motivo = $('motivoM').value.trim(), hasta = $('hastaM').value || null;
+            $('banearLista').disabled = true;
+            let ok = 0; const fallos = [];
+            for (const x of lista) {
+                m.textContent = `Baneando ${ok + fallos.length + 1} de ${lista.length}...`; m.style.color = '';
+                try { await P.control.banear(portal, { equipo: x.equipo, telefono: x.telefono || null, motivo, hasta }); ok++; }
+                catch (e) { fallos.push(`${x.equipo || x.telefono}: ${errorSql(e)}`); }
+            }
+            $('banearLista').disabled = false;
+            m.textContent = `✔ ${ok} baneado(s).` + (fallos.length ? ` ${fallos.length} con error: ${fallos.slice(0, 3).join(' · ')}${fallos.length > 3 ? '…' : ''}` : '');
+            m.style.color = fallos.length ? '#FFD54A' : '#6ee7a8';
+            if (ok) { $('lista_txt').value = ''; $('archivo').value = ''; pintar(); if (alCambiar) alCambiar(); }
+        };
+
         $('agregar').onclick = async () => {
             const equipo = $('equipo').value.trim(), tel = $('tel').value.replace(/[^\d]/g, '');
             if (!equipo && tel.length < 7) { msg('Escribe el equipo, el número o los dos.', '#ff8a8d'); return; }

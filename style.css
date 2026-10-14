@@ -911,3 +911,10 @@ body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-ri
 .site-header,header{-webkit-backdrop-filter:blur(14px)}
 footer{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
 @media(max-width:760px){input,select,textarea{font-size:16px!important}nav.main-nav{max-height:calc(100svh - 66px);overflow-y:auto;-webkit-overflow-scrolling:touch}}
+
+/* Aire entre bloques de la portada principal */
+.social-row { gap: 14px; }
+.ses-list, .latam-acciones { gap: 12px; }
+#contenedorTopEquiposPublicos, #contenedorTopKillersPublicos, #latamTopEquipos, #latamTopKillers { gap: 12px; }
+.calendar-grid { gap: 6px; }
+.stat-row { gap: clamp(12px, 1.6vw, 18px); }

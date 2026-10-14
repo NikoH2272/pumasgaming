@@ -18,12 +18,12 @@
     <!-- Orbitron se usa en la imagen que se descarga -->
     <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261012b">
-    <link rel="stylesheet" href="style.css?v=20261012b">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261013e">
+    <link rel="stylesheet" href="style.css?v=20261013e">
     <link rel="icon" href="imagenes/dragonfest.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261012b" data-portal="dragonfest" data-modo="protegido"></script>
+    <script src="../portal-kit/portal.js?v=20261013e" data-portal="dragonfest" data-modo="protegido"></script>
 </head>
 <body data-tema="dragonfest">
 
@@ -39,6 +39,7 @@
             <ul>
                 <li><a href="#resultados" onclick="closeMenu()">Herramienta</a></li>
                 <li><a href="#gestionCupos" onclick="closeMenu()"><i class="fa-solid fa-ticket"></i> Cupos</a></li>
+                <li><a href="#usuariosPortal" onclick="closeMenu()"><i class="fa-solid fa-users-gear"></i> Usuarios</a></li>
                 <li><a href="./"><i class="fa-solid fa-trophy"></i> Portal mixto</a></li>
                 <li><a href="femenino.html"><i class="fa-solid fa-trophy"></i> Portal femenino</a></li>
                 <li data-pg-hub hidden><a href="/admin/"><i class="fa-solid fa-table-cells-large"></i> Portales</a></li>
@@ -155,18 +156,26 @@
 
     <section id="gestionCupos" class="tool-section">
         <h2 class="section-title">Cupos de Dragon Fest</h2>
-        <div class="tool-container">
-            <h3 class="subtitulo-bloque">Mixto</h3>
-            <div id="cuposAdminMixto"></div>
-            <h4 class="subtitulo-bloque">Mixto · VIP y baneos</h4>
-            <div id="vipCuposMixto"></div>
-            <div id="baneosCuposMixto"></div>
-            <h3 class="subtitulo-bloque" style="margin-top:32px">Femenino</h3>
-            <div id="cuposAdminFemenino"></div>
-            <h4 class="subtitulo-bloque">Femenino · VIP y baneos</h4>
-            <div id="vipCuposFemenino"></div>
-            <div id="baneosCuposFemenino"></div>
+        <div class="form-grid">
+            <div class="form-group"><label for="gestionCuposCategoria">Categoría</label><select id="gestionCuposCategoria" data-segmentado><option value="mixto">Mixto</option><option value="femenino">Femenino</option></select></div>
+            <div class="form-group"><label for="gestionCuposSeccion">Sección</label><select id="gestionCuposSeccion" data-segmentado><option value="cupos">Cupos</option><option value="vip">VIP</option><option value="baneos">Baneos</option></select></div>
         </div>
+        <section class="panel-suave" data-categoria-panel="mixto" aria-label="Administración de Dragon Fest mixto">
+            <div data-gestion-panel="cupos"><h3 class="subtitulo-bloque">Cupos · Mixto</h3><div id="cuposAdminMixto"></div></div>
+            <div data-gestion-panel="vip" hidden><h3 class="subtitulo-bloque">VIP · Mixto</h3><div id="vipCuposMixto"></div></div>
+            <div data-gestion-panel="baneos" hidden><h3 class="subtitulo-bloque">Baneos · Mixto</h3><div id="baneosCuposMixto"></div></div>
+        </section>
+        <section class="panel-suave" data-categoria-panel="femenino" aria-label="Administración de Dragon Fest femenino" hidden>
+            <div data-gestion-panel="cupos"><h3 class="subtitulo-bloque">Cupos · Femenino</h3><div id="cuposAdminFemenino"></div></div>
+            <div data-gestion-panel="vip" hidden><h3 class="subtitulo-bloque">VIP · Femenino</h3><div id="vipCuposFemenino"></div></div>
+            <div data-gestion-panel="baneos" hidden><h3 class="subtitulo-bloque">Baneos · Femenino</h3><div id="baneosCuposFemenino"></div></div>
+        </section>
+    </section>
+
+    <!-- Usuarios del portal (sql/31): el staff solo entra aquí; solo lo ven el admin del portal y el superadmin -->
+    <section id="usuariosPortal" class="tool-section">
+        <h2 class="section-title">Usuarios del portal</h2>
+        <div class="tool-container"><div id="usuariosPortalAdmin"></div></div>
     </section>
 
     <footer>
@@ -194,10 +203,12 @@
             });
         }
     </script>
-    <script src="script.js?v=20261012b"></script>
-    <script src="../portal-kit/guardado.js?v=20261012b"></script>
-    <script src="../portal-kit/cupos.js?v=20261012b"></script>
-    <script src="../portal-kit/cupos-control.js?v=20261012b"></script>
+    <script src="script.js?v=20261013e"></script>
+    <script src="../portal-kit/guardado.js?v=20261013e"></script>
+    <script src="../portal-kit/cupos.js?v=20261013e"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261013e"></script>
+    <script src="../portal-kit/usuarios-portal.js?v=20261013e"></script>
+    <script>window.addEventListener('pg:sesion', () => PumasUsuariosPortal.montar('usuariosPortalAdmin', 'dragonfest'), { once: true });</script>
     <script>
         // Botón "Cargar a la base de datos" (salas de logs + salas manuales, con nombres corregidos y equipos borrados fuera)
         PumasGuardado.montar({
@@ -220,12 +231,26 @@
         });
     </script>
     <script>window.addEventListener('pg:sesion', () => {
-        PumasCupos.montarAdmin('cuposAdminMixto', 'dragonfest');
-        PumasCupos.montarAdmin('cuposAdminFemenino', 'dragonfestfem');
-        PumasControl.montarVip('vipCuposMixto', 'dragonfest', { agregar: true });
-        PumasControl.montarBaneos('baneosCuposMixto', 'dragonfest');
-        PumasControl.montarVip('vipCuposFemenino', 'dragonfestfem', { agregar: true });
-        PumasControl.montarBaneos('baneosCuposFemenino', 'dragonfestfem');
+        const categoria = document.getElementById('gestionCuposCategoria');
+        const seccion = document.getElementById('gestionCuposSeccion');
+        const montadas = new Set();
+        const paneles = {
+            'mixto-cupos': () => PumasCupos.montarAdmin('cuposAdminMixto', 'dragonfest'),
+            'mixto-vip': () => PumasControl.montarVip('vipCuposMixto', 'dragonfest', { agregar: true }),
+            'mixto-baneos': () => PumasControl.montarBaneos('baneosCuposMixto', 'dragonfest'),
+            'femenino-cupos': () => PumasCupos.montarAdmin('cuposAdminFemenino', 'dragonfestfem'),
+            'femenino-vip': () => PumasControl.montarVip('vipCuposFemenino', 'dragonfestfem', { agregar: true }),
+            'femenino-baneos': () => PumasControl.montarBaneos('baneosCuposFemenino', 'dragonfestfem')
+        };
+        const actualizar = () => {
+            document.querySelectorAll('[data-categoria-panel]').forEach(panel => { panel.hidden = panel.dataset.categoriaPanel !== categoria.value; });
+            document.querySelectorAll('[data-gestion-panel]').forEach(panel => { panel.hidden = panel.dataset.gestionPanel !== seccion.value; });
+            const clave = categoria.value + '-' + seccion.value;
+            if (!montadas.has(clave)) { paneles[clave](); montadas.add(clave); }
+        };
+        categoria.addEventListener('change', actualizar);
+        seccion.addEventListener('change', actualizar);
+        actualizar();
     }, { once: true });</script>
 </body>
 </html>

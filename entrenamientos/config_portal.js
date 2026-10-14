@@ -27,7 +27,8 @@
         ['cargar', 'Cargar', 'fa-file-lines'], ['cargarStats', 'Cargar con estadísticas', 'fa-chart-simple'], ['generarCsv', 'Generar CSV', 'fa-file-csv'],
         ['resultadosOficiales', 'VIP · Oficiales', 'fa-shield-halved'], ['registrarVip', 'VIP · Registrar VIP', 'fa-user-plus'],
         ['borrarEntrenos', 'Borrar', 'fa-trash-can'], ['metricas', 'Métricas', 'fa-chart-pie'],
-        ['programar', 'Cupos · Programar', 'fa-calendar-plus'], ['cuposVip', 'Cupos · VIP', 'fa-crown'], ['baneados', 'Cupos · Baneados', 'fa-ban']
+        ['programar', 'Cupos · Programar', 'fa-calendar-plus'], ['cuposVip', 'Cupos · VIP', 'fa-crown'], ['baneados', 'Cupos · Baneados', 'fa-ban'],
+        ['caidas', 'Caídas', 'fa-parachute-box']
     ];
 
     const CSS = `

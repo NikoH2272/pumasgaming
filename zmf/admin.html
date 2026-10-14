@@ -17,12 +17,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261012b">
-    <link rel="stylesheet" href="style.css?v=20261012b">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261013e">
+    <link rel="stylesheet" href="style.css?v=20261013e">
     <link rel="icon" href="imagenes/zmf.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261012b" data-portal="zmf" data-modo="protegido"></script>
+    <script src="../portal-kit/portal.js?v=20261013e" data-portal="zmf" data-modo="protegido"></script>
 </head>
 <body data-tema="zmf">
 
@@ -38,6 +38,7 @@
             <ul>
                 <li><a href="#resultados" onclick="closeMenu()">Herramienta</a></li>
                 <li><a href="#gestionCupos" onclick="closeMenu()"><i class="fa-solid fa-ticket"></i> Cupos</a></li>
+                <li><a href="#usuariosPortal" onclick="closeMenu()"><i class="fa-solid fa-users-gear"></i> Usuarios</a></li>
                 <li><a href="./"><i class="fa-solid fa-trophy"></i> Portal mixto</a></li>
                 <li><a href="femenino.html"><i class="fa-solid fa-trophy"></i> Portal femenino</a></li>
                 <li data-pg-hub hidden><a href="/admin/"><i class="fa-solid fa-table-cells-large"></i> Portales</a></li>
@@ -114,18 +115,26 @@
 
     <section id="gestionCupos" class="tool-section">
         <h2 class="section-title">Cupos de ZMF</h2>
-        <div class="tool-container">
-            <h3 class="subtitulo-bloque">Mixto</h3>
-            <div id="cuposAdminMixto"></div>
-            <h4 class="subtitulo-bloque">Mixto · VIP y baneos</h4>
-            <div id="vipCuposMixto"></div>
-            <div id="baneosCuposMixto"></div>
-            <h3 class="subtitulo-bloque" style="margin-top:32px">Femenino</h3>
-            <div id="cuposAdminFemenino"></div>
-            <h4 class="subtitulo-bloque">Femenino · VIP y baneos</h4>
-            <div id="vipCuposFemenino"></div>
-            <div id="baneosCuposFemenino"></div>
+        <div class="form-grid">
+            <div class="form-group"><label for="gestionCuposCategoria">Categoría</label><select id="gestionCuposCategoria" data-segmentado><option value="mixto">Mixto</option><option value="femenino">Femenino</option></select></div>
+            <div class="form-group"><label for="gestionCuposSeccion">Sección</label><select id="gestionCuposSeccion" data-segmentado><option value="cupos">Cupos</option><option value="vip">VIP</option><option value="baneos">Baneos</option></select></div>
         </div>
+        <section class="panel-suave" data-categoria-panel="mixto" aria-label="Administración de ZMF mixto">
+            <div data-gestion-panel="cupos"><h3 class="subtitulo-bloque">Cupos · Mixto</h3><div id="cuposAdminMixto"></div></div>
+            <div data-gestion-panel="vip" hidden><h3 class="subtitulo-bloque">VIP · Mixto</h3><div id="vipCuposMixto"></div></div>
+            <div data-gestion-panel="baneos" hidden><h3 class="subtitulo-bloque">Baneos · Mixto</h3><div id="baneosCuposMixto"></div></div>
+        </section>
+        <section class="panel-suave" data-categoria-panel="femenino" aria-label="Administración de ZMF femenino" hidden>
+            <div data-gestion-panel="cupos"><h3 class="subtitulo-bloque">Cupos · Femenino</h3><div id="cuposAdminFemenino"></div></div>
+            <div data-gestion-panel="vip" hidden><h3 class="subtitulo-bloque">VIP · Femenino</h3><div id="vipCuposFemenino"></div></div>
+            <div data-gestion-panel="baneos" hidden><h3 class="subtitulo-bloque">Baneos · Femenino</h3><div id="baneosCuposFemenino"></div></div>
+        </section>
+    </section>
+
+    <!-- Usuarios del portal (sql/31): el staff solo entra aquí; solo lo ven el admin del portal y el superadmin -->
+    <section id="usuariosPortal" class="tool-section">
+        <h2 class="section-title">Usuarios del portal</h2>
+        <div class="tool-container"><div id="usuariosPortalAdmin"></div></div>
     </section>
 
     <footer>
@@ -152,10 +161,12 @@
             if (typeof _rFD !== 'undefined' && _rFD.length && document.getElementById('tablaCaptura')) procesarConNombresPersonalizados();
         }
     </script>
-    <script src="script.js?v=20261012b"></script>
-    <script src="../portal-kit/guardado.js?v=20261012b"></script>
-    <script src="../portal-kit/cupos.js?v=20261012b"></script>
-    <script src="../portal-kit/cupos-control.js?v=20261012b"></script>
+    <script src="script.js?v=20261013e"></script>
+    <script src="../portal-kit/guardado.js?v=20261013e"></script>
+    <script src="../portal-kit/cupos.js?v=20261013e"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261013e"></script>
+    <script src="../portal-kit/usuarios-portal.js?v=20261013e"></script>
+    <script>window.addEventListener('pg:sesion', () => PumasUsuariosPortal.montar('usuariosPortalAdmin', 'zmf'), { once: true });</script>
     <script>
         // Botón "Cargar a la base de datos" (usa los logs subidos y los nombres corregidos)
         PumasGuardado.montar({
@@ -178,12 +189,26 @@
         });
     </script>
     <script>window.addEventListener('pg:sesion', () => {
-        PumasCupos.montarAdmin('cuposAdminMixto', 'zmf');
-        PumasCupos.montarAdmin('cuposAdminFemenino', 'zmffem');
-        PumasControl.montarVip('vipCuposMixto', 'zmf', { agregar: true });
-        PumasControl.montarBaneos('baneosCuposMixto', 'zmf');
-        PumasControl.montarVip('vipCuposFemenino', 'zmffem', { agregar: true });
-        PumasControl.montarBaneos('baneosCuposFemenino', 'zmffem');
+        const categoria = document.getElementById('gestionCuposCategoria');
+        const seccion = document.getElementById('gestionCuposSeccion');
+        const montadas = new Set();
+        const paneles = {
+            'mixto-cupos': () => PumasCupos.montarAdmin('cuposAdminMixto', 'zmf'),
+            'mixto-vip': () => PumasControl.montarVip('vipCuposMixto', 'zmf', { agregar: true }),
+            'mixto-baneos': () => PumasControl.montarBaneos('baneosCuposMixto', 'zmf'),
+            'femenino-cupos': () => PumasCupos.montarAdmin('cuposAdminFemenino', 'zmffem'),
+            'femenino-vip': () => PumasControl.montarVip('vipCuposFemenino', 'zmffem', { agregar: true }),
+            'femenino-baneos': () => PumasControl.montarBaneos('baneosCuposFemenino', 'zmffem')
+        };
+        const actualizar = () => {
+            document.querySelectorAll('[data-categoria-panel]').forEach(panel => { panel.hidden = panel.dataset.categoriaPanel !== categoria.value; });
+            document.querySelectorAll('[data-gestion-panel]').forEach(panel => { panel.hidden = panel.dataset.gestionPanel !== seccion.value; });
+            const clave = categoria.value + '-' + seccion.value;
+            if (!montadas.has(clave)) { paneles[clave](); montadas.add(clave); }
+        };
+        categoria.addEventListener('change', actualizar);
+        seccion.addEventListener('change', actualizar);
+        actualizar();
     }, { once: true });</script>
 </body>
 </html>

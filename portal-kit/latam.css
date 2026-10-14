@@ -66,3 +66,13 @@
 @media (max-width: 1200px) { .dest-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 700px)  { .dest-grid { grid-template-columns: 1fr; } }
 @media (max-width: 700px)  { .latam-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Aire entre bloques (LATAM y portales de entrenos) */
+.ses-list, .latam-acciones, .res-lista { gap: 12px; }
+#latamTopEquipos, #latamTopKillers { gap: 12px; }
+
+/* Filas de entrenos en columnas angostas */
+.res-row { flex-wrap: wrap; }
+.res-row > div:first-child { flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; }
+.res-row .pg-ses-acc { flex: 0 0 auto; margin-left: auto; }
+.res-lista { overflow-x: hidden; }

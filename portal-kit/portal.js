@@ -255,7 +255,7 @@
         const m = String((error && (error.message || error.code)) || error || '');
         return /PGRST202|PGRST205|42883|42P01|Could not find the (function|table)|does not exist|schema cache/i.test(m);
     }
-    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/28).';
+    const AVISO_SQL = 'Falta correr el SQL nuevo en Supabase (sql/17 a sql/32).';
     async function rpcPublico(nombre, params) {
         const c = db();
         if (!c) throw new Error('No se pudo conectar con la base de datos.');
@@ -401,6 +401,17 @@
         quitar: (portal, cupo) => rpcAdmin('admin_cupo_quitar', { p_portal: portal, p_cupo: cupo }),
         tipo: (portal, id, tipo) => rpcAdmin('admin_cupo_tipo', { p_portal: portal, p_id: id, p_tipo: tipo }),
         vip: (portal, id, cierraEn) => rpcAdmin('admin_cupo_vip', { p_portal: portal, p_id: id, p_cierra_en: cierraEn ? new Date(cierraEn).toISOString() : null })
+    };
+
+    /* ---------------- Usuarios propios de cada portal (sql/31) ---------------- */
+    const usuariosPortal = {
+        listar: portal => rpcAdmin('portal_usuarios', { p_portal: portal }),
+        guardar: (portal, u) => rpcAdmin('portal_usuario_guardar', { p_portal: portal, p_usuario: u.usuario, p_nombre: u.nombre || null,
+            p_clave: u.clave || null, p_activo: u.activo !== false, p_tipo: u.tipo || 'staff' }),
+        borrar: (portal, usuario) => rpcAdmin('portal_usuario_borrar', { p_portal: portal, p_usuario: usuario }),
+        // Secciones del panel por usuario (sql/32)
+        misSecciones: portal => rpcAdmin('portal_mis_secciones', { p_portal: portal }),
+        secciones: (portal, usuario, lista) => rpcAdmin('portal_usuario_secciones', { p_portal: portal, p_usuario: usuario, p_secciones: lista })
     };
 
     /* ---------------- Entrenos Pumas como portal aparte (sql/28) ---------------- */
@@ -756,13 +767,115 @@ html.pg-verificando body{visibility:hidden}
         login, logout, validar, guard, puede, tiene, inicioDe, db, sesion: leerSesion,
         cargarEfecto, guardarEfecto, aplicarEfecto, usuarios, entrenos, respaldo, confirmar, escaparHtml,
         cargarModulos, olvidarModulos, datosPortal, modulos, aplicarColores, aplicarPersonalizacion, rgbDe, textoSobre,
-        sitio, sorteo, cupos, control, pumas, ascensos, baneados, ia, vip, stats, cargarKit, faltaSql
+        sitio, sorteo, cupos, control, pumas, usuariosPortal, ascensos, baneados, ia, vip, stats, cargarKit, faltaSql, segmentar
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
     else iniciar();
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montarCompartir);
     else montarCompartir();
+
+    // Menú: si los enlaces no caben en la barra (a cualquier ancho), pasa a menú de hamburguesa
+    function ajustarNav() {
+        const h = document.querySelector('.site-header');
+        const nav = h && h.querySelector('.main-nav'), btn = h && h.querySelector('.menu-toggle'), ul = nav && nav.querySelector('ul');
+        if (!ul || !btn) return;
+        if (window.innerWidth <= 760) { h.classList.remove('nav-compacta'); return; }   // el celular ya usa hamburguesa
+        const estaba = h.classList.contains('nav-compacta');
+        h.classList.remove('nav-compacta');
+        const logo = h.querySelector('.logo-container');
+        const cs = getComputedStyle(h);
+        const disponible = h.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - (logo ? logo.offsetWidth : 0) - 32
+            - [...h.children].filter(c => c !== nav && c !== logo && c !== btn && c.offsetParent).reduce((a, c) => a + c.offsetWidth, 0);
+        const compacta = ul.scrollWidth > disponible;
+        h.classList.toggle('nav-compacta', compacta);
+        if (!compacta || !estaba) nav.classList.remove('is-active');
+    }
+    function montarNav() {
+        const h = document.querySelector('.site-header'), nav = h && h.querySelector('.main-nav');
+        if (!nav) return;
+        let t = null;
+        const ajustar = () => { clearTimeout(t); t = setTimeout(ajustarNav, 60); };
+        ajustar();
+        window.addEventListener('resize', ajustar);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustar);
+        new MutationObserver(ajustar).observe(nav, { childList: true, subtree: true });   // usuario y enlaces que se agregan después
+        // En el menú compacto, tocar un enlace lo cierra
+        nav.addEventListener('click', e => { if (e.target.closest('a') && h.classList.contains('nav-compacta')) nav.classList.remove('is-active'); });
+    }
+
+    // <select data-segmentado> → pestañas (el select sigue mandando: mismos valores y mismo evento change)
+    function segmentar(raiz) {
+        (raiz || document).querySelectorAll('select[data-segmentado]:not([data-seg-listo])').forEach(sel => {
+            sel.dataset.segListo = '1';
+            const grupo = document.createElement('div');
+            grupo.className = 'segmentos';
+            grupo.setAttribute('role', 'tablist');
+            const etiqueta = sel.id && document.querySelector(`label[for="${sel.id}"]`);
+            if (etiqueta) grupo.setAttribute('aria-label', etiqueta.textContent.trim());
+            const marcar = () => grupo.querySelectorAll('button').forEach(b => {
+                const on = b.dataset.valor === sel.value;
+                b.classList.toggle('on', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            [...sel.options].forEach(o => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.setAttribute('role', 'tab');
+                b.dataset.valor = o.value;
+                b.textContent = o.textContent;
+                b.addEventListener('click', () => { if (sel.value === o.value) return; sel.value = o.value; sel.dispatchEvent(new Event('change', { bubbles: true })); marcar(); });
+                grupo.appendChild(b);
+            });
+            sel.addEventListener('change', marcar);
+            marcar();
+            sel.classList.add('seg-oculto');
+            sel.after(grupo);
+        });
+    }
+
+    // Paneles de los portales: cada enlace del menú (#seccion) muestra SOLO su sección, como pestañas,
+    // en vez de un scroll largo. La portada solo sale en la primera. Sirve para cualquier panel con
+    // enlaces #id a <section>; las herramientas que ya tienen pestañas propias no se tocan.
+    function montarSeccionesAdmin() {
+        if (!(MODO === 'protegido' || MODO === 'admin')) return;
+        if (document.getElementById('navAdmin') || document.querySelector('.asc-tabs')) return;
+        const nav = document.getElementById('mainNav');
+        if (!nav) return;
+        const enlaces = [...nav.querySelectorAll('a[href^="#"]')].filter(a => {
+            const t = document.getElementById(a.getAttribute('href').slice(1));
+            return t && t.tagName === 'SECTION';
+        });
+        if (enlaces.length < 2) return;
+        const secciones = [...new Set(enlaces.map(a => document.getElementById(a.getAttribute('href').slice(1))))];
+        const hero = document.querySelector('.portal-hero');
+        const visibles = () => secciones.filter(s => !s.hidden);
+        function mostrar(id, subir) {
+            const lista = visibles();
+            if (!lista.some(s => s.id === id)) id = lista.length ? lista[0].id : secciones[0].id;
+            secciones.forEach(s => s.classList.toggle('seccion-oculta', s.id !== id));
+            enlaces.forEach(a => { const on = a.getAttribute('href') === '#' + id; a.classList.toggle('activo', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+            if (hero) hero.classList.toggle('seccion-oculta', id !== (lista[0] || secciones[0]).id);
+            try { history.replaceState(null, '', '#' + id); } catch (e) { /* sin historial */ }
+            if (subir) window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.dispatchEvent(new CustomEvent('pg:seccion', { detail: { id } }));
+        }
+        enlaces.forEach(a => a.addEventListener('click', e => { e.preventDefault(); mostrar(a.getAttribute('href').slice(1), true); }));
+        mostrar(location.hash.slice(1), false);
+        window.PumasSecciones = { mostrar, secciones };
+        // Si a un usuario se le ocultan secciones (permisos) después de cargar, se vuelve a acomodar
+        new MutationObserver(() => { const act = secciones.find(s => !s.classList.contains('seccion-oculta')); if (!act || act.hidden) mostrar('', false); })
+            .observe(document.body, { attributes: true, subtree: true, attributeFilter: ['hidden'] });
+    }
+
+    // Animaciones (Motion): solo si el sistema no pide reducir movimiento
+    function montarAnimaciones() {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        cargarKit('vendor/motion.js').then(() => cargarKit('animaciones.js')).catch(() => { /* sin animaciones */ });
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { montarNav(); segmentar(); montarSeccionesAdmin(); montarAnimaciones(); });
+    else { montarNav(); segmentar(); montarSeccionesAdmin(); montarAnimaciones(); }
 
     // Créditos del creador en el pie de página (todas las páginas; las que no tienen pie, menos el login, reciben uno)
     const CREADOR = { usuario: '@coach.nikoh', url: 'https://www.instagram.com/coach.nikoh/' };

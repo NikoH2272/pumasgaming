@@ -17,7 +17,9 @@
     const esRolAza = r => !!r && Array.isArray(r.portales) && r.portales.length === 1 && r.portales[0] === 'ascensosaza';
     // Entrenos Pumas también es aparte: su staff (rol que solo ve 'entrenamientos') se maneja en su propia ventana
     const esRolPumas = r => !!r && Array.isArray(r.portales) && r.portales.length === 1 && r.portales[0] === 'entrenamientos';
-    const esRolAparte = r => esRolAza(r) || esRolPumas(r);
+    const esRolStaff = r => !!r && /^staff_/.test(r.id);
+    const esRolAparte = r => esRolAza(r) || esRolPumas(r) || esRolStaff(r);
+    let portalElegido = '';
     const nombreEvento = id => { const c = window.ASC_CATEGORIA && window.ASC_CATEGORIA(id); return c ? c.nombre : id; };
 
     async function arrancar() {
@@ -75,7 +77,8 @@
                 <td><input type="password" data-campo="clave" placeholder="Nueva clave (opcional)" autocomplete="new-password" aria-label="Nueva clave de ${esc(u.usuario)}"></td>
                 <td><button class="btn-mini" data-accion="guardar-usuario"><i class="fa-solid fa-floppy-disk"></i> Guardar</button></td>
             </tr>`;
-        const filasUsuarios = datos.usuarios.filter(u => !rolesAza.has(u.rol) && !rolesPumas.has(u.rol)).map(u => filaUsuario(u)).join('');
+        const rolesStaff = new Set(datos.roles.filter(esRolStaff).map(r => r.id));
+        const filasUsuarios = datos.usuarios.filter(u => !rolesAza.has(u.rol) && !rolesPumas.has(u.rol) && !rolesStaff.has(u.rol)).map(u => filaUsuario(u)).join('');
         // En la ventana de AZA: sus admins (los moderadores van en su propia tabla)
         const filasAdminsAza = usuariosAza.filter(u => u.rol !== 'moderador_aza').map(u => filaUsuario(u, true)).join('');
 
@@ -102,7 +105,8 @@
                     ${r.id !== 'superadmin' && !r.usuarios ? '<button class="btn-mini" data-accion="eliminar-rol"><i class="fa-solid fa-trash"></i> Borrar</button>' : ''}
                 </div>
             </article>`;
-        const tarjetasRoles = ordenados.filter(r => !rolesAza.has(r.id) && !rolesPumas.has(r.id)).map(tarjeta).join('');
+        const tarjetasRoles = ordenados.filter(r => !rolesAza.has(r.id) && !rolesPumas.has(r.id) && !rolesStaff.has(r.id)).map(tarjeta).join('');
+        const portalesLista = (datos.portales || []).filter(p => p.id !== 'principal');
         const tarjetasAza = ordenados.filter(r => rolesAza.has(r.id)).map(tarjeta).join('');
         const nMods = usuariosAza.filter(u => u.rol === 'moderador_aza').length;
 
@@ -113,6 +117,7 @@
             <button type="button" class="us-tab${vista === 'principal' ? ' on' : ''}" data-vista-btn="principal"><i class="fa-solid fa-users"></i> Panel principal</button>
             <button type="button" class="us-tab${vista === 'aza' ? ' on' : ''}" data-vista-btn="aza"><i class="fa-solid fa-wand-magic-sparkles"></i> Ascensos AZA · subusuarios <b>${usuariosAza.length}</b></button>
             <button type="button" class="us-tab${vista === 'pumas' ? ' on' : ''}" data-vista-btn="pumas"><i class="fa-solid fa-paw"></i> Entrenos Pumas · subusuarios <b>${nPumas}</b></button>
+            <button type="button" class="us-tab${vista === 'portales' ? ' on' : ''}" data-vista-btn="portales"><i class="fa-solid fa-sitemap"></i> Usuarios por portal</button>
         </div>
 
         <div data-vista="principal"${vista === 'principal' ? '' : ' hidden'}>
@@ -149,6 +154,15 @@
                 <div class="acciones"><button class="btn-mini" data-accion="guardar-rol"><i class="fa-solid fa-plus"></i> Crear rol</button></div>
             </article>
         </div>
+        </div>
+
+        <div data-vista="portales"${vista === 'portales' ? '' : ' hidden'}>
+            <p class="tool-desc">Elige un portal para ver sus usuarios, crear su <b>administrador</b> o su <b>staff</b>. El staff solo entra a ese portal; el admin del portal maneja a su staff desde su propio panel.</p>
+            <div class="form-group" style="max-width:420px;margin:0 auto 18px">
+                <label for="usPortal">Portal</label>
+                <select id="usPortal"><option value="">— Elige un portal —</option>${portalesLista.map(p => `<option value="${esc(p.id)}" ${p.id === portalElegido ? 'selected' : ''}>${esc(p.nombre)}</option>`).join('')}</select>
+            </div>
+            <div class="card-box" style="max-width:1180px;margin:0 auto"><div id="usPortalCaja"><p class="muted" style="text-align:center">Elige un portal.</p></div></div>
         </div>
 
         <div data-vista="pumas"${vista === 'pumas' ? '' : ' hidden'}>
@@ -201,6 +215,9 @@
             if (vista === 'pumas') montarPumas();
         }));
         if (vista === 'pumas') montarPumas();
+        const selPortal = raiz.querySelector('#usPortal');
+        selPortal.addEventListener('change', () => { portalElegido = selPortal.value; montarPortal(); });
+        if (portalElegido) montarPortal();
         raiz.querySelector('#formNuevoAza').addEventListener('submit', e => {
             e.preventDefault();
             const btn = e.target.querySelector('button');
@@ -271,6 +288,20 @@
             if (!confirm(`¿Borrar el rol "${id}"?`)) return;
             ejecutar(btn, () => P.usuarios.eliminarRol(id), `Rol ${id} borrado.`);
         }));
+    }
+
+    // Usuarios de un portal (sql/31). Pumas tiene además los módulos por usuario; AZA, sus moderadores.
+    function montarPortal() {
+        const caja = raiz.querySelector('#usPortalCaja');
+        if (!caja) return;
+        if (!portalElegido) { caja.innerHTML = '<p class="muted" style="text-align:center">Elige un portal.</p>'; return; }
+        const aviso = portalElegido === 'entrenamientos'
+            ? '<p class="muted" style="margin:0 0 12px"><i class="fa-solid fa-circle-info"></i> Los módulos que puede usar cada staff de Pumas se eligen en la pestaña <b>Entrenos Pumas · subusuarios</b>.</p>'
+            : portalElegido === 'ascensosaza'
+            ? '<p class="muted" style="margin:0 0 12px"><i class="fa-solid fa-circle-info"></i> Los moderadores de AZA (con sus eventos e IA) se manejan en la pestaña <b>Ascensos AZA · subusuarios</b>.</p>' : '';
+        caja.innerHTML = aviso + '<div id="usPortalUsuarios"><p class="muted" style="text-align:center">Cargando...</p></div>';
+        if (window.PumasUsuariosPortal) window.PumasUsuariosPortal.montar('usPortalUsuarios', portalElegido);
+        else caja.innerHTML = '<p class="muted" style="text-align:center">No se pudo cargar el módulo de usuarios por portal.</p>';
     }
 
     function montarPumas() {

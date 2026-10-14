@@ -17,12 +17,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Michroma&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261012b">
-    <link rel="stylesheet" href="style.css?v=20261012b">
+    <link rel="stylesheet" href="../portal-kit/portal.css?v=20261013e">
+    <link rel="stylesheet" href="style.css?v=20261013e">
     <link rel="icon" href="imagenes/rusheo.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261012b" data-portal="rusheo" data-modo="protegido"></script>
+    <script src="../portal-kit/portal.js?v=20261013e" data-portal="rusheo" data-modo="protegido"></script>
 </head>
 <body data-tema="rusheo">
 
@@ -38,6 +38,7 @@
             <ul>
                 <li><a href="#resultados" onclick="closeMenu()">Herramienta</a></li>
                 <li><a href="#gestionCupos" onclick="closeMenu()"><i class="fa-solid fa-ticket"></i> Cupos</a></li>
+                <li><a href="#usuariosPortal" onclick="closeMenu()"><i class="fa-solid fa-users-gear"></i> Usuarios</a></li>
                 <li><a href="./"><i class="fa-solid fa-trophy"></i> Ver portal</a></li>
                 <li data-pg-hub hidden><a href="/admin/"><i class="fa-solid fa-table-cells-large"></i> Portales</a></li>
                 <li><span class="pg-user"><i class="fa-solid fa-user-shield"></i> <span data-pg-usuario></span></span></li>
@@ -106,13 +107,22 @@
     <section id="gestionCupos" class="tool-section">
         <h2 class="section-title">Cupos de Rusheo</h2>
         <div class="tool-container">
-            <p class="tool-desc">Programa jornadas y administra las inscripciones de este portal.</p>
-            <div id="cuposAdmin"></div>
-            <h3 class="subtitulo-bloque" style="margin-top:30px">VIP · horarios y equipos autorizados</h3>
-            <div id="vipCuposAdmin"></div>
-            <h3 class="subtitulo-bloque" style="margin-top:30px">Baneos por equipo o teléfono</h3>
-            <div id="baneosCuposAdmin"></div>
+            <div class="form-group" style="max-width:460px">
+                <label for="gestionCuposSeccion">Sección</label>
+                <select id="gestionCuposSeccion" data-segmentado><option value="cupos">Cupos</option><option value="vip">VIP</option><option value="baneos">Baneos</option></select>
+            </div>
+            <section class="panel-suave">
+                <div data-gestion-panel="cupos"><h3 class="subtitulo-bloque">Cupos</h3><div id="cuposAdmin"></div></div>
+                <div data-gestion-panel="vip" hidden><h3 class="subtitulo-bloque">VIP</h3><div id="vipCuposAdmin"></div></div>
+                <div data-gestion-panel="baneos" hidden><h3 class="subtitulo-bloque">Baneos por equipo o teléfono</h3><div id="baneosCuposAdmin"></div></div>
+            </section>
         </div>
+    </section>
+
+    <!-- Usuarios del portal (sql/31): el staff solo entra aquí; solo lo ven el admin del portal y el superadmin -->
+    <section id="usuariosPortal" class="tool-section">
+        <h2 class="section-title">Usuarios del portal</h2>
+        <div class="tool-container"><div id="usuariosPortalAdmin"></div></div>
     </section>
 
     <footer>
@@ -123,10 +133,12 @@
         function toggleMenu() { document.getElementById('mainNav').classList.toggle('is-active'); }
         function closeMenu() { document.getElementById('mainNav').classList.remove('is-active'); }
     </script>
-    <script src="script.js?v=20261012b"></script>
-    <script src="../portal-kit/guardado.js?v=20261012b"></script>
-    <script src="../portal-kit/cupos.js?v=20261012b"></script>
-    <script src="../portal-kit/cupos-control.js?v=20261012b"></script>
+    <script src="script.js?v=20261013e"></script>
+    <script src="../portal-kit/guardado.js?v=20261013e"></script>
+    <script src="../portal-kit/cupos.js?v=20261013e"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261013e"></script>
+    <script src="../portal-kit/usuarios-portal.js?v=20261013e"></script>
+    <script>window.addEventListener('pg:sesion', () => PumasUsuariosPortal.montar('usuariosPortalAdmin', 'rusheo'), { once: true });</script>
     <script>
         // Botón "Cargar a la base de datos" (usa los logs subidos y los nombres corregidos)
         PumasGuardado.montar({
@@ -149,9 +161,19 @@
         });
     </script>
     <script>window.addEventListener('pg:sesion', () => {
-        PumasCupos.montarAdmin('cuposAdmin', 'rusheo');
-        PumasControl.montarVip('vipCuposAdmin', 'rusheo', { agregar: true });
-        PumasControl.montarBaneos('baneosCuposAdmin', 'rusheo');
+        const seccion = document.getElementById('gestionCuposSeccion');
+        const montadas = new Set();
+        const paneles = {
+            cupos: () => PumasCupos.montarAdmin('cuposAdmin', 'rusheo'),
+            vip: () => PumasControl.montarVip('vipCuposAdmin', 'rusheo', { agregar: true }),
+            baneos: () => PumasControl.montarBaneos('baneosCuposAdmin', 'rusheo')
+        };
+        const actualizar = () => {
+            document.querySelectorAll('[data-gestion-panel]').forEach(panel => { panel.hidden = panel.dataset.gestionPanel !== seccion.value; });
+            if (!montadas.has(seccion.value)) { paneles[seccion.value](); montadas.add(seccion.value); }
+        };
+        seccion.addEventListener('change', actualizar);
+        actualizar();
     }, { once: true });</script>
 </body>
 </html>

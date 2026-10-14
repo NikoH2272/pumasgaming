@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styleadmin.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261012b" data-portal="entrenamientos" data-modo="admin"></script>
+    <script src="../portal-kit/portal.js?v=20261013e" data-portal="entrenamientos" data-modo="admin"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
     <style>
@@ -117,6 +117,7 @@
                     <li><a href="#" onclick="cambiarPestanaAdmin('registrarVip')" id="navVipReg"><i class="fa-solid fa-user-plus"></i> Registrar VIP</a></li>
                 </ul>
             </li>
+            <li><a href="#" onclick="cambiarPestanaAdmin('caidas')" id="navCaidas" style="color: var(--secondary);"><i class="fa-solid fa-parachute-box"></i> Caídas</a></li>
             <li><a href="#" onclick="cambiarPestanaAdmin('borrarEntrenos')" id="navBorrar" style="color: var(--secondary);"><i class="fa-solid fa-trash-can"></i> Borrar</a></li>
             <li><a href="#" onclick="cambiarPestanaAdmin('metricas')" id="navMetricas" style="color: var(--secondary);"><i class="fa-solid fa-chart-pie"></i> Métricas</a></li>
             <li><a href="./" style="color: #fff;" target="_blank"><i class="fa-solid fa-list"></i> Público</a></li>
@@ -466,6 +467,12 @@
         </div>
     </section>
 
+    <!-- CAÍDAS: la caída de cada equipo por mapa (caidas.js) -->
+    <section id="seccionCaidas" class="tool-section" style="padding-top: 40px; display: none;">
+        <h2 class="section-title">Caídas por equipo</h2>
+        <div class="tool-container"><div id="caidasPumas"></div></div>
+    </section>
+
     <!-- CONFIGURACIÓN DEL PORTAL DE PUMAS (sql/28): secciones públicas y usuarios del staff -->
     <section id="seccionConfig" class="tool-section" style="padding-top: 40px; display: none;">
         <h2 class="section-title">Configuración de Entrenos Pumas</h2>
@@ -551,7 +558,8 @@
                 cargarEntrenamientosProgramadosAdmin('VIP');
             } },
             baneados:            { sec: 'seccionBaneados', nav: 'navBaneados', alAbrir: () => PumasControl.montarBaneos('baneadosAdmin', 'entrenamientos') },
-            config:              { sec: 'seccionConfig', nav: 'navConfig', alAbrir: () => PumasConfig.montar('configPumas') }
+            config:              { sec: 'seccionConfig', nav: 'navConfig', alAbrir: () => PumasConfig.montar('configPumas') },
+            caidas:              { sec: 'seccionCaidas', nav: 'navCaidas', alAbrir: () => PumasCaidas.montar('caidasPumas') }
         };
 
         function cerrarSubmenus(excepto) {
@@ -624,12 +632,13 @@
             cambiarPestanaAdmin('cargar');
         });
     </script>
-    <script src="../portal-kit/completos.js?v=20261012b"></script>
-    <script src="admin_logica.js?v=20261012b"></script>
-    <script src="completos_admin.js?v=20261012b"></script>
-    <script src="../portal-kit/generador-csv.js?v=20261012b"></script>
-    <script src="../portal-kit/cupos-control.js?v=20261012b"></script>
-    <script src="config_portal.js?v=20261012b"></script>
+    <script src="../portal-kit/completos.js?v=20261013e"></script>
+    <script src="admin_logica.js?v=20261013e"></script>
+    <script src="completos_admin.js?v=20261013e"></script>
+    <script src="../portal-kit/generador-csv.js?v=20261013e"></script>
+    <script src="../portal-kit/cupos-control.js?v=20261013e"></script>
+    <script src="config_portal.js?v=20261013e"></script>
+    <script src="caidas.js?v=20261013e"></script>
     <script>
         // Permisos por usuario (staff de Pumas): solo los módulos habilitados; Configuración solo para los admins
         window.addEventListener('pg:sesion', () => PumasConfig.aplicarPermisos(PESTANAS, cambiarPestanaAdmin), { once: true });
@@ -648,6 +657,6 @@
         window.alTerminarEntreno = () => abrirGenerarBaneo(false);
     </script>
     <script>PumasGenerador.montar('generadorCsv');</script>
-    <script src="vip_admin.js?v=20261012b"></script>
+    <script src="vip_admin.js?v=20261013e"></script>
 </body>
 </html>
