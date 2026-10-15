@@ -775,13 +775,25 @@ html.pg-verificando body{visibility:hidden}
 
     /* ---------------- Torneos aliados (sql/35) ---------------- */
     const torneos = {
-        publico:       (portal)                          => rpcPublico('torneos_publico',        { p_portal: portal }),
-        tabla:         (id)                              => rpcPublico('torneos_tabla',           { p_torneo_id: id }),
-        adminListar:   (portal)                          => rpcAdmin  ('torneos_admin_listar',    { p_portal: portal }),
-        adminGuardar:  (portal, d)                       => rpcAdmin  ('torneos_admin_guardar',   { p_portal: portal, p_id: d.id ?? null, p_nombre: d.nombre ?? null, p_juego: d.juego ?? 'free_fire', p_descripcion: d.descripcion ?? null, p_fecha_inicio: d.fechaInicio ?? null, p_fecha_fin: d.fechaFin ?? null, p_estado: d.estado ?? 'borrador', p_config: d.config ?? {}, p_colores: d.colores ?? {}, p_logo_url: d.logoUrl ?? null, p_banner_url: d.bannerUrl ?? null, p_publico: d.publico ?? false }),
-        adminBorrar:   (portal, id)                      => rpcAdmin  ('torneos_admin_borrar',    { p_portal: portal, p_id: id }),
-        adminResultado:(portal, torneoId, partidaId, r)  => rpcAdmin  ('torneos_admin_resultado', { p_portal: portal, p_torneo_id: torneoId, p_partida_id: partidaId, p_resultados: r }),
-        adminLog:      (portal, torneoId, d)             => rpcAdmin  ('torneos_admin_log',       { p_portal: portal, p_torneo_id: torneoId, p_partida_id: d.partidaId ?? null, p_nombre: d.nombre ?? null, p_contenido: d.contenido ?? null })
+        // Público
+        publico:             (portal)                         => rpcPublico('torneos_publico',              { p_portal: portal }),
+        tabla:               (id)                             => rpcPublico('torneos_tabla',                { p_torneo_id: id }),
+        // Admin — torneos
+        adminListar:         (portal)                         => rpcAdmin  ('torneos_admin_listar',         { p_portal: portal }),
+        adminGuardar:        (portal, d)                      => rpcAdmin  ('torneos_admin_guardar',        { p_portal: portal, p_id: d.id ?? null, p_nombre: d.nombre ?? null, p_juego: d.juego ?? 'free_fire', p_descripcion: d.descripcion ?? null, p_fecha_inicio: d.fechaInicio ?? null, p_fecha_fin: d.fechaFin ?? null, p_estado: d.estado ?? 'borrador', p_config: d.config ?? {}, p_colores: d.colores ?? {}, p_logo_url: d.logoUrl ?? null, p_banner_url: d.bannerUrl ?? null, p_publico: d.publico ?? false }),
+        adminBorrar:         (portal, id)                     => rpcAdmin  ('torneos_admin_borrar',         { p_portal: portal, p_id: id }),
+        adminResultado:      (portal, torneoId, partidaId, r) => rpcAdmin  ('torneos_admin_resultado',      { p_portal: portal, p_torneo_id: torneoId, p_partida_id: partidaId, p_resultados: r }),
+        adminLog:            (portal, torneoId, d)            => rpcAdmin  ('torneos_admin_log',            { p_portal: portal, p_torneo_id: torneoId, p_partida_id: d.partidaId ?? null, p_nombre: d.nombre ?? null, p_contenido: d.contenido ?? null }),
+        // Admin — equipos (sql/36)
+        adminEquipos:        (portal, torneoId)               => rpcAdmin  ('torneos_admin_equipos',        { p_portal: portal, p_torneo_id: torneoId }),
+        adminEquipoGuardar:  (portal, torneoId, d)            => rpcAdmin  ('torneos_admin_equipo_guardar', { p_portal: portal, p_torneo_id: torneoId, p_id: d.id ?? null, p_nombre: d.nombre ?? null, p_contacto: d.contacto ?? null, p_ig: d.ig ?? null, p_seed: d.seed ?? null, p_grupo: d.grupo ?? null, p_eliminado: d.eliminado ?? false, p_metadata: d.metadata ?? {} }),
+        adminEquipoBorrar:   (portal, id)                     => rpcAdmin  ('torneos_admin_equipo_borrar',  { p_portal: portal, p_id: id }),
+        // Admin — partidas (sql/36)
+        adminPartidas:       (portal, torneoId)               => rpcAdmin  ('torneos_admin_partidas',       { p_portal: portal, p_torneo_id: torneoId }),
+        adminPartidaGuardar: (portal, torneoId, d)            => rpcAdmin  ('torneos_admin_partida_guardar',{ p_portal: portal, p_torneo_id: torneoId, p_id: d.id ?? null, p_fase: d.fase ?? 'grupos', p_ronda: d.ronda ?? 1, p_sala: d.sala ?? null, p_estado: d.estado ?? 'pendiente', p_notas: d.notas ?? null }),
+        adminPartidaBorrar:  (portal, id)                     => rpcAdmin  ('torneos_admin_partida_borrar', { p_portal: portal, p_id: id }),
+        // Admin — logs (sql/36)
+        adminLogs:           (portal, torneoId)               => rpcAdmin  ('torneos_admin_logs',           { p_portal: portal, p_torneo_id: torneoId })
     };
 
     window.PumasPortal = {
