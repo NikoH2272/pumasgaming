@@ -1,17 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-C79JND219Y');
-</script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-C79JND219Y');</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Torneos · Pumas Gaming</title>
+<title>Pumas Corp · Esports Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
@@ -22,260 +16,780 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../portal-kit/portal.js?v=20261015" data-portal="torneos" data-modo="publico" data-sin-efecto></script>
 <style>
-/* ── TORNEOS HUB ───────────────────────────────────────────────── */
-.hub-hero {
-  background:
-    linear-gradient(180deg, rgba(var(--primary-rgb),.08) 0%, transparent 100%),
-    linear-gradient(145deg, var(--bg-b) 0%, var(--bg-a) 100%);
-  border-bottom: 1px solid var(--line);
-  padding: 3.5rem 1.5rem 2.8rem;
+/* ── PUMAS CORP ────────────────────────────────────────────────────── */
+:root {
+  --cp-gold:   #D8C395;
+  --cp-gold2:  #F4EEDC;
+  --cp-amber:  #B8A875;
+  --cp-dark:   #0A0A0A;
+  --cp-dark2:  #181818;
+  --cp-dark3:  #232323;
+  --cp-line:   rgba(216,195,149,.22);
+  --cp-text:   #F4EEDC;
+  --cp-gray:   #8A8070;
+  --cp-blue:   #B8A875;
+  --cp-teal:   #D8C395;
+  --cp-purple: #F4EEDC;
+}
+
+/* ── HERO ────────────────────────────────────────────────────────────*/
+.cp-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 5rem 1.5rem 4rem;
   text-align: center;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(216,195,149,.12) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 50% at 80% 80%, rgba(216,195,149,.07) 0%, transparent 55%),
+    linear-gradient(180deg, var(--cp-dark2) 0%, var(--cp-dark) 100%);
+  border-bottom: 1px solid var(--cp-line);
 }
-.hub-hero h1 {
+.cp-hero::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    repeating-linear-gradient(135deg, transparent 0 68px, rgba(216,195,149,.03) 69px, transparent 70px 140px);
+}
+.cp-hero-inner { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; }
+.cp-badge {
+  display: inline-block;
   font-family: 'Michroma', sans-serif;
-  font-size: clamp(1.6rem, 5vw, 2.6rem);
-  color: var(--primary);
-  margin: 0 0 .4rem;
-  letter-spacing: .05em;
+  font-size: .65rem; letter-spacing: .24em; text-transform: uppercase;
+  color: var(--cp-gold); border: 1px solid rgba(216,195,149,.38);
+  background: rgba(216,195,149,.08);
+  padding: .3rem .9rem; border-radius: 20px; margin-bottom: 1.2rem;
 }
-.hub-hero p { color: var(--gray); margin: 0; font-size: .9rem; }
+.cp-hero h1 {
+  font-family: 'Michroma', sans-serif;
+  font-size: clamp(2rem, 8vw, 3.8rem);
+  line-height: 1.1; margin: 0 0 .5rem;
+  color: var(--cp-text);
+}
+.cp-hero h1 span { color: var(--cp-gold); }
+.cp-hero p { color: var(--cp-gray); font-size: .95rem; margin: 0 0 2rem; letter-spacing: .06em; }
 
-/* filtros */
-.hub-filtros {
-  background: rgba(0,0,0,.35);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
-  display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center;
-  padding: .9rem 1rem;
-  position: sticky; top: 0; z-index: 30;
+/* Stats */
+.cp-stats {
+  display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;
 }
-.hub-filtros button {
-  background: rgba(var(--primary-rgb),.06); color: var(--gray);
-  border: 1.5px solid var(--line);
-  padding: .38rem 1rem; border-radius: 20px; cursor: pointer; font-size: .8rem; transition: all .15s;
+.cp-stat { text-align: center; }
+.cp-stat-n {
+  font-family: 'Michroma', sans-serif; font-size: 1.9rem; font-weight: 700;
+  color: var(--cp-gold); line-height: 1;
 }
-.hub-filtros button.activo,
-.hub-filtros button:hover { background: var(--primary); color: var(--on-primary); border-color: var(--primary); font-weight: 700; }
+.cp-stat-l { font-size: .72rem; color: var(--cp-gray); letter-spacing: .1em; text-transform: uppercase; margin-top: .25rem; }
+.cp-stat-sep { width: 1px; background: var(--cp-line); align-self: stretch; }
 
-/* sección */
-.hub-seccion { max-width: 1100px; margin: 0 auto; padding: 0 1rem 2.5rem; }
-.hub-seccion h2 {
-  font-family: 'Michroma', sans-serif; font-size: .8rem; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--t4); padding: 1.6rem 0 .8rem;
-  border-bottom: 1px solid var(--line); margin: 0 0 1rem;
+/* ── SECCIONES ───────────────────────────────────────────────────────*/
+.cp-section { max-width: 1160px; margin: 0 auto; padding: 2.8rem 1.2rem; }
+.cp-section + .cp-section { border-top: 1px solid var(--cp-line); }
+
+.cp-section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .8rem; margin-bottom: 1.4rem;
+}
+.cp-section-title {
+  font-family: 'Michroma', sans-serif;
+  font-size: .82rem; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--cp-text); display: flex; align-items: center; gap: .6rem;
+}
+.cp-section-title i { color: var(--cp-gold); }
+.cp-section-sub { font-size: .75rem; color: var(--cp-gray); }
+
+/* Dot live */
+.cp-live-dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  background: #ff4444;
+  box-shadow: 0 0 0 0 rgba(255,68,68,.5);
+  animation: pulse-live 1.6s ease infinite;
+}
+@keyframes pulse-live {
+  0%   { box-shadow: 0 0 0 0 rgba(255,68,68,.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(255,68,68,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,68,68,0); }
 }
 
-/* grid de cards */
-.hub-grid {
+/* ── CAROUSEL ────────────────────────────────────────────────────────*/
+.cp-carousel-nav { display: flex; gap: .4rem; }
+.cp-carousel-nav button {
+  background: rgba(216,195,149,.08); border: 1px solid var(--cp-line);
+  color: var(--cp-gray); width: 32px; height: 32px; border-radius: 8px;
+  cursor: pointer; font-size: .8rem; transition: all .15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.cp-carousel-nav button:hover { background: rgba(216,195,149,.2); color: var(--cp-gold); }
+
+.cp-carousel {
+  display: flex; gap: 1rem; overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; -ms-overflow-style: none;
+  padding-bottom: .5rem;
+}
+.cp-carousel::-webkit-scrollbar { display: none; }
+
+.cp-mini-card {
+  flex: 0 0 220px; scroll-snap-align: start;
+  background: linear-gradient(170deg, rgba(216,195,149,.05) 0%, rgba(0,0,0,.4) 100%), var(--cp-dark2);
+  border: 1px solid var(--cp-line);
+  border-radius: 12px; overflow: hidden;
+  text-decoration: none; color: inherit;
+  transition: border-color .15s, transform .15s;
+}
+.cp-mini-card:hover { border-color: var(--cp-gold); transform: translateY(-2px); }
+.cp-mini-banner {
+  height: 90px; overflow: hidden; position: relative;
+  background: linear-gradient(135deg, var(--cp-dark3), rgba(216,195,149,.1));
+  display: flex; align-items: center; justify-content: center;
+}
+.cp-mini-banner img { width: 100%; height: 100%; object-fit: cover; }
+.cp-mini-banner .no-img { font-size: 2rem; color: var(--cp-gold); opacity: .4; }
+.cp-mini-live-tag {
+  position: absolute; top: 7px; right: 7px;
+  background: rgba(255,68,68,.9); color: #fff;
+  font-size: .6rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  padding: .15rem .45rem; border-radius: 20px;
+}
+.cp-mini-body { padding: .8rem; }
+.cp-mini-nombre { font-weight: 700; font-size: .88rem; color: var(--cp-text); margin-bottom: .3rem;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cp-mini-meta { font-size: .72rem; color: var(--cp-gray); display: flex; gap: .5rem; align-items: center; }
+.cp-mini-meta i { color: var(--cp-amber); }
+
+/* ── CALENDAR ────────────────────────────────────────────────────────*/
+.cp-cal-wrap {
+  display: grid; grid-template-columns: 1fr 300px; gap: 1.2rem; align-items: start;
+}
+@media(max-width:720px) { .cp-cal-wrap { grid-template-columns: 1fr; } }
+
+.cp-calendar {
+  background: var(--cp-dark2); border: 1px solid var(--cp-line);
+  border-radius: 12px; overflow: hidden;
+}
+.cp-cal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .9rem 1.1rem; border-bottom: 1px solid var(--cp-line);
+}
+.cp-cal-title { font-family: 'Michroma', sans-serif; font-size: .8rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--cp-text); }
+.cp-cal-nav { display: flex; gap: .3rem; }
+.cp-cal-nav button {
+  background: rgba(216,195,149,.08); border: 1px solid var(--cp-line);
+  color: var(--cp-gray); width: 28px; height: 28px; border-radius: 6px;
+  cursor: pointer; font-size: .75rem; display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.cp-cal-nav button:hover { background: rgba(216,195,149,.2); color: var(--cp-gold); }
+.cp-cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 1px; background: var(--cp-line);
+}
+.cp-cal-day-head {
+  background: var(--cp-dark2); padding: .45rem 0; text-align: center;
+  font-size: .65rem; font-family: 'Michroma', sans-serif; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--cp-gray);
+}
+.cp-cal-day {
+  background: var(--cp-dark2); min-height: 44px; padding: .3rem .4rem;
+  font-size: .78rem; cursor: pointer; transition: background .1s; position: relative;
+}
+.cp-cal-day:hover { background: rgba(216,195,149,.08); }
+.cp-cal-day.otro-mes { color: rgba(138,128,112,.25); }
+.cp-cal-day.hoy { background: rgba(216,195,149,.08); }
+.cp-cal-day.hoy .cp-day-n { color: var(--cp-gold); font-weight: 700; }
+.cp-cal-day.seleccionado { background: rgba(216,195,149,.14); outline: 1px inset rgba(216,195,149,.4); }
+.cp-day-n { display: block; text-align: right; font-size: .8rem; }
+.cp-day-dots { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 3px; }
+.cp-day-dot { width: 5px; height: 5px; border-radius: 50%; }
+.cp-day-dot.en_curso      { background: #ff4444; }
+.cp-day-dot.inscripciones { background: var(--cp-gold); }
+.cp-day-dot.finalizado    { background: var(--cp-amber); }
+
+.cp-events-panel {
+  background: var(--cp-dark2); border: 1px solid var(--cp-line);
+  border-radius: 12px; padding: 1rem;
+}
+.cp-events-title {
+  font-family: 'Michroma', sans-serif; font-size: .72rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--cp-gray); margin-bottom: .8rem;
+}
+.cp-event-item {
+  display: flex; gap: .6rem; align-items: flex-start;
+  padding: .6rem 0; border-bottom: 1px solid rgba(216,195,149,.1);
+}
+.cp-event-item:last-child { border-bottom: none; }
+.cp-event-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+}
+.cp-event-info .cp-event-nombre { font-size: .83rem; font-weight: 600; color: var(--cp-text); }
+.cp-event-info .cp-event-meta   { font-size: .72rem; color: var(--cp-gray); margin-top: 2px; }
+.cp-events-empty { text-align: center; color: var(--cp-gray); font-size: .82rem; padding: 1rem 0; }
+
+/* ── GRIDS (inscripciones / premium) ─────────────────────────────────*/
+.cp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 1rem;
 }
-.hub-card {
-  background: linear-gradient(175deg, rgba(var(--primary-rgb),.06) 0%, rgba(0,0,0,.25) 100%), var(--bg-b);
-  border: 1px solid var(--line);
+.cp-card {
+  background: linear-gradient(170deg, rgba(216,195,149,.04) 0%, rgba(0,0,0,.35) 100%), var(--cp-dark2);
+  border: 1px solid var(--cp-line);
   border-radius: 12px; overflow: hidden;
   text-decoration: none; color: inherit;
   transition: transform .15s, border-color .15s, box-shadow .15s;
   display: flex; flex-direction: column;
 }
-.hub-card:hover {
+.cp-card:hover {
   transform: translateY(-3px);
-  border-color: var(--primary);
-  box-shadow: 0 6px 32px rgba(var(--primary-rgb),.18), 0 0 0 1px rgba(var(--primary-rgb),.12);
+  border-color: var(--cp-gold);
+  box-shadow: 0 6px 30px rgba(216,195,149,.12), 0 0 0 1px rgba(216,195,149,.08);
 }
-.hub-card-banner {
-  height: 110px;
-  background: linear-gradient(135deg, var(--bg-b) 0%, rgba(var(--primary-rgb),.12) 100%);
-  position: relative; overflow: hidden;
+.cp-card-banner {
+  height: 100px; position: relative; overflow: hidden;
+  background: linear-gradient(135deg, var(--cp-dark3) 0%, rgba(216,195,149,.08) 100%);
   display: flex; align-items: center; justify-content: center;
 }
-.hub-card-banner img { width: 100%; height: 100%; object-fit: cover; }
-.hub-card-banner .no-banner { font-size: 2.8rem; opacity: .35; color: var(--primary); }
-.hub-card-logo {
-  position: absolute; bottom: -18px; left: 14px;
-  width: 44px; height: 44px; border-radius: 50%;
-  border: 2.5px solid var(--bg-b); background: var(--bg-b); overflow: hidden;
+.cp-card-banner img { width: 100%; height: 100%; object-fit: cover; }
+.cp-card-banner .no-img { font-size: 2.5rem; color: var(--cp-gold); opacity: .3; }
+.cp-card-logo {
+  position: absolute; bottom: -16px; left: 12px;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 2px solid var(--cp-dark2); background: var(--cp-dark2); overflow: hidden;
   display: flex; align-items: center; justify-content: center;
 }
-.hub-card-logo img { width: 100%; height: 100%; object-fit: cover; }
-.hub-card-body { padding: 1.4rem .9rem .9rem; flex: 1; display: flex; flex-direction: column; gap: .35rem; }
-.hub-card-nombre { font-weight: 700; font-size: 1rem; line-height: 1.25; color: var(--light); }
-.hub-card-meta   { font-size: .75rem; color: var(--gray); display: flex; gap: .7rem; flex-wrap: wrap; }
-.hub-card-meta span { display: flex; align-items: center; gap: .3rem; }
-.hub-card-meta i { color: var(--t4); }
-.hub-card-estado {
-  display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .06em;
-  text-transform: uppercase; padding: .2rem .55rem; border-radius: 20px; margin-top: auto;
-  align-self: flex-start;
+.cp-card-logo img { width: 100%; height: 100%; object-fit: cover; }
+.cp-card-body { padding: 1.3rem .9rem .9rem; flex: 1; display: flex; flex-direction: column; gap: .3rem; }
+.cp-card-nombre { font-weight: 700; font-size: .95rem; color: var(--cp-text); }
+.cp-card-meta { font-size: .74rem; color: var(--cp-gray); display: flex; gap: .6rem; flex-wrap: wrap; }
+.cp-card-meta i { color: var(--cp-amber); }
+.cp-card-badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .67rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: .2rem .55rem; border-radius: 20px; margin-top: auto; align-self: flex-start;
 }
-.estado-en_curso     { background: rgba(36,214,165,.15); color: #24d6a5; border: 1px solid rgba(36,214,165,.4); }
-.estado-inscripciones{ background: rgba(255,198,89,.15); color: #ffc659; border: 1px solid rgba(255,198,89,.45); }
-.estado-finalizado   { background: rgba(0,132,133,.15);  color: #008485; border: 1px solid rgba(0,132,133,.35); }
-.estado-borrador     { background: rgba(0,34,85,.5);     color: var(--gray); border: 1px solid rgba(0,132,133,.2); }
+.badge-inscripciones { background: rgba(216,195,149,.12); color: var(--cp-gold); border: 1px solid rgba(216,195,149,.35); }
+.badge-en_curso      { background: rgba(255,68,68,.13); color: #ff6b6b; border: 1px solid rgba(255,68,68,.35); }
+.badge-premium       { background: rgba(244,238,220,.1); color: var(--cp-gold2); border: 1px solid rgba(244,238,220,.25); }
 
-/* vacío / carga */
-.hub-vacio { text-align: center; color: var(--gray); padding: 2.5rem 0; font-size: .88rem; }
-.hub-spinner { display: flex; align-items: center; justify-content: center; gap: .6rem; color: var(--t4); font-size: .85rem; padding: 2rem 0; }
-.hub-spinner i { animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* portal chip */
-.hub-portal-chip {
-  font-size: .68rem; color: var(--t4); background: rgba(0,132,133,.12);
-  border-radius: 20px; padding: .18rem .55rem; border: 1px solid rgba(0,132,133,.3);
+/* ── ACTIVIDADES ─────────────────────────────────────────────────────*/
+.cp-filter-row { display: flex; gap: .4rem; }
+.cp-filter-row button {
+  background: rgba(216,195,149,.06); color: var(--cp-gray);
+  border: 1.5px solid var(--cp-line);
+  padding: .3rem .85rem; border-radius: 20px; cursor: pointer;
+  font-size: .76rem; transition: all .15s;
 }
+.cp-filter-row button.activo,
+.cp-filter-row button:hover { background: var(--cp-gold); color: #0A0A0A; border-color: var(--cp-gold); font-weight: 700; }
+
+.cp-activities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+.cp-act-card {
+  background: var(--cp-dark2); border: 1px solid var(--cp-line);
+  border-radius: 12px; padding: 1.1rem; display: flex; flex-direction: column; gap: .6rem;
+  text-decoration: none; color: inherit;
+  transition: border-color .15s, transform .15s;
+}
+.cp-act-card:hover { border-color: var(--cp-gold); transform: translateY(-2px); }
+.cp-act-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+.cp-act-icon {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  background: rgba(216,195,149,.08); display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; color: var(--cp-amber);
+}
+.cp-act-icon.pago { background: rgba(216,195,149,.14); color: var(--cp-gold); }
+.cp-act-price {
+  font-size: .7rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
+  padding: .18rem .5rem; border-radius: 20px;
+}
+.cp-act-price.gratis { background: rgba(184,168,117,.12); color: var(--cp-amber); border: 1px solid rgba(184,168,117,.28); }
+.cp-act-price.pago   { background: rgba(216,195,149,.12); color: var(--cp-gold); border: 1px solid rgba(216,195,149,.32); }
+.cp-act-nombre { font-weight: 700; font-size: .9rem; color: var(--cp-text); }
+.cp-act-desc   { font-size: .78rem; color: var(--cp-gray); line-height: 1.5; }
+.cp-act-footer { display: flex; align-items: center; gap: .5rem; margin-top: auto; }
+.cp-act-juego  { font-size: .72rem; color: var(--cp-gray); display: flex; align-items: center; gap: .3rem; }
+.cp-act-link   {
+  margin-left: auto; font-size: .76rem; font-weight: 700;
+  color: var(--cp-amber); text-decoration: none; display: flex; align-items: center; gap: .3rem;
+  transition: color .15s;
+}
+.cp-act-link:hover { color: var(--cp-gold2); }
+
+/* ── CANALES ─────────────────────────────────────────────────────────*/
+.cp-channels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+.cp-channel-card {
+  background: var(--cp-dark2); border: 1px solid var(--cp-line);
+  border-radius: 12px; padding: 1.1rem;
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: .6rem;
+  text-decoration: none; color: inherit;
+  transition: border-color .15s, transform .15s, box-shadow .15s;
+}
+.cp-channel-card:hover { transform: translateY(-2px); border-color: var(--cp-gold); box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+.cp-channel-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+}
+.ch-discord   { background: rgba(88,101,242,.15); color: #7289DA; border: 1px solid rgba(88,101,242,.28); }
+.ch-whatsapp  { background: rgba(37,211,102,.12); color: #25D366; border: 1px solid rgba(37,211,102,.25); }
+.ch-telegram  { background: rgba(0,136,204,.12); color: #29B6F6; border: 1px solid rgba(0,136,204,.25); }
+.ch-instagram { background: rgba(240,60,128,.12); color: #E1306C; border: 1px solid rgba(240,60,128,.25); }
+.ch-tiktok    { background: rgba(216,195,149,.1); color: var(--cp-gold); border: 1px solid rgba(216,195,149,.25); }
+.ch-youtube   { background: rgba(255,0,0,.12); color: #FF5252; border: 1px solid rgba(255,0,0,.25); }
+.ch-general   { background: rgba(216,195,149,.08); color: var(--cp-amber); border: 1px solid rgba(216,195,149,.22); }
+.cp-channel-nombre { font-weight: 700; font-size: .88rem; color: var(--cp-text); }
+.cp-channel-desc   { font-size: .74rem; color: var(--cp-gray); }
+.cp-channel-card:hover .cp-channel-nombre { color: var(--cp-gold); }
+
+/* ── ESTADOS VACÍOS ──────────────────────────────────────────────────*/
+.cp-vacio {
+  grid-column: 1 / -1;
+  text-align: center; color: var(--cp-gray); padding: 2rem;
+  font-size: .85rem;
+}
+.cp-vacio i { font-size: 2rem; display: block; margin-bottom: .5rem; opacity: .35; }
+.cp-spinner { display: flex; align-items: center; justify-content: center; gap: .5rem;
+  color: var(--cp-gray); font-size: .85rem; padding: 2rem; }
+.cp-spinner i { animation: cp-spin 1s linear infinite; }
+@keyframes cp-spin { to { transform: rotate(360deg); } }
+
+/* ── BOTÓN VER MÁS ───────────────────────────────────────────────────*/
+.cp-ver-mas { display: flex; justify-content: center; margin-top: 1.2rem; }
+.cp-btn-link {
+  display: inline-flex; align-items: center; gap: .5rem;
+  border: 1.5px solid var(--cp-line); color: var(--cp-gray);
+  background: rgba(216,195,149,.05);
+  padding: .5rem 1.4rem; border-radius: 8px; font-size: .8rem;
+  text-decoration: none; font-weight: 600; transition: all .15s;
+}
+.cp-btn-link:hover { border-color: var(--cp-gold); color: var(--cp-gold); background: rgba(216,195,149,.07); }
 </style>
 </head>
-<body data-tema="torneos">
+<body data-tema="corp">
 
 <header class="site-header">
   <a class="logo-container" href="/">
     <img src="../imagenes/LOGO PUMAS WEB.png" alt="Logo" class="logo-img" onerror="this.onerror=null">
-    <div class="logo"><span class="t-a">TORNEOS</span><small>by PUMAS</small></div>
+    <div class="logo">
+      <span class="t-a">PUMAS</span> <span style="color:var(--cp-amber)">CORP</span>
+      <small>esports hub</small>
+    </div>
   </a>
   <button class="menu-toggle" aria-label="Abrir menú" onclick="toggleMenu()">
     <span class="bar"></span><span class="bar"></span><span class="bar"></span>
   </button>
   <nav class="main-nav" id="mainNav">
     <ul>
-      <li><a href="#en-curso"       onclick="closeMenu()">En curso</a></li>
-      <li><a href="#proximos"       onclick="closeMenu()">Próximos</a></li>
-      <li><a href="#finalizados"    onclick="closeMenu()">Finalizados</a></li>
-      <li><a href="/"               onclick="closeMenu()">Inicio</a></li>
+      <li><a href="#en-vivo"       onclick="closeMenu()">En Vivo</a></li>
+      <li><a href="#calendario"    onclick="closeMenu()">Calendario</a></li>
+      <li><a href="#inscripciones" onclick="closeMenu()">Inscripciones</a></li>
+      <li><a href="#actividades"   onclick="closeMenu()">Actividades</a></li>
+      <li><a href="#comunicacion"  onclick="closeMenu()">Comunidad</a></li>
+      <li><a href="/"              onclick="closeMenu()">Inicio</a></li>
     </ul>
   </nav>
 </header>
 
 <main>
-  <section class="hub-hero">
-    <h1><i class="fa-solid fa-trophy" style="font-size:.8em;margin-right:.4rem"></i>Torneos</h1>
-    <p>Todos los torneos aliados de la comunidad Pumas Gaming</p>
+
+  <!-- ── HERO ─────────────────────────────────────────────────────── -->
+  <section class="cp-hero">
+    <div class="cp-hero-inner">
+      <div class="cp-badge"><i class="fa-solid fa-bolt" style="margin-right:.4rem"></i>PUMAS CORP</div>
+      <h1>TU CENTRO<br><span>DE ESPORTS</span></h1>
+      <p>Torneos · Actividades · Comunidad · Competencias</p>
+      <div class="cp-stats" id="cp-stats">
+        <div class="cp-spinner"><i class="fa-solid fa-circle-notch"></i></div>
+      </div>
+    </div>
   </section>
 
-  <!-- Filtros -->
-  <div class="hub-filtros" id="filtros">
-    <button class="activo" data-filtro="todos" onclick="filtrar(this)">Todos</button>
-    <button data-filtro="en_curso"      onclick="filtrar(this)">En curso</button>
-    <button data-filtro="inscripciones" onclick="filtrar(this)">Inscripciones abiertas</button>
-    <button data-filtro="finalizado"    onclick="filtrar(this)">Finalizados</button>
-  </div>
-
-  <div class="hub-seccion">
-    <div id="hub-contenido">
-      <div class="hub-spinner"><i class="fa-solid fa-circle-notch"></i> Cargando torneos…</div>
+  <!-- ── TORNEOS EN VIVO ────────────────────────────────────────────── -->
+  <section class="cp-section" id="en-vivo">
+    <div class="cp-section-head">
+      <div class="cp-section-title">
+        <span class="cp-live-dot"></span> Torneos en vivo
+      </div>
+      <div class="cp-carousel-nav">
+        <button onclick="scrollCarousel(-1)" title="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+        <button onclick="scrollCarousel(1)"  title="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
     </div>
-  </div>
+    <div class="cp-carousel" id="cp-carousel">
+      <div class="cp-spinner"><i class="fa-solid fa-circle-notch"></i> Cargando…</div>
+    </div>
+  </section>
+
+  <!-- ── CALENDARIO ────────────────────────────────────────────────── -->
+  <section class="cp-section" id="calendario">
+    <div class="cp-section-head">
+      <div class="cp-section-title">
+        <i class="fa-regular fa-calendar-days"></i> Calendario de fechas
+      </div>
+    </div>
+    <div class="cp-cal-wrap">
+      <div class="cp-calendar">
+        <div class="cp-cal-header">
+          <span class="cp-cal-title" id="cal-titulo">—</span>
+          <div class="cp-cal-nav">
+            <button onclick="cambiarMes(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+            <button onclick="cambiarMes(1)"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+        <div class="cp-cal-grid" id="cal-grid"></div>
+      </div>
+      <div class="cp-events-panel">
+        <div class="cp-events-title" id="cal-events-titulo">Selecciona una fecha</div>
+        <div id="cal-events-lista"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── INSCRIPCIONES ──────────────────────────────────────────────── -->
+  <section class="cp-section" id="inscripciones">
+    <div class="cp-section-head">
+      <div class="cp-section-title">
+        <i class="fa-solid fa-user-plus"></i> Torneos abiertos para inscripción
+      </div>
+    </div>
+    <div class="cp-grid" id="cp-inscripciones">
+      <div class="cp-spinner"><i class="fa-solid fa-circle-notch"></i> Cargando…</div>
+    </div>
+    <div class="cp-ver-mas" id="insc-ver-mas" style="display:none">
+      <a href="#en-vivo" class="cp-btn-link">
+        <i class="fa-solid fa-trophy"></i> Ver torneos en vivo
+      </a>
+    </div>
+  </section>
+
+  <!-- ── TORNEOS PREMIUM ────────────────────────────────────────────── -->
+  <section class="cp-section" id="premium">
+    <div class="cp-section-head">
+      <div class="cp-section-title">
+        <i class="fa-solid fa-crown"></i> Torneos con inscripción de pago
+      </div>
+    </div>
+    <div class="cp-grid" id="cp-premium">
+      <div class="cp-spinner"><i class="fa-solid fa-circle-notch"></i> Cargando…</div>
+    </div>
+  </section>
+
+  <!-- ── ACTIVIDADES ────────────────────────────────────────────────── -->
+  <section class="cp-section" id="actividades">
+    <div class="cp-section-head">
+      <div class="cp-section-title">
+        <i class="fa-solid fa-bolt"></i> Actividades
+      </div>
+      <div class="cp-filter-row" id="act-filtros">
+        <button class="activo" onclick="filtrarActividades(this,'todas')">Todas</button>
+        <button onclick="filtrarActividades(this,'gratis')">Gratis</button>
+        <button onclick="filtrarActividades(this,'pago')">De pago</button>
+      </div>
+    </div>
+    <div class="cp-activities" id="cp-activities"></div>
+  </section>
+
+  <!-- ── COMUNICACIÓN ───────────────────────────────────────────────── -->
+  <section class="cp-section" id="comunicacion">
+    <div class="cp-section-head">
+      <div class="cp-section-title">
+        <i class="fa-solid fa-comments"></i> Comunícate con nosotros
+      </div>
+    </div>
+    <div class="cp-channels" id="cp-channels"></div>
+  </section>
+
 </main>
 
 <footer class="site-footer">
   <a href="https://pumasgaming.com">pumasgaming.com</a>
+  &nbsp;·&nbsp;
+  <a href="/">Inicio</a>
 </footer>
 
 <script>
 (function () {
   const P = window.PumasPortal;
+
+  const CORP_KEY_ACT = 'corp_actividades';
+  const CORP_KEY_CH  = 'corp_canales';
+
+  function leerStorage(key, def) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; }
+  }
+
+  const DEFAULT_ACTIVIDADES = [
+    { id:1, nombre:'Liga Semanal Free Fire', tipo:'gratis', descripcion:'Compite cada semana en las ligas abiertas de la comunidad Pumas.', juego:'Free Fire', icono:'gamepad', link:'#en-vivo' },
+    { id:2, nombre:'Entrenamiento VIP', tipo:'pago', precio:'$5.000 COP', descripcion:'Sesiones de coaching con jugadores experimentados para mejorar tu nivel.', juego:'Call of Duty', icono:'star', link:'#' },
+    { id:3, nombre:'Torneo Comunidad', tipo:'gratis', descripcion:'Torneos abiertos sin costo de inscripción para todos los miembros.', juego:'Todos', icono:'users', link:'#inscripciones' },
+    { id:4, nombre:'Copa Pumas Corp', tipo:'pago', precio:'$10.000 COP', descripcion:'Competencia premium con premios en efectivo y reconocimientos.', juego:'Free Fire', icono:'crown', link:'#' },
+    { id:5, nombre:'Clínica de Gameplay', tipo:'gratis', descripcion:'Revisión de partidas y consejos de mejora en transmisión en vivo.', juego:'Valorant', icono:'video', link:'#' },
+    { id:6, nombre:'Ruta de Ascenso', tipo:'pago', precio:'$8.000 COP', descripcion:'Programa estructurado para subir de rango con mentores certificados.', juego:'Free Fire', icono:'arrow-trend-up', link:'#' }
+  ];
+
+  const DEFAULT_CANALES = [
+    { id:1, nombre:'Discord Oficial', tipo:'discord', descripcion:'Servidor principal de la comunidad', link:'#' },
+    { id:2, nombre:'WhatsApp Free Fire', tipo:'whatsapp', descripcion:'Grupo oficial para jugadores de FF', link:'#' },
+    { id:3, nombre:'Instagram', tipo:'instagram', descripcion:'Noticias y resultados en tiempo real', link:'#' },
+    { id:4, nombre:'TikTok', tipo:'tiktok', descripcion:'Highlights y contenido de torneos', link:'#' },
+    { id:5, nombre:'Canal YouTube', tipo:'youtube', descripcion:'Transmisiones en vivo y replays', link:'#' },
+    { id:6, nombre:'Telegram Noticias', tipo:'telegram', descripcion:'Alertas de torneos y horarios', link:'#' }
+  ];
+
+  let ACTIVIDADES = leerStorage(CORP_KEY_ACT, DEFAULT_ACTIVIDADES);
+  let CANALES     = leerStorage(CORP_KEY_CH,  DEFAULT_CANALES);
+
+  const JUEGOS = { free_fire:'Free Fire', cod:'Call of Duty', valorant:'Valorant', fortnite:'Fortnite', minecraft:'Minecraft' };
   let TODOS = [];
-  let filtroActivo = 'todos';
-
-  const ESTADOS = {
-    en_curso:      { label: 'En curso',           cls: 'estado-en_curso' },
-    inscripciones: { label: 'Inscripciones',       cls: 'estado-inscripciones' },
-    finalizado:    { label: 'Finalizado',          cls: 'estado-finalizado' },
-    borrador:      { label: 'Borrador',            cls: 'estado-borrador' }
-  };
-
-  const JUEGOS = {
-    free_fire:    'Free Fire',
-    cod:          'Call of Duty',
-    valorant:     'Valorant',
-    fortnite:     'Fortnite',
-    minecraft:    'Minecraft'
-  };
 
   function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
-
-  function fmtFecha(iso) {
+  function fmtFecha(iso, opts) {
     if (!iso) return null;
-    const d = new Date(iso);
-    return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('es', opts || { day:'2-digit', month:'short', year:'numeric' });
   }
 
-  function renderCard(t) {
-    const estado = ESTADOS[t.estado] || { label: t.estado, cls: 'estado-borrador' };
-    const juego  = JUEGOS[t.juego] || t.juego || '';
-    const fi     = fmtFecha(t.fecha_inicio);
-    const ff     = fmtFecha(t.fecha_fin);
-    const fechaTxt = fi && ff ? `${fi} – ${ff}` : fi ? `Desde ${fi}` : ff ? `Hasta ${ff}` : null;
-    const portalNombre = P.PORTALES[t.portal] ? P.PORTALES[t.portal].nombre : (t.portal || '');
+  async function cargar() {
+    try {
+      const data = await P.torneos.publico(null);
+      TODOS = Array.isArray(data) ? data.filter(t => t.publico !== false && t.estado !== 'borrador') : [];
+    } catch { TODOS = []; }
+    renderStats(); renderCarousel(); renderInscripciones();
+    renderPremium(); renderCalendar(); renderActividades('todas'); renderCanales();
+  }
 
-    // colores custom del torneo
-    const c = t.colores || {};
-    const estilo = c.primary ? `style="--primary:${c.primary};--primary-rgb:${hexRgb(c.primary)};--bg-b:${c.bg||'var(--bg-b)'}"` : '';
+  function renderStats() {
+    const enVivo   = TODOS.filter(t => t.estado === 'en_curso').length;
+    const inscr    = TODOS.filter(t => t.estado === 'inscripciones').length;
+    const proximos = TODOS.filter(t => t.fecha_inicio && new Date(t.fecha_inicio) > new Date())
+                         .sort((a,b) => new Date(a.fecha_inicio)-new Date(b.fecha_inicio));
+    const prox = proximos.length ? fmtFecha(proximos[0].fecha_inicio, {day:'2-digit', month:'short'}) : '—';
+    document.getElementById('cp-stats').innerHTML = `
+      <div class="cp-stat"><div class="cp-stat-n">${enVivo}</div><div class="cp-stat-l">En vivo</div></div>
+      <div class="cp-stat-sep"></div>
+      <div class="cp-stat"><div class="cp-stat-n">${inscr}</div><div class="cp-stat-l">Inscripciones</div></div>
+      <div class="cp-stat-sep"></div>
+      <div class="cp-stat"><div class="cp-stat-n">${prox}</div><div class="cp-stat-l">Próxima fecha</div></div>
+      <div class="cp-stat-sep"></div>
+      <div class="cp-stat"><div class="cp-stat-n">${TODOS.length}</div><div class="cp-stat-l">Total torneos</div></div>`;
+  }
 
-    return `<a href="ver.html?id=${t.id}" class="hub-card" ${estilo}>
-      <div class="hub-card-banner">
-        ${t.banner_url ? `<img src="${esc(t.banner_url)}" alt="">` : `<i class="fa-solid fa-trophy no-banner"></i>`}
-        ${t.logo_url   ? `<div class="hub-card-logo"><img src="${esc(t.logo_url)}" alt=""></div>` : ''}
-      </div>
-      <div class="hub-card-body">
-        <div class="hub-card-nombre">${esc(t.nombre)}</div>
-        <div class="hub-card-meta">
-          ${juego ? `<span><i class="fa-solid fa-gamepad"></i>${esc(juego)}</span>` : ''}
-          ${fechaTxt ? `<span><i class="fa-regular fa-calendar"></i>${esc(fechaTxt)}</span>` : ''}
-          ${portalNombre ? `<span class="hub-portal-chip">${esc(portalNombre)}</span>` : ''}
+  function renderCarousel() {
+    const wrap  = document.getElementById('cp-carousel');
+    const lista = TODOS.filter(t => t.estado === 'en_curso');
+    if (!lista.length) {
+      wrap.innerHTML = '<div class="cp-vacio"><i class="fa-solid fa-ghost"></i>No hay torneos en vivo ahora mismo.</div>';
+      return;
+    }
+    wrap.innerHTML = lista.map(t => {
+      const juego = JUEGOS[t.juego] || t.juego || '';
+      return `<a href="ver.html?id=${t.id}" class="cp-mini-card">
+        <div class="cp-mini-banner">
+          ${t.banner_url ? `<img src="${esc(t.banner_url)}" alt="">` : `<i class="fa-solid fa-trophy no-img"></i>`}
+          <span class="cp-mini-live-tag">EN VIVO</span>
         </div>
-        ${t.descripcion ? `<div style="font-size:.78rem;color:var(--gray);margin-top:.15rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${esc(t.descripcion)}</div>` : ''}
-        <span class="hub-card-estado ${estado.cls}">${estado.label}</span>
+        <div class="cp-mini-body">
+          <div class="cp-mini-nombre">${esc(t.nombre)}</div>
+          <div class="cp-mini-meta"><i class="fa-solid fa-gamepad"></i>${esc(juego)}</div>
+        </div>
+      </a>`;
+    }).join('');
+  }
+
+  window.scrollCarousel = function(dir) {
+    document.getElementById('cp-carousel').scrollBy({ left: dir * 240, behavior: 'smooth' });
+  };
+
+  function renderInscripciones() {
+    const wrap  = document.getElementById('cp-inscripciones');
+    const lista = TODOS.filter(t => t.estado === 'inscripciones');
+    if (!lista.length) {
+      wrap.innerHTML = '<div class="cp-vacio"><i class="fa-solid fa-user-plus"></i>No hay torneos con inscripciones abiertas.</div>';
+      return;
+    }
+    wrap.innerHTML = lista.slice(0,6).map(renderCard).join('');
+    if (lista.length > 0) document.getElementById('insc-ver-mas').style.display = 'flex';
+  }
+
+  function renderPremium() {
+    const wrap  = document.getElementById('cp-premium');
+    const lista = TODOS.filter(t => t.config?.pago || t.config?.precio);
+    if (!lista.length) {
+      wrap.innerHTML = '<div class="cp-vacio"><i class="fa-solid fa-crown"></i>No hay torneos premium en este momento.</div>';
+      return;
+    }
+    wrap.innerHTML = lista.slice(0,6).map(t => renderCard(t, 'premium')).join('');
+  }
+
+  function renderCard(t, tipo) {
+    const juego = JUEGOS[t.juego] || t.juego || '';
+    const fi    = fmtFecha(t.fecha_inicio);
+    const badge = tipo === 'premium'
+      ? `<span class="cp-card-badge badge-premium"><i class="fa-solid fa-crown"></i> Premium${t.config?.precio?' · '+esc(t.config.precio):''}</span>`
+      : `<span class="cp-card-badge badge-inscripciones"><i class="fa-solid fa-circle-dot"></i> Inscripciones abiertas</span>`;
+    return `<a href="ver.html?id=${t.id}" class="cp-card">
+      <div class="cp-card-banner">
+        ${t.banner_url ? `<img src="${esc(t.banner_url)}" alt="">` : `<i class="fa-solid fa-trophy no-img"></i>`}
+        ${t.logo_url   ? `<div class="cp-card-logo"><img src="${esc(t.logo_url)}" alt=""></div>` : ''}
+      </div>
+      <div class="cp-card-body">
+        <div class="cp-card-nombre">${esc(t.nombre)}</div>
+        <div class="cp-card-meta">
+          ${juego ? `<span><i class="fa-solid fa-gamepad"></i>${esc(juego)}</span>` : ''}
+          ${fi    ? `<span><i class="fa-regular fa-calendar"></i>${esc(fi)}</span>` : ''}
+        </div>
+        ${t.descripcion ? `<div style="font-size:.77rem;color:var(--cp-gray);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${esc(t.descripcion)}</div>` : ''}
+        ${badge}
       </div>
     </a>`;
   }
 
-  function hexRgb(hex) {
-    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-    return isNaN(r) ? '255,198,89' : `${r},${g},${b}`;
+  /* ─── Calendario ── */
+  let calYear, calMonth, calFechaSeleccionada = null;
+
+  function renderCalendar() {
+    const hoy = new Date();
+    calYear  = calYear  ?? hoy.getFullYear();
+    calMonth = calMonth ?? hoy.getMonth();
+    dibujarCal();
+    seleccionarDia(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
   }
 
-  function renderSecciones(lista) {
-    const ORDER = ['en_curso','inscripciones','finalizado','borrador'];
-    const TITULOS = {
-      en_curso:      '🔴 En curso',
-      inscripciones: '🟡 Inscripciones abiertas',
-      finalizado:    '✅ Finalizados',
-      borrador:      'Borradores'
-    };
-    let html = '';
-    ORDER.forEach(estado => {
-      const sub = lista.filter(t => t.estado === estado);
-      if (!sub.length) return;
-      html += `<h2 id="${estado}">${TITULOS[estado]}</h2>
-               <div class="hub-grid">${sub.map(renderCard).join('')}</div>`;
+  function dibujarCal() {
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const dias  = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+    document.getElementById('cal-titulo').textContent = `${meses[calMonth]} ${calYear}`;
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = dias.map(d => `<div class="cp-cal-day-head">${d}</div>`).join('');
+
+    const primero   = new Date(calYear, calMonth, 1);
+    const ultimo    = new Date(calYear, calMonth+1, 0);
+    const inicioSem = (primero.getDay() + 6) % 7;
+    const hoy       = new Date();
+
+    const eventosDelMes = {};
+    TODOS.forEach(t => {
+      [t.fecha_inicio, t.fecha_fin].filter(Boolean).forEach(iso => {
+        const f = new Date(iso);
+        if (f.getFullYear() === calYear && f.getMonth() === calMonth) {
+          const k = f.getDate();
+          if (!eventosDelMes[k]) eventosDelMes[k] = [];
+          eventosDelMes[k].push(t);
+        }
+      });
     });
-    if (!html) html = `<div class="hub-vacio"><i class="fa-solid fa-ghost" style="font-size:2rem;display:block;margin-bottom:.6rem"></i>No hay torneos disponibles aún.</div>`;
-    document.getElementById('hub-contenido').innerHTML = html;
-  }
 
-  function filtrar(btn) {
-    document.querySelectorAll('.hub-filtros button').forEach(b => b.classList.remove('activo'));
-    btn.classList.add('activo');
-    filtroActivo = btn.dataset.filtro;
-    const lista = filtroActivo === 'todos' ? TODOS : TODOS.filter(t => t.estado === filtroActivo);
-    renderSecciones(lista);
-  }
-  window.filtrar = filtrar;
-
-  async function cargar() {
-    try {
-      // Cargamos torneos de todos los portales (p_portal = null devuelve todos)
-      const data = await P.torneos.publico(null);
-      TODOS = Array.isArray(data) ? data : [];
-      renderSecciones(TODOS);
-    } catch(e) {
-      document.getElementById('hub-contenido').innerHTML =
-        `<div class="hub-vacio"><i class="fa-solid fa-triangle-exclamation"></i> No se pudo cargar la lista de torneos.</div>`;
+    for (let i = 0; i < inicioSem; i++) {
+      const d = new Date(calYear, calMonth, 1 - (inicioSem - i));
+      grid.innerHTML += `<div class="cp-cal-day otro-mes"><span class="cp-day-n">${d.getDate()}</span></div>`;
     }
+    for (let d = 1; d <= ultimo.getDate(); d++) {
+      const esHoy = d === hoy.getDate() && calMonth === hoy.getMonth() && calYear === hoy.getFullYear();
+      const esSel = calFechaSeleccionada && d === calFechaSeleccionada.d && calMonth === calFechaSeleccionada.m && calYear === calFechaSeleccionada.y;
+      const dots  = (eventosDelMes[d]||[]).slice(0,3).map(t => `<span class="cp-day-dot ${t.estado||''}"></span>`).join('');
+      grid.innerHTML += `<div class="cp-cal-day${esHoy?' hoy':''}${esSel?' seleccionado':''}" onclick="seleccionarDia(${calYear},${calMonth},${d})">
+        <span class="cp-day-n">${d}</span>${dots?`<div class="cp-day-dots">${dots}</div>`:''}
+      </div>`;
+    }
+    const restantes = (7 - ((inicioSem + ultimo.getDate()) % 7)) % 7;
+    for (let i = 1; i <= restantes; i++)
+      grid.innerHTML += `<div class="cp-cal-day otro-mes"><span class="cp-day-n">${i}</span></div>`;
+  }
+
+  window.cambiarMes = function(dir) {
+    calMonth += dir;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    calFechaSeleccionada = null;
+    dibujarCal();
+    document.getElementById('cal-events-titulo').textContent = 'Selecciona una fecha';
+    document.getElementById('cal-events-lista').innerHTML = '';
+  };
+
+  window.seleccionarDia = function(y, m, d) {
+    calFechaSeleccionada = { y, m, d };
+    dibujarCal();
+    const fecha = new Date(y, m, d);
+    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('cal-events-titulo').textContent = `${d} de ${meses[m]} de ${y}`;
+    const eventos = TODOS.filter(t => {
+      const fi = t.fecha_inicio ? new Date(t.fecha_inicio) : null;
+      const ff = t.fecha_fin    ? new Date(t.fecha_fin)    : null;
+      if (!fi && !ff) return false;
+      const fiD = fi ? new Date(fi.getFullYear(), fi.getMonth(), fi.getDate()) : null;
+      const ffD = ff ? new Date(ff.getFullYear(), ff.getMonth(), ff.getDate()) : null;
+      if (fiD && ffD) return fecha >= fiD && fecha <= ffD;
+      if (fiD) return fecha.getTime() === fiD.getTime();
+      if (ffD) return fecha.getTime() === ffD.getTime();
+      return false;
+    });
+    const lista = document.getElementById('cal-events-lista');
+    if (!eventos.length) { lista.innerHTML = '<div class="cp-events-empty">Sin eventos en esta fecha</div>'; return; }
+    const COLORS = { en_curso:'#ff4444', inscripciones:'#D8C395', finalizado:'#B8A875', borrador:'#8A8070' };
+    lista.innerHTML = eventos.map(t => `
+      <div class="cp-event-item">
+        <span class="cp-event-dot" style="background:${COLORS[t.estado]||'#8A8070'}"></span>
+        <div class="cp-event-info">
+          <div class="cp-event-nombre">${esc(t.nombre)}</div>
+          <div class="cp-event-meta">${JUEGOS[t.juego]||t.juego||''}${t.fecha_inicio?' · Desde '+fmtFecha(t.fecha_inicio,{day:'2-digit',month:'short'}):''}</div>
+        </div>
+      </div>`).join('');
+  };
+
+  /* ─── Actividades ── */
+  window.filtrarActividades = function(btn, filtro) {
+    document.querySelectorAll('#act-filtros button').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+    renderActividades(filtro);
+  };
+
+  function renderActividades(filtro) {
+    const lista = filtro === 'todas' ? ACTIVIDADES : ACTIVIDADES.filter(a => a.tipo === filtro);
+    const wrap  = document.getElementById('cp-activities');
+    if (!lista.length) { wrap.innerHTML = '<div class="cp-vacio"><i class="fa-solid fa-bolt"></i>No hay actividades en esta categoría.</div>'; return; }
+    const ICONS = { gamepad:'fa-solid fa-gamepad', star:'fa-solid fa-star', users:'fa-solid fa-users',
+      crown:'fa-solid fa-crown', video:'fa-solid fa-video', 'arrow-trend-up':'fa-solid fa-arrow-trend-up',
+      trophy:'fa-solid fa-trophy', bolt:'fa-solid fa-bolt' };
+    wrap.innerHTML = lista.map(a => `
+      <a href="${esc(a.link||'#')}" class="cp-act-card">
+        <div class="cp-act-top">
+          <div class="cp-act-icon ${a.tipo}"><i class="${ICONS[a.icono]||'fa-solid fa-bolt'}"></i></div>
+          <span class="cp-act-price ${a.tipo}">${a.tipo==='gratis'?'Gratis':esc(a.precio||'De pago')}</span>
+        </div>
+        <div class="cp-act-nombre">${esc(a.nombre)}</div>
+        <div class="cp-act-desc">${esc(a.descripcion||'')}</div>
+        <div class="cp-act-footer">
+          ${a.juego?`<span class="cp-act-juego"><i class="fa-solid fa-gamepad"></i>${esc(a.juego)}</span>`:''}
+          <span class="cp-act-link">Ver más <i class="fa-solid fa-arrow-right"></i></span>
+        </div>
+      </a>`).join('');
+  }
+
+  /* ─── Canales ── */
+  function renderCanales() {
+    const TIPO = {
+      discord:   { cls:'ch-discord',   icon:'fa-brands fa-discord' },
+      whatsapp:  { cls:'ch-whatsapp',  icon:'fa-brands fa-whatsapp' },
+      telegram:  { cls:'ch-telegram',  icon:'fa-brands fa-telegram' },
+      instagram: { cls:'ch-instagram', icon:'fa-brands fa-instagram' },
+      tiktok:    { cls:'ch-tiktok',    icon:'fa-brands fa-tiktok' },
+      youtube:   { cls:'ch-youtube',   icon:'fa-brands fa-youtube' },
+    };
+    document.getElementById('cp-channels').innerHTML = CANALES.map(c => {
+      const t = TIPO[c.tipo] || { cls:'ch-general', icon:'fa-solid fa-comments' };
+      return `<a href="${esc(c.link||'#')}" class="cp-channel-card" ${c.link&&c.link!=='#'?'target="_blank" rel="noopener"':''}>
+        <div class="cp-channel-icon ${t.cls}"><i class="${t.icon}"></i></div>
+        <div class="cp-channel-nombre">${esc(c.nombre)}</div>
+        <div class="cp-channel-desc">${esc(c.descripcion||'')}</div>
+      </a>`;
+    }).join('');
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', cargar);
