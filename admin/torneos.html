@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="pg-verificando">
+<html lang="es">
 <head>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-C79JND219Y');</script>
@@ -17,12 +17,12 @@
 :root {
   --tz-gold: #ffc659; --tz-gold2: #ebe070;
   --tz-blue: #003772; --tz-teal: #008485; --tz-green: #24d6a5;
-  --tz-bg:   #010e1e; --tz-bg2:  #002255; --tz-bg3: #002a60;
+  --tz-bg:   #011a3a; --tz-bg2:  #002255; --tz-bg3: #002a60;
   --tz-line: rgba(0,132,133,.4);
   --tz-text: #d6eaff; --tz-gray: #5a84ad;
 }
 *{box-sizing:border-box}
-body{background:var(--tz-bg);color:var(--tz-text);font-family:'Segoe UI',sans-serif;font-size:.9rem;margin:0}
+body{background:var(--tz-bg);color:var(--tz-text);font-family:'Segoe UI',sans-serif;font-size:.9rem;margin:0;visibility:visible!important}
 
 /* ── Layout ── */
 .tz-wrap{max-width:1200px;margin:0 auto;padding:0 1rem 3rem}
@@ -84,8 +84,8 @@ body{background:var(--tz-bg);color:var(--tz-text);font-family:'Segoe UI',sans-se
 
 /* ── Botones ── */
 .tz-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.1rem;border-radius:7px;font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .15s;border:1.5px solid transparent}
-.tz-btn-pri{background:var(--tz-gold);color:var(--tz-bg);border-color:var(--tz-gold)}
-.tz-btn-pri:hover{opacity:.88}
+.tz-btn-pri{background:linear-gradient(135deg,#008485,#24d6a5);color:#011a3a;border-color:#24d6a5;font-weight:700}
+.tz-btn-pri:hover{filter:brightness(1.1)}
 .tz-btn-sec{background:rgba(0,132,133,.15);color:var(--tz-teal);border-color:var(--tz-teal)}
 .tz-btn-sec:hover{background:rgba(0,132,133,.3)}
 .tz-btn-red{background:rgba(255,77,77,.12);color:#ff7070;border-color:rgba(255,77,77,.35)}
@@ -301,9 +301,26 @@ body{background:var(--tz-bg);color:var(--tz-text);font-family:'Segoe UI',sans-se
               <span style="font-size:.85rem">Visible al público</span>
             </div>
 
+            <!-- Preview en vivo -->
+            <div style="margin-top:.6rem">
+              <div style="font-family:'Michroma',sans-serif;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tz-teal);margin-bottom:.6rem">
+                <i class="fa-solid fa-eye" style="margin-right:.3rem"></i>Vista previa de la card
+              </div>
+              <div id="card-preview" style="max-width:300px;border-radius:12px;overflow:hidden;border:1.5px solid var(--tz-line)">
+                <div id="prev-banner" style="height:90px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#003772,#008485)">
+                  <i class="fa-solid fa-trophy" style="font-size:2rem;color:#ffc659;opacity:.5"></i>
+                </div>
+                <div id="prev-body" style="padding:12px;background:#002a60">
+                  <div id="prev-nombre" style="font-weight:700;font-size:.92rem;color:#d6eaff;margin-bottom:4px">Nombre del torneo</div>
+                  <div style="font-size:.72rem;color:#5a84ad;margin-bottom:8px" id="prev-meta">Free Fire</div>
+                  <span id="prev-estado" style="font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.15rem .5rem;border-radius:20px;background:rgba(0,42,96,.5);color:#5a84ad;border:1px solid rgba(0,132,133,.2)">Borrador</span>
+                </div>
+              </div>
+            </div>
+
             <div class="tz-btn-row">
               <button type="submit" class="tz-btn tz-btn-pri"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
-              <a id="trn-link-publico" href="#" target="_blank" class="tz-btn tz-btn-sec" style="display:none"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ver público</a>
+              <a id="trn-link-publico" href="#" target="_blank" class="tz-btn tz-btn-sec" style="display:none"><i class="fa-solid fa-arrow-up-right-from-square"></i> Ver en la página pública</a>
             </div>
             <div class="tz-status" id="status-info"></div>
           </form>
@@ -476,10 +493,10 @@ body{background:var(--tz-bg);color:var(--tz-text);font-family:'Segoe UI',sans-se
   async function mostrarApp(ses) {
     // Construir lista de portales accesibles
     const todos = Object.entries(P.PORTALES);
-    const esSuper = P.tiene('super');
+    const esSuper = P.tiene(ses, 'super');
     const portalesAccesibles = esSuper
       ? todos.filter(([k]) => k !== 'torneos') // super ve todos menos el hub
-      : todos.filter(([k]) => P.puede('portal:' + k) && k !== 'torneos');
+      : todos.filter(([k]) => P.puede(ses, 'portal:' + k) && k !== 'torneos');
 
     if (!portalesAccesibles.length) {
       document.getElementById('login-status').textContent = 'No tienes portales asignados.';
@@ -566,25 +583,74 @@ body{background:var(--tz-bg);color:var(--tz-text);font-family:'Segoe UI',sans-se
     setColor('bg',      c.bg      || '#003772');
     const link = document.getElementById('trn-link-publico');
     link.href = `/torneos/ver.html?id=${t.id}`;
-    link.style.display = t.publico ? '' : 'none';
+    link.style.display = '';  // siempre visible para poder previsualizar
     document.getElementById('status-info').className = 'tz-status';
+    actualizarPreview();
   }
 
   function setColor(key, val) {
     document.getElementById(`trn-color-${key}`).value = val;
     document.getElementById(`trn-color-${key}-hex`).value = val;
+    actualizarPreview();
   }
 
-  // Sincronizar color picker ↔ input texto
+  // Sincronizar color picker ↔ input texto ↔ preview
   ['primary','accent','bg'].forEach(k => {
     document.getElementById(`trn-color-${k}`).addEventListener('input', e => {
       document.getElementById(`trn-color-${k}-hex`).value = e.target.value;
+      actualizarPreview();
     });
     document.getElementById(`trn-color-${k}-hex`).addEventListener('input', e => {
-      if (/^#[0-9a-fA-F]{6}$/.test(e.target.value))
+      if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
         document.getElementById(`trn-color-${k}`).value = e.target.value;
+        actualizarPreview();
+      }
     });
   });
+
+  // Actualizar preview cuando cambia nombre, juego o estado
+  ['trn-nombre','trn-juego','trn-estado'].forEach(id => {
+    document.getElementById(id).addEventListener('input', actualizarPreview);
+    document.getElementById(id).addEventListener('change', actualizarPreview);
+  });
+
+  function actualizarPreview() {
+    const primary = document.getElementById('trn-color-primary-hex').value || '#ffc659';
+    const bg      = document.getElementById('trn-color-bg-hex').value      || '#003772';
+    const nombre  = document.getElementById('trn-nombre').value            || 'Nombre del torneo';
+    const juego   = document.getElementById('trn-juego').value             || 'free_fire';
+    const estado  = document.getElementById('trn-estado').value            || 'borrador';
+    const JUEGOS  = { free_fire:'Free Fire', cod:'Call of Duty', valorant:'Valorant', fortnite:'Fortnite', minecraft:'Minecraft' };
+    const ESTADO_CSS = {
+      en_curso:      'background:rgba(36,214,165,.18);color:#24d6a5;border:1px solid rgba(36,214,165,.4)',
+      inscripciones: 'background:rgba(255,198,89,.18);color:#ffc659;border:1px solid rgba(255,198,89,.4)',
+      finalizado:    'background:rgba(0,132,133,.15);color:#008485;border:1px solid rgba(0,132,133,.4)',
+      borrador:      'background:rgba(0,42,96,.5);color:#5a84ad;border:1px solid rgba(0,132,133,.2)'
+    };
+    const ESTADO_L = { en_curso:'En curso', inscripciones:'Inscripciones', finalizado:'Finalizado', borrador:'Borrador' };
+    const banner   = document.getElementById('trn-banner-url').value;
+    const prevBan  = document.getElementById('prev-banner');
+    if (banner) {
+      prevBan.style.backgroundImage = `url(${banner})`;
+      prevBan.style.backgroundSize  = 'cover';
+      prevBan.style.backgroundPosition = 'center';
+      prevBan.innerHTML = '';
+    } else {
+      prevBan.style.backgroundImage = '';
+      prevBan.style.background = `linear-gradient(135deg, ${bg}, #008485)`;
+      prevBan.innerHTML = `<i class="fa-solid fa-trophy" style="font-size:2rem;color:${primary};opacity:.6"></i>`;
+    }
+    document.getElementById('prev-body').style.background   = bg;
+    document.getElementById('prev-nombre').style.color      = primary;
+    document.getElementById('prev-nombre').textContent      = nombre;
+    document.getElementById('prev-meta').textContent        = JUEGOS[juego] || juego;
+    const chip = document.getElementById('prev-estado');
+    chip.textContent = ESTADO_L[estado] || estado;
+    chip.style.cssText = `font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.15rem .5rem;border-radius:20px;${ESTADO_CSS[estado]||ESTADO_CSS.borrador}`;
+  }
+
+  // Activar preview con cambio de banner URL
+  document.getElementById('trn-banner-url').addEventListener('input', actualizarPreview);
 
   /* ─── Guardar torneo ─────────────────────────────────────── */
   window.guardarTorneo = async function(e) {
@@ -661,6 +727,7 @@ body{background:var(--tz-bg);color:var(--tz-text);font-family:'Segoe UI',sans-se
     setColor('primary','#ffc659'); setColor('accent','#24d6a5'); setColor('bg','#003772');
     document.getElementById('trn-link-publico').style.display = 'none';
     document.getElementById('status-info').className = 'tz-status';
+    actualizarPreview();
   };
 
   /* ─── Equipos ────────────────────────────────────────────── */

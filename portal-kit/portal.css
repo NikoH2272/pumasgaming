@@ -70,15 +70,33 @@ body[data-tema="dragonfestfem"] {  /* Femenino: rosa */
   --light: #FFF0F7; --gray: #C7A3B5;
   --bg-a: #0D0308; --bg-b: #1F0A16;
 }
-body[data-tema="torneos"] {  /* Hub de torneos: navy + dorado + teal */
-  --primary: #ffc659; --primary-rgb: 255, 198, 89;
-  --accent: #24d6a5;  --accent-rgb: 36, 214, 165;
-  --on-primary: #011225;
-  --light: #d6eaff; --gray: #5a84ad;
-  --bg-a: #010e1e; --bg-b: #002255;
-  --line: rgba(0,132,133,.45);
-  --t1: #ffc659; --t2: #ebe070; --t3: #003772; --t4: #008485; --t5: #24d6a5;
+body[data-tema="torneos"] {  /* Hub de torneos: negro profundo + dorado */
+  --primary: #D8C395; --primary-rgb: 216,195,149;
+  --accent: #F4EEDC;  --accent-rgb: 244,238,220;
+  --on-primary: #0A0A0A;
+  --light: #F4EEDC; --gray: #8A8070;
+  --bg-a: #0A0A0A; --bg-b: #1F1F1F;
+  --line: rgba(216,195,149,.25);
+  --t1: #D8C395; --t2: #F4EEDC; --t3: #2A2A2A; --t4: #B8A875; --t5: #F4EEDC;
 }
+body[data-tema="torneos"] .site-header { background: rgba(10,10,10,.96); border-bottom: 1px solid rgba(216,195,149,.2); }
+body[data-tema="torneos"] .site-footer { background: #1F1F1F; border-top: 1px solid rgba(216,195,149,.18); color: #8A8070; }
+body[data-tema="torneos"] .site-footer a { color: #8A8070; }
+body[data-tema="torneos"] .site-footer a:hover { color: #D8C395; }
+
+body[data-tema="corp"] {  /* Pumas Corp: negro profundo + dorado cálido */
+  --primary: #D8C395; --primary-rgb: 216,195,149;
+  --accent: #F4EEDC;  --accent-rgb: 244,238,220;
+  --on-primary: #0A0A0A;
+  --light: #F4EEDC; --gray: #8A8070;
+  --bg-a: #0A0A0A; --bg-b: #181818;
+  --line: rgba(216,195,149,.22);
+  --t1: #D8C395; --t2: #F4EEDC; --t3: #252525; --t4: #B8A875; --t5: #F4EEDC;
+}
+body[data-tema="corp"] .site-header { background: rgba(10,10,10,.96); border-bottom: 1px solid rgba(216,195,149,.18); }
+body[data-tema="corp"] .site-footer { background: #181818; border-top: 1px solid rgba(216,195,149,.15); color: #8A8070; }
+body[data-tema="corp"] .site-footer a { color: #8A8070; }
+body[data-tema="corp"] .site-footer a:hover { color: #D8C395; }
 
 * { box-sizing: border-box; }
 html.pg-verificando body { visibility: hidden; }
