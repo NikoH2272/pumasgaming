@@ -70,13 +70,13 @@ body[data-tema="dragonfestfem"] {  /* Femenino: rosa */
   --light: #FFF0F7; --gray: #C7A3B5;
   --bg-a: #0D0308; --bg-b: #1F0A16;
 }
-body[data-tema="torneos"] {  /* Hub de torneos: azul navy + dorado */
+body[data-tema="torneos"] {  /* Hub de torneos: navy + dorado + teal */
   --primary: #ffc659; --primary-rgb: 255, 198, 89;
   --accent: #24d6a5;  --accent-rgb: 36, 214, 165;
-  --on-primary: #05101e;
-  --light: #d8eaf0; --gray: #7090a0;
-  --bg-a: #03080f; --bg-b: #001a3a;
-  --line: rgba(255,198,89,.25);
+  --on-primary: #011225;
+  --light: #d6eaff; --gray: #5a84ad;
+  --bg-a: #010e1e; --bg-b: #002255;
+  --line: rgba(0,132,133,.45);
   --t1: #ffc659; --t2: #ebe070; --t3: #003772; --t4: #008485; --t5: #24d6a5;
 }
 
