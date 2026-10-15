@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-C79JND219Y');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Torneo · Pumas Gaming</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="../portal-kit/latam.css?v=20261015">
+<link rel="stylesheet" href="../portal-kit/portal.css?v=20261015">
+<link rel="icon" href="../imagenes/LOGO PUMAS WEB.png" id="page-icon">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../portal-kit/portal.js?v=20261015" data-portal="torneos" data-modo="publico"></script>
+<style>
+/* ── TORNEO INDIVIDUAL ────────────────────────────────────────── */
+.trn-hero {
+  position: relative; overflow: hidden;
+  min-height: 200px; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding: 0 1.5rem 1.8rem;
+  background: linear-gradient(160deg, var(--bg-b) 0%, #000 100%);
+}
+.trn-hero-banner {
+  position: absolute; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+  filter: brightness(.35) saturate(1.2);
+}
+.trn-hero-content { position: relative; z-index: 1; text-align: center; width: 100%; max-width: 750px; }
+.trn-logo {
+  width: 70px; height: 70px; border-radius: 50%;
+  border: 3px solid var(--primary); overflow: hidden;
+  background: var(--bg-a); margin: 0 auto .8rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.trn-logo img { width: 100%; height: 100%; object-fit: cover; }
+.trn-logo-ico { font-size: 2rem; color: var(--primary); opacity: .6; }
+.trn-titulo { font-family: 'Michroma', sans-serif; font-size: clamp(1.3rem,5vw,2rem); color: var(--primary); margin: 0 0 .35rem; }
+.trn-sub { color: var(--gray); font-size: .82rem; display: flex; gap: .9rem; justify-content: center; flex-wrap: wrap; margin: 0; }
+.trn-sub span { display: flex; align-items: center; gap: .3rem; }
+.trn-estado {
+  display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; padding: .25rem .65rem; border-radius: 20px; margin-top: .6rem;
+}
+.estado-en_curso     { background: rgba(36,214,165,.18); color: #24d6a5; border: 1px solid rgba(36,214,165,.4); }
+.estado-inscripciones{ background: rgba(255,198,89,.18);  color: #ffc659; border: 1px solid rgba(255,198,89,.4); }
+.estado-finalizado   { background: rgba(120,120,130,.12); color: #888;    border: 1px solid rgba(120,120,130,.3); }
+.estado-borrador     { background: rgba(0,0,0,.3);        color: #666;    border: 1px solid rgba(120,120,130,.2); }
+
+/* tabs */
+.trn-tabs { display: flex; border-bottom: 2px solid rgba(255,255,255,.09); background: var(--bg-b); position: sticky; top: 0; z-index: 20; }
+.trn-tab  { flex: 1; padding: .85rem .5rem; text-align: center; font-size: .82rem; font-weight: 600; cursor: pointer; color: var(--gray); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: color .15s, border-color .15s; }
+.trn-tab:hover  { color: var(--light, #e8e0d0); }
+.trn-tab.activa { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* paneles */
+.trn-panel { display: none; max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+.trn-panel.activo { display: block; }
+
+/* tabla de posiciones */
+.trn-tabla { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.trn-tabla thead th { text-align: left; padding: .5rem .6rem; color: var(--gray); font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,.1); }
+.trn-tabla tbody tr { border-bottom: 1px solid rgba(255,255,255,.05); transition: background .12s; }
+.trn-tabla tbody tr:hover { background: rgba(255,255,255,.04); }
+.trn-tabla td { padding: .6rem .6rem; vertical-align: middle; }
+.trn-rank { font-family: 'Michroma', sans-serif; font-size: .8rem; color: var(--gray); width: 2rem; text-align: center; }
+.trn-rank.top1 { color: #FFD700; }
+.trn-rank.top2 { color: #C0C0C0; }
+.trn-rank.top3 { color: #CD7F32; }
+.trn-nombre { font-weight: 700; color: var(--light, #e8e0d0); }
+.trn-ig     { font-size: .75rem; color: var(--gray); }
+.trn-pts    { font-family: 'Michroma', sans-serif; color: var(--primary); font-size: .95rem; font-weight: 700; text-align: right; }
+.trn-kills  { color: var(--accent, #24d6a5); text-align: right; font-size: .88rem; }
+
+/* resultados por ronda */
+.trn-ronda-titulo {
+  font-family: 'Michroma', sans-serif; font-size: .78rem; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--gray); padding: 1.2rem 0 .5rem;
+  border-bottom: 1px solid rgba(255,255,255,.08); margin: 0 0 .6rem;
+}
+.trn-partida-card {
+  background: var(--bg-b); border: 1.5px solid rgba(255,255,255,.08);
+  border-radius: 10px; padding: .9rem 1rem; margin-bottom: .8rem;
+}
+.trn-partida-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .6rem; font-size: .78rem; color: var(--gray); }
+.trn-res-tabla { width: 100%; font-size: .8rem; border-collapse: collapse; }
+.trn-res-tabla th { text-align: left; color: var(--gray); font-size: .69rem; letter-spacing: .06em; text-transform: uppercase; padding: .25rem .4rem; border-bottom: 1px solid rgba(255,255,255,.07); }
+.trn-res-tabla td { padding: .35rem .4rem; border-bottom: 1px solid rgba(255,255,255,.04); }
+.trn-res-tabla .pos1  { color: #FFD700; font-weight: 700; }
+.trn-res-tabla .pos2  { color: #C0C0C0; }
+.trn-res-tabla .pos3  { color: #CD7F32; }
+
+/* equipos */
+.trn-equipo-card {
+  display: flex; align-items: center; gap: .8rem;
+  background: var(--bg-b); border: 1.5px solid rgba(255,255,255,.08);
+  border-radius: 10px; padding: .75rem 1rem; margin-bottom: .5rem;
+}
+.trn-equipo-seed { font-family: 'Michroma', sans-serif; font-size: .75rem; color: var(--gray); min-width: 1.5rem; }
+.trn-equipo-nombre { font-weight: 700; font-size: .9rem; color: var(--light, #e8e0d0); }
+.trn-equipo-ig     { font-size: .75rem; color: var(--gray); }
+.trn-eliminado     { opacity: .4; text-decoration: line-through; }
+
+/* descripción */
+.trn-desc { color: var(--gray); line-height: 1.7; font-size: .88rem; white-space: pre-wrap; }
+
+/* back link */
+.trn-back { display: inline-flex; align-items: center; gap: .4rem; color: var(--gray); font-size: .8rem; text-decoration: none; padding: .8rem 1rem; transition: color .15s; }
+.trn-back:hover { color: var(--primary); }
+
+/* vacío / carga */
+.trn-vacio   { text-align: center; color: var(--gray); padding: 2.5rem 0; font-size: .88rem; }
+.trn-spinner { display: flex; align-items: center; justify-content: center; gap: .6rem; color: var(--gray); font-size: .85rem; padding: 3rem 0; }
+.trn-spinner i { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body data-tema="torneos">
+
+<header class="site-header">
+  <a class="logo-container" href="/">
+    <img src="../imagenes/LOGO PUMAS WEB.png" alt="Logo" class="logo-img" id="header-logo" onerror="this.onerror=null">
+    <div class="logo"><span class="t-a" id="header-nombre">TORNEO</span><small>by PUMAS</small></div>
+  </a>
+  <button class="menu-toggle" aria-label="Abrir menú" onclick="toggleMenu()">
+    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+  </button>
+  <nav class="main-nav" id="mainNav">
+    <ul>
+      <li><a href="#tabla"      onclick="abrirTab('tabla');closeMenu()">Tabla</a></li>
+      <li><a href="#resultados" onclick="abrirTab('resultados');closeMenu()">Resultados</a></li>
+      <li><a href="#equipos"    onclick="abrirTab('equipos');closeMenu()">Equipos</a></li>
+      <li><a href="./index.html" onclick="closeMenu()">Todos los torneos</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="main-cargando">
+  <div class="trn-spinner"><i class="fa-solid fa-circle-notch"></i> Cargando torneo…</div>
+</main>
+
+<main id="main-contenido" style="display:none">
+  <!-- HERO -->
+  <section class="trn-hero" id="trn-hero">
+    <div class="trn-hero-banner" id="trn-banner"></div>
+    <div class="trn-hero-content">
+      <div class="trn-logo" id="trn-logo"><i class="fa-solid fa-trophy trn-logo-ico"></i></div>
+      <h1 class="trn-titulo" id="trn-titulo">–</h1>
+      <p class="trn-sub" id="trn-sub"></p>
+      <span class="trn-estado" id="trn-estado-chip"></span>
+    </div>
+  </section>
+
+  <a href="./index.html" class="trn-back"><i class="fa-solid fa-arrow-left"></i> Todos los torneos</a>
+
+  <!-- TABS -->
+  <nav class="trn-tabs">
+    <div class="trn-tab activa" data-tab="tabla"      onclick="abrirTab('tabla')">      <i class="fa-solid fa-ranking-star"></i> Tabla</div>
+    <div class="trn-tab"        data-tab="resultados" onclick="abrirTab('resultados')"> <i class="fa-solid fa-list-ol"></i> Resultados</div>
+    <div class="trn-tab"        data-tab="equipos"    onclick="abrirTab('equipos')">    <i class="fa-solid fa-users"></i> Equipos</div>
+    <div class="trn-tab"        data-tab="info"       onclick="abrirTab('info')">        <i class="fa-solid fa-circle-info"></i> Info</div>
+  </nav>
+
+  <!-- PANEL: TABLA -->
+  <section class="trn-panel activo" id="panel-tabla">
+    <div id="contenido-tabla"><div class="trn-spinner"><i class="fa-solid fa-circle-notch"></i></div></div>
+  </section>
+
+  <!-- PANEL: RESULTADOS POR RONDA -->
+  <section class="trn-panel" id="panel-resultados">
+    <div id="contenido-resultados"><div class="trn-spinner"><i class="fa-solid fa-circle-notch"></i></div></div>
+  </section>
+
+  <!-- PANEL: EQUIPOS -->
+  <section class="trn-panel" id="panel-equipos">
+    <div id="contenido-equipos"><div class="trn-spinner"><i class="fa-solid fa-circle-notch"></i></div></div>
+  </section>
+
+  <!-- PANEL: INFO -->
+  <section class="trn-panel" id="panel-info">
+    <div id="contenido-info"></div>
+  </section>
+</main>
+
+<main id="main-error" style="display:none">
+  <div class="trn-vacio" style="padding:4rem 1rem">
+    <i class="fa-solid fa-triangle-exclamation" style="font-size:2.5rem;display:block;margin-bottom:.8rem;color:var(--gray)"></i>
+    <div id="error-msg">No se encontró el torneo.</div>
+    <a href="./index.html" style="display:inline-block;margin-top:1.2rem;color:var(--primary);font-size:.85rem"><i class="fa-solid fa-arrow-left"></i> Ver todos los torneos</a>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <a href="https://pumasgaming.com">pumasgaming.com</a>
+</footer>
+
+<script>
+(function () {
+  const P = window.PumasPortal;
+  let TORNEO = null;
+  let TABLA  = [];
+
+  const ESTADOS = {
+    en_curso:      { label: 'En curso',           cls: 'estado-en_curso' },
+    inscripciones: { label: 'Inscripciones abiertas', cls: 'estado-inscripciones' },
+    finalizado:    { label: 'Finalizado',          cls: 'estado-finalizado' },
+    borrador:      { label: 'Borrador',            cls: 'estado-borrador' }
+  };
+  const JUEGOS = { free_fire:'Free Fire', cod:'Call of Duty', valorant:'Valorant', fortnite:'Fortnite', minecraft:'Minecraft' };
+
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function fmtFecha(iso) { if (!iso) return null; return new Date(iso).toLocaleDateString('es',{day:'2-digit',month:'short',year:'numeric'}); }
+
+  /* ── Aplicar colores del torneo ────────────────────────────── */
+  function aplicarColores(colores) {
+    if (!colores) return;
+    const b = document.body;
+    if (colores.primary)   b.style.setProperty('--primary',  colores.primary);
+    if (colores.primary)   b.style.setProperty('--primary-rgb', hexRgb(colores.primary));
+    if (colores.accent)    b.style.setProperty('--accent',   colores.accent);
+    if (colores.accent)    b.style.setProperty('--accent-rgb', hexRgb(colores.accent));
+    if (colores.bg)        b.style.setProperty('--bg-b',     colores.bg);
+  }
+  function hexRgb(hex) {
+    const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+    return isNaN(r)?'255,198,89':`${r},${g},${b}`;
+  }
+
+  /* ── Tabs ─────────────────────────────────────────────────── */
+  function abrirTab(nombre) {
+    document.querySelectorAll('.trn-tab').forEach(t => t.classList.toggle('activa', t.dataset.tab === nombre));
+    document.querySelectorAll('.trn-panel').forEach(p => p.classList.toggle('activo', p.id === 'panel-' + nombre));
+    if (nombre === 'resultados' && !document.getElementById('contenido-resultados').dataset.cargado) cargarResultados();
+    if (nombre === 'equipos'    && !document.getElementById('contenido-equipos').dataset.cargado)    cargarEquipos();
+  }
+  window.abrirTab = abrirTab;
+
+  /* ── TABLA ────────────────────────────────────────────────── */
+  function renderTabla(filas) {
+    if (!filas.length) {
+      document.getElementById('contenido-tabla').innerHTML = '<div class="trn-vacio"><i class="fa-solid fa-ghost"></i> Sin resultados registrados aún.</div>';
+      return;
+    }
+    const html = `<table class="trn-tabla">
+      <thead><tr>
+        <th>#</th><th>Equipo</th><th style="text-align:right">Kills</th>
+        <th style="text-align:right">Partidas</th><th style="text-align:right">Puntos</th>
+      </tr></thead>
+      <tbody>
+        ${filas.map((f,i) => `<tr>
+          <td class="trn-rank ${i===0?'top1':i===1?'top2':i===2?'top3':''}">${i+1}</td>
+          <td><div class="trn-nombre">${esc(f.nombre)}</div>${f.ig?`<div class="trn-ig">@${esc(f.ig)}</div>`:''}</td>
+          <td class="trn-kills">${f.kills_total||0}</td>
+          <td style="text-align:right;color:var(--gray);font-size:.82rem">${f.partidas||0}</td>
+          <td class="trn-pts">${f.puntos_total||0}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+    document.getElementById('contenido-tabla').innerHTML = html;
+  }
+
+  /* ── RESULTADOS POR RONDA ─────────────────────────────────── */
+  async function cargarResultados() {
+    const el = document.getElementById('contenido-resultados');
+    el.dataset.cargado = '1';
+    // Los resultados están dentro de TABLA pero necesitamos por partida
+    // Usamos torneos_tabla que trae el agregado; mostramos tabla como resumen
+    // Si no hay partidas registradas, mostramos la tabla general
+    el.innerHTML = `<div style="padding:1.2rem 0 .5rem;color:var(--gray);font-size:.82rem">
+      La vista detallada por ronda estará disponible cuando se registren los logs de cada partida.
+      <br><br>A continuación la tabla general de puntuaciones:
+    </div>` + document.getElementById('contenido-tabla').innerHTML;
+  }
+
+  /* ── EQUIPOS ──────────────────────────────────────────────── */
+  async function cargarEquipos() {
+    const el = document.getElementById('contenido-equipos');
+    el.dataset.cargado = '1';
+    const config = (TORNEO && TORNEO.config) || {};
+    const maxEq = config.max_equipos;
+    const inscr = TABLA.length;
+    el.innerHTML = `
+      ${maxEq ? `<div style="font-size:.78rem;color:var(--gray);margin-bottom:1rem">Equipos: <strong style="color:var(--primary)">${inscr}</strong>${maxEq?' / '+maxEq:''}</div>` : ''}
+      ${TABLA.length ? TABLA.map((e,i) => `
+        <div class="trn-equipo-card">
+          <div class="trn-equipo-seed">#${i+1}</div>
+          <div>
+            <div class="trn-equipo-nombre">${esc(e.nombre)}</div>
+            ${e.ig ? `<div class="trn-equipo-ig">@${esc(e.ig)}</div>` : ''}
+          </div>
+        </div>`).join('') :
+        '<div class="trn-vacio"><i class="fa-solid fa-users-slash"></i> No hay equipos inscritos aún.</div>'
+      }`;
+  }
+
+  /* ── INFO ─────────────────────────────────────────────────── */
+  function renderInfo() {
+    const t = TORNEO;
+    const c = t.config || {};
+    const fi = fmtFecha(t.fecha_inicio), ff = fmtFecha(t.fecha_fin);
+    let rows = [];
+    if (t.juego)         rows.push(['Juego',      JUEGOS[t.juego]||t.juego]);
+    if (fi)              rows.push(['Inicio',      fi]);
+    if (ff)              rows.push(['Fin',         ff]);
+    if (c.formato)       rows.push(['Formato',     c.formato]);
+    if (c.grupos)        rows.push(['Grupos',      c.grupos]);
+    if (c.rondas)        rows.push(['Rondas',      c.rondas]);
+    if (c.max_equipos)   rows.push(['Cupos',       c.max_equipos]);
+    if (c.puntos_kill)   rows.push(['Ptos/kill',   c.puntos_kill]);
+    const tabla = rows.length ? `<table style="width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:1.5rem">
+      ${rows.map(([k,v]) => `<tr style="border-bottom:1px solid rgba(255,255,255,.07)">
+        <td style="padding:.55rem .6rem;color:var(--gray);width:40%">${esc(k)}</td>
+        <td style="padding:.55rem .6rem;color:var(--light,#e8e0d0);font-weight:600">${esc(String(v))}</td>
+      </tr>`).join('')}
+    </table>` : '';
+    document.getElementById('contenido-info').innerHTML = tabla +
+      (t.descripcion ? `<div class="trn-desc">${esc(t.descripcion)}</div>` : '');
+  }
+
+  /* ── INIT ─────────────────────────────────────────────────── */
+  async function init() {
+    const params = new URLSearchParams(location.search);
+    const id     = params.get('id');
+    if (!id || isNaN(Number(id))) { mostrarError('ID de torneo no válido.'); return; }
+
+    try {
+      // Cargar torneo: buscamos en la lista pública (no hay endpoint de uno solo)
+      const lista = await P.torneos.publico(null);
+      TORNEO = Array.isArray(lista) ? lista.find(t => String(t.id) === String(id)) : null;
+      if (!TORNEO) { mostrarError('Torneo no encontrado o no está disponible.'); return; }
+
+      // Título dinámico
+      document.title = `${TORNEO.nombre} · Pumas Gaming`;
+
+      // Colores
+      aplicarColores(TORNEO.colores);
+
+      // Hero
+      document.getElementById('trn-titulo').textContent = TORNEO.nombre;
+      if (TORNEO.banner_url) document.getElementById('trn-banner').style.backgroundImage = `url(${TORNEO.banner_url})`;
+      if (TORNEO.logo_url) {
+        document.getElementById('trn-logo').innerHTML = `<img src="${esc(TORNEO.logo_url)}" alt="">`;
+        document.getElementById('page-icon').href     = TORNEO.logo_url;
+        document.getElementById('header-logo').src    = TORNEO.logo_url;
+      }
+      document.getElementById('header-nombre').textContent = TORNEO.nombre.toUpperCase().slice(0,14);
+
+      // Sub línea del hero
+      const sub = [];
+      const juego = JUEGOS[TORNEO.juego] || TORNEO.juego;
+      if (juego) sub.push(`<span><i class="fa-solid fa-gamepad"></i>${esc(juego)}</span>`);
+      const fi = fmtFecha(TORNEO.fecha_inicio), ff = fmtFecha(TORNEO.fecha_fin);
+      if (fi) sub.push(`<span><i class="fa-regular fa-calendar"></i>${esc(fi)}${ff?' – '+esc(ff):''}</span>`);
+      if (TORNEO.portal && P.PORTALES[TORNEO.portal]) {
+        sub.push(`<span><i class="fa-solid fa-link"></i>${esc(P.PORTALES[TORNEO.portal].nombre)}</span>`);
+      }
+      document.getElementById('trn-sub').innerHTML = sub.join('');
+
+      // Estado chip
+      const est = ESTADOS[TORNEO.estado] || { label: TORNEO.estado, cls: 'estado-borrador' };
+      const chip = document.getElementById('trn-estado-chip');
+      chip.textContent = est.label;
+      chip.className   = `trn-estado ${est.cls}`;
+
+      // Tabla de posiciones
+      const tablaData = await P.torneos.tabla(Number(id));
+      TABLA = Array.isArray(tablaData) ? tablaData : [];
+      renderTabla(TABLA);
+
+      // Info
+      renderInfo();
+
+      // Mostrar contenido
+      document.getElementById('main-cargando').style.display  = 'none';
+      document.getElementById('main-contenido').style.display = '';
+
+    } catch(e) {
+      mostrarError('Error al cargar el torneo. Intenta de nuevo.');
+    }
+  }
+
+  function mostrarError(msg) {
+    document.getElementById('main-cargando').style.display = 'none';
+    document.getElementById('main-error').style.display    = '';
+    document.getElementById('error-msg').textContent       = msg;
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+</body>
+</html>

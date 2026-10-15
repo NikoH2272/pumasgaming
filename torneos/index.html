@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-C79JND219Y');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Torneos · Pumas Gaming</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="../portal-kit/latam.css?v=20261015">
+<link rel="stylesheet" href="../portal-kit/portal.css?v=20261015">
+<link rel="icon" href="../imagenes/LOGO PUMAS WEB.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../portal-kit/portal.js?v=20261015" data-portal="torneos" data-modo="publico"></script>
+<style>
+/* ── TORNEOS HUB ─────────────────────────────────────────────── */
+.hub-hero {
+  background: linear-gradient(160deg, var(--bg-b) 0%, #001240 100%);
+  border-bottom: 2px solid rgba(var(--primary-rgb), .25);
+  padding: 3rem 1.5rem 2.5rem;
+  text-align: center;
+}
+.hub-hero h1 {
+  font-family: 'Michroma', sans-serif;
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  color: var(--primary);
+  margin: 0 0 .4rem;
+  letter-spacing: .04em;
+}
+.hub-hero p { color: var(--gray); margin: 0; font-size: .9rem; }
+
+/* filtros */
+.hub-filtros {
+  display: flex; gap: .5rem; flex-wrap: wrap; justify-content: center;
+  padding: 1.2rem 1rem .6rem;
+}
+.hub-filtros button {
+  background: var(--bg-b); color: var(--gray); border: 1.5px solid rgba(255,255,255,.1);
+  padding: .4rem 1rem; border-radius: 20px; cursor: pointer; font-size: .8rem; transition: all .15s;
+}
+.hub-filtros button.activo,
+.hub-filtros button:hover { background: var(--primary); color: var(--on-primary, #05101e); border-color: var(--primary); font-weight: 700; }
+
+/* sección */
+.hub-seccion { max-width: 1100px; margin: 0 auto; padding: 0 1rem 2.5rem; }
+.hub-seccion h2 { font-family: 'Michroma', sans-serif; font-size: .9rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gray); padding: 1.5rem 0 .8rem; border-bottom: 1px solid rgba(255,255,255,.08); margin: 0 0 1rem; }
+
+/* grid de cards */
+.hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 1rem;
+}
+.hub-card {
+  background: var(--bg-b);
+  border: 1.5px solid rgba(255,255,255,.09);
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform .15s, border-color .15s, box-shadow .15s;
+  display: flex; flex-direction: column;
+}
+.hub-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 6px 30px rgba(var(--primary-rgb),.18); }
+.hub-card-banner {
+  height: 110px; background: var(--bg-a); position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.hub-card-banner img { width: 100%; height: 100%; object-fit: cover; }
+.hub-card-banner .no-banner {
+  font-size: 2.8rem; opacity: .25;
+}
+.hub-card-logo {
+  position: absolute; bottom: -18px; left: 14px;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 2.5px solid var(--bg-b); background: var(--bg-a); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.hub-card-logo img { width: 100%; height: 100%; object-fit: cover; }
+.hub-card-body { padding: 1.4rem .9rem .9rem; flex: 1; display: flex; flex-direction: column; gap: .35rem; }
+.hub-card-nombre { font-weight: 700; font-size: 1rem; line-height: 1.25; color: var(--light, #e8e0d0); }
+.hub-card-meta   { font-size: .75rem; color: var(--gray); display: flex; gap: .7rem; flex-wrap: wrap; }
+.hub-card-meta span { display: flex; align-items: center; gap: .3rem; }
+.hub-card-estado {
+  display: inline-block; font-size: .68rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; padding: .2rem .55rem; border-radius: 20px; margin-top: auto;
+}
+.estado-en_curso     { background: rgba(36,214,165,.18); color: #24d6a5; border: 1px solid rgba(36,214,165,.35); }
+.estado-inscripciones{ background: rgba(255,198,89,.18);  color: #ffc659; border: 1px solid rgba(255,198,89,.35); }
+.estado-finalizado   { background: rgba(120,120,130,.12); color: #888;    border: 1px solid rgba(120,120,130,.25); }
+.estado-borrador     { background: rgba(0,0,0,.2);        color: #666;    border: 1px solid rgba(120,120,130,.15); }
+
+/* vacío / carga */
+.hub-vacio { text-align: center; color: var(--gray); padding: 2.5rem 0; font-size: .88rem; }
+.hub-spinner { display: flex; align-items: center; justify-content: center; gap: .6rem; color: var(--gray); font-size: .85rem; padding: 2rem 0; }
+.hub-spinner i { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* portal chip */
+.hub-portal-chip {
+  font-size: .68rem; color: var(--gray); background: rgba(255,255,255,.06);
+  border-radius: 20px; padding: .18rem .55rem; border: 1px solid rgba(255,255,255,.09);
+}
+</style>
+</head>
+<body data-tema="torneos">
+
+<header class="site-header">
+  <a class="logo-container" href="/">
+    <img src="../imagenes/LOGO PUMAS WEB.png" alt="Logo" class="logo-img" onerror="this.onerror=null">
+    <div class="logo"><span class="t-a">TORNEOS</span><small>by PUMAS</small></div>
+  </a>
+  <button class="menu-toggle" aria-label="Abrir menú" onclick="toggleMenu()">
+    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+  </button>
+  <nav class="main-nav" id="mainNav">
+    <ul>
+      <li><a href="#en-curso"       onclick="closeMenu()">En curso</a></li>
+      <li><a href="#proximos"       onclick="closeMenu()">Próximos</a></li>
+      <li><a href="#finalizados"    onclick="closeMenu()">Finalizados</a></li>
+      <li><a href="/"               onclick="closeMenu()">Inicio</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section class="hub-hero">
+    <h1><i class="fa-solid fa-trophy" style="font-size:.8em;margin-right:.4rem"></i>Torneos</h1>
+    <p>Todos los torneos aliados de la comunidad Pumas Gaming</p>
+  </section>
+
+  <!-- Filtros -->
+  <div class="hub-filtros" id="filtros">
+    <button class="activo" data-filtro="todos" onclick="filtrar(this)">Todos</button>
+    <button data-filtro="en_curso"      onclick="filtrar(this)">En curso</button>
+    <button data-filtro="inscripciones" onclick="filtrar(this)">Inscripciones abiertas</button>
+    <button data-filtro="finalizado"    onclick="filtrar(this)">Finalizados</button>
+  </div>
+
+  <div class="hub-seccion">
+    <div id="hub-contenido">
+      <div class="hub-spinner"><i class="fa-solid fa-circle-notch"></i> Cargando torneos…</div>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <a href="https://pumasgaming.com">pumasgaming.com</a>
+</footer>
+
+<script>
+(function () {
+  const P = window.PumasPortal;
+  let TODOS = [];
+  let filtroActivo = 'todos';
+
+  const ESTADOS = {
+    en_curso:      { label: 'En curso',           cls: 'estado-en_curso' },
+    inscripciones: { label: 'Inscripciones',       cls: 'estado-inscripciones' },
+    finalizado:    { label: 'Finalizado',          cls: 'estado-finalizado' },
+    borrador:      { label: 'Borrador',            cls: 'estado-borrador' }
+  };
+
+  const JUEGOS = {
+    free_fire:    'Free Fire',
+    cod:          'Call of Duty',
+    valorant:     'Valorant',
+    fortnite:     'Fortnite',
+    minecraft:    'Minecraft'
+  };
+
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmtFecha(iso) {
+    if (!iso) return null;
+    const d = new Date(iso);
+    return d.toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  function renderCard(t) {
+    const estado = ESTADOS[t.estado] || { label: t.estado, cls: 'estado-borrador' };
+    const juego  = JUEGOS[t.juego] || t.juego || '';
+    const fi     = fmtFecha(t.fecha_inicio);
+    const ff     = fmtFecha(t.fecha_fin);
+    const fechaTxt = fi && ff ? `${fi} – ${ff}` : fi ? `Desde ${fi}` : ff ? `Hasta ${ff}` : null;
+    const portalNombre = P.PORTALES[t.portal] ? P.PORTALES[t.portal].nombre : (t.portal || '');
+
+    // colores custom del torneo
+    const c = t.colores || {};
+    const estilo = c.primary ? `style="--primary:${c.primary};--primary-rgb:${hexRgb(c.primary)};--bg-b:${c.bg||'var(--bg-b)'}"` : '';
+
+    return `<a href="ver.html?id=${t.id}" class="hub-card" ${estilo}>
+      <div class="hub-card-banner">
+        ${t.banner_url ? `<img src="${esc(t.banner_url)}" alt="">` : `<i class="fa-solid fa-trophy no-banner"></i>`}
+        ${t.logo_url   ? `<div class="hub-card-logo"><img src="${esc(t.logo_url)}" alt=""></div>` : ''}
+      </div>
+      <div class="hub-card-body">
+        <div class="hub-card-nombre">${esc(t.nombre)}</div>
+        <div class="hub-card-meta">
+          ${juego ? `<span><i class="fa-solid fa-gamepad"></i>${esc(juego)}</span>` : ''}
+          ${fechaTxt ? `<span><i class="fa-regular fa-calendar"></i>${esc(fechaTxt)}</span>` : ''}
+          ${portalNombre ? `<span class="hub-portal-chip">${esc(portalNombre)}</span>` : ''}
+        </div>
+        ${t.descripcion ? `<div style="font-size:.78rem;color:var(--gray);margin-top:.15rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${esc(t.descripcion)}</div>` : ''}
+        <span class="hub-card-estado ${estado.cls}">${estado.label}</span>
+      </div>
+    </a>`;
+  }
+
+  function hexRgb(hex) {
+    const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return isNaN(r) ? '255,198,89' : `${r},${g},${b}`;
+  }
+
+  function renderSecciones(lista) {
+    const ORDER = ['en_curso','inscripciones','finalizado','borrador'];
+    const TITULOS = {
+      en_curso:      '🔴 En curso',
+      inscripciones: '🟡 Inscripciones abiertas',
+      finalizado:    '✅ Finalizados',
+      borrador:      'Borradores'
+    };
+    let html = '';
+    ORDER.forEach(estado => {
+      const sub = lista.filter(t => t.estado === estado);
+      if (!sub.length) return;
+      html += `<h2 id="${estado}">${TITULOS[estado]}</h2>
+               <div class="hub-grid">${sub.map(renderCard).join('')}</div>`;
+    });
+    if (!html) html = `<div class="hub-vacio"><i class="fa-solid fa-ghost" style="font-size:2rem;display:block;margin-bottom:.6rem"></i>No hay torneos disponibles aún.</div>`;
+    document.getElementById('hub-contenido').innerHTML = html;
+  }
+
+  function filtrar(btn) {
+    document.querySelectorAll('.hub-filtros button').forEach(b => b.classList.remove('activo'));
+    btn.classList.add('activo');
+    filtroActivo = btn.dataset.filtro;
+    const lista = filtroActivo === 'todos' ? TODOS : TODOS.filter(t => t.estado === filtroActivo);
+    renderSecciones(lista);
+  }
+  window.filtrar = filtrar;
+
+  async function cargar() {
+    try {
+      // Cargamos torneos de todos los portales (p_portal = null devuelve todos)
+      const data = await P.torneos.publico(null);
+      TODOS = Array.isArray(data) ? data : [];
+      renderSecciones(TODOS);
+    } catch(e) {
+      document.getElementById('hub-contenido').innerHTML =
+        `<div class="hub-vacio"><i class="fa-solid fa-triangle-exclamation"></i> No se pudo cargar la lista de torneos.</div>`;
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', cargar);
+  else cargar();
+})();
+</script>
+</body>
+</html>
