@@ -208,7 +208,8 @@
         if (!cfg || !cfg.activo) return;
         estilos();
         const cont = contenedor(destino);
-        const clave = 'pg_din_enc_' + portal;
+        const ronda = (cfg.config && cfg.config.ronda) || 0;
+        const clave = 'pg_din_enc_' + portal + '_r' + ronda;
         let miVoto = null;
         try { miVoto = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (e) {}
 

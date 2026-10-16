@@ -223,15 +223,28 @@
                                 <input type="datetime-local" id="enc-inicio">
                             </div>
                             <div>
-                                <label style="font-size:.78rem;color:#999;display:block;margin-bottom:4px">Duración</label>
-                                <select id="enc-duracion">
-                                    <option value="300">5 minutos</option>
-                                    <option value="600" selected>10 minutos</option>
-                                    <option value="900">15 minutos</option>
-                                    <option value="1800">30 minutos</option>
-                                    <option value="3600">1 hora</option>
-                                    <option value="0">Sin límite</option>
-                                </select>
+                                <label style="font-size:.78rem;color:#999;display:block;margin-bottom:4px">Límite de tiempo</label>
+                                <div style="display:flex;gap:10px;margin-bottom:6px">
+                                    <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:#aaa;text-transform:none;font-weight:normal;letter-spacing:0;cursor:pointer">
+                                        <input type="radio" name="enc-tipo-limite" value="duracion" checked> Duración
+                                    </label>
+                                    <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:#aaa;text-transform:none;font-weight:normal;letter-spacing:0;cursor:pointer">
+                                        <input type="radio" name="enc-tipo-limite" value="fecha"> Fecha específica
+                                    </label>
+                                </div>
+                                <div id="enc-limite-duracion-wrap">
+                                    <select id="enc-duracion">
+                                        <option value="300">5 minutos</option>
+                                        <option value="600" selected>10 minutos</option>
+                                        <option value="900">15 minutos</option>
+                                        <option value="1800">30 minutos</option>
+                                        <option value="3600">1 hora</option>
+                                        <option value="0">Sin límite</option>
+                                    </select>
+                                </div>
+                                <div id="enc-limite-fecha-wrap" style="display:none">
+                                    <input type="datetime-local" id="enc-fecha-fin">
+                                </div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:flex-end">
@@ -247,6 +260,7 @@
                     <div class="poll-timer" id="enc-timer">--:--</div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap">
                         <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" id="btn-reset-enc"><i class="fa-solid fa-stop"></i> Terminar</button>
+                        <button class="btn-mini" style="background:rgba(255,165,0,.12);border-color:rgba(255,165,0,.4);color:#ffa040" id="btn-restablecer-enc"><i class="fa-solid fa-rotate-right"></i> Restablecer votos</button>
                         <button class="btn-mini" id="btn-export-enc-wa"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
                         <button class="btn-mini" id="btn-export-enc-csv"><i class="fa-solid fa-file-csv"></i> CSV</button>
                     </div>
@@ -719,23 +733,43 @@
         }
     }
 
+    // Toggle duración / fecha específica
+    document.querySelectorAll('[name="enc-tipo-limite"]').forEach(r => {
+        r.addEventListener('change', function() {
+            document.getElementById('enc-limite-duracion-wrap').style.display = this.value === 'duracion' ? '' : 'none';
+            document.getElementById('enc-limite-fecha-wrap').style.display    = this.value === 'fecha'    ? '' : 'none';
+        });
+    });
+
     document.getElementById('btn-iniciar-enc').addEventListener('click', async () => {
         const pregunta = document.getElementById('enc-pregunta').value.trim();
         const opciones = Array.from(document.querySelectorAll('.enc-opt')).map(i => i.value.trim()).filter(Boolean);
         if (!pregunta) { alert('Escribe la pregunta.'); return; }
         if (opciones.length < 2) { alert('Necesitas al menos 2 opciones válidas.'); return; }
-        const dur = parseInt(document.getElementById('enc-duracion').value);
-        const deadline = dur > 0 ? new Date(Date.now() + dur * 1000).toISOString() : null;
+
+        let deadline = null;
+        const tipoLimite = document.querySelector('[name="enc-tipo-limite"]:checked').value;
+        if (tipoLimite === 'fecha') {
+            const fechaVal = document.getElementById('enc-fecha-fin').value;
+            if (!fechaVal) { alert('Selecciona la fecha de finalización.'); return; }
+            const fechaDate = new Date(fechaVal);
+            if (fechaDate <= new Date()) { alert('La fecha de fin debe ser en el futuro.'); return; }
+            deadline = fechaDate.toISOString();
+        } else {
+            const dur = parseInt(document.getElementById('enc-duracion').value);
+            deadline = dur > 0 ? new Date(Date.now() + dur * 1000).toISOString() : null;
+        }
+
         const inicioVal = document.getElementById('enc-inicio').value;
         const inicio = inicioVal ? new Date(inicioVal).toISOString() : null;
         const st = document.getElementById('status-encuesta');
         st.textContent = 'Iniciando...'; st.className = 'din-status';
         try {
-            // Vaciar votos anteriores
             await P.dinamica.vaciar(portalActual, 'encuesta').catch(() => {});
+            // ronda 0 al iniciar (reset del contador)
             await P.dinamica.config(portalActual, 'encuesta', {
                 activo: true,
-                config: { pregunta, opciones },
+                config: { pregunta, opciones, ronda: 0 },
                 deadline: deadline,
                 quitarDeadline: !deadline,
                 inicio: inicio,
@@ -754,6 +788,23 @@
         try {
             await P.dinamica.config(portalActual, 'encuesta', { activo: false, quitarDeadline: true });
             await P.dinamica.vaciar(portalActual, 'encuesta').catch(() => {});
+            await cargarDinamica('encuesta');
+            st.textContent = ''; st.className = 'din-status';
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    });
+
+    document.getElementById('btn-restablecer-enc').addEventListener('click', async () => {
+        if (!confirm('¿Restablecer votos? Los participantes podrán votar nuevamente.')) return;
+        const st = document.getElementById('status-encuesta');
+        st.textContent = 'Restableciendo...'; st.className = 'din-status';
+        try {
+            await P.dinamica.vaciar(portalActual, 'encuesta');
+            const ses = sesiones.encuesta || {};
+            const cfg = ses.config || {};
+            const rondaActual = (cfg.ronda || 0) + 1;
+            await P.dinamica.config(portalActual, 'encuesta', {
+                config: { ...cfg, ronda: rondaActual },
+            });
             await cargarDinamica('encuesta');
             st.textContent = ''; st.className = 'din-status';
         } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
