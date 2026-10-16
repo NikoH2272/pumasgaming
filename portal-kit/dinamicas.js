@@ -259,8 +259,11 @@
             </div>`;
         }).join('')}<p class="pgd-total">Total votos: <b>${totalVotos}</b></p></div>` : '';
 
+        const imagenEnc = config.imagen ? `<img src="${esc(config.imagen)}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:12px;display:block" onerror="this.style.display='none'">` : '';
+
         cont.innerHTML = `<div class="pgd-caja">
             <h2>📊 ${titulo}</h2>
+            ${imagenEnc}
             ${pregunta ? `<p class="pgd-sub" style="font-size:1rem;font-weight:700;color:#F4EEDC">${pregunta}</p>` : ''}
             ${cfg.deadline && !cerrado ? relojHTML(relojId) : ''}
             ${cuerpo}
