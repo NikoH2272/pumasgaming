@@ -37,6 +37,15 @@
   font-size:1.4rem;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
   display:flex;align-items:center;justify-content:center}
 .pgj-dpad button:active{background:rgba(var(--primary-rgb,216,195,149),.35)}
+.pgj-tetris-body{display:flex;gap:20px;align-items:flex-start;justify-content:center}
+.pgj-tetris-side{display:none;min-width:150px;flex-shrink:0}
+@media(pointer:fine){.pgj-tetris-side{display:block}}
+.pgj-dpad-tetris{gap:8px;margin-top:16px;width:100%}
+.pgj-dpad-tetris .pgj-dpad-row{justify-content:center;gap:8px}
+.pgj-dpad-tetris button{width:82px;height:82px;font-size:1.7rem;border-radius:10px;border-width:2px;flex-direction:column;gap:2px}
+.pgj-dpad-tetris button small{font-size:.55rem;display:block;font-family:var(--font-display,'Michroma',sans-serif);letter-spacing:.05em;opacity:.8}
+.pgj-dpad-tetris button[data-act="rot"]{width:110px;height:74px}
+.pgj-dpad-tetris button[data-act="drp"]{width:260px;height:64px;font-size:.9rem;letter-spacing:.06em}
 .pgj form{display:grid;gap:12px;max-width:320px;margin-bottom:18px}
 .pgj label{display:block;margin-bottom:5px;color:var(--primary,#D8C395);
   font:800 .66rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;text-transform:uppercase}
@@ -633,44 +642,59 @@
         function renderJuego(jug) {
             cont.innerHTML = `<div class="pgj-caja"${cfg.config?.fondo ? ` style="background-image:url('${cfg.config.fondo}');background-size:cover;background-blend-mode:overlay"` : ''}>
                 <h2>${titulo}</h2>
-                <p class="pgj-info" style="margin-bottom:14px">
-                    Jugador: <b style="color:var(--primary,#D8C395)">${esc(jug.nombre)}</b>
-                    &nbsp;·&nbsp;
-                    <button class="pgj-btn pgj-btn-sec" id="pgjSalir" style="min-height:32px;padding:2px 12px;font-size:.7rem">✕ Salir</button>
-                </p>
-                <div class="pgj-layout">
-                    <div>
-                        <p class="pgj-score-live" id="pgjScoreLive">PUNTOS: 0</p>
-                        <p style="font-size:.75rem;color:#888;margin:4px 0 12px">⬆ Rotar · ⬇ Bajar · Espacio = Caída</p>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                    <span class="pgj-info">Jugador: <b style="color:var(--primary,#D8C395)">${esc(jug.nombre)}</b></span>
+                    <button class="pgj-btn pgj-btn-sec" id="pgjSalir" style="min-height:30px;padding:2px 12px;font-size:.7rem">✕ Salir</button>
+                </div>
+                <p class="pgj-score-live" id="pgjScoreLive" style="margin:0 0 12px;text-align:center;font-size:1.1rem">PUNTOS: 0</p>
+                <div class="pgj-tetris-body">
+                    <div class="pgj-tetris-side">
+                        <p style="font-size:.72rem;color:#888;margin:0 0 10px">⬆ Rotar · ⬇ Bajar<br>Espacio = Drop rápido</p>
                         <h3 style="font:700 .72rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;color:var(--primary,#D8C395);text-transform:uppercase;margin:0 0 8px">Top 20</h3>
                         <div id="pgjLbWrap">${lbHTML(entradas)}</div>
                     </div>
                     <div class="pgj-canvas-col">
-                        <canvas id="pgjCv" width="${T_W}" height="${T_H}" style="max-height:min(82vh,480px)"></canvas>
+                        <canvas id="pgjCv" width="${T_W}" height="${T_H}" style="max-height:min(72vh,460px)"></canvas>
                         <p class="pgj-controles">← → Mover · ↑ Rotar · ↓ Bajar · Espacio = Drop</p>
-                        <div class="pgj-dpad" id="pgjDpad" style="margin-top:8px">
-                            <div class="pgj-dpad-row"><button data-act="rot">🔄</button></div>
-                            <div class="pgj-dpad-row">
-                                <button data-act="lft">⬅</button>
-                                <button data-act="drp">⬇⬇</button>
-                                <button data-act="rgt">➡</button>
-                            </div>
-                        </div>
+                    </div>
+                </div>
+                <div class="pgj-dpad pgj-dpad-tetris" id="pgjDpad">
+                    <div class="pgj-dpad-row">
+                        <button data-act="rot">🔄<small>ROTAR</small></button>
+                    </div>
+                    <div class="pgj-dpad-row">
+                        <button data-act="lft">⬅</button>
+                        <button data-act="dwn">⬇<small>BAJAR</small></button>
+                        <button data-act="rgt">➡</button>
+                    </div>
+                    <div class="pgj-dpad-row">
+                        <button data-act="drp">⬇⬇ DROP RÁPIDO ⬇⬇</button>
                     </div>
                 </div>
             </div>`;
             const cv = document.getElementById('pgjCv');
             document.getElementById('pgjSalir').addEventListener('click', () => { if (cv?._tclean) cv._tclean(); inicioTetris(); });
+            let _dpadInterval = null;
             document.getElementById('pgjDpad')?.addEventListener('pointerdown', e => {
                 const btn = e.target.closest('[data-act]');
-                if (!btn || !_running) return;
-                const a = btn.dataset.act;
-                if (a === 'lft') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
-                if (a === 'rgt') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
-                if (a === 'rot') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
-                if (a === 'drp') document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+                if (!btn) return;
                 e.preventDefault();
+                const fireAct = (a) => {
+                    if (a === 'lft') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft',  bubbles: true }));
+                    if (a === 'rgt') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+                    if (a === 'dwn') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown',  bubbles: true }));
+                    if (a === 'rot') document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp',    bubbles: true }));
+                    if (a === 'drp') document.dispatchEvent(new KeyboardEvent('keydown', { key: ' ',          bubbles: true }));
+                };
+                const a = btn.dataset.act;
+                fireAct(a);
+                if (a === 'lft' || a === 'rgt' || a === 'dwn') {
+                    clearInterval(_dpadInterval);
+                    _dpadInterval = setInterval(() => fireAct(a), 120);
+                }
             });
+            document.getElementById('pgjDpad')?.addEventListener('pointerup',    () => clearInterval(_dpadInterval));
+            document.getElementById('pgjDpad')?.addEventListener('pointerleave', () => clearInterval(_dpadInterval));
             iniciarTetris(cv,
                 async (finalPts) => {
                     if (cv?._tclean) cv._tclean();
@@ -763,7 +787,7 @@
                         <p class="pgj-3-result" id="pgjResult" style="color:#aaa">Tú: ✕ &nbsp; CPU: ○</p>
                         <button class="pgj-btn pgj-btn-sec" id="pgjSigRonda" style="margin:12px 0;min-height:38px;padding:0 16px;font-size:.75rem" hidden>▶ Siguiente ronda</button>
                         <h3 style="font:700 .72rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;color:var(--primary,#D8C395);text-transform:uppercase;margin:0 0 8px">Top 20</h3>
-                        ${lbHTML(entradas)}
+                        <div id="pgjLbWrap">${lbHTML(entradas)}</div>
                     </div>
                     <div class="pgj-canvas-col">
                         <canvas id="pgjCv" width="${TL_SIZE}" height="${TL_SIZE}" style="cursor:pointer;max-width:min(88vw,${TL_SIZE}px)"></canvas>
@@ -790,7 +814,11 @@
                     try {
                         await P.dinamica.registrar(portal, 'juego_3lineas', { nombre: jug.nombre, ig: jug.ig || '', metadata: { puntos: wins } });
                         const cfg2 = await P.dinamica.publico(portal, 'juego_3lineas');
-                        if (cfg2?.entradas) entradas = cfg2.entradas;
+                        if (cfg2?.entradas) {
+                            entradas = cfg2.entradas;
+                            const lb = document.getElementById('pgjLbWrap');
+                            if (lb) lb.innerHTML = lbHTML(entradas);
+                        }
                     } catch (e) { console.error('[PG 3enLinea]', e?.message || e); }
                 }
             });
@@ -804,7 +832,11 @@
             });
         }
 
-        function inicio3enLinea(msg) {
+        async function inicio3enLinea(msg) {
+            try {
+                const fresh = await P.dinamica.publico(portal, 'juego_3lineas');
+                if (fresh?.entradas) entradas = fresh.entradas;
+            } catch (_) {}
             cont.innerHTML = `<div class="pgj-caja"${cfg.config?.fondo ? ` style="background-image:url('${cfg.config.fondo}');background-size:cover;background-blend-mode:overlay"` : ''}>
                 <h2>${titulo}</h2>
                 <p class="pgj-sub">Tres en línea vs CPU — gana la mayor cantidad de rondas. ¡El jugador con más victorias gana!</p>
@@ -822,7 +854,7 @@
                                 <p class="pgj-msg" id="pgjMsgForm"></p>
                                </form>`}
                         <h3 style="font:700 .72rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;color:var(--primary,#D8C395);text-transform:uppercase;margin:0 0 8px">Top 20</h3>
-                        ${lbHTML(entradas)}
+                        <div id="pgjLbWrap">${lbHTML(entradas)}</div>
                     </div>
                     <div class="pgj-canvas-col">
                         <canvas id="pgjCvPrev" width="${TL_SIZE}" height="${TL_SIZE}" style="opacity:.25;max-width:min(88vw,${TL_SIZE}px)"></canvas>
