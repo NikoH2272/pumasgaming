@@ -774,6 +774,8 @@
 
         function renderJuego(jug) {
             let motor = null;
+            // Victorias previas guardadas en BD para este jugador (acumulado histórico)
+            const prevWins = (entradas.find(e => e.nombre.toLowerCase() === jug.nombre.toLowerCase())?.puntos) || 0;
             cont.innerHTML = `<div class="pgj-caja"${cfg.config?.fondo ? ` style="background-image:url('${cfg.config.fondo}');background-size:cover;background-blend-mode:overlay"` : ''}>
                 <h2>${titulo}</h2>
                 <p class="pgj-info" style="margin-bottom:10px">
@@ -796,13 +798,12 @@
                 </div>
             </div>`;
             const cv = document.getElementById('pgjCv');
-            let wins = 0;
-            motor = iniciar3enLinea(cv, async (resultado, w, partidas) => {
-                wins = w;
+            motor = iniciar3enLinea(cv, async (resultado, sessionWins, partidas) => {
+                const totalWins = prevWins + sessionWins; // acumulado histórico + sesión actual
                 const wEl = document.getElementById('pgjWins');
                 const rEl = document.getElementById('pgjResult');
                 const sigBtn = document.getElementById('pgjSigRonda');
-                if (wEl) wEl.textContent = 'VICTORIAS: ' + wins;
+                if (wEl) wEl.textContent = 'VICTORIAS: ' + totalWins;
                 if (rEl) {
                     if (resultado === 'win') rEl.textContent = '🏆 ¡Ganaste esta ronda!';
                     else if (resultado === 'loss') rEl.textContent = '😔 Ganó la CPU esta vez';
@@ -812,7 +813,7 @@
                 if (sigBtn) sigBtn.hidden = false;
                 if (resultado === 'win' && jug) {
                     try {
-                        await P.dinamica.registrar(portal, 'juego_3lineas', { nombre: jug.nombre, ig: jug.ig || '', metadata: { puntos: wins } });
+                        await P.dinamica.registrar(portal, 'juego_3lineas', { nombre: jug.nombre, ig: jug.ig || '', metadata: { puntos: totalWins } });
                         const cfg2 = await P.dinamica.publico(portal, 'juego_3lineas');
                         if (cfg2?.entradas) {
                             entradas = cfg2.entradas;
