@@ -321,9 +321,34 @@
                 <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
                     <button class="btn-mini" id="btn-enc-hora-masiva" style="font-size:.78rem;padding:5px 10px"><i class="fa-solid fa-clock"></i> Hora masiva</button>
                     <button class="btn-mini" id="btn-enc-grupos-wa" style="font-size:.78rem;padding:5px 10px"><i class="fa-brands fa-whatsapp"></i> Grupos → WA</button>
+                    <button class="btn-mini" id="btn-enc-clasificados" style="font-size:.78rem;padding:5px 10px;background:rgba(255,213,74,.1);border-color:rgba(255,213,74,.4);color:#FFD54A"><i class="fa-solid fa-trophy"></i> Clasificados</button>
                     <button class="btn-mini" id="btn-enc-restablecer-todas" style="font-size:.78rem;padding:5px 10px"><i class="fa-solid fa-rotate-right"></i> Restablecer todas</button>
                     <button class="btn-mini" id="btn-enc-borrar-todas" style="font-size:.78rem;padding:5px 10px;background:rgba(255,77,77,.1);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-trash"></i> Borrar todas</button>
                 </div>
+
+                <!-- Panel clasificados -->
+                <div id="panel-clasificados" style="display:none;border:1px solid rgba(255,213,74,.3);border-radius:6px;padding:14px;margin-bottom:14px;background:rgba(255,213,74,.04)">
+                    <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#FFD54A;margin:0 0 12px"><i class="fa-solid fa-trophy"></i> Clasificados a la siguiente ronda</p>
+
+                    <div class="din-form" style="margin-bottom:12px">
+                        <label style="font-size:.75rem;color:#999;display:block;margin-bottom:4px">Premio final</label>
+                        <input type="text" id="enc-premio-final" placeholder="Ej: Skin de Diamante + Gift Card $500" maxlength="200">
+                        <label style="font-size:.75rem;color:#999;display:block;margin-bottom:4px;margin-top:6px">Nombre de la ronda / fase</label>
+                        <input type="text" id="enc-nombre-ronda" placeholder="Ej: Semifinal, Gran Final, Ronda 2..." maxlength="80">
+                    </div>
+
+                    <div id="clasificados-lista" style="margin-bottom:12px"></div>
+
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="btn-mini" id="btn-clasificados-wa" style="font-size:.78rem;padding:5px 10px"><i class="fa-brands fa-whatsapp"></i> Copiar para WA</button>
+                        <button class="btn-mini" id="btn-clasificados-nueva-ronda" style="font-size:.78rem;padding:5px 10px;background:rgba(77,255,145,.1);border-color:rgba(77,255,145,.4);color:#4dff91"><i class="fa-solid fa-arrow-right"></i> Crear nueva ronda</button>
+                        <button class="btn-mini" id="btn-clasificados-cerrar" style="font-size:.78rem;padding:5px 10px;background:transparent;border-color:rgba(255,255,255,.2);color:#999"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <p class="din-status" id="status-clasificados"></p>
+                </div>
+
+                <!-- Nav rápida entre encuestas -->
+                <div id="enc-nav" style="display:none;overflow-x:auto;gap:6px;margin-bottom:10px;padding-bottom:4px;scrollbar-width:thin;flex-wrap:nowrap"></div>
 
                 <!-- Lista de encuestas -->
                 <div id="enc-lista"></div>
@@ -701,10 +726,30 @@
 
     function renderEncLista() {
         const cont = document.getElementById('enc-lista');
+        const nav  = document.getElementById('enc-nav');
+
         if (!encuestas.length) {
             cont.innerHTML = '<p style="color:#666;font-size:.85rem;margin:0 0 10px">No hay encuestas. Crea la primera.</p>';
+            nav.style.display = 'none';
             return;
         }
+
+        // Barra de navegación rápida
+        if (encuestas.length > 1) {
+            nav.style.display = 'flex';
+            nav.innerHTML = encuestas.map((enc, i) => {
+                const label = enc.titulo || `#${i + 1}`;
+                const color = !enc.activo ? 'rgba(255,255,255,.12)' : enc.cerrado ? 'rgba(255,138,141,.2)' : 'rgba(77,255,145,.2)';
+                const border = !enc.activo ? 'rgba(255,255,255,.18)' : enc.cerrado ? 'rgba(255,138,141,.4)' : 'rgba(77,255,145,.4)';
+                return `<button onclick="document.getElementById('enc-item-${enc.id}').scrollIntoView({behavior:'smooth',block:'nearest'})"
+                    style="flex-shrink:0;padding:4px 10px;border-radius:20px;border:1px solid ${border};background:${color};color:#F4EEDC;font-size:.75rem;cursor:pointer;white-space:nowrap;font-family:inherit">
+                    ${esc(label)}
+                </button>`;
+            }).join('');
+        } else {
+            nav.style.display = 'none';
+        }
+
         cont.innerHTML = encuestas.map(enc => {
             const opciones = enc.opciones || [];
             const total = parseInt(enc.total_votos || 0);
@@ -741,7 +786,7 @@
 
             const ganBadge = nGan > 1 ? `<span class="din-badge" style="margin-left:6px;font-size:.7rem">Top ${nGan}</span>` : '';
 
-            return `<div style="border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:12px;margin-bottom:10px;background:rgba(255,255,255,.02)">
+            return `<div id="enc-item-${enc.id}" style="border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:12px;margin-bottom:10px;background:rgba(255,255,255,.02)">
                 <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
                     <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
                         <b style="font-size:.9rem;color:#F4EEDC">${esc(titulo)}</b>${ganBadge}
@@ -959,6 +1004,99 @@
                 ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
                 alert('Texto copiado.');
             });
+    });
+
+    /* ── Clasificados ── */
+    function calcClasificados() {
+        return encuestas.map(enc => {
+            const opciones = enc.opciones || [];
+            const votos    = enc.votos || {};
+            const nGan     = Math.max(1, parseInt(enc.n_ganadores || 1));
+            const vArr     = opciones.map((_, i) => parseInt(votos[i] || 0));
+            const ordenIdx = [...vArr.keys()].sort((a, b) => vArr[b] - vArr[a]);
+            const clasificados = ordenIdx.slice(0, nGan).filter(i => vArr[i] > 0).map(i => opciones[i]);
+            return { titulo: enc.titulo || enc.pregunta || `Encuesta #${enc.id}`, clasificados, nGan };
+        }).filter(g => g.clasificados.length > 0);
+    }
+
+    function renderClasificados() {
+        const grupos = calcClasificados();
+        const cont   = document.getElementById('clasificados-lista');
+        const medallas = ['🥇','🥈','🥉'];
+        if (!grupos.length) {
+            cont.innerHTML = '<p style="color:#666;font-size:.85rem">Sin votos registrados aún.</p>';
+            return;
+        }
+        cont.innerHTML = grupos.map(g => `
+            <div style="margin-bottom:10px;padding:10px 12px;border-radius:6px;background:rgba(255,213,74,.06);border:1px solid rgba(255,213,74,.18)">
+                <div style="font-size:.78rem;font-weight:700;color:#FFD54A;letter-spacing:.08em;margin-bottom:6px">${esc(g.titulo)}</div>
+                ${g.clasificados.map((eq, i) => `
+                    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.88rem;color:#F4EEDC">
+                        <span style="font-size:1rem">${medallas[i] || '🏅'}</span>
+                        <span style="flex:1">${esc(eq)}</span>
+                    </div>`).join('')}
+            </div>`).join('');
+    }
+
+    document.getElementById('btn-enc-clasificados').addEventListener('click', () => {
+        const panel = document.getElementById('panel-clasificados');
+        const visible = panel.style.display !== 'none';
+        panel.style.display = visible ? 'none' : '';
+        if (!visible) renderClasificados();
+    });
+
+    document.getElementById('btn-clasificados-cerrar').addEventListener('click', () => {
+        document.getElementById('panel-clasificados').style.display = 'none';
+    });
+
+    document.getElementById('btn-clasificados-wa').addEventListener('click', () => {
+        const grupos  = calcClasificados();
+        if (!grupos.length) { alert('Sin clasificados aún.'); return; }
+        const portal  = (P.PORTALES[portalActual] || {}).nombre || portalActual;
+        const fecha   = new Date().toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric' });
+        const ronda   = document.getElementById('enc-nombre-ronda').value.trim();
+        const premio  = document.getElementById('enc-premio-final').value.trim();
+        const medallas = ['🥇','🥈','🥉'];
+        let txt = `*${ronda ? ronda + ' — ' : ''}Clasificados · ${portal} · ${fecha}*\n\n`;
+        grupos.forEach(g => {
+            txt += `*${g.titulo}*\n`;
+            g.clasificados.forEach((eq, i) => { txt += `  ${medallas[i] || '🏅'} ${eq}\n`; });
+            txt += '\n';
+        });
+        const total = grupos.reduce((s, g) => s + g.clasificados.length, 0);
+        txt += `_${total} equipo${total !== 1 ? 's' : ''} clasificado${total !== 1 ? 's' : ''}_`;
+        if (premio) txt += `\n\n🏆 *Premio final:* ${premio}`;
+        navigator.clipboard.writeText(txt)
+            .then(() => alert('Clasificados copiados para WhatsApp.'))
+            .catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+                alert('Texto copiado.');
+            });
+    });
+
+    document.getElementById('btn-clasificados-nueva-ronda').addEventListener('click', async () => {
+        const grupos = calcClasificados();
+        if (!grupos.length) { alert('Sin clasificados aún.'); return; }
+        const todos  = grupos.flatMap(g => g.clasificados);
+        const ronda  = document.getElementById('enc-nombre-ronda').value.trim() || 'Siguiente ronda';
+        const premio = document.getElementById('enc-premio-final').value.trim();
+        if (!confirm(`¿Crear encuesta "${ronda}" con ${todos.length} equipos clasificados?`)) return;
+        const st = document.getElementById('status-clasificados');
+        st.textContent = 'Creando...'; st.className = 'din-status';
+        try {
+            await P.enc.crear(portalActual, {
+                titulo:     ronda,
+                pregunta:   premio ? `¿Quién gana el ${premio}?` : '¿Quién avanza a la final?',
+                opciones:   todos,
+                activo:     false,
+                nGanadores: 1,
+            });
+            await cargarEncuestas();
+            renderClasificados();
+            st.textContent = '✔ Encuesta(s) de nueva ronda creadas.'; st.className = 'din-status ok';
+            setTimeout(() => st.textContent = '', 3000);
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
     });
 
     document.querySelectorAll('[name="enc-f-limite"]').forEach(r => {

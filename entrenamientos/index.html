@@ -250,12 +250,18 @@
     <script>
         // Mostrar links de nav cuando hay dinámica o juego activos
         (async function () {
+            // Sistema legado (registro / encuesta en din_sesiones)
             for (const tipo of ['registro', 'encuesta']) {
                 try {
                     const r = await PumasPortal.dinamica.publico('entrenamientos', tipo);
-                    if (r && r.activo) { document.getElementById('navDinamicas').hidden = false; break; }
-                } catch(e) { break; }
+                    if (r && r.activo) { document.getElementById('navDinamicas').hidden = false; return; }
+                } catch(e) {}
             }
+            // Sistema nuevo de encuestas (din_encuestas)
+            try {
+                const lista = await PumasPortal.enc.publico('entrenamientos');
+                if (lista && lista.length) { document.getElementById('navDinamicas').hidden = false; }
+            } catch(e) {}
         })();
     </script>
     <script>

@@ -445,7 +445,26 @@
         estilos();
         const cont = contenedor(destino);
 
-        cont.innerHTML = lista.map(enc => {
+        // Barra de navegación superior (solo si hay más de una encuesta)
+        const navHtml = lista.length > 1 ? `
+            <div id="pgdEncNav" style="display:flex;gap:8px;overflow-x:auto;padding:0 0 10px;margin-bottom:6px;scrollbar-width:thin;flex-wrap:nowrap">
+                ${lista.map((enc, i) => {
+                    const label = enc.titulo || ('Enc. ' + (i + 1));
+                    let miVoto = null;
+                    try { miVoto = JSON.parse(localStorage.getItem('pg_enc_' + enc.id + '_r' + (enc.ronda || 0)) || 'null'); } catch(e) {}
+                    const votado = miVoto !== null;
+                    const cerrado = enc.cerrado;
+                    const col = votado ? 'rgba(77,255,145,.25)' : cerrado ? 'rgba(255,138,141,.2)' : 'rgba(216,195,149,.15)';
+                    const bor = votado ? 'rgba(77,255,145,.5)'  : cerrado ? 'rgba(255,138,141,.4)' : 'rgba(216,195,149,.35)';
+                    const ico = votado ? '✔ ' : cerrado ? '⛔ ' : '';
+                    return `<button onclick="document.getElementById('pgdEnc_${enc.id}').scrollIntoView({behavior:'smooth',block:'start'})"
+                        style="flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid ${bor};background:${col};color:#F4EEDC;font-size:.82rem;cursor:pointer;font-family:inherit;white-space:nowrap">
+                        ${ico}${esc(label)}
+                    </button>`;
+                }).join('')}
+            </div>` : '';
+
+        cont.innerHTML = navHtml + lista.map(enc => {
             const opciones = enc.opciones || [];
             const ronda = enc.ronda || 0;
             const clave = 'pg_enc_' + enc.id + '_r' + ronda;
@@ -513,7 +532,7 @@
                 </div>`;
             }).join('')}<p class="pgd-total">Total votos: <b>${totalVotos}</b></p></div>` : '';
 
-            return `<div class="pgd-caja" style="margin-bottom:18px">
+            return `<div id="pgdEnc_${enc.id}" class="pgd-caja" style="margin-bottom:18px;scroll-margin-top:12px">
                 <h2>📊 ${titulo}</h2>
                 ${imagenHtml}${preguntaTxt}${cuerpo}
                 ${miVoto !== null || cerrado ? resultados : ''}
