@@ -82,6 +82,19 @@
 .din-status.ok{color:#4dff91}
 .din-status.err{color:#ff7070}
 @media(max-width:500px){.din-form-row{grid-template-columns:1fr}}
+/* ── Banner Ganador ── */
+.ban-wrap{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+@media(max-width:700px){.ban-wrap{grid-template-columns:1fr}}
+.ban-canvas-wrap{position:relative}
+#banAdminCv{width:100%;aspect-ratio:1;border-radius:8px;border:1px solid rgba(216,195,149,.25);display:block;background:#07080d}
+.ban-fields{display:flex;flex-direction:column;gap:8px}
+.ban-label{font:700 .68rem 'Michroma',sans-serif;letter-spacing:.08em;color:#D8C395;text-transform:uppercase;display:block;margin-bottom:3px}
+.ban-input{width:100%;padding:8px 10px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#F4EEDC;border-radius:5px;font:inherit;font-size:.88rem;box-sizing:border-box}
+.ban-input:focus{outline:none;border-color:#D8C395}
+.ban-file-drop{border:2px dashed rgba(216,195,149,.25);border-radius:7px;padding:14px;text-align:center;cursor:pointer;color:#666;font-size:.8rem;position:relative;transition:border-color .2s}
+.ban-file-drop:hover,.ban-file-drop.over{border-color:#D8C395;color:#aaa}
+.ban-file-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;padding:0;border:none}
+.ban-prev-img{width:48px;height:48px;object-fit:cover;border-radius:5px;border:1px solid rgba(216,195,149,.2);display:none;margin:0 auto 4px}
 </style>
 </head>
 <body>
@@ -394,20 +407,23 @@
         </div>
 
         <!-- ═══ JUEGO RETRO ═══ -->
+        <!-- SNAKE -->
         <div class="din-card" id="card-juego" style="grid-column:1/-1">
             <div class="din-card-head">
                 <div class="din-icon" style="background:rgba(77,255,145,.15);color:#4dff91"><i class="fa-solid fa-gamepad"></i></div>
-                <h3>Juego Retro — Snake</h3>
+                <h3>🐍 Snake</h3>
                 <span class="din-badge" id="badge-juego">Inactivo</span>
             </div>
             <div class="din-card-body">
                 <div class="din-toggle-wrap">
                     <label class="din-toggle"><input type="checkbox" id="toggle-juego"><span class="din-toggle-track"></span></label>
-                    <span style="font-size:.83rem;color:#aaa">Activar juego público</span>
+                    <span style="font-size:.83rem;color:#aaa">Activar Snake público</span>
                 </div>
-
+                <div style="display:flex;gap:8px;margin:10px 0;align-items:center">
+                    <input type="url" id="juego-fondo" placeholder="URL del fondo (opcional)" style="flex:1;padding:8px 10px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
+                    <button class="btn-mini" id="btn-juego-fondo-save"><i class="fa-solid fa-image"></i> Fondo</button>
+                </div>
                 <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
-                    <!-- Game area -->
                     <div>
                         <div class="game-hud">
                             <span>PUNTUACIÓN: <span id="game-score">0</span></span>
@@ -418,13 +434,12 @@
                             <button class="btn-mini" id="btn-start-game"><i class="fa-solid fa-play"></i> Iniciar</button>
                             <button class="btn-mini" id="btn-pause-game" disabled><i class="fa-solid fa-pause"></i> Pausar</button>
                         </div>
-                        <!-- Registro antes de jugar -->
                         <div id="game-reg-form" style="margin-top:12px;display:none">
                             <p style="font-size:.83rem;color:#D8C395;margin-bottom:8px"><i class="fa-solid fa-user-plus"></i> Regístrate para guardar tu puntuación:</p>
                             <div class="din-form">
                                 <div class="din-form-row">
                                     <input type="text" id="game-reg-nombre" placeholder="Tu nombre" maxlength="40">
-                                    <input type="text" id="game-reg-num" placeholder="Número (p.ej. 7)" maxlength="20">
+                                    <input type="text" id="game-reg-num" placeholder="ID Free Fire" maxlength="20">
                                 </div>
                                 <button class="btn-mini" id="btn-game-reg-save"><i class="fa-solid fa-check"></i> Guardar y jugar</button>
                             </div>
@@ -432,27 +447,190 @@
                         <p class="din-status" id="status-juego"></p>
                         <p style="font-size:.78rem;color:#555;margin-top:8px;text-align:center">↑ ↓ ← → o WASD · Espacio = Pausa</p>
                     </div>
-                    <!-- Leaderboard -->
                     <div>
                         <p class="din-section-label" style="margin-top:0"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
                         <div class="din-table-wrap">
                             <table class="din-table">
-                                <thead><tr><th>#</th><th>Jugador</th><th>Nº</th><th>Pts</th><th></th></tr></thead>
-                                <tbody id="tbody-leaderboard"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                                <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
+                                <tbody id="tbody-lb-juego"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
                             </table>
                         </div>
                         <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-                            <button class="btn-mini" id="btn-export-lb-wa"><i class="fa-brands fa-whatsapp"></i> WA</button>
-                            <button class="btn-mini" id="btn-export-lb-csv"><i class="fa-solid fa-file-csv"></i> CSV</button>
-                            <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" id="btn-clear-lb"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                            <button class="btn-mini" data-lb-wa="juego"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                            <button class="btn-mini" data-lb-csv="juego"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                            <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego"><i class="fa-solid fa-trash"></i> Limpiar</button>
                         </div>
                     </div>
                 </div>
-
                 <div class="din-url-box" id="url-juego" style="display:none">
-                    <i class="fa-solid fa-link"></i>
-                    <span id="url-juego-txt"></span>
+                    <i class="fa-solid fa-link"></i><span id="url-juego-txt"></span>
                     <button onclick="copiarUrl('juego')">Copiar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TETRIS -->
+        <div class="din-card" id="card-juego_tetris">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(0,229,255,.15);color:#00E5FF"><i class="fa-solid fa-th"></i></div>
+                <h3>🟦 Tetris</h3>
+                <span class="din-badge" id="badge-juego_tetris">Inactivo</span>
+            </div>
+            <div class="din-card-body">
+                <div class="din-toggle-wrap">
+                    <label class="din-toggle"><input type="checkbox" id="toggle-juego_tetris"><span class="din-toggle-track"></span></label>
+                    <span style="font-size:.83rem;color:#aaa">Activar Tetris público</span>
+                </div>
+                <div style="display:flex;gap:8px;margin:10px 0;align-items:center">
+                    <input type="url" id="juego_tetris-fondo" placeholder="URL del fondo (opcional)" style="flex:1;padding:8px 10px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
+                    <button class="btn-mini" id="btn-juego_tetris-fondo-save"><i class="fa-solid fa-image"></i> Fondo</button>
+                </div>
+                <p class="din-section-label" style="margin-top:4px"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
+                <div class="din-table-wrap">
+                    <table class="din-table">
+                        <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
+                        <tbody id="tbody-lb-juego_tetris"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                    </table>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                    <button class="btn-mini" data-lb-wa="juego_tetris"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                    <button class="btn-mini" data-lb-csv="juego_tetris"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                    <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_tetris"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                </div>
+                <p class="din-status" id="status-juego_tetris"></p>
+                <div class="din-url-box" id="url-juego_tetris" style="display:none">
+                    <i class="fa-solid fa-link"></i><span id="url-juego_tetris-txt"></span>
+                    <button onclick="copiarUrl('juego_tetris')">Copiar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3 EN LÍNEA -->
+        <div class="din-card" id="card-juego_3lineas">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(216,195,149,.15);color:#D8C395"><i class="fa-solid fa-hashtag"></i></div>
+                <h3>✕○ 3 en Línea</h3>
+                <span class="din-badge" id="badge-juego_3lineas">Inactivo</span>
+            </div>
+            <div class="din-card-body">
+                <div class="din-toggle-wrap">
+                    <label class="din-toggle"><input type="checkbox" id="toggle-juego_3lineas"><span class="din-toggle-track"></span></label>
+                    <span style="font-size:.83rem;color:#aaa">Activar 3 en Línea público</span>
+                </div>
+                <div style="display:flex;gap:8px;margin:10px 0;align-items:center">
+                    <input type="url" id="juego_3lineas-fondo" placeholder="URL del fondo (opcional)" style="flex:1;padding:8px 10px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
+                    <button class="btn-mini" id="btn-juego_3lineas-fondo-save"><i class="fa-solid fa-image"></i> Fondo</button>
+                </div>
+                <p class="din-section-label" style="margin-top:4px"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
+                <div class="din-table-wrap">
+                    <table class="din-table">
+                        <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
+                        <tbody id="tbody-lb-juego_3lineas"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                    </table>
+                </div>
+                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                    <button class="btn-mini" data-lb-wa="juego_3lineas"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                    <button class="btn-mini" data-lb-csv="juego_3lineas"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                    <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_3lineas"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                </div>
+                <p class="din-status" id="status-juego_3lineas"></p>
+                <div class="din-url-box" id="url-juego_3lineas" style="display:none">
+                    <i class="fa-solid fa-link"></i><span id="url-juego_3lineas-txt"></span>
+                    <button onclick="copiarUrl('juego_3lineas')">Copiar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- GANADOR DEL EVENTO -->
+        <div class="din-card" id="card-ganador" style="grid-column:1/-1">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(255,213,74,.15);color:#FFD54A"><i class="fa-solid fa-crown"></i></div>
+                <h3>Ganador del Evento</h3>
+            </div>
+            <div class="din-card-body">
+                <p style="font-size:.83rem;color:#aaa;margin:0 0 12px">Registra quién ganó el premio para tener el historial.</p>
+                <div style="display:grid;grid-template-columns:160px 1fr 140px auto;gap:10px;align-items:end;flex-wrap:wrap">
+                    <div>
+                        <label style="display:block;font-size:.72rem;color:#D8C395;font-family:Michroma,sans-serif;margin-bottom:4px">JUEGO</label>
+                        <select id="gan-juego" style="width:100%;padding:8px 10px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px">
+                            <option value="juego">Snake</option>
+                            <option value="juego_tetris">Tetris</option>
+                            <option value="juego_3lineas">3 en Línea</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:.72rem;color:#D8C395;font-family:Michroma,sans-serif;margin-bottom:4px">NOMBRE DEL GANADOR</label>
+                        <input type="text" id="gan-nombre" placeholder="Nombre del jugador" maxlength="80" style="width:100%;padding:8px 10px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;box-sizing:border-box">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:.72rem;color:#D8C395;font-family:Michroma,sans-serif;margin-bottom:4px">PUNTUACIÓN</label>
+                        <input type="number" id="gan-puntos" placeholder="0" min="0" style="width:100%;padding:8px 10px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;box-sizing:border-box">
+                    </div>
+                    <button class="btn-mini" id="btn-guardar-ganador" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                </div>
+                <div id="ganador-actual" style="margin-top:14px;font-size:.85rem;color:#aaa"></div>
+                <p class="din-status" id="status-ganador"></p>
+            </div>
+        </div>
+
+        <!-- BANNER DEL GANADOR -->
+        <div class="din-card" id="card-banner" style="grid-column:1/-1">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(216,195,149,.12);color:#D8C395"><i class="fa-solid fa-image"></i></div>
+                <h3>🖼 Banner del Ganador</h3>
+            </div>
+            <div class="din-card-body">
+                <p style="font-size:.83rem;color:#aaa;margin:0 0 14px">Genera un banner 1:1 (1080×1080 px) para publicar en redes.</p>
+                <button class="btn-mini" id="btn-ban-desde-ganador" style="margin-bottom:14px"><i class="fa-solid fa-arrow-down"></i> Usar datos del ganador guardado</button>
+                <div class="ban-wrap">
+                    <!-- Campos -->
+                    <div class="ban-fields">
+                        <div>
+                            <label class="ban-label">Juego</label>
+                            <select class="ban-input" id="ban-juego">
+                                <option value="snake">🐍 Snake</option>
+                                <option value="tetris">🧱 Tetris</option>
+                                <option value="treslineas">✕○ Tres en Línea</option>
+                                <option value="mvp">⭐ MVP Entrenos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="ban-label" id="ban-label-pts">Puntuación</label>
+                            <input class="ban-input" type="number" id="ban-puntos" placeholder="Ej: 3500" min="0">
+                        </div>
+                        <div>
+                            <label class="ban-label">Nombre del Ganador</label>
+                            <input class="ban-input" type="text" id="ban-nombre" placeholder="Ej: ProGamer99" maxlength="30" autocomplete="off">
+                        </div>
+                        <div>
+                            <label class="ban-label">ID de Free Fire</label>
+                            <input class="ban-input" type="text" id="ban-idff" placeholder="Ej: 123456789" maxlength="20" autocomplete="off" inputmode="numeric">
+                        </div>
+                        <div>
+                            <label class="ban-label">Torneo / Evento (opcional)</label>
+                            <input class="ban-input" type="text" id="ban-torneo" placeholder="Ej: Liga Semanal #12" maxlength="40">
+                        </div>
+                        <div>
+                            <label class="ban-label">Imagen de fondo</label>
+                            <div class="ban-file-drop" id="ban-drop">
+                                <img class="ban-prev-img" id="ban-prev-img">
+                                <p id="ban-drop-txt">📁 Clic o arrastra una imagen</p>
+                                <input type="file" id="ban-fondo-file" accept="image/*">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="ban-label">URL de fondo alternativa</label>
+                            <input class="ban-input" type="url" id="ban-fondo-url" placeholder="https://...">
+                        </div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+                            <button class="btn-mini" id="btn-ban-limpiar-fondo">↺ Limpiar fondo</button>
+                            <button class="btn-mini" id="btn-ban-descargar" style="background:rgba(216,195,149,.15);border-color:rgba(216,195,149,.5);color:#D8C395"><i class="fa-solid fa-download"></i> Descargar PNG</button>
+                        </div>
+                    </div>
+                    <!-- Preview canvas -->
+                    <div class="ban-canvas-wrap">
+                        <canvas id="banAdminCv" width="1080" height="1080"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -504,8 +682,11 @@
         return base + portalActual + '/';
     }
 
+    const JUEGO_TIPOS = ['juego','juego_tetris','juego_3lineas'];
+    const JUEGO_NOMBRES = { juego: 'Snake', juego_tetris: 'Tetris', juego_3lineas: '3 en Línea' };
+
     function actualizarUrls() {
-        ['registro','encuesta','juego'].forEach(t => {
+        ['registro','encuesta','juego','juego_tetris','juego_3lineas'].forEach(t => {
             const box = document.getElementById('url-' + t);
             const txt = document.getElementById('url-' + t + '-txt');
             if (txt) txt.textContent = urlPublica(t);
@@ -530,6 +711,8 @@
         await Promise.all([
             cargarDinamica('registro'),
             cargarDinamica('juego'),
+            cargarDinamica('juego_tetris'),
+            cargarDinamica('juego_3lineas'),
             cargarEncuestas(),
         ]);
     }
@@ -552,7 +735,7 @@
         }
         if (tipo === 'registro') renderRegistro();
         if (tipo === 'encuesta') renderEncuesta();
-        if (tipo === 'juego')    renderLeaderboard();
+        if (JUEGO_TIPOS.includes(tipo)) renderLeaderboard(tipo);
     }
 
     /* ── Config helper ── */
@@ -1481,81 +1664,149 @@
 
 
     /* ══════════════════════════════════════
-       LEADERBOARD DEL JUEGO
+       LEADERBOARD DE JUEGOS (genérico)
     ══════════════════════════════════════ */
-    function renderLeaderboard() {
-        const ses = sesiones.juego || {};
-        const lista = (entradas.juego || []).slice(0, 20);
+    function renderLeaderboard(tipo) {
+        const ses   = sesiones[tipo] || {};
+        const lista = (entradas[tipo] || []).slice(0, 20);
+        const toggle = document.getElementById('toggle-' + tipo);
+        const badge  = document.getElementById('badge-' + tipo);
+        const urlBox = document.getElementById('url-' + tipo);
+        const fondo  = document.getElementById(tipo + '-fondo');
 
-        const toggleJ = document.getElementById('toggle-juego');
-        const badgeJ  = document.getElementById('badge-juego');
-        const urlBox  = document.getElementById('url-juego');
+        if (toggle) toggle.checked = !!ses.activo;
+        if (badge)  { badge.textContent = ses.activo ? 'Activo' : 'Inactivo'; badge.className = 'din-badge' + (ses.activo ? ' activo' : ''); }
+        if (urlBox) urlBox.style.display = ses.activo ? 'flex' : 'none';
+        if (fondo)  fondo.value = ses.config?.fondo || '';
 
-        toggleJ.checked = !!ses.activo;
-        badgeJ.textContent = ses.activo ? 'Activo' : 'Inactivo';
-        badgeJ.className = 'din-badge' + (ses.activo ? ' activo' : '');
-        urlBox.style.display = ses.activo ? 'flex' : 'none';
+        // Cargar ganador guardado en config
+        renderGanadorActual();
 
-        const tb = document.getElementById('tbody-leaderboard');
-        if (!lista.length) { tb.innerHTML = '<tr><td colspan="5" class="din-empty">Sin registros</td></tr>'; return; }
-        // Sort by puntos desc
-        const sorted = [...lista].sort((a, b) => {
-            const pa = a.metadata && a.metadata.puntos ? parseInt(a.metadata.puntos) : 0;
-            const pb = b.metadata && b.metadata.puntos ? parseInt(b.metadata.puntos) : 0;
-            return pb - pa;
-        });
+        const tb = document.getElementById('tbody-lb-' + tipo);
+        if (!tb) return;
+        if (!lista.length) { tb.innerHTML = `<tr><td colspan="5" class="din-empty">Sin registros</td></tr>`; return; }
+        const sorted = [...lista].sort((a, b) => (parseInt(b.metadata?.puntos||0)) - (parseInt(a.metadata?.puntos||0)));
         tb.innerHTML = sorted.map((r, i) => {
-            const pts = r.metadata && r.metadata.puntos ? r.metadata.puntos : 0;
+            const pts = r.metadata?.puntos || 0;
+            const id  = r.ig || r.numero || '—';
             const cls = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
             return `<tr>
                 <td><div class="score-rank"><div class="pos ${cls}">${i+1}</div></div></td>
                 <td>${esc(r.nombre)}</td>
-                <td>${r.numero ? esc(r.numero) : '—'}</td>
+                <td style="font-size:.78rem;color:#aaa">${esc(id)}</td>
                 <td style="color:#FFD54A;font-weight:700">${pts}</td>
-                <td><button class="del-btn" onclick="borrarEntrada('juego',${r.id})"><i class="fa-solid fa-xmark"></i></button></td>
+                <td><button class="del-btn" onclick="borrarEntrada('${tipo}',${r.id})"><i class="fa-solid fa-xmark"></i></button></td>
             </tr>`;
         }).join('');
     }
 
-    document.getElementById('toggle-juego').addEventListener('change', function() {
-        config('juego', { activo: this.checked }, 'status-juego');
-    });
-
-    document.getElementById('btn-export-lb-wa').addEventListener('click', () => {
-        const lista = (entradas.juego || []).slice();
-        if (!lista.length) { alert('No hay registros.'); return; }
-        lista.sort((a, b) => (b.metadata?.puntos || 0) - (a.metadata?.puntos || 0));
-        const portal = (P.PORTALES[portalActual] || {}).nombre || portalActual;
-        let txt = `*Top jugadores Snake — ${portal}*\n\n`;
-        const medals = ['🥇','🥈','🥉'];
-        lista.slice(0, 20).forEach((r, i) => {
-            const pts = r.metadata?.puntos || 0;
-            txt += `${medals[i] || (i+1+'.')} ${r.nombre}`;
-            if (r.numero) txt += ` (#${r.numero})`;
-            txt += ` — ${pts} pts\n`;
+    // Toggles de habilitación
+    JUEGO_TIPOS.forEach(tipo => {
+        document.getElementById('toggle-' + tipo)?.addEventListener('change', function() {
+            config(tipo, { activo: this.checked }, 'status-' + tipo);
         });
-        navigator.clipboard.writeText(txt).then(() => alert('Copiado para WhatsApp.')).catch(() => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('Copiado.'); });
+        // Guardar fondo
+        document.getElementById('btn-' + tipo + '-fondo-save')?.addEventListener('click', async () => {
+            const url   = document.getElementById(tipo + '-fondo')?.value.trim() || '';
+            const ses   = sesiones[tipo] || {};
+            const cfg   = Object.assign({}, ses.config || {}, { fondo: url || undefined });
+            if (!url) delete cfg.fondo;
+            const st = document.getElementById('status-' + tipo);
+            if (st) { st.textContent = 'Guardando…'; st.className = 'din-status'; }
+            try {
+                await P.dinamica.config(portalActual, tipo, { config: cfg });
+                await cargarDinamica(tipo);
+                if (st) { st.textContent = '✔ Fondo actualizado'; st.className = 'din-status ok'; setTimeout(() => st.textContent='',2500); }
+            } catch(e) { if (st) { st.textContent = e.message; st.className = 'din-status err'; } }
+        });
     });
 
-    document.getElementById('btn-export-lb-csv').addEventListener('click', () => {
-        const lista = (entradas.juego || []).slice();
-        if (!lista.length) { alert('No hay registros.'); return; }
-        lista.sort((a, b) => (b.metadata?.puntos || 0) - (a.metadata?.puntos || 0));
-        const rows = ['#,Jugador,Número,Puntos,Fecha'].concat(
-            lista.map((r, i) => `${i+1},"${(r.nombre||'').replace(/"/g,'""')}","${(r.numero||'').replace(/"/g,'""')}",${r.metadata?.puntos||0},"${r.creado ? new Date(r.creado).toLocaleString('es-MX') : ''}"`)
-        ).join('\n');
-        descargar('leaderboard_pumas.csv', rows, 'text/csv');
+    // Exportar WA / CSV / Limpiar (event delegation)
+    document.addEventListener('click', async e => {
+        const btnWa    = e.target.closest('[data-lb-wa]');
+        const btnCsv   = e.target.closest('[data-lb-csv]');
+        const btnClear = e.target.closest('[data-lb-clear]');
+
+        if (btnWa) {
+            const tipo = btnWa.dataset.lbWa;
+            const lista = (entradas[tipo] || []).slice().sort((a,b)=>(b.metadata?.puntos||0)-(a.metadata?.puntos||0));
+            if (!lista.length) { alert('No hay registros.'); return; }
+            const portal = (P.PORTALES[portalActual]||{}).nombre || portalActual;
+            const nombre = JUEGO_NOMBRES[tipo] || tipo;
+            let txt = `*Top jugadores ${nombre} — ${portal}*\n\n`;
+            const medals = ['🥇','🥈','🥉'];
+            lista.slice(0,20).forEach((r,i) => {
+                const pts = r.metadata?.puntos || 0;
+                const id  = r.ig || r.numero;
+                txt += `${medals[i]||(i+1+'.')} ${r.nombre}${id ? ` (ID: ${id})` : ''} — ${pts} pts\n`;
+            });
+            navigator.clipboard.writeText(txt).then(()=>alert('Copiado para WhatsApp.')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('Copiado.');});
+        }
+
+        if (btnCsv) {
+            const tipo = btnCsv.dataset.lbCsv;
+            const lista = (entradas[tipo] || []).slice().sort((a,b)=>(b.metadata?.puntos||0)-(a.metadata?.puntos||0));
+            if (!lista.length) { alert('No hay registros.'); return; }
+            const rows = ['#,Jugador,ID,Puntos,Fecha'].concat(
+                lista.map((r,i)=>`${i+1},"${(r.nombre||'').replace(/"/g,'""')}","${(r.ig||r.numero||'').replace(/"/g,'""')}",${r.metadata?.puntos||0},"${r.creado?new Date(r.creado).toLocaleString('es-MX'):''}"`)
+            ).join('\n');
+            descargar(`lb_${tipo}_${portalActual}.csv`, rows, 'text/csv');
+        }
+
+        if (btnClear) {
+            const tipo = btnClear.dataset.lbClear;
+            if (!confirm(`¿Borrar todos los registros de ${JUEGO_NOMBRES[tipo] || tipo}?`)) return;
+            const st = document.getElementById('status-' + tipo);
+            if (st) { st.textContent = 'Limpiando...'; st.className = 'din-status'; }
+            try {
+                await P.dinamica.vaciar(portalActual, tipo);
+                await cargarDinamica(tipo);
+                if (st) { st.textContent = '✔ Limpiado'; st.className = 'din-status ok'; setTimeout(()=>st.textContent='',2500); }
+            } catch(e) { if (st) { st.textContent = e.message; st.className = 'din-status err'; } }
+        }
     });
 
-    document.getElementById('btn-clear-lb').addEventListener('click', async () => {
-        if (!confirm('¿Borrar todos los registros del leaderboard?')) return;
-        const st = document.getElementById('status-juego');
-        st.textContent = 'Limpiando...'; st.className = 'din-status';
+    /* ── Ganador del evento ── */
+    function renderGanadorActual() {
+        const tipo = document.getElementById('gan-juego')?.value || 'juego';
+        const ses  = sesiones[tipo] || {};
+        const gan  = ses.config?.ganador;
+        const el   = document.getElementById('ganador-actual');
+        if (!el) return;
+        if (gan && gan.nombre) {
+            el.innerHTML = `<span style="color:#FFD54A">🏆 Ganador actual (${esc(JUEGO_NOMBRES[tipo]||tipo)}):</span>
+                <b style="color:#fff;margin-left:6px">${esc(gan.nombre)}</b>
+                <span style="color:#aaa;margin-left:6px">— ${gan.puntos ?? '?'} pts</span>`;
+        } else {
+            el.textContent = 'Sin ganador registrado para ' + (JUEGO_NOMBRES[tipo] || tipo) + '.';
+        }
+    }
+
+    document.getElementById('gan-juego')?.addEventListener('change', () => {
+        const tipo = document.getElementById('gan-juego').value;
+        renderGanadorActual();
+        // Pre-llenar desde el top 1
+        const lista = (entradas[tipo] || []).slice().sort((a,b)=>(b.metadata?.puntos||0)-(a.metadata?.puntos||0));
+        if (lista[0]) {
+            document.getElementById('gan-nombre').value = lista[0].nombre || '';
+            document.getElementById('gan-puntos').value = lista[0].metadata?.puntos || '';
+        }
+    });
+
+    document.getElementById('btn-guardar-ganador')?.addEventListener('click', async () => {
+        const tipo   = document.getElementById('gan-juego').value;
+        const nombre = document.getElementById('gan-nombre').value.trim();
+        const puntos = parseInt(document.getElementById('gan-puntos').value) || 0;
+        if (!nombre) { alert('Escribe el nombre del ganador.'); return; }
+        const st  = document.getElementById('status-ganador');
+        const ses = sesiones[tipo] || {};
+        const cfg = Object.assign({}, ses.config || {}, { ganador: { nombre, puntos } });
+        st.textContent = 'Guardando…'; st.className = 'din-status';
         try {
-            await P.dinamica.vaciar(portalActual, 'juego');
-            await cargarDinamica('juego');
-            st.textContent = '✔ Limpiado'; st.className = 'din-status ok';
-            setTimeout(() => st.textContent = '', 2500);
+            await P.dinamica.config(portalActual, tipo, { config: cfg });
+            await cargarDinamica(tipo);
+            st.textContent = `✔ Ganador de ${JUEGO_NOMBRES[tipo]||tipo} guardado`; st.className = 'din-status ok';
+            setTimeout(() => st.textContent = '', 3000);
         } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
     });
 
@@ -1668,16 +1919,16 @@
         if (score > prev) localStorage.setItem('pg_din_best_score', score);
         document.getElementById('game-best').textContent = Math.max(score, prev);
         if (score > 0) {
-            if (juegoJugador) guardarPuntuacion(juegoJugador.nombre, juegoJugador.numero, score);
+            if (juegoJugador) guardarPuntuacion(juegoJugador.nombre, juegoJugador.ig || juegoJugador.numero || '', score);
             else { setTimeout(() => document.getElementById('game-reg-form').style.display = '', 200); }
         }
     }
 
-    async function guardarPuntuacion(nombre, numero, pts) {
+    async function guardarPuntuacion(nombre, ig, pts) {
         const st = document.getElementById('status-juego');
         st.textContent = 'Guardando puntuación...'; st.className = 'din-status';
         try {
-            await P.dinamica.registrar(portalActual, 'juego', { nombre, numero, metadata: { puntos: pts } });
+            await P.dinamica.registrar(portalActual, 'juego', { nombre, ig: ig || '', metadata: { puntos: pts } });
             await cargarDinamica('juego');
             st.textContent = '✔ Puntuación guardada'; st.className = 'din-status ok';
             setTimeout(() => st.textContent = '', 3000);
@@ -1689,11 +1940,11 @@
 
     document.getElementById('btn-game-reg-save').addEventListener('click', () => {
         const nombre = document.getElementById('game-reg-nombre').value.trim();
-        const numero = document.getElementById('game-reg-num').value.trim();
+        const ig     = document.getElementById('game-reg-num').value.trim();
         if (!nombre) { alert('Escribe tu nombre.'); return; }
-        juegoJugador = { nombre, numero };
+        juegoJugador = { nombre, ig };
         try { localStorage.setItem('pg_din_jugador', JSON.stringify(juegoJugador)); } catch(e) {}
-        guardarPuntuacion(nombre, numero, score);
+        guardarPuntuacion(nombre, ig, score);
     });
 
     document.getElementById('btn-start-game').addEventListener('click', () => {
@@ -1751,12 +2002,216 @@
     document.getElementById('game-best').textContent = localStorage.getItem('pg_din_best_score') || '0';
     if (juegoJugador) {
         document.getElementById('game-reg-nombre').value = juegoJugador.nombre;
-        document.getElementById('game-reg-num').value = juegoJugador.numero || '';
+        document.getElementById('game-reg-num').value = juegoJugador.ig || juegoJugador.numero || '';
     }
 
     /* ── Arranque ── */
     resetGame();
     await cargarTodo();
+
+    /* ════════════════════════════════════════════
+       BANNER DEL GANADOR — canvas 1080×1080
+    ═══════════════════════════════════════════════ */
+    (function initBanner() {
+        const BCV  = document.getElementById('banAdminCv');
+        const BCTX = BCV.getContext('2d');
+        const BS   = 1080;
+        const BJUEGOS = {
+            snake:      { label: 'Snake',         emoji: '🐍', pts: 'PUNTOS',      titulo: 'GANADOR' },
+            tetris:     { label: 'Tetris',         emoji: '🧱', pts: 'PUNTOS',      titulo: 'GANADOR' },
+            treslineas: { label: 'Tres en Línea',  emoji: '✕○', pts: 'VICTORIAS',   titulo: 'GANADOR' },
+            mvp:        { label: 'Entrenos Pumas', emoji: '⭐', pts: 'PUNTUACIÓN',   titulo: 'MVP' },
+        };
+        let banBg = null;
+        let banFontsReady = false;
+
+        const banFonts = Promise.all([
+            document.fonts.load('400 40px Michroma'),
+            document.fonts.load('700 40px Michroma'),
+        ]).then(() => { banFontsReady = true; }).catch(() => { banFontsReady = true; });
+
+        function banFitFont(ctx, text, fam, maxW, maxSz) {
+            let sz = maxSz;
+            ctx.font = `700 ${sz}px ${fam}`;
+            while (ctx.measureText(text).width > maxW && sz > 18) {
+                sz -= 2; ctx.font = `700 ${sz}px ${fam}`;
+            }
+            return sz;
+        }
+
+        function banRender() {
+            const juego  = BJUEGOS[document.getElementById('ban-juego').value];
+            const nombre = document.getElementById('ban-nombre').value.trim() || 'GANADOR';
+            const idff   = document.getElementById('ban-idff').value.trim();
+            const puntos = document.getElementById('ban-puntos').value.trim();
+            const torneo = document.getElementById('ban-torneo').value.trim();
+            const C = BCTX, S = BS;
+
+            /* fondo */
+            if (banBg) {
+                const sc = Math.max(S / banBg.width, S / banBg.height);
+                const w = banBg.width * sc, h = banBg.height * sc;
+                C.drawImage(banBg, (S-w)/2, (S-h)/2, w, h);
+            } else {
+                const g = C.createRadialGradient(S*.5,S*.3,0,S*.5,S*.5,S*.75);
+                g.addColorStop(0,'#1a1b22'); g.addColorStop(1,'#07080d');
+                C.fillStyle = g; C.fillRect(0,0,S,S);
+                C.strokeStyle='rgba(216,195,149,.04)'; C.lineWidth=1;
+                for (let i=60;i<S;i+=60){
+                    C.beginPath();C.moveTo(i,0);C.lineTo(i,S);C.stroke();
+                    C.beginPath();C.moveTo(0,i);C.lineTo(S,i);C.stroke();
+                }
+            }
+            /* overlay */
+            const ov=C.createLinearGradient(0,0,0,S);
+            ov.addColorStop(0,'rgba(0,0,0,.55)');ov.addColorStop(.45,'rgba(0,0,0,.3)');ov.addColorStop(1,'rgba(0,0,0,.75)');
+            C.fillStyle=ov; C.fillRect(0,0,S,S);
+            /* barras doradas */
+            C.fillStyle='#D8C395'; C.fillRect(0,0,S,7); C.fillRect(0,S-7,S,7);
+            /* PUMAS GAMING */
+            C.font=`400 ${S*.028}px Michroma,sans-serif`; C.fillStyle='#D8C395';
+            C.letterSpacing=`${S*.005}px`; C.textAlign='center';
+            C.fillText('PUMAS GAMING',S/2,S*.07); C.letterSpacing='0px';
+            /* badge juego */
+            const bY=S*.115, bTxt=`${juego.emoji}  ${juego.label.toUpperCase()}`;
+            C.font=`400 ${S*.022}px Michroma,sans-serif`;
+            const bW=C.measureText(bTxt).width+S*.06, bH=S*.05, bX=S/2-bW/2;
+            C.fillStyle='rgba(216,195,149,.12)'; C.strokeStyle='rgba(216,195,149,.4)'; C.lineWidth=1.5;
+            const br=8; C.beginPath();
+            C.moveTo(bX+br,bY);C.lineTo(bX+bW-br,bY);C.quadraticCurveTo(bX+bW,bY,bX+bW,bY+br);
+            C.lineTo(bX+bW,bY+bH-br);C.quadraticCurveTo(bX+bW,bY+bH,bX+bW-br,bY+bH);
+            C.lineTo(bX+br,bY+bH);C.quadraticCurveTo(bX,bY+bH,bX,bY+bH-br);
+            C.lineTo(bX,bY+br);C.quadraticCurveTo(bX,bY,bX+br,bY);C.closePath();
+            C.fill(); C.stroke();
+            C.fillStyle='#D8C395'; C.fillText(bTxt,S/2,bY+bH*.68);
+            /* GANADOR / MVP label */
+            C.font=`400 ${S*.033}px Michroma,sans-serif`; C.fillStyle='rgba(216,195,149,.7)';
+            C.letterSpacing=`${S*.012}px`; C.fillText(juego.titulo,S/2,S*.28); C.letterSpacing='0px';
+            /* divisores */
+            const dY=S*.3; C.strokeStyle='#D8C395'; C.lineWidth=1;
+            C.beginPath();C.moveTo(S/2-S*.28,dY);C.lineTo(S/2-S*.18,dY);C.stroke();
+            C.beginPath();C.moveTo(S/2+S*.18,dY);C.lineTo(S/2+S*.28,dY);C.stroke();
+            /* NOMBRE */
+            const nSz=banFitFont(C,nombre.toUpperCase(),'Michroma,sans-serif',S*.82,S*.12);
+            C.font=`700 ${nSz}px Michroma,sans-serif`;
+            const nG=C.createLinearGradient(0,S*.32,0,S*.32+nSz);
+            nG.addColorStop(0,'#f5e8c0');nG.addColorStop(.5,'#D8C395');nG.addColorStop(1,'#b8944a');
+            C.fillStyle=nG; C.fillText(nombre.toUpperCase(),S/2,S*.32+nSz*.85);
+            /* ID FF */
+            if(idff){
+                C.font=`400 ${S*.03}px sans-serif`; C.fillStyle='rgba(255,255,255,.55)';
+                C.fillText('ID: '+idff,S/2,S*.47);
+            }
+            /* puntos */
+            if(puntos){
+                const pY=S*.57;
+                C.font=`400 ${S*.023}px Michroma,sans-serif`; C.fillStyle='rgba(216,195,149,.6)';
+                C.letterSpacing=`${S*.006}px`; C.fillText(juego.pts,S/2,pY); C.letterSpacing='0px';
+                const pSz=banFitFont(C,puntos,'Michroma,sans-serif',S*.55,S*.145);
+                C.font=`700 ${pSz}px Michroma,sans-serif`;
+                const pG=C.createLinearGradient(0,pY,0,pY+pSz);
+                pG.addColorStop(0,'#ffffff');pG.addColorStop(1,'#D8C395');
+                C.fillStyle=pG; C.fillText(puntos,S/2,pY+pSz*.97);
+            }
+            /* torneo */
+            if(torneo){
+                C.font=`600 ${S*.028}px sans-serif`; C.fillStyle='rgba(255,255,255,.45)';
+                C.fillText(torneo,S/2,S*.84);
+            }
+            /* watermark */
+            C.font=`400 ${S*.018}px Michroma,sans-serif`; C.fillStyle='rgba(216,195,149,.3)';
+            C.textAlign='left'; C.fillText('pumasgaming.com',S*.045,S*.955); C.textAlign='center';
+        }
+
+        function banSafeRender() {
+            if (banFontsReady) banRender(); else banFonts.then(() => banRender());
+        }
+
+        function banLoadBg(src) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload  = () => { banBg = img; banSafeRender(); };
+            img.onerror = () => { banBg = null; banSafeRender(); };
+            img.src = src;
+        }
+
+        /* inputs → re-render */
+        function banSyncLabel() {
+            const j = BJUEGOS[document.getElementById('ban-juego').value];
+            const map = { 'PUNTOS':'Puntuación', 'VICTORIAS':'Victorias ganadas', 'PUNTUACIÓN':'Puntuación' };
+            document.getElementById('ban-label-pts').textContent = map[j.pts] || j.pts;
+        }
+        ['ban-juego','ban-nombre','ban-idff','ban-puntos','ban-torneo'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                banSyncLabel();
+                banSafeRender();
+            });
+        });
+
+        /* URL fondo */
+        document.getElementById('ban-fondo-url').addEventListener('input', function() {
+            const v = this.value.trim();
+            if (!v) { banBg = null; banSafeRender(); return; }
+            banLoadBg(v);
+        });
+
+        /* archivo */
+        const banDrop   = document.getElementById('ban-drop');
+        const banFileIn = document.getElementById('ban-fondo-file');
+        const banPrevImg= document.getElementById('ban-prev-img');
+        const banDropTxt= document.getElementById('ban-drop-txt');
+
+        function banHandleFile(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+            const rd = new FileReader();
+            rd.onload = e => {
+                banPrevImg.src = e.target.result;
+                banPrevImg.style.display = 'block';
+                banDropTxt.style.display = 'none';
+                banLoadBg(e.target.result);
+            };
+            rd.readAsDataURL(file);
+        }
+
+        banFileIn.addEventListener('change', () => banHandleFile(banFileIn.files[0]));
+        banDrop.addEventListener('dragover',  e => { e.preventDefault(); banDrop.classList.add('over'); });
+        banDrop.addEventListener('dragleave', () => banDrop.classList.remove('over'));
+        banDrop.addEventListener('drop', e => { e.preventDefault(); banDrop.classList.remove('over'); banHandleFile(e.dataTransfer.files[0]); });
+
+        /* limpiar fondo */
+        document.getElementById('btn-ban-limpiar-fondo').addEventListener('click', () => {
+            banBg = null; banPrevImg.style.display='none'; banDropTxt.style.display='block';
+            document.getElementById('ban-fondo-url').value = ''; banFileIn.value = '';
+            banSafeRender();
+        });
+
+        /* DESCARGAR */
+        document.getElementById('btn-ban-descargar').addEventListener('click', () => {
+            const nombre = document.getElementById('ban-nombre').value.trim() || 'ganador';
+            const juego  = document.getElementById('ban-juego').value;
+            const a = document.createElement('a');
+            a.href     = BCV.toDataURL('image/png');
+            a.download = `banner-${juego}-${nombre.replace(/\s+/g,'-').toLowerCase()}.png`;
+            a.click();
+        });
+
+        /* AUTOCOMPLETAR desde ganador guardado */
+        document.getElementById('btn-ban-desde-ganador').addEventListener('click', () => {
+            const juego   = document.getElementById('gan-juego')?.value || 'juego';
+            const nombre  = document.getElementById('gan-nombre')?.value.trim() || '';
+            const puntos  = document.getElementById('gan-puntos')?.value.trim() || '';
+            const mapa    = { juego:'snake', juego_tetris:'tetris', juego_3lineas:'treslineas' };
+            document.getElementById('ban-juego').value  = mapa[juego] || 'snake';
+            document.getElementById('ban-nombre').value = nombre;
+            document.getElementById('ban-puntos').value = puntos;
+            banSyncLabel();
+            banSafeRender();
+            document.getElementById('card-banner').scrollIntoView({ behavior:'smooth', block:'start' });
+        });
+
+        /* render inicial */
+        banFonts.then(() => banRender());
+    })();
 
 })();
 </script>
