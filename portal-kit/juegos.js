@@ -565,7 +565,7 @@
                             await P.dinamica.registrar(portal, 'juego', { nombre: jug.nombre, ig: jug.ig || '', metadata: { puntos: finalPts } });
                             const cfg2 = await P.dinamica.publico(portal, 'juego');
                             if (cfg2?.entradas) entradas = cfg2.entradas;
-                        } catch (_) {}
+                        } catch (e) { console.error('[PG Snake]', e?.message || e); }
                     }
                     inicioSnake('Game over · ' + finalPts + ' puntos');
                 },
@@ -641,7 +641,9 @@
                 <div class="pgj-layout">
                     <div>
                         <p class="pgj-score-live" id="pgjScoreLive">PUNTOS: 0</p>
-                        <p style="font-size:.75rem;color:#888;margin:4px 0 0">⬆ Rotar · ⬇ Bajar · Espacio = Caída</p>
+                        <p style="font-size:.75rem;color:#888;margin:4px 0 12px">⬆ Rotar · ⬇ Bajar · Espacio = Caída</p>
+                        <h3 style="font:700 .72rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;color:var(--primary,#D8C395);text-transform:uppercase;margin:0 0 8px">Top 20</h3>
+                        <div id="pgjLbWrap">${lbHTML(entradas)}</div>
                     </div>
                     <div class="pgj-canvas-col">
                         <canvas id="pgjCv" width="${T_W}" height="${T_H}" style="max-height:min(82vh,480px)"></canvas>
@@ -676,8 +678,12 @@
                         try {
                             await P.dinamica.registrar(portal, 'juego_tetris', { nombre: jug.nombre, ig: jug.ig || '', metadata: { puntos: finalPts } });
                             const cfg2 = await P.dinamica.publico(portal, 'juego_tetris');
-                            if (cfg2?.entradas) entradas = cfg2.entradas;
-                        } catch (_) {}
+                            if (cfg2?.entradas) {
+                                entradas = cfg2.entradas;
+                                const lb = document.getElementById('pgjLbWrap');
+                                if (lb) lb.innerHTML = lbHTML(entradas);
+                            }
+                        } catch (e) { console.error('[PG Tetris]', e?.message || e); }
                     }
                     inicioTetris('Game over · ' + finalPts + ' pts');
                 },
@@ -785,7 +791,7 @@
                         await P.dinamica.registrar(portal, 'juego_3lineas', { nombre: jug.nombre, ig: jug.ig || '', metadata: { puntos: wins } });
                         const cfg2 = await P.dinamica.publico(portal, 'juego_3lineas');
                         if (cfg2?.entradas) entradas = cfg2.entradas;
-                    } catch (_) {}
+                    } catch (e) { console.error('[PG 3enLinea]', e?.message || e); }
                 }
             });
             document.getElementById('pgjSalir').addEventListener('click', () => inicio3enLinea());
