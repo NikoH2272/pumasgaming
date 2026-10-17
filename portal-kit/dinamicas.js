@@ -319,15 +319,22 @@
                    </div>`
                 : `<div class="pgd-cerrado">⛔ La encuesta cerró.</div>`;
         } else if (miVoto !== null) {
-            cuerpo = `${timerInline}<div class="pgd-ok"><small>Ya votaste</small><b>${esc(opciones[miVoto] || '')}</b></div>`;
+            const nombreVotado = miVoto && miVoto.nombre ? `<br><small style="color:#999">como ${esc(miVoto.nombre)}</small>` : '';
+            cuerpo = `${timerInline}<div class="pgd-ok"><small>Ya votaste</small><b>${esc(opciones[miVoto.idx ?? miVoto] || '')}</b>${nombreVotado}</div>`;
         } else {
             const rcWidget = RECAPTCHA_SITEKEY
                 ? `<div id="pgdRecaptcha" style="margin:12px 0 4px"></div>`
                 : '';
-            cuerpo = `${timerInline}<div id="pgdOpcs">${opciones.map((op, i) =>
-                `<div class="pgd-poll-opt"><button class="pgd-poll-btn" data-idx="${i}">${esc(op)}</button></div>`
-            ).join('')}</div>${rcWidget}<p class="pgd-msg" id="pgdMsgEnc" role="alert"></p>`;
-            cargarRecaptcha();
+            cuerpo = `${timerInline}
+                <div style="margin-bottom:12px">
+                    <input id="pgdNombreEnc" type="text" placeholder="Tu nombre o apodo" maxlength="80"
+                        style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#F4EEDC;font-size:.95rem">
+                </div>
+                ${rcWidget}
+                <div id="pgdOpcs" style="margin-top:10px">${opciones.map((op, i) =>
+                    `<div class="pgd-poll-opt"><button class="pgd-poll-btn" data-idx="${i}">${esc(op)}</button></div>`
+                ).join('')}</div>
+                <p class="pgd-msg" id="pgdMsgEnc" role="alert"></p>`;
         }
 
         const resultados = totalVotos > 0 ? `<div style="margin-top:18px">${opciones.map((op, i) => {
@@ -352,6 +359,9 @@
         if (cfg.deadline && !cerrado) iniciarReloj(relojId, cfg.deadline, () => montarEncuesta(portal, destino));
         if (miVoto !== null && !cerrado) setTimeout(() => montarEncuesta(portal, destino), 15000);
 
+        // reCAPTCHA debe montarse DESPUÉS de que el HTML ya esté en el DOM
+        if (miVoto === null && !cerrado) cargarRecaptcha();
+
         const opcs = document.getElementById('pgdOpcs');
         if (!opcs) return;
         opcs.addEventListener('click', async e => {
@@ -359,29 +369,35 @@
             if (!btn) return;
             const idx = parseInt(btn.dataset.idx);
             const msg = document.getElementById('pgdMsgEnc');
+            const nombreInput = document.getElementById('pgdNombreEnc');
+            const nombre = nombreInput ? nombreInput.value.trim() : '';
 
-            // Verificar reCAPTCHA antes de enviar
-            if (RECAPTCHA_SITEKEY) {
-                if (!getRcToken()) {
-                    msg.textContent = 'Completa el reCAPTCHA primero.';
-                    return;
-                }
+            if (!nombre) {
+                msg.textContent = 'Escribe tu nombre antes de votar.';
+                if (nombreInput) nombreInput.focus();
+                return;
+            }
+            if (RECAPTCHA_SITEKEY && !getRcToken()) {
+                msg.textContent = 'Completa el reCAPTCHA primero.';
+                return;
             }
 
             opcs.querySelectorAll('.pgd-poll-btn').forEach(b => b.disabled = true);
+            if (nombreInput) nombreInput.disabled = true;
             msg.textContent = '';
             try {
                 await P.dinamica.registrar(portal, 'encuesta', {
-                    nombre: 'voto',
+                    nombre,
                     metadata: { opcion_idx: idx },
                     voterToken: getVoterToken(portal),
                     recaptchaToken: getRcToken(),
                 });
-                try { localStorage.setItem(clave, JSON.stringify(idx)); } catch(e) {}
+                try { localStorage.setItem(clave, JSON.stringify({ idx, nombre })); } catch(e) {}
                 await montarEncuesta(portal, destino || (cont.id !== 'pgDinamica' ? cont.id : undefined));
             } catch (err) {
                 msg.textContent = err.message || 'Error al votar.';
                 opcs.querySelectorAll('.pgd-poll-btn').forEach(b => b.disabled = false);
+                if (nombreInput) nombreInput.disabled = false;
                 resetRc();
             }
         });
