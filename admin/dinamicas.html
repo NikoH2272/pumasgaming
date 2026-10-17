@@ -322,6 +322,15 @@
                     <button class="btn-mini" id="btn-enc-hora-masiva" style="font-size:.78rem;padding:5px 10px"><i class="fa-solid fa-clock"></i> Hora masiva</button>
                     <button class="btn-mini" id="btn-enc-grupos-wa" style="font-size:.78rem;padding:5px 10px"><i class="fa-brands fa-whatsapp"></i> Grupos → WA</button>
                     <button class="btn-mini" id="btn-enc-clasificados" style="font-size:.78rem;padding:5px 10px;background:rgba(255,213,74,.1);border-color:rgba(255,213,74,.4);color:#FFD54A"><i class="fa-solid fa-trophy"></i> Clasificados</button>
+                    <span style="display:inline-flex;align-items:center;gap:4px">
+                        <button class="btn-mini" id="btn-enc-imagen" style="font-size:.78rem;padding:5px 10px"><i class="fa-solid fa-image"></i> Imagen</button>
+                        <select id="enc-img-cols" style="background:#111;border:1px solid rgba(216,195,149,.3);color:#D8C395;border-radius:5px;padding:4px 6px;font-size:.75rem;height:28px">
+                            <option value="1">1 col</option>
+                            <option value="2">2 col</option>
+                            <option value="3" selected>3 col</option>
+                            <option value="4">4 col</option>
+                        </select>
+                    </span>
                     <button class="btn-mini" id="btn-enc-restablecer-todas" style="font-size:.78rem;padding:5px 10px"><i class="fa-solid fa-rotate-right"></i> Restablecer todas</button>
                     <button class="btn-mini" id="btn-enc-borrar-todas" style="font-size:.78rem;padding:5px 10px;background:rgba(255,77,77,.1);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-trash"></i> Borrar todas</button>
                 </div>
@@ -331,6 +340,15 @@
                     <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#FFD54A;margin:0 0 12px"><i class="fa-solid fa-trophy"></i> Clasificados a la siguiente ronda</p>
 
                     <div class="din-form" style="margin-bottom:12px">
+                        <div class="din-form-row">
+                            <div>
+                                <label style="font-size:.75rem;color:#999;display:block;margin-bottom:4px">¿Cuántos pasan por grupo?</label>
+                                <input type="number" id="enc-cuantos-pasan" min="1" max="20" value="1" style="width:100%;box-sizing:border-box">
+                            </div>
+                            <div style="display:flex;flex-direction:column;justify-content:flex-end">
+                                <small style="font-size:.73rem;color:#666;line-height:1.3">Top N de cada encuesta que avanzan</small>
+                            </div>
+                        </div>
                         <label style="font-size:.75rem;color:#999;display:block;margin-bottom:4px">Premio final</label>
                         <input type="text" id="enc-premio-final" placeholder="Ej: Skin de Diamante + Gift Card $500" maxlength="200">
                         <label style="font-size:.75rem;color:#999;display:block;margin-bottom:4px;margin-top:6px">Nombre de la ronda / fase</label>
@@ -956,6 +974,192 @@
         } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
     });
 
+    /* ── Imagen de resultados (grilla N columnas) ── */
+    document.getElementById('btn-enc-imagen').addEventListener('click', () => {
+        if (!encuestas.length) { alert('No hay encuestas.'); return; }
+
+        const COLS    = Math.max(1, parseInt(document.getElementById('enc-img-cols').value) || 3);
+        const MEDALLAS= ['🥇','🥈','🥉','4°','5°','6°','7°','8°'];
+        const W       = Math.max(800, COLS * 340);
+        const PAD     = 28;         // padding exterior
+        const GAP     = 14;         // gap entre tarjetas
+        const HEAD_H  = 72;
+        const FOOT_H  = 36;
+        const BAR_H   = 18;
+        const BAR_GAP = 7;
+        const OPT_ROW = BAR_H + BAR_GAP;
+        const TITLE_H = 40;         // altura del header de cada tarjeta
+        const CARD_PAD= 10;         // padding interno tarjeta
+
+        // Precalcular datos
+        const datos = encuestas.map(enc => {
+            const opciones = enc.opciones || [];
+            const votos    = enc.votos || {};
+            const nGan     = Math.max(1, parseInt(enc.n_ganadores || 1));
+            const vArr     = opciones.map((_, i) => parseInt(votos[i] || 0));
+            const totalV   = vArr.reduce((a,b)=>a+b,0);
+            const ordenIdx = [...vArr.keys()].sort((a,b) => vArr[b]-vArr[a]);
+            const ganSet   = new Set(ordenIdx.slice(0, nGan).filter(i => vArr[i] > 0));
+            return { enc, opciones, vArr, totalV, ganSet, ordenIdx };
+        });
+
+        // Altura de cada tarjeta (uniforme = máx opciones de la columna)
+        const ROWS      = Math.ceil(datos.length / COLS);
+        const CARD_W    = Math.floor((W - PAD*2 - GAP*(COLS-1)) / COLS);
+        // Calcular altura por fila (max opciones en esa fila)
+        const rowH = [];
+        for (let r = 0; r < ROWS; r++) {
+            let maxOpts = 0;
+            for (let c = 0; c < COLS; c++) {
+                const d = datos[r*COLS + c];
+                if (d) maxOpts = Math.max(maxOpts, d.opciones.length);
+            }
+            rowH.push(TITLE_H + maxOpts * OPT_ROW + CARD_PAD*2);
+        }
+        const totalH = HEAD_H + rowH.reduce((s,h) => s+h+GAP, 0) + FOOT_H;
+
+        const canvas = document.createElement('canvas');
+        canvas.width  = W;
+        canvas.height = totalH;
+        const ctx     = canvas.getContext('2d');
+
+        // Fondo
+        ctx.fillStyle = '#0c0c0c';
+        ctx.fillRect(0, 0, W, totalH);
+        ctx.fillStyle = '#D8C395';
+        ctx.fillRect(0, 0, W, 4);
+
+        // Header
+        const portal = (P.PORTALES[portalActual] || {}).nombre || portalActual;
+        const fecha  = new Date().toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric' });
+        ctx.fillStyle = '#D8C395';
+        ctx.font = `bold ${COLS <= 2 ? 22 : 18}px Michroma, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(`${portal.toUpperCase()} · ENCUESTAS`, W/2, 34);
+        ctx.font = '12px sans-serif';
+        ctx.fillStyle = '#777';
+        ctx.fillText(fecha, W/2, 54);
+
+        function rRect(x, yy, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x+r,yy); ctx.lineTo(x+w-r,yy); ctx.arcTo(x+w,yy,x+w,yy+r,r);
+            ctx.lineTo(x+w,yy+h-r); ctx.arcTo(x+w,yy+h,x+w-r,yy+h,r);
+            ctx.lineTo(x+r,yy+h); ctx.arcTo(x,yy+h,x,yy+h-r,r);
+            ctx.lineTo(x,yy+r); ctx.arcTo(x,yy,x+r,yy,r);
+            ctx.closePath();
+        }
+
+        // Calcular font sizes según ancho de tarjeta
+        const fTitle = Math.max(9, Math.min(13, Math.floor(CARD_W / 22)));
+        const fLabel = Math.max(8, Math.min(11, Math.floor(CARD_W / 26)));
+        const fPct   = Math.max(8, Math.min(10, Math.floor(CARD_W / 30)));
+        const LABEL_W= Math.floor(CARD_W * 0.42);
+        const PCT_W  = 32;
+        const BAR_X  = CARD_PAD + LABEL_W + 4;
+        const BAR_W  = CARD_W - BAR_X - PCT_W - 4;
+
+        let startY = HEAD_H;
+
+        for (let r = 0; r < ROWS; r++) {
+            const cardH = rowH[r];
+            for (let c = 0; c < COLS; c++) {
+                const idx = r*COLS + c;
+                if (idx >= datos.length) break;
+                const { enc, opciones, vArr, totalV, ganSet, ordenIdx } = datos[idx];
+                const cx = PAD + c*(CARD_W + GAP);
+                const cy = startY;
+                const titulo = enc.titulo || enc.pregunta || `Encuesta #${enc.id}`;
+                const totalVD = vArr.reduce((a,b)=>a+b,0);
+
+                // Card bg + border
+                ctx.fillStyle = 'rgba(255,255,255,0.035)';
+                rRect(cx, cy, CARD_W, cardH, 8); ctx.fill();
+                ctx.strokeStyle = 'rgba(216,195,149,0.22)';
+                ctx.lineWidth = 1; ctx.stroke();
+
+                // Header tarjeta
+                ctx.fillStyle = 'rgba(216,195,149,0.08)';
+                rRect(cx, cy, CARD_W, TITLE_H, 8); ctx.fill();
+                // Solo redondear arriba: sobreescribir mitad inferior del header
+                ctx.fillStyle = 'rgba(216,195,149,0.08)';
+                ctx.fillRect(cx, cy + TITLE_H/2, CARD_W, TITLE_H/2);
+
+                // Título
+                ctx.fillStyle = '#D8C395';
+                ctx.font = `bold ${fTitle}px Michroma, sans-serif`;
+                ctx.textAlign = 'left';
+                const maxCh = Math.floor(CARD_W / (fTitle * 0.65));
+                ctx.fillText(titulo.length > maxCh ? titulo.slice(0,maxCh-1)+'…' : titulo, cx+CARD_PAD, cy+17);
+
+                // Total votos
+                ctx.fillStyle = '#555';
+                ctx.font = `${fPct}px sans-serif`;
+                ctx.textAlign = 'right';
+                ctx.fillText(`${totalVD}v`, cx+CARD_W-CARD_PAD, cy+TITLE_H-8);
+
+                // Separador bajo el título
+                ctx.strokeStyle = 'rgba(216,195,149,0.15)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(cx+4, cy+TITLE_H); ctx.lineTo(cx+CARD_W-4, cy+TITLE_H);
+                ctx.stroke();
+
+                // Opciones
+                let oy = cy + TITLE_H + CARD_PAD;
+                opciones.forEach((op, i) => {
+                    const v    = vArr[i];
+                    const pct  = totalV > 0 ? Math.round((v/totalV)*100) : 0;
+                    const esGan= ganSet.has(i);
+                    const pos  = ordenIdx.indexOf(i);
+                    const fill = (pct/100) * BAR_W;
+
+                    // Barra track
+                    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+                    rRect(cx+BAR_X, oy+2, BAR_W, BAR_H-4, 3); ctx.fill();
+
+                    // Barra fill
+                    if (fill > 1) {
+                        const g = ctx.createLinearGradient(cx+BAR_X,0,cx+BAR_X+fill,0);
+                        if (esGan){ g.addColorStop(0,'#FFD54A'); g.addColorStop(1,'#ffa000'); }
+                        else      { g.addColorStop(0,'#3a3a3a'); g.addColorStop(1,'#555'); }
+                        ctx.fillStyle = g;
+                        rRect(cx+BAR_X, oy+2, Math.max(fill,3), BAR_H-4, 3); ctx.fill();
+                    }
+
+                    // Label
+                    ctx.font = `${esGan?'bold ':''}${fLabel}px sans-serif`;
+                    ctx.fillStyle = esGan ? '#FFD54A' : '#bbb';
+                    ctx.textAlign = 'right';
+                    const medal = esGan ? (MEDALLAS[pos]||'🏅')+' ' : '';
+                    const maxL  = Math.floor(LABEL_W / (fLabel * 0.6));
+                    ctx.fillText(medal+(op.length>maxL?op.slice(0,maxL-1)+'…':op), cx+CARD_PAD+LABEL_W, oy+BAR_H/2+4);
+
+                    // Pct
+                    ctx.font = `bold ${fPct}px sans-serif`;
+                    ctx.fillStyle = esGan ? '#FFD54A' : '#666';
+                    ctx.textAlign = 'left';
+                    ctx.fillText(`${pct}%`, cx+BAR_X+BAR_W+4, oy+BAR_H/2+4);
+
+                    oy += OPT_ROW;
+                });
+            }
+            startY += cardH + GAP;
+        }
+
+        // Footer
+        ctx.fillStyle = '#D8C395';
+        ctx.fillRect(0, totalH-4, W, 4);
+        ctx.font = '10px sans-serif';
+        ctx.fillStyle = '#333';
+        ctx.textAlign = 'center';
+        ctx.fillText('PUMAS GAMING', W/2, totalH-14);
+
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = `encuestas_${portalActual}_${Date.now()}.png`;
+        a.click();
+    });
+
     /* ── Restablecer todas ── */
     document.getElementById('btn-enc-restablecer-todas').addEventListener('click', async () => {
         if (!encuestas.length) { alert('No hay encuestas.'); return; }
@@ -1008,14 +1212,14 @@
 
     /* ── Clasificados ── */
     function calcClasificados() {
+        const nGanGlobal = Math.max(1, parseInt(document.getElementById('enc-cuantos-pasan').value) || 1);
         return encuestas.map(enc => {
             const opciones = enc.opciones || [];
             const votos    = enc.votos || {};
-            const nGan     = Math.max(1, parseInt(enc.n_ganadores || 1));
             const vArr     = opciones.map((_, i) => parseInt(votos[i] || 0));
             const ordenIdx = [...vArr.keys()].sort((a, b) => vArr[b] - vArr[a]);
-            const clasificados = ordenIdx.slice(0, nGan).filter(i => vArr[i] > 0).map(i => opciones[i]);
-            return { titulo: enc.titulo || enc.pregunta || `Encuesta #${enc.id}`, clasificados, nGan };
+            const clasificados = ordenIdx.slice(0, nGanGlobal).filter(i => vArr[i] > 0).map(i => opciones[i]);
+            return { titulo: enc.titulo || enc.pregunta || `Encuesta #${enc.id}`, clasificados, nGan: nGanGlobal };
         }).filter(g => g.clasificados.length > 0);
     }
 
@@ -1027,7 +1231,14 @@
             cont.innerHTML = '<p style="color:#666;font-size:.85rem">Sin votos registrados aún.</p>';
             return;
         }
-        cont.innerHTML = grupos.map(g => `
+        const total = grupos.reduce((s, g) => s + g.clasificados.length, 0);
+        cont.innerHTML = `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;border-radius:6px;background:rgba(255,213,74,.1);border:1px solid rgba(255,213,74,.3)">
+                <i class="fa-solid fa-users" style="color:#FFD54A"></i>
+                <span style="font-size:.88rem;color:#FFD54A;font-weight:700">${total} equipo${total !== 1 ? 's' : ''} clasificado${total !== 1 ? 's' : ''}</span>
+                <span style="font-size:.78rem;color:#888;margin-left:auto">${grupos.length} grupo${grupos.length !== 1 ? 's' : ''}</span>
+            </div>
+            ${grupos.map(g => `
             <div style="margin-bottom:10px;padding:10px 12px;border-radius:6px;background:rgba(255,213,74,.06);border:1px solid rgba(255,213,74,.18)">
                 <div style="font-size:.78rem;font-weight:700;color:#FFD54A;letter-spacing:.08em;margin-bottom:6px">${esc(g.titulo)}</div>
                 ${g.clasificados.map((eq, i) => `
@@ -1035,7 +1246,7 @@
                         <span style="font-size:1rem">${medallas[i] || '🏅'}</span>
                         <span style="flex:1">${esc(eq)}</span>
                     </div>`).join('')}
-            </div>`).join('');
+            </div>`).join('')}`;
     }
 
     document.getElementById('btn-enc-clasificados').addEventListener('click', () => {
@@ -1043,6 +1254,10 @@
         const visible = panel.style.display !== 'none';
         panel.style.display = visible ? 'none' : '';
         if (!visible) renderClasificados();
+    });
+
+    document.getElementById('enc-cuantos-pasan').addEventListener('input', () => {
+        if (document.getElementById('panel-clasificados').style.display !== 'none') renderClasificados();
     });
 
     document.getElementById('btn-clasificados-cerrar').addEventListener('click', () => {
