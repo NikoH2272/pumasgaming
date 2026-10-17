@@ -222,6 +222,7 @@
             pieza = sig; sig = nuevaPieza();
             px = Math.floor(T_COLS / 2) - Math.floor(pieza.s[0].length / 2);
             py = 0;
+            if (colisiona(pieza.s, px, py)) { running = false; clearTimeout(_tid); onOver(pts); return; }
         }
 
         function dibujar() {
