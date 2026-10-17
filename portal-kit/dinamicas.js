@@ -11,6 +11,40 @@
     const P = window.PumasPortal;
     const esc = P.escaparHtml;
 
+    /* ── Cloudflare Turnstile ──────────────────────────────────────────
+       1. Ve a dash.cloudflare.com/turnstile → Add site → elige tu dominio
+       2. Copia el "Site Key" (público) y pégalo abajo.
+       3. Para verificación server-side (opcional pero recomendado), guarda
+          el "Secret Key" en un Supabase Edge Function — sin esto el widget
+          es disuasión visual pero no verificación completa.
+    ────────────────────────────────────────────────────────────────── */
+    const TURNSTILE_SITEKEY = ''; // ← pega aquí tu site key de Cloudflare
+
+    function cargarTurnstile() {
+        if (!TURNSTILE_SITEKEY || document.getElementById('pg-ts-script')) return;
+        const s = document.createElement('script');
+        s.id = 'pg-ts-script';
+        s.src = 'https://challenges.cloudflare.com/turnstile/v1/api.js';
+        s.async = true;
+        document.head.appendChild(s);
+    }
+
+    /* ── Voter token — fingerprint por navegador ──────────────────────
+       UUID aleatorio guardado en localStorage. Cada ronda el servidor
+       rechaza un segundo voto con el mismo token.
+    ────────────────────────────────────────────────────────────────── */
+    function getVoterToken(portal) {
+        const key = 'pg_voter_' + portal;
+        try {
+            let t = localStorage.getItem(key);
+            if (!t) {
+                t = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
+                localStorage.setItem(key, t);
+            }
+            return t;
+        } catch (e) { return null; }
+    }
+
     function estilos() {
         if (document.getElementById('pgDinamicaCss')) return;
         const st = document.createElement('style');
@@ -268,9 +302,13 @@
         } else if (miVoto !== null) {
             cuerpo = `${timerInline}<div class="pgd-ok"><small>Ya votaste</small><b>${esc(opciones[miVoto] || '')}</b></div>`;
         } else {
+            const tsWidget = TURNSTILE_SITEKEY
+                ? `<div class="cf-turnstile" id="pgdTurnstile" data-sitekey="${TURNSTILE_SITEKEY}" data-theme="dark" data-size="flexible" style="margin:10px 0 4px"></div>`
+                : '';
             cuerpo = `${timerInline}<div id="pgdOpcs">${opciones.map((op, i) =>
                 `<div class="pgd-poll-opt"><button class="pgd-poll-btn" data-idx="${i}">${esc(op)}</button></div>`
-            ).join('')}</div><p class="pgd-msg" id="pgdMsgEnc" role="alert"></p>`;
+            ).join('')}</div>${tsWidget}<p class="pgd-msg" id="pgdMsgEnc" role="alert"></p>`;
+            cargarTurnstile();
         }
 
         const resultados = totalVotos > 0 ? `<div style="margin-top:18px">${opciones.map((op, i) => {
@@ -301,15 +339,33 @@
             if (!btn) return;
             const idx = parseInt(btn.dataset.idx);
             const msg = document.getElementById('pgdMsgEnc');
+
+            // Verificar Turnstile si está configurado
+            if (TURNSTILE_SITEKEY) {
+                const tsToken = window.turnstile && turnstile.getResponse(document.getElementById('pgdTurnstile'));
+                if (!tsToken) {
+                    msg.textContent = 'Completa la verificación de seguridad primero.';
+                    return;
+                }
+            }
+
             opcs.querySelectorAll('.pgd-poll-btn').forEach(b => b.disabled = true);
             msg.textContent = '';
             try {
-                await P.dinamica.registrar(portal, 'encuesta', { nombre: 'voto', metadata: { opcion_idx: idx } });
+                const tsToken = TURNSTILE_SITEKEY && window.turnstile
+                    ? (turnstile.getResponse(document.getElementById('pgdTurnstile')) || null)
+                    : null;
+                await P.dinamica.registrar(portal, 'encuesta', {
+                    nombre: 'voto',
+                    metadata: { opcion_idx: idx, ...(tsToken ? { ts: tsToken.slice(0, 32) } : {}) },
+                    voterToken: getVoterToken(portal),
+                });
                 try { localStorage.setItem(clave, JSON.stringify(idx)); } catch(e) {}
                 await montarEncuesta(portal, destino || (cont.id !== 'pgDinamica' ? cont.id : undefined));
             } catch (err) {
                 msg.textContent = err.message || 'Error al votar.';
                 opcs.querySelectorAll('.pgd-poll-btn').forEach(b => b.disabled = false);
+                if (TURNSTILE_SITEKEY && window.turnstile) turnstile.reset(document.getElementById('pgdTurnstile'));
             }
         });
     }
