@@ -11,22 +11,41 @@
     const P = window.PumasPortal;
     const esc = P.escaparHtml;
 
-    /* ── Cloudflare Turnstile ──────────────────────────────────────────
-       1. Ve a dash.cloudflare.com/turnstile → Add site → elige tu dominio
-       2. Copia el "Site Key" (público) y pégalo abajo.
-       3. Para verificación server-side (opcional pero recomendado), guarda
-          el "Secret Key" en un Supabase Edge Function — sin esto el widget
-          es disuasión visual pero no verificación completa.
-    ────────────────────────────────────────────────────────────────── */
-    const TURNSTILE_SITEKEY = ''; // ← pega aquí tu site key de Cloudflare
+    /* ── Google reCAPTCHA v2 ─────────────────────────────────────────── */
+    const RECAPTCHA_SITEKEY = '6LeoIPMtAAAAAM0JAjDB06LOwAntrFH-ckrOuLyz';
+    let _rcWidgetId = null;
 
-    function cargarTurnstile() {
-        if (!TURNSTILE_SITEKEY || document.getElementById('pg-ts-script')) return;
-        const s = document.createElement('script');
-        s.id = 'pg-ts-script';
-        s.src = 'https://challenges.cloudflare.com/turnstile/v1/api.js';
-        s.async = true;
-        document.head.appendChild(s);
+    function cargarRecaptcha() {
+        if (!RECAPTCHA_SITEKEY) return;
+        const el = document.getElementById('pgdRecaptcha');
+        if (!el) return;
+        _rcWidgetId = null;
+        if (window.grecaptcha && grecaptcha.render) {
+            // Script ya cargado — renderizar directamente
+            _rcWidgetId = grecaptcha.render(el, { sitekey: RECAPTCHA_SITEKEY, theme: 'dark' });
+        } else if (!document.getElementById('pg-rc-script')) {
+            // Primera carga — inyectar script con callback
+            window.pgdRcOnload = function () {
+                const el2 = document.getElementById('pgdRecaptcha');
+                if (el2) _rcWidgetId = grecaptcha.render(el2, { sitekey: RECAPTCHA_SITEKEY, theme: 'dark' });
+            };
+            const s = document.createElement('script');
+            s.id = 'pg-rc-script';
+            s.src = 'https://www.google.com/recaptcha/api.js?onload=pgdRcOnload&render=explicit';
+            s.async = true;
+            document.head.appendChild(s);
+        }
+        // Si el script ya está pero grecaptcha aún no listo, pgdRcOnload lo tomará
+    }
+
+    function getRcToken() {
+        if (!window.grecaptcha) return null;
+        return _rcWidgetId !== null ? grecaptcha.getResponse(_rcWidgetId) : grecaptcha.getResponse();
+    }
+
+    function resetRc() {
+        if (!window.grecaptcha) return;
+        try { _rcWidgetId !== null ? grecaptcha.reset(_rcWidgetId) : grecaptcha.reset(); } catch(e) {}
     }
 
     /* ── Voter token — fingerprint por navegador ──────────────────────
@@ -302,13 +321,13 @@
         } else if (miVoto !== null) {
             cuerpo = `${timerInline}<div class="pgd-ok"><small>Ya votaste</small><b>${esc(opciones[miVoto] || '')}</b></div>`;
         } else {
-            const tsWidget = TURNSTILE_SITEKEY
-                ? `<div class="cf-turnstile" id="pgdTurnstile" data-sitekey="${TURNSTILE_SITEKEY}" data-theme="dark" data-size="flexible" style="margin:10px 0 4px"></div>`
+            const rcWidget = RECAPTCHA_SITEKEY
+                ? `<div id="pgdRecaptcha" style="margin:12px 0 4px"></div>`
                 : '';
             cuerpo = `${timerInline}<div id="pgdOpcs">${opciones.map((op, i) =>
                 `<div class="pgd-poll-opt"><button class="pgd-poll-btn" data-idx="${i}">${esc(op)}</button></div>`
-            ).join('')}</div>${tsWidget}<p class="pgd-msg" id="pgdMsgEnc" role="alert"></p>`;
-            cargarTurnstile();
+            ).join('')}</div>${rcWidget}<p class="pgd-msg" id="pgdMsgEnc" role="alert"></p>`;
+            cargarRecaptcha();
         }
 
         const resultados = totalVotos > 0 ? `<div style="margin-top:18px">${opciones.map((op, i) => {
@@ -340,11 +359,10 @@
             const idx = parseInt(btn.dataset.idx);
             const msg = document.getElementById('pgdMsgEnc');
 
-            // Verificar Turnstile si está configurado
-            if (TURNSTILE_SITEKEY) {
-                const tsToken = window.turnstile && turnstile.getResponse(document.getElementById('pgdTurnstile'));
-                if (!tsToken) {
-                    msg.textContent = 'Completa la verificación de seguridad primero.';
+            // Verificar reCAPTCHA antes de enviar
+            if (RECAPTCHA_SITEKEY) {
+                if (!getRcToken()) {
+                    msg.textContent = 'Completa el reCAPTCHA primero.';
                     return;
                 }
             }
@@ -352,20 +370,18 @@
             opcs.querySelectorAll('.pgd-poll-btn').forEach(b => b.disabled = true);
             msg.textContent = '';
             try {
-                const tsToken = TURNSTILE_SITEKEY && window.turnstile
-                    ? (turnstile.getResponse(document.getElementById('pgdTurnstile')) || null)
-                    : null;
                 await P.dinamica.registrar(portal, 'encuesta', {
                     nombre: 'voto',
-                    metadata: { opcion_idx: idx, ...(tsToken ? { ts: tsToken.slice(0, 32) } : {}) },
+                    metadata: { opcion_idx: idx },
                     voterToken: getVoterToken(portal),
+                    recaptchaToken: getRcToken(),
                 });
                 try { localStorage.setItem(clave, JSON.stringify(idx)); } catch(e) {}
                 await montarEncuesta(portal, destino || (cont.id !== 'pgDinamica' ? cont.id : undefined));
             } catch (err) {
                 msg.textContent = err.message || 'Error al votar.';
                 opcs.querySelectorAll('.pgd-poll-btn').forEach(b => b.disabled = false);
-                if (TURNSTILE_SITEKEY && window.turnstile) turnstile.reset(document.getElementById('pgdTurnstile'));
+                resetRc();
             }
         });
     }

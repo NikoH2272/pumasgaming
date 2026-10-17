@@ -766,7 +766,7 @@ html.pg-verificando body{visibility:hidden}
     /* ---------------- Dinámicas por portal (sql/33) ---------------- */
     const dinamica = {
         publico:  (portal, tipo)                               => rpcPublico('din_publico',       { p_portal: portal, p_tipo: tipo }),
-        registrar:(portal, tipo, d)                            => rpcPublico('din_registrar',     { p_portal: portal, p_tipo: tipo, p_nombre: d.nombre, p_numero: d.numero || null, p_ig: d.ig || null, p_metadata: d.metadata || {}, p_voter_token: d.voterToken || null }),
+        registrar:(portal, tipo, d)                            => rpcPublico('din_registrar',     { p_portal: portal, p_tipo: tipo, p_nombre: d.nombre, p_numero: d.numero || null, p_ig: d.ig || null, p_metadata: d.metadata || {}, p_voter_token: d.voterToken || null, p_recaptcha_token: d.recaptchaToken || null }),
         config:   (portal, tipo, c)                            => rpcAdmin  ('din_admin_config',  { p_portal: portal, p_tipo: tipo, p_activo: c.activo ?? null, p_titulo: c.titulo ?? null, p_config: c.config ?? null, p_deadline: c.deadline ?? null, p_quitar_deadline: !!c.quitarDeadline, p_inicio: c.inicio ?? null, p_quitar_inicio: !!c.quitarInicio }),
         listar:   (portal, tipo)                               => rpcAdmin  ('din_admin_listar',  { p_portal: portal, p_tipo: tipo }),
         borrar:   (portal, id)                                 => rpcAdmin  ('din_admin_borrar',  { p_portal: portal, p_id: id }),
