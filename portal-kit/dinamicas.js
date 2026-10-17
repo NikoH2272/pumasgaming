@@ -350,6 +350,7 @@
         </div>`;
 
         if (cfg.deadline && !cerrado) iniciarReloj(relojId, cfg.deadline, () => montarEncuesta(portal, destino));
+        if (miVoto !== null && !cerrado) setTimeout(() => montarEncuesta(portal, destino), 15000);
 
         const opcs = document.getElementById('pgdOpcs');
         if (!opcs) return;
