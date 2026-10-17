@@ -283,6 +283,48 @@
                     </div>
                 </div>
 
+                <!-- Acciones masivas -->
+                <div id="panel-enc-masivo" style="display:none;border:1px solid rgba(255,184,77,.2);border-radius:6px;padding:12px;margin-bottom:14px;background:rgba(255,184,77,.03)">
+                    <p style="font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ffb84d;margin:0 0 10px">Hora masiva</p>
+                    <div class="din-form">
+                        <div class="din-form-row">
+                            <div>
+                                <label style="font-size:.75rem;color:#999;display:block;margin-bottom:4px">Tipo</label>
+                                <select id="enc-m-tipo">
+                                    <option value="duracion">Duración desde ahora</option>
+                                    <option value="fecha">Fecha específica</option>
+                                    <option value="quitar">Quitar cierre</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="enc-m-dur-wrap">
+                            <select id="enc-m-duracion">
+                                <option value="300">5 minutos</option>
+                                <option value="600" selected>10 minutos</option>
+                                <option value="900">15 minutos</option>
+                                <option value="1800">30 minutos</option>
+                                <option value="3600">1 hora</option>
+                                <option value="7200">2 horas</option>
+                            </select>
+                        </div>
+                        <div id="enc-m-fecha-wrap" style="display:none">
+                            <input type="datetime-local" id="enc-m-fecha">
+                        </div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn-mini" id="btn-enc-m-aplicar" style="flex:1"><i class="fa-solid fa-clock"></i> Aplicar a todas</button>
+                            <button class="btn-mini" id="btn-enc-m-cancelar" style="background:transparent;border-color:rgba(255,255,255,.2);color:#999"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <p class="din-status" id="status-enc-masivo"></p>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+                    <button class="btn-mini" id="btn-enc-hora-masiva" style="font-size:.78rem;padding:5px 10px"><i class="fa-solid fa-clock"></i> Hora masiva</button>
+                    <button class="btn-mini" id="btn-enc-grupos-wa" style="font-size:.78rem;padding:5px 10px"><i class="fa-brands fa-whatsapp"></i> Grupos → WA</button>
+                    <button class="btn-mini" id="btn-enc-restablecer-todas" style="font-size:.78rem;padding:5px 10px"><i class="fa-solid fa-rotate-right"></i> Restablecer todas</button>
+                    <button class="btn-mini" id="btn-enc-borrar-todas" style="font-size:.78rem;padding:5px 10px;background:rgba(255,77,77,.1);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-trash"></i> Borrar todas</button>
+                </div>
+
                 <!-- Lista de encuestas -->
                 <div id="enc-lista"></div>
                 <p class="din-status" id="status-encuestas"></p>
@@ -601,12 +643,7 @@
         const fecha = new Date().toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric' });
         let txt = `*Equipos registrados — ${portal} · ${fecha}*\n\n`;
         lista.forEach((r, i) => {
-            const rep = r.metadata && r.metadata.representante ? r.metadata.representante : '';
-            txt += `${i + 1}. ${r.nombre}`;
-            if (rep) txt += ` (${rep})`;
-            if (r.numero) txt += ` — ${r.numero}`;
-            if (r.ig) txt += ` — @${r.ig}`;
-            txt += '\n';
+            txt += `${i + 1}. ${r.nombre}\n`;
         });
         txt += `\n_Total: ${lista.length} equipo${lista.length !== 1 ? 's' : ''}_`;
         navigator.clipboard.writeText(txt).then(() => alert('Texto copiado para WhatsApp.')).catch(() => {
@@ -828,6 +865,100 @@
     document.getElementById('btn-enc-f-cancelar').addEventListener('click', () => {
         document.getElementById('panel-form-enc').style.display = 'none';
         encEditId = null;
+    });
+
+    /* ── Hora masiva ── */
+    document.getElementById('btn-enc-hora-masiva').addEventListener('click', () => {
+        const panel = document.getElementById('panel-enc-masivo');
+        panel.style.display = panel.style.display === 'none' ? '' : 'none';
+    });
+
+    document.getElementById('btn-enc-m-cancelar').addEventListener('click', () => {
+        document.getElementById('panel-enc-masivo').style.display = 'none';
+    });
+
+    document.getElementById('enc-m-tipo').addEventListener('change', function() {
+        document.getElementById('enc-m-dur-wrap').style.display   = this.value === 'duracion' ? '' : 'none';
+        document.getElementById('enc-m-fecha-wrap').style.display = this.value === 'fecha'    ? '' : 'none';
+    });
+
+    document.getElementById('btn-enc-m-aplicar').addEventListener('click', async () => {
+        if (!encuestas.length) { alert('No hay encuestas.'); return; }
+        const tipo = document.getElementById('enc-m-tipo').value;
+        let deadline = null;
+        let quitarDeadline = false;
+        if (tipo === 'duracion') {
+            const dur = parseInt(document.getElementById('enc-m-duracion').value);
+            deadline = new Date(Date.now() + dur * 1000).toISOString();
+        } else if (tipo === 'fecha') {
+            const fv = document.getElementById('enc-m-fecha').value;
+            if (!fv) { alert('Selecciona la fecha.'); return; }
+            const fd = new Date(fv);
+            if (fd <= new Date()) { alert('La fecha debe ser en el futuro.'); return; }
+            deadline = fd.toISOString();
+        } else {
+            quitarDeadline = true;
+        }
+        const accion = quitarDeadline ? 'Quitando cierre de' : 'Aplicando hora a';
+        if (!confirm(`${accion} ${encuestas.length} encuesta${encuestas.length !== 1 ? 's' : ''}. ¿Continuar?`)) return;
+        const st = document.getElementById('status-enc-masivo');
+        st.textContent = 'Aplicando...'; st.className = 'din-status';
+        try {
+            await Promise.all(encuestas.map(e => P.enc.editar(e.id, { deadline, quitarDeadline })));
+            await cargarEncuestas();
+            st.textContent = `✔ Aplicado a ${encuestas.length} encuesta${encuestas.length !== 1 ? 's' : ''}.`; st.className = 'din-status ok';
+            setTimeout(() => { st.textContent = ''; document.getElementById('panel-enc-masivo').style.display = 'none'; }, 2500);
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    });
+
+    /* ── Restablecer todas ── */
+    document.getElementById('btn-enc-restablecer-todas').addEventListener('click', async () => {
+        if (!encuestas.length) { alert('No hay encuestas.'); return; }
+        if (!confirm(`¿Restablecer votos de ${encuestas.length} encuesta${encuestas.length !== 1 ? 's' : ''}? Los participantes podrán votar nuevamente.`)) return;
+        const st = document.getElementById('status-encuestas');
+        st.textContent = 'Restableciendo...'; st.className = 'din-status';
+        try {
+            await Promise.all(encuestas.map(e => P.enc.restablecer(e.id)));
+            await cargarEncuestas();
+            st.textContent = `✔ ${encuestas.length} encuesta${encuestas.length !== 1 ? 's' : ''} restablecida${encuestas.length !== 1 ? 's' : ''}.`; st.className = 'din-status ok';
+            setTimeout(() => st.textContent = '', 2500);
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    });
+
+    /* ── Borrar todas ── */
+    document.getElementById('btn-enc-borrar-todas').addEventListener('click', async () => {
+        if (!encuestas.length) { alert('No hay encuestas.'); return; }
+        if (!confirm(`¿Borrar las ${encuestas.length} encuesta${encuestas.length !== 1 ? 's' : ''} y todos sus votos? Esta acción no se puede deshacer.`)) return;
+        const st = document.getElementById('status-encuestas');
+        st.textContent = 'Borrando...'; st.className = 'din-status';
+        try {
+            await Promise.all(encuestas.map(e => P.enc.borrar(e.id)));
+            await cargarEncuestas();
+            st.textContent = '✔ Todas borradas.'; st.className = 'din-status ok';
+            setTimeout(() => st.textContent = '', 2500);
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    });
+
+    /* ── Grupos → WhatsApp ── */
+    document.getElementById('btn-enc-grupos-wa').addEventListener('click', () => {
+        if (!encuestas.length) { alert('No hay encuestas.'); return; }
+        const portal = (P.PORTALES[portalActual] || {}).nombre || portalActual;
+        const fecha  = new Date().toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric' });
+        let txt = `*Grupos — ${portal} · ${fecha}*\n\n`;
+        encuestas.forEach(enc => {
+            const nombre = enc.titulo || enc.pregunta || `Encuesta #${enc.id}`;
+            const opciones = enc.opciones || [];
+            txt += `*${nombre}*\n`;
+            opciones.forEach((op, i) => { txt += `  ${i + 1}. ${op}\n`; });
+            txt += '\n';
+        });
+        navigator.clipboard.writeText(txt)
+            .then(() => alert('Texto de grupos copiado para WhatsApp.'))
+            .catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+                alert('Texto copiado.');
+            });
     });
 
     document.querySelectorAll('[name="enc-f-limite"]').forEach(r => {
