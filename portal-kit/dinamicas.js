@@ -13,7 +13,30 @@
 
     /* ── Google reCAPTCHA v2 ─────────────────────────────────────────── */
     const RECAPTCHA_SITEKEY = '6LeoIPMtAAAAAM0JAjDB06LOwAntrFH-ckrOuLyz';
-    let _rcWidgetId = null;
+    let _rcWidgetId = null;          // widget del componente legado (montarEncuesta)
+    const _rcWidgets = {};           // mapa containerId → widgetId (montarEncuestas multi)
+
+    function _cargarScriptRecaptcha() {
+        if (document.getElementById('pg-rc-script')) return;
+        window.pgdRcOnload = function () {
+            // legado — contenedor fijo
+            const leg = document.getElementById('pgdRecaptcha');
+            if (leg && !leg.dataset.rcR) {
+                _rcWidgetId = grecaptcha.render(leg, { sitekey: RECAPTCHA_SITEKEY, theme: 'dark' });
+                leg.dataset.rcR = '1';
+            }
+            // multi-enc — cualquier contenedor con data-rc-pending
+            document.querySelectorAll('[data-rc-pending]').forEach(e => {
+                _rcWidgets[e.id] = grecaptcha.render(e, { sitekey: RECAPTCHA_SITEKEY, theme: 'dark' });
+                delete e.dataset.rcPending;
+            });
+        };
+        const s = document.createElement('script');
+        s.id = 'pg-rc-script';
+        s.src = 'https://www.google.com/recaptcha/api.js?onload=pgdRcOnload&render=explicit';
+        s.async = true;
+        document.head.appendChild(s);
+    }
 
     function cargarRecaptcha() {
         if (!RECAPTCHA_SITEKEY) return;
@@ -21,31 +44,37 @@
         if (!el) return;
         _rcWidgetId = null;
         if (window.grecaptcha && grecaptcha.render) {
-            // Script ya cargado — renderizar directamente
             _rcWidgetId = grecaptcha.render(el, { sitekey: RECAPTCHA_SITEKEY, theme: 'dark' });
-        } else if (!document.getElementById('pg-rc-script')) {
-            // Primera carga — inyectar script con callback
-            window.pgdRcOnload = function () {
-                const el2 = document.getElementById('pgdRecaptcha');
-                if (el2) _rcWidgetId = grecaptcha.render(el2, { sitekey: RECAPTCHA_SITEKEY, theme: 'dark' });
-            };
-            const s = document.createElement('script');
-            s.id = 'pg-rc-script';
-            s.src = 'https://www.google.com/recaptcha/api.js?onload=pgdRcOnload&render=explicit';
-            s.async = true;
-            document.head.appendChild(s);
-        }
-        // Si el script ya está pero grecaptcha aún no listo, pgdRcOnload lo tomará
+        } else { _cargarScriptRecaptcha(); }
+    }
+
+    function cargarRecaptchaPara(containerId) {
+        if (!RECAPTCHA_SITEKEY) return;
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        if (window.grecaptcha && grecaptcha.render) {
+            _rcWidgets[containerId] = grecaptcha.render(el, { sitekey: RECAPTCHA_SITEKEY, theme: 'dark' });
+        } else { el.dataset.rcPending = '1'; _cargarScriptRecaptcha(); }
     }
 
     function getRcToken() {
         if (!window.grecaptcha) return null;
         return _rcWidgetId !== null ? grecaptcha.getResponse(_rcWidgetId) : grecaptcha.getResponse();
     }
+    function getRcTokenDe(containerId) {
+        if (!window.grecaptcha) return null;
+        const w = _rcWidgets[containerId];
+        return w !== undefined ? grecaptcha.getResponse(w) : null;
+    }
 
     function resetRc() {
         if (!window.grecaptcha) return;
         try { _rcWidgetId !== null ? grecaptcha.reset(_rcWidgetId) : grecaptcha.reset(); } catch(e) {}
+    }
+    function resetRcDe(containerId) {
+        if (!window.grecaptcha) return;
+        const w = _rcWidgets[containerId];
+        if (w !== undefined) try { grecaptcha.reset(w); } catch(e) {}
     }
 
     /* ── Voter token — fingerprint por navegador ──────────────────────
@@ -115,6 +144,9 @@
 .pgd-ganador .pgd-gan-lbl{font:700 .68rem var(--font-display,'Michroma',sans-serif);letter-spacing:.14em;text-transform:uppercase;color:var(--primary,#D8C395);opacity:.7;margin-bottom:8px}
 .pgd-ganador .pgd-gan-nombre{font:700 1.25rem var(--font-display,'Michroma',sans-serif);color:var(--primary,#D8C395);margin-bottom:4px;word-break:break-word}
 .pgd-ganador .pgd-gan-votos{font-size:.82rem;color:var(--gray,#B9B2A4)}
+.pgd-gan-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;background:rgba(var(--primary-rgb,216,195,149),.08);margin:4px 0;font-size:.95rem;color:var(--primary,#D8C395)}
+.pgd-gan-item b{flex:1;text-align:left;font:700 1rem var(--font-display,'Michroma',sans-serif)}
+.pgd-gan-item small{color:var(--gray,#B9B2A4);font-size:.8rem}
 @media(max-width:600px){.pgd-row{grid-template-columns:1fr}.pgd-reloj{grid-template-columns:repeat(2,1fr)}}`;
         document.head.appendChild(st);
     }
@@ -404,6 +436,147 @@
     }
 
     /* ══════════════════════════════════════
+       MULTI-ENCUESTA (sql/41)
+    ══════════════════════════════════════ */
+    async function montarEncuestas(portal, destino) {
+        let lista;
+        try { lista = await P.enc.publico(portal); } catch(e) { return; }
+        if (!lista || !lista.length) return;
+        estilos();
+        const cont = contenedor(destino);
+
+        cont.innerHTML = lista.map(enc => {
+            const opciones = enc.opciones || [];
+            const ronda = enc.ronda || 0;
+            const clave = 'pg_enc_' + enc.id + '_r' + ronda;
+            let miVoto = null;
+            try { miVoto = JSON.parse(localStorage.getItem(clave) || 'null'); } catch(e) {}
+
+            const cerrado = enc.cerrado;
+            const titulo = esc(enc.titulo || 'Encuesta');
+            const preguntaTxt = enc.pregunta ? `<p class="pgd-sub" style="font-size:1rem;font-weight:700;color:#F4EEDC">${esc(enc.pregunta)}</p>` : '';
+            const imagenHtml = enc.imagen ? `<img src="${esc(enc.imagen)}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:12px;display:block" onerror="this.style.display='none'">` : '';
+
+            // Votos y ganadores
+            const votos = enc.votos || {};
+            const nGanadores = Math.max(1, parseInt(enc.n_ganadores || 1));
+            let totalVotos = 0;
+            const vArr = opciones.map((_, i) => { const v = parseInt(votos[i] || 0); totalVotos += v; return v; });
+            // Índices ordenados por votos desc para determinar Top N
+            const ordenIdx = [...vArr.keys()].sort((a, b) => vArr[b] - vArr[a]);
+            const ganSet   = new Set(ordenIdx.slice(0, nGanadores).filter(i => vArr[i] > 0));
+            const medallas = ['🥇','🥈','🥉'];
+
+            const relojId = 'pgdReloj_' + enc.id;
+            const timerHtml = enc.deadline && !cerrado ? `<div style="margin-bottom:14px">${relojHTML(relojId)}</div>` : '';
+
+            let cuerpo;
+            if (cerrado) {
+                if (totalVotos === 0) {
+                    cuerpo = `<div class="pgd-cerrado">⛔ La encuesta cerró sin votos.</div>`;
+                } else if (nGanadores === 1) {
+                    const gi = ordenIdx[0];
+                    cuerpo = `<div class="pgd-ganador"><div class="pgd-gan-ico">🏆</div><div class="pgd-gan-lbl">Ganador</div><div class="pgd-gan-nombre">${esc(opciones[gi])}</div><div class="pgd-gan-votos">${vArr[gi]} voto${vArr[gi] !== 1 ? 's' : ''} de ${totalVotos}</div></div>`;
+                } else {
+                    const ganadoresHtml = ordenIdx.slice(0, nGanadores).filter(i => vArr[i] > 0).map((gi, pos) =>
+                        `<div class="pgd-gan-item">${medallas[pos] || '🏅'} <b>${esc(opciones[gi])}</b> <small>${vArr[gi]}v</small></div>`
+                    ).join('');
+                    cuerpo = `<div class="pgd-ganador"><div class="pgd-gan-lbl">Top ${nGanadores} ganadores</div>${ganadoresHtml}</div>`;
+                }
+            } else if (miVoto !== null) {
+                const vIdx = miVoto && miVoto.idx !== undefined ? miVoto.idx : miVoto;
+                const vNom = miVoto && miVoto.nombre ? `<br><small style="color:#999">como ${esc(miVoto.nombre)}</small>` : '';
+                cuerpo = `${timerHtml}<div class="pgd-ok"><small>Ya votaste</small><b>${esc(opciones[vIdx] || '')}</b>${vNom}</div>`;
+            } else {
+                const rcId = 'pgdRc_' + enc.id;
+                const rcHtml = RECAPTCHA_SITEKEY ? `<div id="${rcId}" style="margin:12px 0 4px"></div>` : '';
+                cuerpo = `${timerHtml}
+                    <div style="margin-bottom:12px">
+                        <input id="pgdNom_${enc.id}" type="text" placeholder="Tu nombre o apodo" maxlength="80"
+                            style="width:100%;box-sizing:border-box;padding:9px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#F4EEDC;font-size:.95rem">
+                    </div>
+                    ${rcHtml}
+                    <div id="pgdOpc_${enc.id}" style="margin-top:10px">${opciones.map((op, i) =>
+                        `<div class="pgd-poll-opt"><button class="pgd-poll-btn" data-idx="${i}">${esc(op)}</button></div>`
+                    ).join('')}</div>
+                    <p class="pgd-msg" id="pgdMsg_${enc.id}" role="alert"></p>`;
+            }
+
+            const resultados = totalVotos > 0 ? `<div style="margin-top:18px">${opciones.map((op, i) => {
+                const v = vArr[i], pct = Math.round((v / totalVotos) * 100);
+                const posGan = ganSet.has(i) ? ordenIdx.indexOf(i) : -1;
+                const esGan  = posGan >= 0;
+                const medal  = (cerrado || miVoto !== null) && esGan ? (medallas[posGan] || '🏅') + ' ' : '';
+                return `<div class="pgd-poll-opt">
+                    <div class="pgd-poll-label" style="${esGan && (cerrado || miVoto !== null) ? 'color:#FFD54A;font-weight:700' : ''}"><span>${medal}${esc(op)}</span><span>${v} voto${v !== 1 ? 's' : ''} · ${pct}%</span></div>
+                    <div class="pgd-poll-track"><div class="pgd-poll-fill" style="width:${pct}%${esGan && (cerrado || miVoto !== null) ? ';background:linear-gradient(90deg,#FFD54A,#ffa000)' : ''}"></div></div>
+                </div>`;
+            }).join('')}<p class="pgd-total">Total votos: <b>${totalVotos}</b></p></div>` : '';
+
+            return `<div class="pgd-caja" style="margin-bottom:18px">
+                <h2>📊 ${titulo}</h2>
+                ${imagenHtml}${preguntaTxt}${cuerpo}
+                ${miVoto !== null || cerrado ? resultados : ''}
+            </div>`;
+        }).join('');
+
+        // Timers, reCAPTCHA y handlers por encuesta
+        lista.forEach(enc => {
+            const opciones = enc.opciones || [];
+            const ronda = enc.ronda || 0;
+            const clave = 'pg_enc_' + enc.id + '_r' + ronda;
+            let miVoto = null;
+            try { miVoto = JSON.parse(localStorage.getItem(clave) || 'null'); } catch(e) {}
+
+            if (enc.deadline && !enc.cerrado) {
+                iniciarReloj('pgdReloj_' + enc.id, enc.deadline, () => montarEncuestas(portal, destino));
+            }
+            if (miVoto === null && !enc.cerrado) {
+                if (RECAPTCHA_SITEKEY) cargarRecaptchaPara('pgdRc_' + enc.id);
+            }
+            if (miVoto !== null && !enc.cerrado) {
+                setTimeout(() => montarEncuestas(portal, destino), 15000);
+            }
+
+            const opcsEl = document.getElementById('pgdOpc_' + enc.id);
+            if (!opcsEl) return;
+            opcsEl.addEventListener('click', async e => {
+                const btn = e.target.closest('.pgd-poll-btn');
+                if (!btn) return;
+                const idx = parseInt(btn.dataset.idx);
+                const msg = document.getElementById('pgdMsg_' + enc.id);
+                const nomEl = document.getElementById('pgdNom_' + enc.id);
+                const nombre = nomEl ? nomEl.value.trim() : '';
+
+                if (!nombre) { msg.textContent = 'Escribe tu nombre antes de votar.'; if (nomEl) nomEl.focus(); return; }
+                const rcId = 'pgdRc_' + enc.id;
+                if (RECAPTCHA_SITEKEY && !getRcTokenDe(rcId)) {
+                    msg.textContent = 'Completa el reCAPTCHA primero.'; return;
+                }
+
+                opcsEl.querySelectorAll('.pgd-poll-btn').forEach(b => b.disabled = true);
+                if (nomEl) nomEl.disabled = true;
+                msg.textContent = '';
+                try {
+                    await P.enc.votar(enc.id, {
+                        nombre,
+                        opcion_idx: idx,
+                        voterToken: getVoterToken(portal),
+                        recaptchaToken: getRcTokenDe(rcId),
+                    });
+                    try { localStorage.setItem(clave, JSON.stringify({ idx, nombre })); } catch(e) {}
+                    await montarEncuestas(portal, destino || (cont.id !== 'pgDinamica' ? cont.id : undefined));
+                } catch (err) {
+                    msg.textContent = err.message || 'Error al votar.';
+                    opcsEl.querySelectorAll('.pgd-poll-btn').forEach(b => b.disabled = false);
+                    if (nomEl) nomEl.disabled = false;
+                    resetRcDe(rcId);
+                }
+            });
+        });
+    }
+
+    /* ══════════════════════════════════════
        LEADERBOARD DEL JUEGO
     ══════════════════════════════════════ */
     async function montarJuego(portal, destino) {
@@ -447,26 +620,32 @@
             Cargando dinámica…
         </div>`;
         let encontrado = false;
-        for (const tipo of ['registro', 'encuesta']) {
-            try {
-                const cfg = await P.dinamica.publico(portal, tipo);
-                if (cfg && cfg.activo) {
-                    encontrado = true;
-                    if (tipo === 'registro') { await montarRegistro(portal, destino); return; }
-                    if (tipo === 'encuesta') { await montarEncuesta(portal, destino); return; }
-                }
-            } catch (e) {
-                console.error('[Dinámicas] Error al consultar tipo "' + tipo + '":', e.message || e);
-                cont.innerHTML = `<div class="pgd-caja pgd-cerrado" style="max-width:520px;margin:0 auto">
-                    <b style="display:block;margin-bottom:8px;color:var(--primary,#D8C395)">⚠️ No se pudo cargar la dinámica</b>
-                    <small style="color:#888">${P.escaparHtml(e.message || 'Error desconocido')} — Verifica que <b>sql/33_dinamicas.sql</b> esté corrido en Supabase.</small>
-                </div>`;
-                return;
-            }
+
+        // 1. Registro
+        try {
+            const cfg = await P.dinamica.publico(portal, 'registro');
+            if (cfg && cfg.activo) { encontrado = true; await montarRegistro(portal, destino); return; }
+        } catch(e) {
+            cont.innerHTML = `<div class="pgd-caja pgd-cerrado" style="max-width:520px;margin:0 auto">
+                <b style="display:block;margin-bottom:8px;color:var(--primary,#D8C395)">⚠️ No se pudo cargar la dinámica</b>
+                <small style="color:#888">${P.escaparHtml(e.message || 'Error desconocido')}</small>
+            </div>`;
+            return;
         }
-        if (!encontrado) {
-            cont.innerHTML = ''; // sin dinámica activa: sección vacía (no rompe el layout)
-        }
+
+        // 2. Multi-encuesta (sql/41) — sistema nuevo
+        try {
+            const lista = await P.enc.publico(portal);
+            if (lista && lista.length) { encontrado = true; await montarEncuestas(portal, destino); return; }
+        } catch(e) { /* silencioso si sql/41 no está corrido */ }
+
+        // 3. Encuesta legada (sql/33) — fallback
+        try {
+            const cfg = await P.dinamica.publico(portal, 'encuesta');
+            if (cfg && cfg.activo) { encontrado = true; await montarEncuesta(portal, destino); return; }
+        } catch(e) { /* silencioso */ }
+
+        if (!encontrado) cont.innerHTML = '';
     }
 
     /* ── Auto-mount: se activa cuando se incluye el script en una página de portal ── */
@@ -497,5 +676,5 @@
     autoMontar();
 
     window.PumasPortal = window.PumasPortal || {};
-    window.PumasPortal.dinamicas = { montar, montarRegistro, montarEncuesta, montarJuego };
+    window.PumasPortal.dinamicas = { montar, montarRegistro, montarEncuesta, montarEncuestas, montarJuego };
 })();

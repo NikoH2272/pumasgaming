@@ -151,6 +151,20 @@
                         </div>
                     </div>
                 </div>
+                <!-- Límite de jugadores -->
+                <div class="din-form" style="margin-bottom:10px">
+                    <div class="din-form-row">
+                        <div>
+                            <label style="font-size:.75rem;color:#999;display:block;margin-bottom:4px">Límite de jugadores</label>
+                            <input type="number" id="reg-limite" min="1" max="5000" placeholder="Sin límite (máx 5000)">
+                        </div>
+                        <div style="display:flex;align-items:flex-end;gap:6px">
+                            <button class="btn-mini" id="btn-reg-limite" style="flex:1"><i class="fa-solid fa-users"></i> Guardar</button>
+                            <button class="btn-mini" id="btn-reg-nolimite" title="Quitar límite" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <p style="font-size:.73rem;color:#666;margin:2px 0 0" id="reg-limite-info"></p>
+                </div>
                 <!-- Manual add (admin only) -->
                 <details style="margin-bottom:10px">
                     <summary style="font-size:.8rem;color:#888;cursor:pointer;margin-bottom:6px"><i class="fa-solid fa-user-plus"></i> Agregar equipo manualmente</summary>
@@ -184,107 +198,99 @@
             </div>
         </div>
 
-        <!-- ═══ ENCUESTA ═══ -->
-        <div class="din-card" id="card-encuesta">
+        <!-- ═══ ENCUESTAS (multi) ═══ -->
+        <div class="din-card" id="card-encuestas">
             <div class="din-card-head">
                 <div class="din-icon" style="background:rgba(255,184,77,.15);color:#ffb84d"><i class="fa-solid fa-square-poll-vertical"></i></div>
-                <h3>Encuesta</h3>
-                <span class="din-badge" id="badge-encuesta">Inactivo</span>
+                <h3>Encuestas</h3>
+                <span class="din-badge" id="badge-encuestas">0 activas</span>
             </div>
             <div class="din-card-body">
-                <div class="din-toggle-wrap">
-                    <label class="din-toggle"><input type="checkbox" id="toggle-encuesta"><span class="din-toggle-track"></span></label>
-                    <span style="font-size:.83rem;color:#aaa">Activar encuesta</span>
-                </div>
 
-                <!-- Creador -->
-                <div id="panel-crear-encuesta">
+                <button class="btn-mini" id="btn-nueva-enc" style="margin-bottom:14px"><i class="fa-solid fa-plus"></i> Nueva encuesta</button>
+
+                <!-- Formulario crear/editar -->
+                <div id="panel-form-enc" style="display:none;border:1px solid rgba(255,184,77,.25);border-radius:6px;padding:14px;margin-bottom:16px;background:rgba(255,184,77,.04)">
+                    <p style="font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#ffb84d;margin:0 0 10px" id="enc-form-titulo-lbl">Nueva encuesta</p>
                     <div class="din-form">
-                        <textarea id="enc-pregunta" placeholder="¿Cuál es tu pregunta?" rows="2" maxlength="200"></textarea>
-                        <!-- Cargar opciones desde equipos o CSV -->
+                        <input type="text" id="enc-f-titulo" placeholder="Título (opcional)" maxlength="80">
+                        <textarea id="enc-f-pregunta" placeholder="¿Cuál es tu pregunta?" rows="2" maxlength="200"></textarea>
+
                         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px">
-                            <button class="btn-mini" id="btn-enc-equipos" style="font-size:.78rem;padding:5px 10px" title="Carga los nombres de los equipos registrados como opciones">
-                                <i class="fa-solid fa-clipboard-list"></i> Usar equipos registrados
+                            <button class="btn-mini" id="btn-enc-f-equipos" style="font-size:.78rem;padding:5px 10px">
+                                <i class="fa-solid fa-clipboard-list"></i> Usar equipos
                             </button>
-                            <label class="btn-mini" style="font-size:.78rem;padding:5px 10px;cursor:pointer" title="Sube un CSV con una opción por línea (primera columna)">
-                                <i class="fa-solid fa-file-csv"></i> Cargar CSV
-                                <input type="file" id="enc-csv-input" accept=".csv,text/csv,text/plain" style="display:none">
+                            <label class="btn-mini" style="font-size:.78rem;padding:5px 10px;cursor:pointer">
+                                <i class="fa-solid fa-file-csv"></i> CSV
+                                <input type="file" id="enc-f-csv" accept=".csv,text/csv,text/plain" style="display:none">
                             </label>
                         </div>
-                        <p class="din-status" id="status-enc-cargar" style="margin:0 0 4px"></p>
-                        <div id="enc-opciones">
-                            <div class="din-opt-row"><input type="text" class="enc-opt" placeholder="Opción 1" maxlength="80"><button onclick="borrarOpcion(this)"><i class="fa-solid fa-xmark"></i></button></div>
-                            <div class="din-opt-row"><input type="text" class="enc-opt" placeholder="Opción 2" maxlength="80"><button onclick="borrarOpcion(this)"><i class="fa-solid fa-xmark"></i></button></div>
+                        <p class="din-status" id="status-enc-f-cargar" style="margin:0 0 2px"></p>
+                        <div id="enc-f-opciones">
+                            <div class="din-opt-row"><input type="text" class="enc-f-opt" placeholder="Opción 1" maxlength="80"><button onclick="borrarEncFOpt(this)"><i class="fa-solid fa-xmark"></i></button></div>
+                            <div class="din-opt-row"><input type="text" class="enc-f-opt" placeholder="Opción 2" maxlength="80"><button onclick="borrarEncFOpt(this)"><i class="fa-solid fa-xmark"></i></button></div>
                         </div>
-                        <button class="btn-mini" id="btn-add-opt" style="align-self:flex-start"><i class="fa-solid fa-plus"></i> Agregar opción</button>
+                        <button class="btn-mini" id="btn-enc-f-addopt" style="align-self:flex-start"><i class="fa-solid fa-plus"></i> Opción</button>
+
                         <div>
-                            <label style="font-size:.78rem;color:#999;display:block;margin-bottom:4px">Imagen del evento (URL, opcional)</label>
-                            <input type="url" id="enc-imagen" placeholder="https://..." style="width:100%;box-sizing:border-box">
+                            <label style="font-size:.78rem;color:#999;display:block;margin-bottom:4px">Imagen (URL, opcional)</label>
+                            <input type="url" id="enc-f-imagen" placeholder="https://..." style="width:100%;box-sizing:border-box">
+                        </div>
+                        <div>
+                            <label style="font-size:.78rem;color:#999;display:block;margin-bottom:4px">Cierre</label>
+                            <div style="display:flex;gap:12px;margin-bottom:6px;flex-wrap:wrap">
+                                <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:#aaa;cursor:pointer;text-transform:none;font-weight:normal;letter-spacing:0">
+                                    <input type="radio" name="enc-f-limite" value="duracion" checked> Duración
+                                </label>
+                                <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:#aaa;cursor:pointer;text-transform:none;font-weight:normal;letter-spacing:0">
+                                    <input type="radio" name="enc-f-limite" value="fecha"> Fecha específica
+                                </label>
+                                <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:#aaa;cursor:pointer;text-transform:none;font-weight:normal;letter-spacing:0">
+                                    <input type="radio" name="enc-f-limite" value="ninguno"> Sin límite
+                                </label>
+                            </div>
+                            <div id="enc-f-dur-wrap">
+                                <select id="enc-f-duracion">
+                                    <option value="300">5 minutos</option>
+                                    <option value="600" selected>10 minutos</option>
+                                    <option value="900">15 minutos</option>
+                                    <option value="1800">30 minutos</option>
+                                    <option value="3600">1 hora</option>
+                                    <option value="7200">2 horas</option>
+                                </select>
+                            </div>
+                            <div id="enc-f-fecha-wrap" style="display:none">
+                                <input type="datetime-local" id="enc-f-fecha-fin">
+                            </div>
                         </div>
                         <div class="din-form-row">
                             <div>
-                                <label style="font-size:.78rem;color:#999;display:block;margin-bottom:4px">Hora de inicio (opcional)</label>
-                                <input type="datetime-local" id="enc-inicio">
+                                <label style="font-size:.75rem;color:#999;display:block;margin-bottom:4px">Ganadores a mostrar</label>
+                                <input type="number" id="enc-f-ganadores" min="1" max="20" value="1" style="width:100%;box-sizing:border-box">
                             </div>
-                            <div>
-                                <label style="font-size:.78rem;color:#999;display:block;margin-bottom:4px">Límite de tiempo</label>
-                                <div style="display:flex;gap:10px;margin-bottom:6px">
-                                    <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:#aaa;text-transform:none;font-weight:normal;letter-spacing:0;cursor:pointer">
-                                        <input type="radio" name="enc-tipo-limite" value="duracion" checked> Duración
-                                    </label>
-                                    <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:#aaa;text-transform:none;font-weight:normal;letter-spacing:0;cursor:pointer">
-                                        <input type="radio" name="enc-tipo-limite" value="fecha"> Fecha específica
-                                    </label>
-                                </div>
-                                <div id="enc-limite-duracion-wrap">
-                                    <select id="enc-duracion">
-                                        <option value="300">5 minutos</option>
-                                        <option value="600" selected>10 minutos</option>
-                                        <option value="900">15 minutos</option>
-                                        <option value="1800">30 minutos</option>
-                                        <option value="3600">1 hora</option>
-                                        <option value="0">Sin límite</option>
-                                    </select>
-                                </div>
-                                <div id="enc-limite-fecha-wrap" style="display:none">
-                                    <input type="datetime-local" id="enc-fecha-fin">
-                                </div>
+                            <div style="display:flex;flex-direction:column;justify-content:flex-end">
+                                <small style="font-size:.73rem;color:#666;line-height:1.3">Top N opciones destacadas como ganadoras en resultados</small>
                             </div>
                         </div>
-                        <div style="display:flex;align-items:flex-end">
-                            <button class="btn-mini" id="btn-iniciar-enc" style="width:100%"><i class="fa-solid fa-play"></i> Iniciar</button>
+                        <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:#aaa;cursor:pointer;text-transform:none;font-weight:normal;letter-spacing:0">
+                            <input type="checkbox" id="enc-f-activo"> Activar al crear
+                        </label>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn-mini" id="btn-enc-f-guardar" style="flex:1"><i class="fa-solid fa-check"></i> <span id="enc-f-btn-lbl">Crear</span></button>
+                            <button class="btn-mini" id="btn-enc-f-cancelar" style="background:transparent;border-color:rgba(255,255,255,.2);color:#999"><i class="fa-solid fa-xmark"></i></button>
                         </div>
+                        <p class="din-status" id="status-enc-form"></p>
                     </div>
                 </div>
 
-                <!-- Activa -->
-                <div id="panel-encuesta-activa" style="display:none">
-                    <img id="enc-imagen-activa" src="" alt="" style="display:none;width:100%;max-height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px">
-                    <p id="enc-pregunta-activa" style="font-weight:700;color:#D8C395;margin-bottom:10px;font-size:.9rem"></p>
-                    <div id="enc-resultados"></div>
-                    <div class="poll-timer" id="enc-timer">--:--</div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap">
-                        <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" id="btn-reset-enc"><i class="fa-solid fa-stop"></i> Terminar</button>
-                        <button class="btn-mini" style="background:rgba(255,165,0,.12);border-color:rgba(255,165,0,.4);color:#ffa040" id="btn-restablecer-enc"><i class="fa-solid fa-rotate-right"></i> Restablecer votos</button>
-                        <button class="btn-mini" id="btn-export-enc-wa"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-                        <button class="btn-mini" id="btn-export-enc-csv"><i class="fa-solid fa-file-csv"></i> CSV</button>
-                    </div>
-                </div>
+                <!-- Lista de encuestas -->
+                <div id="enc-lista"></div>
+                <p class="din-status" id="status-encuestas"></p>
 
-                <p class="din-status" id="status-encuesta"></p>
                 <div class="din-url-box" id="url-encuesta" style="display:none">
                     <i class="fa-solid fa-link"></i>
                     <span id="url-encuesta-txt"></span>
                     <button onclick="copiarUrl('encuesta')">Copiar</button>
-                </div>
-
-                <!-- Historial de encuestas anteriores -->
-                <div id="panel-historial-enc" style="margin-top:18px;display:none">
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-                        <i class="fa-solid fa-clock-rotate-left" style="color:#D8C395;opacity:.7"></i>
-                        <span style="font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#D8C395;opacity:.7">Historial</span>
-                    </div>
-                    <div id="historial-enc-lista"></div>
                 </div>
             </div>
         </div>
@@ -438,10 +444,9 @@
         actualizarUrls();
         await Promise.all([
             cargarDinamica('registro'),
-            cargarDinamica('encuesta'),
             cargarDinamica('juego'),
+            cargarEncuestas(),
         ]);
-        cargarHistorialEnc();
     }
 
     async function cargarDinamica(tipo) {
@@ -463,47 +468,6 @@
         if (tipo === 'registro') renderRegistro();
         if (tipo === 'encuesta') renderEncuesta();
         if (tipo === 'juego')    renderLeaderboard();
-    }
-
-    /* ── Historial de encuestas ── */
-    async function cargarHistorialEnc() {
-        const panel = document.getElementById('panel-historial-enc');
-        const lista = document.getElementById('historial-enc-lista');
-        try {
-            const hist = await P.dinamica.historial(portalActual, 'encuesta');
-            if (!hist || !hist.length) { panel.style.display = 'none'; return; }
-            panel.style.display = '';
-            lista.innerHTML = hist.map(h => {
-                const cfg = h.config || {};
-                const opts = cfg.opciones || [];
-                const res = h.resultados || {};
-                const fecha = new Date(h.cerrado).toLocaleString('es-MX', { dateStyle:'short', timeStyle:'short' });
-                const filas = opts.map((op, i) => {
-                    const v = parseInt(res[String(i)] || 0);
-                    const pct = h.total_votos > 0 ? Math.round(v / h.total_votos * 100) : 0;
-                    const ganador = opts.length > 0 && v === Math.max(...opts.map((_, j) => parseInt(res[String(j)] || 0)));
-                    return `<div style="margin-bottom:4px">
-                        <div style="display:flex;justify-content:space-between;font-size:.78rem;color:${ganador ? '#FFD54A' : '#aaa'}">
-                            <span>${ganador ? '🏆 ' : ''}${P.escaparHtml(op)}</span>
-                            <span>${v} · ${pct}%</span>
-                        </div>
-                        <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:2px">
-                            <div style="height:100%;border-radius:3px;width:${pct}%;background:${ganador ? 'linear-gradient(90deg,#FFD54A,#ffa000)' : 'rgba(216,195,149,.4)'}"></div>
-                        </div>
-                    </div>`;
-                }).join('');
-                return `<div style="border:1px solid rgba(216,195,149,.18);border-radius:8px;padding:12px;margin-bottom:10px;background:rgba(0,0,0,.2)">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
-                        <span style="font-size:.83rem;font-weight:700;color:#D8C395;flex:1">${P.escaparHtml(cfg.pregunta || '—')}</span>
-                        <span style="font-size:.7rem;color:#666;white-space:nowrap">${fecha}</span>
-                    </div>
-                    ${filas}
-                    <div style="font-size:.7rem;color:#555;margin-top:6px">${h.total_votos} voto${h.total_votos !== 1 ? 's' : ''} · ronda ${h.ronda}${h.archivado_por ? ' · ' + P.escaparHtml(h.archivado_por) : ''}</div>
-                </div>`;
-            }).join('');
-        } catch(e) {
-            panel.style.display = 'none'; // sql/37 no corrido aún
-        }
     }
 
     /* ── Config helper ── */
@@ -530,9 +494,19 @@
         const urlBox    = document.getElementById('url-registro');
 
         toggleReg.checked = !!ses.activo;
-        badgeReg.textContent = ses.activo ? 'Activo' : 'Inactivo';
+        const nReg    = lista.length;
+        const limReg  = ses.config && ses.config.limite ? parseInt(ses.config.limite) : null;
+        badgeReg.textContent = ses.activo
+            ? (limReg ? `Activo · ${nReg}/${limReg}` : `Activo · ${nReg}`)
+            : 'Inactivo';
         badgeReg.className = 'din-badge' + (ses.activo ? ' activo' : '');
         urlBox.style.display = ses.activo ? 'flex' : 'none';
+
+        // Límite
+        document.getElementById('reg-limite').value = limReg || '';
+        document.getElementById('reg-limite-info').textContent = limReg
+            ? `${nReg} de ${limReg} jugadores registrados`
+            : `${nReg} jugador${nReg !== 1 ? 'es' : ''} registrado${nReg !== 1 ? 's':''} · sin límite`;
 
         // Inicio + Deadline inputs
         const toLocal = iso => iso ? new Date(new Date(iso).getTime() - new Date(iso).getTimezoneOffset()*60000).toISOString().slice(0,16) : '';
@@ -582,6 +556,20 @@
     document.getElementById('btn-reg-nodeadline').addEventListener('click', () => {
         if (!confirm('¿Quitar el límite de tiempo?')) return;
         config('registro', { quitarDeadline: true }, 'status-registro');
+    });
+
+    document.getElementById('btn-reg-limite').addEventListener('click', () => {
+        const val = parseInt(document.getElementById('reg-limite').value);
+        if (!val || val < 1) { alert('Ingresa un número válido (mínimo 1).'); return; }
+        const cfg = Object.assign({}, (sesiones.registro || {}).config || {}, { limite: val });
+        config('registro', { config: cfg }, 'status-registro');
+    });
+
+    document.getElementById('btn-reg-nolimite').addEventListener('click', () => {
+        if (!confirm('¿Quitar el límite de jugadores?')) return;
+        const cfg = Object.assign({}, (sesiones.registro || {}).config || {});
+        delete cfg.limite;
+        config('registro', { config: cfg }, 'status-registro');
     });
 
     document.getElementById('btn-reg-add').addEventListener('click', async () => {
@@ -654,269 +642,358 @@
 
 
     /* ══════════════════════════════════════
-       ENCUESTA
+       ENCUESTAS MULTI (sql/41)
     ══════════════════════════════════════ */
-    function renderEncuesta() {
-        const ses = sesiones.encuesta || {};
-        const lista = entradas.encuesta || [];
-        const cfg   = ses.config || {};
+    let encuestas = [];      // lista local de encuestas del portal
+    let encEditId = null;    // id de encuesta en edición (null = crear nueva)
 
-        const toggleEnc = document.getElementById('toggle-encuesta');
-        const badgeEnc  = document.getElementById('badge-encuesta');
-        const urlBox    = document.getElementById('url-encuesta');
-
-        toggleEnc.checked = !!ses.activo;
-        badgeEnc.textContent = ses.activo ? 'Activa' : 'Inactivo';
-        badgeEnc.className = 'din-badge' + (ses.activo ? ' activo' : '');
-        urlBox.style.display = ses.activo ? 'flex' : 'none';
-
-        const activa = ses.activo && cfg.pregunta;
-        document.getElementById('panel-crear-encuesta').style.display = activa ? 'none' : '';
-        document.getElementById('panel-encuesta-activa').style.display = activa ? '' : 'none';
-
-        if (activa) {
-            const imgActiva = document.getElementById('enc-imagen-activa');
-            if (cfg.imagen) { imgActiva.src = cfg.imagen; imgActiva.style.display = ''; }
-            else { imgActiva.src = ''; imgActiva.style.display = 'none'; }
-            document.getElementById('enc-pregunta-activa').textContent = cfg.pregunta || '';
-            renderResultadosEnc(cfg.opciones || [], lista);
-            if (ses.deadline) iniciarTimerEnc(ses.deadline);
-            else document.getElementById('enc-timer').textContent = '∞';
-        }
+    async function cargarEncuestas() {
+        const st = document.getElementById('status-encuestas');
+        try {
+            encuestas = await P.enc.listar(portalActual) || [];
+        } catch(e) { encuestas = []; }
+        renderEncLista();
+        // Badge de activas
+        const nActivas = encuestas.filter(e => e.activo && !e.cerrado).length;
+        const badge = document.getElementById('badge-encuestas');
+        badge.textContent = nActivas ? nActivas + ' activa' + (nActivas !== 1 ? 's' : '') : '0 activas';
+        badge.className = 'din-badge' + (nActivas ? ' activo' : '');
+        // URL box visible si hay alguna activa
+        document.getElementById('url-encuesta').style.display = nActivas ? 'flex' : 'none';
     }
 
-    function renderResultadosEnc(opciones, lista) {
-        const divR = document.getElementById('enc-resultados');
-        const votos = {};
-        lista.forEach(e => {
-            const idx = e.metadata && e.metadata.opcion_idx != null ? e.metadata.opcion_idx : -1;
-            if (idx >= 0) votos[idx] = (votos[idx] || 0) + 1;
-        });
-        const total = Object.values(votos).reduce((a, b) => a + b, 0) || 1;
-        divR.innerHTML = opciones.map((op, i) => {
-            const v = votos[i] || 0, pct = Math.round((v / total) * 100);
-            return `<div class="poll-opt-bar">
-                <div class="poll-opt-label"><span>${esc(op)}</span><span>${v} voto${v !== 1 ? 's' : ''} (${pct}%)</span></div>
-                <div class="poll-bar-track"><div class="poll-bar-fill" style="width:${pct}%"></div></div>
+    function renderEncLista() {
+        const cont = document.getElementById('enc-lista');
+        if (!encuestas.length) {
+            cont.innerHTML = '<p style="color:#666;font-size:.85rem;margin:0 0 10px">No hay encuestas. Crea la primera.</p>';
+            return;
+        }
+        cont.innerHTML = encuestas.map(enc => {
+            const opciones = enc.opciones || [];
+            const total = parseInt(enc.total_votos || 0);
+            const cerrado = enc.cerrado;
+            const statusLabel = !enc.activo ? 'Inactiva' : cerrado ? 'Cerrada' : 'Activa';
+            const statusCls = !enc.activo ? '' : cerrado ? 'din-badge' : 'din-badge activo';
+            const titulo = enc.titulo || enc.pregunta || 'Encuesta #' + enc.id;
+            const timerTxt = enc.deadline && !cerrado
+                ? `<small style="color:#888;font-size:.75rem">Cierra: ${new Date(enc.deadline).toLocaleString('es-MX', {dateStyle:'short',timeStyle:'short'})}</small>`
+                : cerrado ? `<small style="color:#ff8a8d;font-size:.75rem">Cerrada</small>` : '';
+
+            const votos = enc.votos || {};
+            const vArr = opciones.map((_, i) => parseInt(votos[i] || 0));
+            const totalV = vArr.reduce((a,b) => a+b, 0) || 1;
+            const nGan   = Math.max(1, parseInt(enc.n_ganadores || 1));
+            // Orden de los índices por votos descendente (para marcar ganadores)
+            const ordenIdx = [...vArr.keys()].sort((a,b) => vArr[b] - vArr[a]);
+            const ganadores = new Set(ordenIdx.slice(0, nGan).filter(i => vArr[i] > 0));
+            const medallas  = ['🥇','🥈','🥉'];
+            const barras = opciones.map((op, i) => {
+                const v = vArr[i], pct = Math.round((v/totalV)*100);
+                const posGan = ganadores.has(i) ? ordenIdx.indexOf(i) : -1;
+                const esGan  = posGan >= 0;
+                const medal  = esGan && total > 0 ? (medallas[posGan] || '🏅') + ' ' : '';
+                return `<div style="margin:4px 0">
+                    <div style="display:flex;justify-content:space-between;font-size:.78rem;color:${esGan && total > 0 ? '#FFD54A':'#ccc'};margin-bottom:2px;font-weight:${esGan && total > 0 ? '700':'normal'}">
+                        <span>${medal}${esc(op)}</span><span>${v}v · ${pct}%</span>
+                    </div>
+                    <div style="height:6px;border-radius:3px;background:rgba(255,255,255,.1)">
+                        <div style="height:100%;border-radius:3px;width:${pct}%;background:${esGan && total > 0 ? 'linear-gradient(90deg,#FFD54A,#ffa000)':'linear-gradient(90deg,#D8C395,#FFD54A)'}"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            const ganBadge = nGan > 1 ? `<span class="din-badge" style="margin-left:6px;font-size:.7rem">Top ${nGan}</span>` : '';
+
+            return `<div style="border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:12px;margin-bottom:10px;background:rgba(255,255,255,.02)">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
+                    <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                        <b style="font-size:.9rem;color:#F4EEDC">${esc(titulo)}</b>${ganBadge}
+                        ${enc.pregunta && enc.titulo ? `<div style="font-size:.8rem;color:#999;margin-top:1px;width:100%">${esc(enc.pregunta)}</div>` : ''}
+                    </div>
+                    <span class="${statusCls || 'din-badge'}" style="flex-shrink:0">${statusLabel}</span>
+                </div>
+                <div style="margin-bottom:8px">${timerTxt}</div>
+                ${total > 0 ? barras : '<p style="color:#555;font-size:.8rem;margin:4px 0">Sin votos aún</p>'}
+                <p style="font-size:.78rem;color:#777;margin:6px 0 10px">Total: <b style="color:#aaa">${total}</b> voto${total !== 1 ? 's' : ''}</p>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                    ${!cerrado ? `<button class="btn-mini" style="font-size:.75rem;padding:4px 9px;${enc.activo ? 'background:rgba(255,77,77,.1);border-color:rgba(255,77,77,.4);color:#ff7070' : ''}"
+                        onclick="encToggle(${enc.id},${!enc.activo})">${enc.activo ? 'Desactivar' : 'Activar'}</button>` : ''}
+                    <button class="btn-mini" style="font-size:.75rem;padding:4px 9px" onclick="encRestablecer(${enc.id})"><i class="fa-solid fa-rotate-right"></i> Restablecer</button>
+                    <button class="btn-mini" style="font-size:.75rem;padding:4px 9px" onclick="encEditar(${enc.id})"><i class="fa-solid fa-pen"></i> Editar</button>
+                    <button class="btn-mini" style="font-size:.75rem;padding:4px 9px;background:rgba(255,77,77,.08);border-color:rgba(255,77,77,.35);color:#ff7070" onclick="encBorrar(${enc.id})"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn-mini" style="font-size:.75rem;padding:4px 9px" onclick="encExportWa(${enc.id})"><i class="fa-brands fa-whatsapp"></i></button>
+                </div>
             </div>`;
-        }).join('') + `<p style="font-size:.8rem;color:#777;margin-top:8px">Total votos: <b>${lista.length}</b></p>`;
+        }).join('');
     }
 
-    function iniciarTimerEnc(deadline) {
-        if (encInterval) clearInterval(encInterval);
-        function tick() {
-            const el = document.getElementById('enc-timer');
-            if (!el) { clearInterval(encInterval); return; }
-            const rem = Math.max(0, Math.floor((new Date(deadline) - Date.now()) / 1000));
-            const m = Math.floor(rem / 60), sc = rem % 60;
-            el.textContent = String(m).padStart(2,'0') + ':' + String(sc).padStart(2,'0');
-            el.className = 'poll-timer' + (rem < 60 ? ' urgente' : '');
-            if (rem === 0) { clearInterval(encInterval); }
+    window.encToggle = async function(id, activo) {
+        const st = document.getElementById('status-encuestas');
+        st.textContent = activo ? 'Activando...' : 'Desactivando...'; st.className = 'din-status';
+        try {
+            await P.enc.editar(id, { activo });
+            await cargarEncuestas();
+            st.textContent = ''; st.className = 'din-status';
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    };
+
+    window.encRestablecer = async function(id) {
+        if (!confirm('¿Restablecer votos? Los participantes podrán votar nuevamente.')) return;
+        const st = document.getElementById('status-encuestas');
+        st.textContent = 'Restableciendo...'; st.className = 'din-status';
+        try {
+            await P.enc.restablecer(id);
+            await cargarEncuestas();
+            st.textContent = ''; st.className = 'din-status';
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    };
+
+    window.encEditar = function(id) {
+        const enc = encuestas.find(e => e.id === id);
+        if (!enc) return;
+        encEditId = id;
+        document.getElementById('enc-form-titulo-lbl').textContent = 'Editar encuesta';
+        document.getElementById('enc-f-btn-lbl').textContent = 'Guardar';
+        document.getElementById('enc-f-titulo').value = enc.titulo || '';
+        document.getElementById('enc-f-pregunta').value = enc.pregunta || '';
+        document.getElementById('enc-f-imagen').value = enc.imagen || '';
+        document.getElementById('enc-f-activo').checked = !!enc.activo;
+        document.getElementById('enc-f-ganadores').value = enc.n_ganadores || 1;
+        // Poblar opciones
+        const opciones = enc.opciones || [];
+        poblarEncFOpts(opciones);
+        // Deadline
+        if (enc.deadline && !enc.cerrado) {
+            document.querySelector('[name="enc-f-limite"][value="fecha"]').checked = true;
+            document.getElementById('enc-f-dur-wrap').style.display = 'none';
+            document.getElementById('enc-f-fecha-wrap').style.display = '';
+            const d = new Date(enc.deadline);
+            document.getElementById('enc-f-fecha-fin').value = d.toISOString().slice(0,16);
+        } else {
+            document.querySelector('[name="enc-f-limite"][value="ninguno"]').checked = true;
+            document.getElementById('enc-f-dur-wrap').style.display = 'none';
+            document.getElementById('enc-f-fecha-wrap').style.display = 'none';
         }
-        tick();
-        encInterval = setInterval(tick, 1000);
-    }
+        document.getElementById('panel-form-enc').style.display = '';
+        document.getElementById('panel-form-enc').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
 
-    document.getElementById('toggle-encuesta').addEventListener('change', function() {
-        config('encuesta', { activo: this.checked }, 'status-encuesta');
+    window.encBorrar = async function(id) {
+        if (!confirm('¿Borrar esta encuesta y todos sus votos?')) return;
+        const st = document.getElementById('status-encuestas');
+        st.textContent = 'Borrando...'; st.className = 'din-status';
+        try {
+            await P.enc.borrar(id);
+            await cargarEncuestas();
+            st.textContent = ''; st.className = 'din-status';
+        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
+    };
+
+    window.encExportWa = function(id) {
+        const enc = encuestas.find(e => e.id === id);
+        if (!enc) return;
+        const opciones = enc.opciones || [];
+        const votos = enc.votos || {};
+        const total = parseInt(enc.total_votos || 0) || 1;
+        const portal = (P.PORTALES[portalActual] || {}).nombre || portalActual;
+        let txt = `*${enc.titulo || 'Encuesta'} — ${portal}*\n\n`;
+        if (enc.pregunta) txt += `❓ ${enc.pregunta}\n\n`;
+        opciones.forEach((op, i) => {
+            const v = parseInt(votos[i] || 0), pct = Math.round((v / total) * 100);
+            const bar = '▓'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
+            txt += `${bar} ${pct}% — ${op} (${v} voto${v !== 1 ? 's' : ''})\n`;
+        });
+        txt += `\n_Total: ${parseInt(enc.total_votos || 0)} voto${enc.total_votos !== 1 ? 's' : ''}_`;
+        navigator.clipboard.writeText(txt).then(() => alert('Texto copiado para WhatsApp.')).catch(() => alert(txt));
+    };
+
+    /* ── Formulario ── */
+    document.getElementById('btn-nueva-enc').addEventListener('click', () => {
+        encEditId = null;
+        document.getElementById('enc-form-titulo-lbl').textContent = 'Nueva encuesta';
+        document.getElementById('enc-f-btn-lbl').textContent = 'Crear';
+        document.getElementById('enc-f-titulo').value = '';
+        document.getElementById('enc-f-pregunta').value = '';
+        document.getElementById('enc-f-imagen').value = '';
+        document.getElementById('enc-f-activo').checked = true;
+        poblarEncFOpts(['', '']);
+        document.querySelector('[name="enc-f-limite"][value="duracion"]').checked = true;
+        document.getElementById('enc-f-dur-wrap').style.display = '';
+        document.getElementById('enc-f-fecha-wrap').style.display = 'none';
+        document.getElementById('status-enc-form').textContent = '';
+        const panel = document.getElementById('panel-form-enc');
+        panel.style.display = panel.style.display === 'none' ? '' : 'none';
     });
 
-    document.getElementById('btn-add-opt').addEventListener('click', () => {
-        const cont = document.getElementById('enc-opciones');
-        if (cont.children.length >= 6) { alert('Máximo 6 opciones.'); return; }
+    document.getElementById('btn-enc-f-cancelar').addEventListener('click', () => {
+        document.getElementById('panel-form-enc').style.display = 'none';
+        encEditId = null;
+    });
+
+    document.querySelectorAll('[name="enc-f-limite"]').forEach(r => {
+        r.addEventListener('change', function() {
+            document.getElementById('enc-f-dur-wrap').style.display    = this.value === 'duracion' ? '' : 'none';
+            document.getElementById('enc-f-fecha-wrap').style.display = this.value === 'fecha'    ? '' : 'none';
+        });
+    });
+
+    document.getElementById('btn-enc-f-addopt').addEventListener('click', () => {
+        const cont = document.getElementById('enc-f-opciones');
+        if (cont.children.length >= 8) { alert('Máximo 8 opciones.'); return; }
         const n = cont.children.length + 1;
-        const row = document.createElement('div');
-        row.className = 'din-opt-row';
-        row.innerHTML = `<input type="text" class="enc-opt" placeholder="Opción ${n}" maxlength="80"><button onclick="borrarOpcion(this)"><i class="fa-solid fa-xmark"></i></button>`;
+        const row = document.createElement('div'); row.className = 'din-opt-row';
+        row.innerHTML = `<input type="text" class="enc-f-opt" placeholder="Opción ${n}" maxlength="80"><button onclick="borrarEncFOpt(this)"><i class="fa-solid fa-xmark"></i></button>`;
         cont.appendChild(row);
     });
 
-    window.borrarOpcion = function(btn) {
-        const cont = document.getElementById('enc-opciones');
+    window.borrarEncFOpt = function(btn) {
+        const cont = document.getElementById('enc-f-opciones');
         if (cont.children.length <= 2) { alert('Mínimo 2 opciones.'); return; }
         btn.closest('.din-opt-row').remove();
     };
 
-    /* ── Cargar opciones: equipos registrados ── */
-    document.getElementById('btn-enc-equipos').addEventListener('click', async () => {
-        const st = document.getElementById('status-enc-cargar');
+    function poblarEncFOpts(vals) {
+        const cont = document.getElementById('enc-f-opciones');
+        cont.innerHTML = '';
+        vals.forEach((v, i) => {
+            const row = document.createElement('div'); row.className = 'din-opt-row';
+            row.innerHTML = `<input type="text" class="enc-f-opt" placeholder="Opción ${i+1}" maxlength="80" value="${esc(v)}"><button onclick="borrarEncFOpt(this)"><i class="fa-solid fa-xmark"></i></button>`;
+            cont.appendChild(row);
+        });
+        while (cont.children.length < 2) {
+            const n = cont.children.length + 1;
+            const row = document.createElement('div'); row.className = 'din-opt-row';
+            row.innerHTML = `<input type="text" class="enc-f-opt" placeholder="Opción ${n}" maxlength="80"><button onclick="borrarEncFOpt(this)"><i class="fa-solid fa-xmark"></i></button>`;
+            cont.appendChild(row);
+        }
+    }
+
+    /* ── Cargar equipos registrados — con opción de dividir ── */
+    document.getElementById('btn-enc-f-equipos').addEventListener('click', async () => {
+        const st = document.getElementById('status-enc-f-cargar');
         st.textContent = 'Cargando equipos...'; st.className = 'din-status';
         try {
             const data = await P.dinamica.listar(portalActual, 'registro');
             const equipos = (data.entradas || []).map(e => e.nombre).filter(Boolean);
             if (!equipos.length) { st.textContent = 'No hay equipos registrados.'; st.className = 'din-status err'; return; }
-            poblarOpciones(equipos.slice(0, 6)); // max 6
-            st.textContent = `✔ ${equipos.length} equipo${equipos.length !== 1 ? 's' : ''} cargado${equipos.length !== 1 ? 's' : ''} como opciones.`; st.className = 'din-status ok';
+
+            const MAX_OPT = 6;
+            if (equipos.length > MAX_OPT) {
+                const nGrupos = Math.ceil(equipos.length / MAX_OPT);
+                const resp = confirm(
+                    `Hay ${equipos.length} equipos registrados.\n\n` +
+                    `Con ${MAX_OPT} opciones por encuesta necesitas ${nGrupos} encuestas.\n\n` +
+                    `¿Crear ${nGrupos} encuestas automáticamente (${Math.ceil(equipos.length / nGrupos)} equipos por grupo)?\n\n` +
+                    `OK = Crear todas automáticamente\nCancelar = Cargar solo los primeros ${MAX_OPT}`
+                );
+                if (resp) {
+                    st.textContent = `Creando ${nGrupos} encuestas...`; st.className = 'din-status';
+                    // Calcular deadline
+                    let deadline = null;
+                    const tipoLim = document.querySelector('[name="enc-f-limite"]:checked').value;
+                    if (tipoLim === 'duracion') {
+                        const dur = parseInt(document.getElementById('enc-f-duracion').value);
+                        deadline = dur > 0 ? new Date(Date.now() + dur * 1000).toISOString() : null;
+                    } else if (tipoLim === 'fecha') {
+                        const fv = document.getElementById('enc-f-fecha-fin').value;
+                        deadline = fv ? new Date(fv).toISOString() : null;
+                    }
+                    const preguntaBase  = document.getElementById('enc-f-pregunta').value.trim() || '¿Quién pasa a la siguiente ronda?';
+                    const imagen        = document.getElementById('enc-f-imagen').value.trim();
+                    const activo        = document.getElementById('enc-f-activo').checked;
+                    const nGanadores    = Math.max(1, parseInt(document.getElementById('enc-f-ganadores').value) || 1);
+                    const tamGrupo = Math.ceil(equipos.length / nGrupos);
+                    for (let g = 0; g < nGrupos; g++) {
+                        const grupo = equipos.slice(g * tamGrupo, (g + 1) * tamGrupo);
+                        const titulo = `Grupo ${String.fromCharCode(65 + g)}`; // Grupo A, B, C...
+                        await P.enc.crear(portalActual, {
+                            titulo,
+                            pregunta: preguntaBase,
+                            opciones: grupo,
+                            imagen: imagen || null,
+                            deadline,
+                            activo,
+                            nGanadores,
+                        });
+                    }
+                    await cargarEncuestas();
+                    document.getElementById('panel-form-enc').style.display = 'none';
+                    st.textContent = `✔ ${nGrupos} encuestas creadas con ${equipos.length} equipos.`; st.className = 'din-status ok';
+                    setTimeout(() => st.textContent = '', 4000);
+                    return;
+                }
+            }
+            // Caso normal: cargar primeros MAX_OPT en el formulario
+            poblarEncFOpts(equipos.slice(0, MAX_OPT));
+            st.textContent = `✔ ${Math.min(equipos.length, MAX_OPT)} equipo${equipos.length !== 1 ? 's' : ''} cargado${equipos.length !== 1 ? 's' : ''}.`; st.className = 'din-status ok';
             setTimeout(() => st.textContent = '', 3000);
         } catch(e) { st.textContent = e.message || 'Error al cargar equipos.'; st.className = 'din-status err'; }
     });
 
-    /* ── Cargar opciones: CSV ── */
-    document.getElementById('enc-csv-input').addEventListener('change', function() {
+    /* ── CSV ── */
+    document.getElementById('enc-f-csv').addEventListener('change', function() {
         const file = this.files && this.files[0];
         if (!file) return;
-        const st = document.getElementById('status-enc-cargar');
+        const st = document.getElementById('status-enc-f-cargar');
         const reader = new FileReader();
         reader.onload = function(ev) {
-            // Una opción por línea; si hay comas toma la primera columna
-            const lineas = (ev.target.result || '').split(/\r?\n/).map(l => {
-                const col = l.split(',')[0].replace(/^["'\s]+|["'\s]+$/g, '');
-                return col;
-            }).filter(Boolean);
-            if (!lineas.length) { st.textContent = 'CSV vacío o sin datos.'; st.className = 'din-status err'; return; }
-            poblarOpciones(lineas.slice(0, 6));
-            st.textContent = `✔ ${lineas.length} opción${lineas.length !== 1 ? 'es' : ''} cargada${lineas.length !== 1 ? 's' : ''} desde CSV.`; st.className = 'din-status ok';
+            const lineas = (ev.target.result || '').split(/\r?\n/).map(l => l.split(',')[0].replace(/^["'\s]+|["'\s]+$/g, '')).filter(Boolean);
+            if (!lineas.length) { st.textContent = 'CSV vacío.'; st.className = 'din-status err'; return; }
+            poblarEncFOpts(lineas.slice(0, 8));
+            st.textContent = `✔ ${lineas.length} opción${lineas.length !== 1 ? 'es' : ''} cargada${lineas.length !== 1 ? 's' : ''}.`; st.className = 'din-status ok';
             setTimeout(() => st.textContent = '', 3000);
         };
         reader.readAsText(file, 'UTF-8');
-        this.value = ''; // reset input
+        this.value = '';
     });
 
-    /* ── Poblar opciones: reemplaza los inputs con los valores dados ── */
-    function poblarOpciones(valores) {
-        const cont = document.getElementById('enc-opciones');
-        cont.innerHTML = '';
-        valores.forEach((v, i) => {
-            const row = document.createElement('div');
-            row.className = 'din-opt-row';
-            row.innerHTML = `<input type="text" class="enc-opt" placeholder="Opción ${i+1}" maxlength="80" value="${P.escaparHtml(v)}"><button onclick="borrarOpcion(this)"><i class="fa-solid fa-xmark"></i></button>`;
-            cont.appendChild(row);
-        });
-        // Asegurar mínimo 2 si vinieron menos
-        while (cont.children.length < 2) {
-            const n = cont.children.length + 1;
-            const row = document.createElement('div');
-            row.className = 'din-opt-row';
-            row.innerHTML = `<input type="text" class="enc-opt" placeholder="Opción ${n}" maxlength="80"><button onclick="borrarOpcion(this)"><i class="fa-solid fa-xmark"></i></button>`;
-            cont.appendChild(row);
-        }
-    }
-
-    // Toggle duración / fecha específica
-    document.querySelectorAll('[name="enc-tipo-limite"]').forEach(r => {
-        r.addEventListener('change', function() {
-            document.getElementById('enc-limite-duracion-wrap').style.display = this.value === 'duracion' ? '' : 'none';
-            document.getElementById('enc-limite-fecha-wrap').style.display    = this.value === 'fecha'    ? '' : 'none';
-        });
-    });
-
-    document.getElementById('btn-iniciar-enc').addEventListener('click', async () => {
-        const pregunta = document.getElementById('enc-pregunta').value.trim();
-        const opciones = Array.from(document.querySelectorAll('.enc-opt')).map(i => i.value.trim()).filter(Boolean);
-        if (!pregunta) { alert('Escribe la pregunta.'); return; }
+    /* ── Guardar (crear o editar) ── */
+    document.getElementById('btn-enc-f-guardar').addEventListener('click', async () => {
+        const pregunta = document.getElementById('enc-f-pregunta').value.trim();
+        const opciones = Array.from(document.querySelectorAll('.enc-f-opt')).map(i => i.value.trim()).filter(Boolean);
         if (opciones.length < 2) { alert('Necesitas al menos 2 opciones válidas.'); return; }
 
         let deadline = null;
-        const tipoLimite = document.querySelector('[name="enc-tipo-limite"]:checked').value;
-        if (tipoLimite === 'fecha') {
-            const fechaVal = document.getElementById('enc-fecha-fin').value;
-            if (!fechaVal) { alert('Selecciona la fecha de finalización.'); return; }
-            const fechaDate = new Date(fechaVal);
-            if (fechaDate <= new Date()) { alert('La fecha de fin debe ser en el futuro.'); return; }
-            deadline = fechaDate.toISOString();
-        } else {
-            const dur = parseInt(document.getElementById('enc-duracion').value);
+        const tipoLim = document.querySelector('[name="enc-f-limite"]:checked').value;
+        if (tipoLim === 'duracion') {
+            const dur = parseInt(document.getElementById('enc-f-duracion').value);
             deadline = dur > 0 ? new Date(Date.now() + dur * 1000).toISOString() : null;
+        } else if (tipoLim === 'fecha') {
+            const fv = document.getElementById('enc-f-fecha-fin').value;
+            if (!fv) { alert('Selecciona la fecha de finalización.'); return; }
+            const fd = new Date(fv);
+            if (fd <= new Date()) { alert('La fecha debe ser en el futuro.'); return; }
+            deadline = fd.toISOString();
         }
 
-        const inicioVal = document.getElementById('enc-inicio').value;
-        const inicio = inicioVal ? new Date(inicioVal).toISOString() : null;
-        const st = document.getElementById('status-encuesta');
-        st.textContent = 'Iniciando...'; st.className = 'din-status';
+        const d = {
+            titulo:     document.getElementById('enc-f-titulo').value.trim() || null,
+            pregunta:   pregunta || null,
+            opciones,
+            imagen:     document.getElementById('enc-f-imagen').value.trim() || null,
+            deadline,
+            activo:     document.getElementById('enc-f-activo').checked,
+            nGanadores: Math.max(1, parseInt(document.getElementById('enc-f-ganadores').value) || 1),
+        };
+
+        const st = document.getElementById('status-enc-form');
+        st.textContent = encEditId ? 'Guardando...' : 'Creando...'; st.className = 'din-status';
         try {
-            await P.dinamica.vaciar(portalActual, 'encuesta').catch(() => {});
-            const imagen = document.getElementById('enc-imagen').value.trim();
-            // ronda 0 al iniciar (reset del contador)
-            await P.dinamica.config(portalActual, 'encuesta', {
-                activo: true,
-                config: { pregunta, opciones, ronda: 0, ...(imagen ? { imagen } : {}) },
-                deadline: deadline,
-                quitarDeadline: !deadline,
-                inicio: inicio,
-                quitarInicio: !inicio,
-            });
-            await cargarDinamica('encuesta');
+            if (encEditId) {
+                await P.enc.editar(encEditId, { ...d, quitarDeadline: !deadline });
+            } else {
+                await P.enc.crear(portalActual, d);
+            }
+            await cargarEncuestas();
+            document.getElementById('panel-form-enc').style.display = 'none';
+            encEditId = null;
             st.textContent = ''; st.className = 'din-status';
         } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
     });
 
-    document.getElementById('btn-reset-enc').addEventListener('click', async () => {
-        if (!confirm('¿Terminar la encuesta y borrar resultados?')) return;
-        const st = document.getElementById('status-encuesta');
-        st.textContent = 'Archivando y terminando...'; st.className = 'din-status';
-        if (encInterval) clearInterval(encInterval);
-        try {
-            await P.dinamica.archivar(portalActual, 'encuesta').catch(() => {});
-            await P.dinamica.config(portalActual, 'encuesta', { activo: false, quitarDeadline: true });
-            await P.dinamica.vaciar(portalActual, 'encuesta').catch(() => {});
-            await cargarDinamica('encuesta');
-            cargarHistorialEnc();
-            st.textContent = ''; st.className = 'din-status';
-        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
-    });
+    /* ─── ENCUESTA LEGADA: placeholder para cargarDinamica ─── */
+    function renderEncuesta() { /* migrado a sistema multi-enc */ }
 
-    document.getElementById('btn-restablecer-enc').addEventListener('click', async () => {
-        if (!confirm('¿Restablecer votos? Los participantes podrán votar nuevamente.')) return;
-        const st = document.getElementById('status-encuesta');
-        st.textContent = 'Archivando y restableciendo...'; st.className = 'din-status';
-        try {
-            await P.dinamica.archivar(portalActual, 'encuesta').catch(() => {});
-            await P.dinamica.vaciar(portalActual, 'encuesta');
-            const ses = sesiones.encuesta || {};
-            const cfg = ses.config || {};
-            const rondaActual = (cfg.ronda || 0) + 1;
-            await P.dinamica.config(portalActual, 'encuesta', {
-                config: { ...cfg, ronda: rondaActual },
-            });
-            await cargarDinamica('encuesta');
-            cargarHistorialEnc();
-            st.textContent = ''; st.className = 'din-status';
-        } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
-    });
-
-    document.getElementById('btn-export-enc-wa').addEventListener('click', () => {
-        const ses = sesiones.encuesta || {};
-        const cfg = ses.config || {};
-        const lista = entradas.encuesta || [];
-        if (!cfg.pregunta) { alert('No hay encuesta activa.'); return; }
-        const opciones = cfg.opciones || [];
-        const votos = {};
-        lista.forEach(e => {
-            const idx = e.metadata && e.metadata.opcion_idx != null ? e.metadata.opcion_idx : -1;
-            if (idx >= 0) votos[idx] = (votos[idx] || 0) + 1;
-        });
-        const total = lista.length || 1;
-        const portal = (P.PORTALES[portalActual] || {}).nombre || portalActual;
-        let txt = `*Resultados de encuesta — ${portal}*\n\n❓ ${cfg.pregunta}\n\n`;
-        opciones.forEach((op, i) => {
-            const v = votos[i] || 0, pct = Math.round((v / total) * 100);
-            const bar = '▓'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
-            txt += `${bar} ${pct}% — ${op} (${v} voto${v !== 1 ? 's' : ''})\n`;
-        });
-        txt += `\n_Total: ${total} voto${total !== 1 ? 's' : ''}_`;
-        navigator.clipboard.writeText(txt).then(() => alert('Texto copiado para WhatsApp.')).catch(() => { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); alert('Copiado.'); });
-    });
-
-    document.getElementById('btn-export-enc-csv').addEventListener('click', () => {
-        const ses = sesiones.encuesta || {};
-        const cfg = ses.config || {};
-        const lista = entradas.encuesta || [];
-        if (!cfg.pregunta || !lista.length) { alert('No hay resultados.'); return; }
-        const opciones = cfg.opciones || [];
-        const votos = {};
-        lista.forEach(e => {
-            const idx = e.metadata && e.metadata.opcion_idx != null ? e.metadata.opcion_idx : -1;
-            if (idx >= 0) votos[idx] = (votos[idx] || 0) + 1;
-        });
-        const total = lista.length || 1;
-        const rows = ['Opción,Votos,Porcentaje'].concat(
-            opciones.map((op, i) => {
-                const v = votos[i] || 0;
-                return `"${op.replace(/"/g,'""')}",${v},${Math.round((v/total)*100)}%`;
-            })
-        ).join('\n');
-        descargar('encuesta_resultados_pumas.csv', rows, 'text/csv');
-    });
 
 
     /* ══════════════════════════════════════

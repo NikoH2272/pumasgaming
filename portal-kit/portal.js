@@ -780,8 +780,8 @@ html.pg-verificando body{visibility:hidden}
         publico:     (portal)      => rpcPublico('din_enc_publico',         { p_portal: portal }),
         votar:       (id, d)       => rpcPublico('din_enc_votar',           { p_encuesta_id: id, p_nombre: d.nombre, p_opcion_idx: d.opcion_idx, p_voter_token: d.voterToken || null, p_recaptcha_token: d.recaptchaToken || null }),
         listar:      (portal)      => rpcAdmin  ('din_enc_admin_listar',    { p_portal: portal }),
-        crear:       (portal, d)   => rpcAdmin  ('din_enc_admin_crear',     { p_portal: portal, p_titulo: d.titulo || null, p_pregunta: d.pregunta || null, p_opciones: d.opciones, p_imagen: d.imagen || null, p_deadline: d.deadline || null, p_activo: d.activo ?? false }),
-        editar:      (id, d)       => rpcAdmin  ('din_enc_admin_editar',    { p_id: id, p_titulo: d.titulo ?? null, p_pregunta: d.pregunta ?? null, p_opciones: d.opciones ?? null, p_imagen: d.imagen ?? null, p_deadline: d.deadline ?? null, p_activo: d.activo ?? null, p_quitar_deadline: !!d.quitarDeadline }),
+        crear:       (portal, d)   => rpcAdmin  ('din_enc_admin_crear',     { p_portal: portal, p_titulo: d.titulo || null, p_pregunta: d.pregunta || null, p_opciones: d.opciones, p_imagen: d.imagen || null, p_deadline: d.deadline || null, p_activo: d.activo ?? false, p_n_ganadores: d.nGanadores ?? 1 }),
+        editar:      (id, d)       => rpcAdmin  ('din_enc_admin_editar',    { p_id: id, p_titulo: d.titulo ?? null, p_pregunta: d.pregunta ?? null, p_opciones: d.opciones ?? null, p_imagen: d.imagen ?? null, p_deadline: d.deadline ?? null, p_activo: d.activo ?? null, p_quitar_deadline: !!d.quitarDeadline, p_n_ganadores: d.nGanadores ?? null }),
         restablecer: (id)          => rpcAdmin  ('din_enc_admin_restablecer',{ p_id: id }),
         borrar:      (id)          => rpcAdmin  ('din_enc_admin_borrar',    { p_id: id }),
     };
