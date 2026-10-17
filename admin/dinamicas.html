@@ -277,6 +277,15 @@
                     <span id="url-encuesta-txt"></span>
                     <button onclick="copiarUrl('encuesta')">Copiar</button>
                 </div>
+
+                <!-- Historial de encuestas anteriores -->
+                <div id="panel-historial-enc" style="margin-top:18px;display:none">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                        <i class="fa-solid fa-clock-rotate-left" style="color:#D8C395;opacity:.7"></i>
+                        <span style="font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#D8C395;opacity:.7">Historial</span>
+                    </div>
+                    <div id="historial-enc-lista"></div>
+                </div>
             </div>
         </div>
 
@@ -432,6 +441,7 @@
             cargarDinamica('encuesta'),
             cargarDinamica('juego'),
         ]);
+        cargarHistorialEnc();
     }
 
     async function cargarDinamica(tipo) {
@@ -453,6 +463,47 @@
         if (tipo === 'registro') renderRegistro();
         if (tipo === 'encuesta') renderEncuesta();
         if (tipo === 'juego')    renderLeaderboard();
+    }
+
+    /* ── Historial de encuestas ── */
+    async function cargarHistorialEnc() {
+        const panel = document.getElementById('panel-historial-enc');
+        const lista = document.getElementById('historial-enc-lista');
+        try {
+            const hist = await P.dinamica.historial(portalActual, 'encuesta');
+            if (!hist || !hist.length) { panel.style.display = 'none'; return; }
+            panel.style.display = '';
+            lista.innerHTML = hist.map(h => {
+                const cfg = h.config || {};
+                const opts = cfg.opciones || [];
+                const res = h.resultados || {};
+                const fecha = new Date(h.cerrado).toLocaleString('es-MX', { dateStyle:'short', timeStyle:'short' });
+                const filas = opts.map((op, i) => {
+                    const v = parseInt(res[String(i)] || 0);
+                    const pct = h.total_votos > 0 ? Math.round(v / h.total_votos * 100) : 0;
+                    const ganador = opts.length > 0 && v === Math.max(...opts.map((_, j) => parseInt(res[String(j)] || 0)));
+                    return `<div style="margin-bottom:4px">
+                        <div style="display:flex;justify-content:space-between;font-size:.78rem;color:${ganador ? '#FFD54A' : '#aaa'}">
+                            <span>${ganador ? '🏆 ' : ''}${P.escaparHtml(op)}</span>
+                            <span>${v} · ${pct}%</span>
+                        </div>
+                        <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:2px">
+                            <div style="height:100%;border-radius:3px;width:${pct}%;background:${ganador ? 'linear-gradient(90deg,#FFD54A,#ffa000)' : 'rgba(216,195,149,.4)'}"></div>
+                        </div>
+                    </div>`;
+                }).join('');
+                return `<div style="border:1px solid rgba(216,195,149,.18);border-radius:8px;padding:12px;margin-bottom:10px;background:rgba(0,0,0,.2)">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
+                        <span style="font-size:.83rem;font-weight:700;color:#D8C395;flex:1">${P.escaparHtml(cfg.pregunta || '—')}</span>
+                        <span style="font-size:.7rem;color:#666;white-space:nowrap">${fecha}</span>
+                    </div>
+                    ${filas}
+                    <div style="font-size:.7rem;color:#555;margin-top:6px">${h.total_votos} voto${h.total_votos !== 1 ? 's' : ''} · ronda ${h.ronda}${h.archivado_por ? ' · ' + P.escaparHtml(h.archivado_por) : ''}</div>
+                </div>`;
+            }).join('');
+        } catch(e) {
+            panel.style.display = 'none'; // sql/37 no corrido aún
+        }
     }
 
     /* ── Config helper ── */
@@ -792,12 +843,14 @@
     document.getElementById('btn-reset-enc').addEventListener('click', async () => {
         if (!confirm('¿Terminar la encuesta y borrar resultados?')) return;
         const st = document.getElementById('status-encuesta');
-        st.textContent = 'Terminando...'; st.className = 'din-status';
+        st.textContent = 'Archivando y terminando...'; st.className = 'din-status';
         if (encInterval) clearInterval(encInterval);
         try {
+            await P.dinamica.archivar(portalActual, 'encuesta').catch(() => {});
             await P.dinamica.config(portalActual, 'encuesta', { activo: false, quitarDeadline: true });
             await P.dinamica.vaciar(portalActual, 'encuesta').catch(() => {});
             await cargarDinamica('encuesta');
+            cargarHistorialEnc();
             st.textContent = ''; st.className = 'din-status';
         } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
     });
@@ -805,8 +858,9 @@
     document.getElementById('btn-restablecer-enc').addEventListener('click', async () => {
         if (!confirm('¿Restablecer votos? Los participantes podrán votar nuevamente.')) return;
         const st = document.getElementById('status-encuesta');
-        st.textContent = 'Restableciendo...'; st.className = 'din-status';
+        st.textContent = 'Archivando y restableciendo...'; st.className = 'din-status';
         try {
+            await P.dinamica.archivar(portalActual, 'encuesta').catch(() => {});
             await P.dinamica.vaciar(portalActual, 'encuesta');
             const ses = sesiones.encuesta || {};
             const cfg = ses.config || {};
@@ -815,6 +869,7 @@
                 config: { ...cfg, ronda: rondaActual },
             });
             await cargarDinamica('encuesta');
+            cargarHistorialEnc();
             st.textContent = ''; st.className = 'din-status';
         } catch(e) { st.textContent = e.message; st.className = 'din-status err'; }
     });

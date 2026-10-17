@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="style.css?v=20261013e">
 <link rel="icon" href="imagenes/LOGO PUMAS WEB.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../portal-kit/portal.js?v=20261013e" data-portal="entrenamientos" data-modo="publico"></script>
+<script src="../portal-kit/portal.js?v=20261016a" data-portal="entrenamientos" data-modo="publico" data-sin-sorteo></script>
 </head>
 <body>
 
@@ -34,13 +34,25 @@
     </nav>
 </header>
 
-<div id="pgDinamica"></div>
+<main>
+    <div id="pgDinamica"></div>
+</main>
 
 <footer>
     <p>&copy; 2026 PUMAS GAMING. Todos los derechos reservados.</p>
 </footer>
 
-<script src="../portal-kit/dinamicas.js?v=20261013e"></script>
+<script src="../portal-kit/dinamicas.js?v=20261016a" data-sin-dinamica></script>
+<script>
+    (function() {
+        function init() {
+            if (window.PumasPortal && window.PumasPortal.dinamicas)
+                PumasPortal.dinamicas.montar('entrenamientos', 'pgDinamica');
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+        else init();
+    })();
+</script>
 
 </body>
 </html>

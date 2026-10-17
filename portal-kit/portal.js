@@ -770,7 +770,9 @@ html.pg-verificando body{visibility:hidden}
         config:   (portal, tipo, c)                            => rpcAdmin  ('din_admin_config',  { p_portal: portal, p_tipo: tipo, p_activo: c.activo ?? null, p_titulo: c.titulo ?? null, p_config: c.config ?? null, p_deadline: c.deadline ?? null, p_quitar_deadline: !!c.quitarDeadline, p_inicio: c.inicio ?? null, p_quitar_inicio: !!c.quitarInicio }),
         listar:   (portal, tipo)                               => rpcAdmin  ('din_admin_listar',  { p_portal: portal, p_tipo: tipo }),
         borrar:   (portal, id)                                 => rpcAdmin  ('din_admin_borrar',  { p_portal: portal, p_id: id }),
-        vaciar:   (portal, tipo)                               => rpcAdmin  ('din_admin_vaciar',  { p_portal: portal, p_tipo: tipo })
+        vaciar:   (portal, tipo)                               => rpcAdmin  ('din_admin_vaciar',  { p_portal: portal, p_tipo: tipo }),
+        archivar: (portal, tipo)                               => rpcAdmin  ('din_admin_archivar', { p_portal: portal, p_tipo: tipo }),
+        historial:(portal, tipo)                               => rpcAdmin  ('din_admin_historial',{ p_portal: portal, p_tipo: tipo ?? null })
     };
 
     /* ---------------- Torneos aliados (sql/35) ---------------- */

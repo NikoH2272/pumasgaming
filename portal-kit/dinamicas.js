@@ -57,6 +57,11 @@
 .pgd-lb td{padding:8px;border-bottom:1px solid rgba(255,255,255,.06);color:var(--light,#F4EEDC)}
 .pgd-lb .pos{font:700 .8rem var(--font-display,'Michroma',sans-serif);color:var(--primary,#D8C395)}
 .pgd-total{font-size:.82rem;color:var(--gray,#B9B2A4);margin-top:10px}
+.pgd-ganador{text-align:center;padding:22px 16px;border:1px solid rgba(var(--primary-rgb,216,195,149),.35);border-radius:10px;background:rgba(var(--primary-rgb,216,195,149),.06);margin-bottom:6px}
+.pgd-ganador .pgd-gan-ico{font-size:2.2rem;margin-bottom:6px}
+.pgd-ganador .pgd-gan-lbl{font:700 .68rem var(--font-display,'Michroma',sans-serif);letter-spacing:.14em;text-transform:uppercase;color:var(--primary,#D8C395);opacity:.7;margin-bottom:8px}
+.pgd-ganador .pgd-gan-nombre{font:700 1.25rem var(--font-display,'Michroma',sans-serif);color:var(--primary,#D8C395);margin-bottom:4px;word-break:break-word}
+.pgd-ganador .pgd-gan-votos{font-size:.82rem;color:var(--gray,#B9B2A4)}
 @media(max-width:600px){.pgd-row{grid-template-columns:1fr}.pgd-reloj{grid-template-columns:repeat(2,1fr)}}`;
         document.head.appendChild(st);
     }
@@ -240,22 +245,40 @@
             totalVotos += (v.total || 1);
         });
 
+        // Calcular ganador
+        let ganadorIdx = -1, ganadorVotos = -1;
+        opciones.forEach((_, i) => { if ((votos[i] || 0) > ganadorVotos) { ganadorVotos = votos[i] || 0; ganadorIdx = i; } });
+        const ganadorNombre = ganadorIdx >= 0 ? opciones[ganadorIdx] : null;
+
+        // Timer inline: se incluye dentro del cuerpo para garantizar visibilidad
+        const timerInline = cfg.deadline && !cerrado
+            ? `<div style="margin-bottom:14px">${relojHTML(relojId)}</div>`
+            : '';
+
         let cuerpo;
         if (cerrado) {
-            cuerpo = `<div class="pgd-cerrado">⛔ La encuesta cerró.</div>`;
+            cuerpo = ganadorNombre
+                ? `<div class="pgd-ganador">
+                       <div class="pgd-gan-ico">🏆</div>
+                       <div class="pgd-gan-lbl">Ganador</div>
+                       <div class="pgd-gan-nombre">${esc(ganadorNombre)}</div>
+                       <div class="pgd-gan-votos">${ganadorVotos} voto${ganadorVotos !== 1 ? 's' : ''} de ${totalVotos}</div>
+                   </div>`
+                : `<div class="pgd-cerrado">⛔ La encuesta cerró.</div>`;
         } else if (miVoto !== null) {
-            cuerpo = `<div class="pgd-ok"><small>Ya votaste</small><b>${esc(opciones[miVoto] || '')}</b></div>`;
+            cuerpo = `${timerInline}<div class="pgd-ok"><small>Ya votaste</small><b>${esc(opciones[miVoto] || '')}</b></div>`;
         } else {
-            cuerpo = `<div id="pgdOpcs">${opciones.map((op, i) =>
+            cuerpo = `${timerInline}<div id="pgdOpcs">${opciones.map((op, i) =>
                 `<div class="pgd-poll-opt"><button class="pgd-poll-btn" data-idx="${i}">${esc(op)}</button></div>`
             ).join('')}</div><p class="pgd-msg" id="pgdMsgEnc" role="alert"></p>`;
         }
 
         const resultados = totalVotos > 0 ? `<div style="margin-top:18px">${opciones.map((op, i) => {
             const v = votos[i] || 0, pct = Math.round((v / totalVotos) * 100);
+            const esGanador = cerrado && i === ganadorIdx;
             return `<div class="pgd-poll-opt">
-                <div class="pgd-poll-label"><span>${esc(op)}</span><span>${v} voto${v !== 1 ? 's' : ''} · ${pct}%</span></div>
-                <div class="pgd-poll-track"><div class="pgd-poll-fill" style="width:${pct}%"></div></div>
+                <div class="pgd-poll-label"><span>${esc(op)}${esGanador ? ' 🏆' : ''}</span><span>${v} voto${v !== 1 ? 's' : ''} · ${pct}%</span></div>
+                <div class="pgd-poll-track"><div class="pgd-poll-fill" style="width:${pct}%${esGanador ? ';background:linear-gradient(90deg,#FFD54A,#ffa000)' : ''}"></div></div>
             </div>`;
         }).join('')}<p class="pgd-total">Total votos: <b>${totalVotos}</b></p></div>` : '';
 
@@ -265,12 +288,11 @@
             <h2>📊 ${titulo}</h2>
             ${imagenEnc}
             ${pregunta ? `<p class="pgd-sub" style="font-size:1rem;font-weight:700;color:#F4EEDC">${pregunta}</p>` : ''}
-            ${cfg.deadline && !cerrado ? relojHTML(relojId) : ''}
             ${cuerpo}
             ${(miVoto !== null || cerrado) ? resultados : ''}
         </div>`;
 
-        if (cfg.deadline && !cerrado) iniciarReloj(relojId, cfg.deadline, () => location.reload());
+        if (cfg.deadline && !cerrado) iniciarReloj(relojId, cfg.deadline, () => montarEncuesta(portal, destino));
 
         const opcs = document.getElementById('pgdOpcs');
         if (!opcs) return;
@@ -365,8 +387,10 @@
             document.addEventListener('DOMContentLoaded', autoMontar);
             return;
         }
-        // No correr en el admin
+        // No correr en el admin ni en páginas que montan manualmente
         if (location.pathname.includes('/admin/')) return;
+        const self = document.querySelector('script[src*="dinamicas.js"]');
+        if (self && self.dataset.sinDinamica !== undefined) return;
         // PumasPortal debe estar cargado
         if (!window.PumasPortal || !window.PumasPortal.PORTALES) return;
         // Detectar portal: primer segmento del path, o data-portal en el script tag
