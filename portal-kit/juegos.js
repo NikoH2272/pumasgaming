@@ -340,6 +340,474 @@
     }
 
     /* ═══════════════════════════════
+       MOTOR PAC-MAN
+    ═══════════════════════════════ */
+    const PM_CELL = 18;
+    // Maze: # wall  . dot  o power  ' ' tunnel/empty  G ghost-house
+    const PM_MAZE_SRC = [
+        '#####################',
+        '#.........#.........#',
+        '#.##.####.#.####.##.#',
+        '#o##.####.#.####.##o#',
+        '#.##.####.#.####.##.#',
+        '#...................#',
+        '#.##.#.#####.#.##...#',
+        '#.##.#.#####.#.##...#',
+        '#....#...#...#......#',
+        '######.#####.######.#',
+        '     #.#GGG#.#      .',
+        '######.#GGG#.######  ',
+        '.......#GGG#.........',
+        '######.#####.######  ',
+        '     #...........#  .',
+        '######.#####.######  ',
+        '#.........#.........#',
+        '#.##.####.#.####.##.#',
+        '#o..#.....P.....#..o#',
+        '###.#.#.#####.#.#.###',
+        '#....#...#...#...#..#',
+        '#.######.#.######...#',
+        '#...................#',
+        '#####################',
+    ];
+    const PM_ROWS = PM_MAZE_SRC.length;
+    const PM_COLS = PM_MAZE_SRC[0].length;
+    const PM_W = PM_COLS * PM_CELL, PM_H = PM_ROWS * PM_CELL;
+
+    function iniciarPacman(canvas, onOver, onScore) {
+        const ctx = canvas.getContext('2d');
+        let maze, dots, powers, pacX, pacY, pacDx, pacDy, ndx, ndy;
+        let ghosts, score, lives, frightenTick, frightDur, gameOver, won, _tid, running;
+
+        function parseMaze() {
+            maze = []; dots = []; powers = [];
+            let px = 10, py = 18;
+            for (let r = 0; r < PM_ROWS; r++) {
+                maze[r] = [];
+                for (let c = 0; c < PM_COLS; c++) {
+                    const ch = PM_MAZE_SRC[r][c] || ' ';
+                    maze[r][c] = ch;
+                    if (ch === '.') dots.push({ r, c, eaten: false });
+                    if (ch === 'o') powers.push({ r, c, eaten: false });
+                    if (ch === 'P') { px = c; py = r; }
+                }
+            }
+            return { px, py };
+        }
+
+        function isWall(c, r) {
+            if (r < 0 || r >= PM_ROWS || c < 0 || c >= PM_COLS) return true;
+            const ch = maze[r]?.[c];
+            return ch === '#';
+        }
+
+        function canMove(c, r) { return !isWall(c, r); }
+
+        function initGhosts() {
+            // Spawn from ghost house ~center
+            const gc = 10, gr = 11;
+            ghosts = [
+                { c: gc,   r: gr, dx: 1,  dy: 0,  color: '#FF0000', mode: 'exit', tick: 0  }, // Blinky
+                { c: gc+1, r: gr, dx: -1, dy: 0,  color: '#FFB8FF', mode: 'exit', tick: 30 }, // Pinky
+                { c: gc-1, r: gr, dx: 0,  dy: -1, color: '#00FFFF', mode: 'exit', tick: 60 }, // Inky
+                { c: gc+1, r: gr, dx: 0,  dy: 1,  color: '#FFB852', mode: 'exit', tick: 90 }, // Clyde
+            ];
+        }
+
+        function moveGhost(g) {
+            g.tick++;
+            if (g.mode === 'exit' && g.tick < g.tick) return;
+            const frightened = frightenTick > 0;
+            // Possible directions
+            const dirs = [{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}];
+            const opts = dirs.filter(d => {
+                if (d.dx === -g.dx && d.dy === -g.dy) return false; // no reverse
+                return canMove(g.c + d.dx, g.r + d.dy);
+            });
+            if (!opts.length) { g.dx = -g.dx; g.dy = -g.dy; return; }
+            if (frightened || Math.random() < 0.3) {
+                const pick = opts[Math.floor(Math.random() * opts.length)];
+                g.dx = pick.dx; g.dy = pick.dy;
+            } else {
+                // Chase Pacman
+                const best = opts.reduce((a, b) => {
+                    const da = Math.hypot(g.c+a.dx-pacX, g.r+a.dy-pacY);
+                    const db = Math.hypot(g.c+b.dx-pacX, g.r+b.dy-pacY);
+                    return da < db ? a : b;
+                });
+                g.dx = best.dx; g.dy = best.dy;
+            }
+            const nc = g.c + g.dx, nr = g.r + g.dy;
+            if (canMove(nc, nr)) { g.c = nc; g.r = nr; }
+        }
+
+        function step() {
+            if (!running) return;
+            // Move pac
+            if (canMove(pacX + ndx, pacY + ndy)) { pacDx = ndx; pacDy = ndy; }
+            const nx = pacX + pacDx, ny = pacY + pacDy;
+            // Tunnel wrap
+            const wnx = (nx + PM_COLS) % PM_COLS;
+            if (canMove(wnx, ny)) { pacX = wnx; pacY = ny; }
+
+            // Eat dots
+            dots.forEach(d => { if (!d.eaten && d.c === pacX && d.r === pacY) { d.eaten = true; score += 10; onScore(score); } });
+            powers.forEach(p => { if (!p.eaten && p.c === pacX && p.r === pacY) { p.eaten = true; score += 50; frightenTick = frightDur; onScore(score); } });
+
+            if (frightenTick > 0) frightenTick--;
+
+            // Move ghosts
+            ghosts.forEach(g => { if (Math.random() < 0.5) moveGhost(g); });
+
+            // Ghost collision
+            ghosts.forEach(g => {
+                if (g.c === pacX && g.r === pacY) {
+                    if (frightenTick > 0) { score += 200; g.c = 10; g.r = 11; onScore(score); }
+                    else { lives--; if (lives <= 0) { running = false; clearTimeout(_tid); onOver(score); return; } pacX = 10; pacY = 18; }
+                }
+            });
+
+            // Win
+            if (dots.every(d => d.eaten) && powers.every(p => p.eaten)) { running = false; clearTimeout(_tid); won = true; onOver(score); return; }
+
+            draw();
+            if (running) _tid = setTimeout(step, 120);
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, PM_W, PM_H);
+            for (let r = 0; r < PM_ROWS; r++) {
+                for (let c = 0; c < PM_COLS; c++) {
+                    const ch = maze[r][c];
+                    const x = c * PM_CELL, y = r * PM_CELL;
+                    if (ch === '#') {
+                        ctx.fillStyle = '#1a1aff';
+                        ctx.fillRect(x+1, y+1, PM_CELL-2, PM_CELL-2);
+                        ctx.strokeStyle = '#3333ff'; ctx.lineWidth = 1;
+                        ctx.strokeRect(x+1, y+1, PM_CELL-2, PM_CELL-2);
+                    }
+                }
+            }
+            // Dots
+            ctx.fillStyle = '#fff';
+            dots.forEach(d => { if (!d.eaten) { ctx.beginPath(); ctx.arc(d.c*PM_CELL+PM_CELL/2, d.r*PM_CELL+PM_CELL/2, 2, 0, Math.PI*2); ctx.fill(); } });
+            // Powers
+            ctx.fillStyle = '#FFD54A';
+            powers.forEach(p => { if (!p.eaten) { ctx.beginPath(); ctx.arc(p.c*PM_CELL+PM_CELL/2, p.r*PM_CELL+PM_CELL/2, 5, 0, Math.PI*2); ctx.fill(); } });
+            // Ghosts
+            ghosts.forEach(g => {
+                const frightened = frightenTick > 0;
+                ctx.fillStyle = frightened ? (frightenTick < 60 && Math.floor(Date.now()/300)%2 ? '#fff' : '#0000ff') : g.color;
+                const gx = g.c * PM_CELL + PM_CELL/2, gy = g.r * PM_CELL + PM_CELL/2;
+                ctx.beginPath();
+                ctx.arc(gx, gy - 2, PM_CELL/2 - 2, Math.PI, 0);
+                ctx.lineTo(gx + PM_CELL/2 - 2, gy + PM_CELL/2);
+                for (let i = 0; i < 3; i++) {
+                    ctx.quadraticCurveTo(gx + PM_CELL/2 - 2 - (i+1)*((PM_CELL-4)/3) + (PM_CELL-4)/6, gy + PM_CELL/4, gx + PM_CELL/2 - 2 - (i+1)*((PM_CELL-4)/3), gy + PM_CELL/2);
+                }
+                ctx.closePath(); ctx.fill();
+                if (!frightened) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(gx-3, gy-4, 3, 0, Math.PI*2); ctx.arc(gx+3, gy-4, 3, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#00f'; ctx.beginPath(); ctx.arc(gx-3+g.dx, gy-4+g.dy, 1.5, 0, Math.PI*2); ctx.arc(gx+3+g.dx, gy-4+g.dy, 1.5, 0, Math.PI*2); ctx.fill(); }
+            });
+            // Pac-Man
+            const angle = (Date.now() / 100) % (Math.PI * 2);
+            const mouth = 0.2 + 0.2 * Math.abs(Math.sin(angle));
+            const pxc = pacX * PM_CELL + PM_CELL/2, pyc = pacY * PM_CELL + PM_CELL/2;
+            const dir = Math.atan2(pacDy, pacDx);
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.moveTo(pxc, pyc);
+            ctx.arc(pxc, pyc, PM_CELL/2 - 1, dir + mouth, dir + Math.PI * 2 - mouth);
+            ctx.closePath(); ctx.fill();
+            // HUD
+            ctx.fillStyle = '#FFD54A'; ctx.font = '12px Michroma,monospace';
+            ctx.fillText('♥'.repeat(lives), 4, 14);
+            ctx.fillText('PTS: ' + score, PM_W - 90, 14);
+        }
+
+        function iniciar() {
+            const { px, py } = parseMaze();
+            pacX = px; pacY = py; pacDx = 0; pacDy = 0; ndx = 0; ndy = -1;
+            score = 0; lives = 3; frightenTick = 0; frightDur = 150; running = true; won = false;
+            initGhosts();
+            clearTimeout(_tid);
+            step();
+        }
+
+        function onKey(e) {
+            if (!running) return;
+            if (e.key === 'ArrowLeft')  { ndx = -1; ndy = 0; }
+            if (e.key === 'ArrowRight') { ndx =  1; ndy = 0; }
+            if (e.key === 'ArrowUp')    { ndx = 0; ndy = -1; }
+            if (e.key === 'ArrowDown')  { ndx = 0; ndy =  1; }
+        }
+        document.addEventListener('keydown', onKey);
+        const _clean = () => { running = false; clearTimeout(_tid); document.removeEventListener('keydown', onKey); };
+        canvas._pmclean = _clean;
+        iniciar();
+        return { stop: _clean };
+    }
+
+    /* ═══════════════════════════════
+       MOTOR BREAKOUT
+    ═══════════════════════════════ */
+    const BK_W = 360, BK_H = 480;
+    const BK_COLS = 10, BK_ROWS = 7;
+    const BK_BW = BK_W / BK_COLS, BK_BH = 18;
+
+    function iniciarBreakout(canvas, onOver, onScore) {
+        const ctx = canvas.getContext('2d');
+        const PAD_W = 70, PAD_H = 10, BALL_R = 7;
+        let padX, ballX, ballY, bvx, bvy, bricks, score, lives, _tid, running;
+        const COLORS = ['#FF4444','#FF8C00','#FFD700','#88DD00','#00CCFF','#AA66FF','#FF66AA'];
+
+        function initBricks() {
+            bricks = [];
+            for (let r = 0; r < BK_ROWS; r++)
+                for (let c = 0; c < BK_COLS; c++)
+                    bricks.push({ r, c, alive: true, pts: (BK_ROWS - r) * 10 });
+        }
+
+        function step() {
+            if (!running) return;
+            ballX += bvx; ballY += bvy;
+            // Walls
+            if (ballX - BALL_R < 0) { ballX = BALL_R; bvx = -bvx; }
+            if (ballX + BALL_R > BK_W) { ballX = BK_W - BALL_R; bvx = -bvx; }
+            if (ballY - BALL_R < 0) { ballY = BALL_R; bvy = -bvy; }
+            // Paddle
+            const padY = BK_H - 40;
+            if (ballY + BALL_R >= padY && ballY + BALL_R <= padY + PAD_H + Math.abs(bvy) &&
+                ballX >= padX - PAD_W/2 && ballX <= padX + PAD_W/2) {
+                bvy = -Math.abs(bvy);
+                bvx += (ballX - padX) / (PAD_W/2) * 2; // spin
+            }
+            // Brick collision
+            bricks.forEach(b => {
+                if (!b.alive) return;
+                const bx = b.c * BK_BW, by = 50 + b.r * (BK_BH + 4);
+                if (ballX+BALL_R > bx && ballX-BALL_R < bx+BK_BW && ballY+BALL_R > by && ballY-BALL_R < by+BK_BH) {
+                    b.alive = false; score += b.pts; onScore(score);
+                    // Bounce
+                    const cx = bx + BK_BW/2, cy = by + BK_BH/2;
+                    if (Math.abs(ballX - cx) > Math.abs(ballY - cy)) bvx = -bvx; else bvy = -bvy;
+                }
+            });
+            // Speed cap
+            const spd = Math.hypot(bvx, bvy);
+            if (spd > 9) { bvx = bvx/spd*9; bvy = bvy/spd*9; }
+            if (spd < 4) { bvx = bvx/spd*4; bvy = bvy/spd*4; }
+            // Fall
+            if (ballY - BALL_R > BK_H) { lives--; if (lives <= 0) { running = false; clearTimeout(_tid); onOver(score); return; } resetBall(); }
+            // Win
+            if (bricks.every(b => !b.alive)) { running = false; clearTimeout(_tid); onOver(score); return; }
+            draw();
+            if (running) _tid = setTimeout(step, 14);
+        }
+
+        function resetBall() { ballX = padX; ballY = BK_H - 70; bvx = (Math.random()-0.5)*4; bvy = -5; }
+
+        function draw() {
+            ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, BK_W, BK_H);
+            bricks.forEach(b => {
+                if (!b.alive) return;
+                const bx = b.c * BK_BW + 2, by = 50 + b.r * (BK_BH + 4);
+                ctx.fillStyle = COLORS[b.r % COLORS.length];
+                ctx.fillRect(bx, by, BK_BW - 4, BK_BH);
+            });
+            // Paddle
+            ctx.fillStyle = '#D8C395';
+            ctx.beginPath(); ctx.roundRect(padX - PAD_W/2, BK_H - 40, PAD_W, PAD_H, 5); ctx.fill();
+            // Ball
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(ballX, ballY, BALL_R, 0, Math.PI*2); ctx.fill();
+            // HUD
+            ctx.fillStyle = '#FFD54A'; ctx.font = '12px Michroma,monospace';
+            ctx.fillText('♥'.repeat(lives), 6, 20);
+            ctx.fillText('PTS: ' + score, BK_W - 90, 20);
+        }
+
+        function iniciar() {
+            padX = BK_W / 2; score = 0; lives = 3; running = true;
+            initBricks(); resetBall(); clearTimeout(_tid); step();
+        }
+
+        let _keys = {};
+        function onKey(e) { _keys[e.key] = e.type === 'keydown'; }
+        function movePad() { if (_keys['ArrowLeft']) padX = Math.max(PAD_W/2, padX - 6); if (_keys['ArrowRight']) padX = Math.min(BK_W - PAD_W/2, padX + 6); }
+        const _origStep = step;
+        // Hook pad movement into game loop via mousemove/touch
+        canvas.addEventListener('mousemove', e => { const r = canvas.getBoundingClientRect(); padX = Math.max(PAD_W/2, Math.min(BK_W - PAD_W/2, (e.clientX - r.left) * BK_W / r.width)); });
+        canvas.addEventListener('touchmove', e => { e.preventDefault(); const r = canvas.getBoundingClientRect(); padX = Math.max(PAD_W/2, Math.min(BK_W - PAD_W/2, (e.touches[0].clientX - r.left) * BK_W / r.width)); }, { passive: false });
+        document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey);
+        const _clean = () => { running = false; clearTimeout(_tid); document.removeEventListener('keydown', onKey); document.removeEventListener('keyup', onKey); };
+        canvas._bkclean = _clean;
+        iniciar();
+        return { stop: _clean, movePad };
+    }
+
+    /* ═══════════════════════════════
+       MOTOR BOMBERMAN
+    ═══════════════════════════════ */
+    const BM_COLS = 15, BM_ROWS = 13, BM_CELL = 30;
+    const BM_W = BM_COLS * BM_CELL, BM_H = BM_ROWS * BM_CELL;
+
+    function iniciarBomberman(canvas, onOver, onScore) {
+        const ctx = canvas.getContext('2d');
+        let grid, player, enemies, bombs, explosions, score, _tid, running;
+
+        // 0=open 1=solid wall 2=soft block
+        function initGrid() {
+            grid = Array.from({ length: BM_ROWS }, (_, r) =>
+                Array.from({ length: BM_COLS }, (_, c) => {
+                    if (r % 2 === 0 && c % 2 === 0) return 1; // solid pillar
+                    // safe zone around player start
+                    if ((r <= 1 && c <= 2) || (r <= 2 && c <= 1)) return 0;
+                    return Math.random() < 0.55 ? 2 : 0; // soft block
+                })
+            );
+        }
+
+        function initEnemies() {
+            enemies = [
+                { c: BM_COLS-2, r: 1,          dx: -1, dy: 0, alive: true, tick: 0 },
+                { c: BM_COLS-2, r: BM_ROWS-2,  dx: 0,  dy: -1, alive: true, tick: 0 },
+                { c: 1,         r: BM_ROWS-2,  dx: 1,  dy: 0, alive: true, tick: 0 },
+            ];
+        }
+
+        function isPassable(c, r) {
+            if (c < 0 || c >= BM_COLS || r < 0 || r >= BM_ROWS) return false;
+            return grid[r][c] === 0;
+        }
+
+        function moveEnemy(en) {
+            en.tick++;
+            if (en.tick % 8 !== 0) return;
+            const nc = en.c + en.dx, nr = en.r + en.dy;
+            if (!isPassable(nc, nr) || Math.random() < 0.2) {
+                const dirs = [{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}];
+                const opts = dirs.filter(d => isPassable(en.c+d.dx, en.r+d.dy));
+                if (opts.length) { const p = opts[Math.floor(Math.random()*opts.length)]; en.dx=p.dx; en.dy=p.dy; }
+                return;
+            }
+            en.c = nc; en.r = nr;
+        }
+
+        function placeBomb() {
+            if (!running) return;
+            const { c, r } = player;
+            if (bombs.find(b => b.c === c && b.r === r)) return;
+            bombs.push({ c, r, timer: 90, exploding: false });
+        }
+
+        function explodeBomb(b) {
+            b.exploding = true;
+            const cells = [{ c: b.c, r: b.r }];
+            [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dc,dr]) => {
+                for (let i = 1; i <= 2; i++) {
+                    const ec = b.c+dc*i, er = b.r+dr*i;
+                    if (ec<0||ec>=BM_COLS||er<0||er>=BM_ROWS) break;
+                    if (grid[er][ec] === 1) break;
+                    cells.push({ c: ec, r: er });
+                    if (grid[er][ec] === 2) { grid[er][ec] = 0; score += 5; onScore(score); break; }
+                }
+            });
+            explosions.push({ cells, life: 25 });
+            // Kill enemies/player in blast
+            enemies.forEach(en => { if (en.alive && cells.find(cl => cl.c===en.c && cl.r===en.r)) { en.alive=false; score+=100; onScore(score); } });
+            if (cells.find(cl => cl.c===player.c && cl.r===player.r)) { running=false; clearTimeout(_tid); onOver(score); }
+        }
+
+        function step() {
+            if (!running) return;
+            bombs.forEach(b => {
+                b.timer--;
+                if (b.timer <= 0 && !b.exploding) explodeBomb(b);
+            });
+            explosions.forEach(ex => ex.life--);
+            bombs     = bombs.filter(b => b.timer > -20);
+            explosions= explosions.filter(ex => ex.life > 0);
+            enemies.filter(en => en.alive).forEach(moveEnemy);
+            // Enemy touches player
+            if (enemies.some(en => en.alive && en.c===player.c && en.r===player.r)) { running=false; clearTimeout(_tid); onOver(score); return; }
+            // Win
+            if (enemies.every(en => !en.alive)) { running=false; clearTimeout(_tid); onOver(score + 500); return; }
+            draw();
+            if (running) _tid = setTimeout(step, 50);
+        }
+
+        function draw() {
+            ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0,0,BM_W,BM_H);
+            for (let r=0;r<BM_ROWS;r++) for (let c=0;c<BM_COLS;c++) {
+                const x=c*BM_CELL, y=r*BM_CELL;
+                if (grid[r][c]===1) { ctx.fillStyle='#444'; ctx.fillRect(x+1,y+1,BM_CELL-2,BM_CELL-2); }
+                else if (grid[r][c]===2) { ctx.fillStyle='#8B6914'; ctx.fillRect(x+2,y+2,BM_CELL-4,BM_CELL-4); ctx.strokeStyle='#6B4F10'; ctx.strokeRect(x+2,y+2,BM_CELL-4,BM_CELL-4); }
+            }
+            bombs.forEach(b => {
+                const x=b.c*BM_CELL+BM_CELL/2, y=b.r*BM_CELL+BM_CELL/2;
+                const p = 1 - b.timer/90, r2 = 8 + p*4;
+                ctx.fillStyle=`rgba(30,30,30,${0.7+p*0.3})`;
+                ctx.beginPath(); ctx.arc(x,y,r2,0,Math.PI*2); ctx.fill();
+                ctx.strokeStyle='#888'; ctx.lineWidth=2;
+                ctx.beginPath(); ctx.arc(x,y,r2,0,Math.PI*2); ctx.stroke();
+                // Fuse
+                ctx.strokeStyle='#FFD700'; ctx.lineWidth=2;
+                ctx.beginPath(); ctx.moveTo(x,y-r2); ctx.bezierCurveTo(x+5,y-r2-8,x+10,y-r2-6,x+8,y-r2-12); ctx.stroke();
+            });
+            explosions.forEach(ex => {
+                ex.cells.forEach(cl => {
+                    ctx.fillStyle=`rgba(255,150,0,${ex.life/25})`;
+                    ctx.fillRect(cl.c*BM_CELL+1,cl.r*BM_CELL+1,BM_CELL-2,BM_CELL-2);
+                    ctx.fillStyle=`rgba(255,255,100,${ex.life/25*0.7})`;
+                    ctx.fillRect(cl.c*BM_CELL+6,cl.r*BM_CELL+6,BM_CELL-12,BM_CELL-12);
+                });
+            });
+            enemies.filter(en=>en.alive).forEach(en => {
+                const x=en.c*BM_CELL+BM_CELL/2, y=en.r*BM_CELL+BM_CELL/2;
+                ctx.fillStyle='#ff4444';
+                ctx.beginPath(); ctx.arc(x,y,BM_CELL/2-3,0,Math.PI*2); ctx.fill();
+                ctx.fillStyle='#fff'; ctx.font='14px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+                ctx.fillText('👾',x,y);
+            });
+            // Player
+            const px=player.c*BM_CELL+BM_CELL/2, py=player.r*BM_CELL+BM_CELL/2;
+            ctx.fillStyle='#4dff91';
+            ctx.beginPath(); ctx.arc(px,py,BM_CELL/2-3,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#fff'; ctx.font='16px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+            ctx.fillText('🙂',px,py);
+            // Score + enemies left
+            ctx.fillStyle='#FFD54A'; ctx.font='11px Michroma,monospace'; ctx.textAlign='left';
+            ctx.fillText('PTS:'+score+'  👾:'+enemies.filter(e=>e.alive).length, 4, 14);
+        }
+
+        function iniciar() {
+            initGrid(); initEnemies();
+            player = { c: 1, r: 1, dx: 0, dy: 0 };
+            bombs = []; explosions = []; score = 0; running = true;
+            clearTimeout(_tid); step();
+        }
+
+        let _moveQ = null, _moveInterval = null;
+        function tryMove(dc, dr) {
+            const nc = player.c+dc, nr = player.r+dr;
+            if (isPassable(nc, nr)) { player.c = nc; player.r = nr; draw(); }
+        }
+        function onKey(e) {
+            if (!running) return;
+            if (e.key==='ArrowLeft')  tryMove(-1,0);
+            if (e.key==='ArrowRight') tryMove(1,0);
+            if (e.key==='ArrowUp')    tryMove(0,-1);
+            if (e.key==='ArrowDown')  tryMove(0,1);
+            if (e.key===' ') { e.preventDefault(); placeBomb(); }
+        }
+        document.addEventListener('keydown', onKey);
+        const _clean = () => { running=false; clearTimeout(_tid); clearInterval(_moveInterval); document.removeEventListener('keydown', onKey); };
+        canvas._bmclean = _clean;
+        iniciar();
+        return { stop: _clean, placeBomb, tryMove };
+    }
+
+    /* ═══════════════════════════════
        MOTOR 3 EN LÍNEA
     ═══════════════════════════════ */
     const TL_SIZE = 270;
@@ -938,12 +1406,320 @@
     }
 
     /* ═══════════════════════════════
+       RENDER PAC-MAN
+    ═══════════════════════════════ */
+    async function montarPacman(portal, cont, cfg) {
+        let entradas = cfg.entradas || [];
+        const titulo = esc(cfg.titulo || '🟡 Pac-Man');
+        const clave = 'pg_jug_' + portal + '_juego_pacman';
+        let jugador = null;
+        try { jugador = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (_) {}
+
+        function renderJuego(jug) {
+            cont.innerHTML = `<div class="pgj-caja">
+                <h2>${titulo}</h2>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                    <span class="pgj-info">Jugador: <b style="color:var(--primary,#D8C395)">${esc(jug.nombre)}</b></span>
+                    <button class="pgj-btn pgj-btn-sec" id="pgjSalir" style="min-height:30px;padding:2px 12px;font-size:.7rem">✕ Salir</button>
+                </div>
+                <p class="pgj-score-live" id="pgjScoreLive" style="margin:0 0 8px;text-align:center">PUNTOS: 0</p>
+                <div style="display:flex;justify-content:center">
+                    <canvas id="pgjCv" width="${PM_W}" height="${PM_H}" style="max-width:100%;max-height:min(68vh,${PM_H}px)"></canvas>
+                </div>
+                <div class="pgj-dpad" id="pgjDpad" style="margin-top:10px">
+                    <div class="pgj-dpad-row"><button data-act="up">⬆</button></div>
+                    <div class="pgj-dpad-row">
+                        <button data-act="lft">⬅</button>
+                        <button data-act="dwn">⬇</button>
+                        <button data-act="rgt">➡</button>
+                    </div>
+                </div>
+            </div>`;
+            const cv = document.getElementById('pgjCv');
+            document.getElementById('pgjSalir').addEventListener('click', () => { cv?._pmclean?.(); inicioPacman(); });
+            const motor = iniciarPacman(cv,
+                async (finalPts) => {
+                    cv?._pmclean?.();
+                    if (finalPts > 0 && jug) {
+                        try {
+                            await P.dinamica.registrar(portal, 'juego_pacman', { nombre: jug.nombre, ig: jug.ig||'', metadata: { puntos: finalPts } });
+                            const cfg2 = await P.dinamica.publico(portal, 'juego_pacman');
+                            if (cfg2?.entradas) entradas = cfg2.entradas;
+                        } catch (e) { console.error('[PG Pacman]', e?.message||e); }
+                    }
+                    inicioPacman('Game over · ' + finalPts + ' pts');
+                },
+                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; }
+            );
+            document.getElementById('pgjDpad')?.addEventListener('pointerdown', e => {
+                const a = e.target.closest('[data-act]')?.dataset.act;
+                if (a==='lft') document.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));
+                if (a==='rgt') document.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
+                if (a==='up')  document.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowUp',bubbles:true}));
+                if (a==='dwn') document.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
+            });
+        }
+
+        function inicioPacman(msg) {
+            cont.innerHTML = `<div class="pgj-caja">
+                <h2>${titulo}</h2>
+                ${cfg.deadline ? `<div class="pgj-deadline"><span class="pgj-deadline-label">Cierra en</span><span class="pgj-deadline-clock" id="pgjClock">…</span></div>` : ''}
+                ${cfg.cerrado ? `<div class="pgj-cerrado-msg">⛔ Este juego ya cerró. Gracias por participar.</div>` : ''}
+                <p class="pgj-sub">Pac-Man clásico — come todos los puntos, evita los fantasmas. Power pellets = fantasmas vulnerables.</p>
+                <div class="pgj-layout">
+                    <div>
+                        ${jugador
+                            ? `<p class="pgj-info" style="margin-bottom:12px">Jugando como <b style="color:var(--primary,#D8C395)">${esc(jugador.nombre)}</b>
+                               <button class="pgj-btn pgj-btn-sec" id="pgjCambiar" style="min-height:30px;padding:2px 10px;font-size:.65rem;margin-left:8px">Cambiar</button></p>
+                               ${msg ? `<p class="pgj-msg" style="margin-bottom:10px">${esc(msg)}</p>` : ''}
+                               <button class="pgj-btn" id="pgjJugar" style="margin-bottom:20px;width:100%;max-width:220px">▶ ${msg ? 'Jugar otra vez' : 'Jugar'}</button>`
+                            : `<form id="pgjForm">
+                                <div><label for="pgjNom">Nombre *</label><input id="pgjNom" required maxlength="40" placeholder="Tu nombre" autocomplete="off"></div>
+                                <div><label for="pgjId">ID de Free Fire</label><input id="pgjId" maxlength="40" placeholder="Ej: 123456789" inputmode="numeric"></div>
+                                <button type="submit" class="pgj-btn">Listo para jugar →</button>
+                                <p class="pgj-msg" id="pgjMsgForm"></p>
+                               </form>`}
+                        <h3 style="font:700 .72rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;color:var(--primary,#D8C395);text-transform:uppercase;margin:0 0 8px">Top 20</h3>
+                        ${lbHTML(entradas)}
+                    </div>
+                    <div class="pgj-canvas-col">
+                        <canvas id="pgjCvPrev" width="${PM_W}" height="${PM_H}" style="opacity:.2;max-height:min(72vh,${PM_H}px)"></canvas>
+                    </div>
+                </div>
+            </div>`;
+            if (cfg.deadline && !cfg.cerrado) relojJuego(cfg.deadline);
+            if (cfg.cerrado) { const b = document.getElementById('pgjJugar'); if (b) { b.disabled=true; b.textContent='⛔ Cerrado'; } }
+            const cv = document.getElementById('pgjCvPrev');
+            if (cv) { const cx = cv.getContext('2d'); cx.fillStyle='#000'; cx.fillRect(0,0,PM_W,PM_H); }
+            document.getElementById('pgjForm')?.addEventListener('submit', e => {
+                e.preventDefault();
+                const nombre = document.getElementById('pgjNom').value.trim();
+                const ig = document.getElementById('pgjId').value.trim();
+                const msgEl = document.getElementById('pgjMsgForm');
+                if (!nombre) { msgEl.textContent='El nombre es requerido.'; return; }
+                if (MALAS.test(nombre)) { msgEl.textContent='Ese nombre no está permitido.'; return; }
+                try { localStorage.setItem(clave, JSON.stringify({ nombre, ig })); } catch (_) {}
+                jugador = { nombre, ig }; inicioPacman();
+            });
+            document.getElementById('pgjCambiar')?.addEventListener('click', () => { try { localStorage.removeItem(clave); } catch (_) {} jugador=null; inicioPacman(); });
+            document.getElementById('pgjJugar')?.addEventListener('click', () => renderJuego(jugador));
+        }
+
+        inicioPacman();
+    }
+
+    /* ═══════════════════════════════
+       RENDER BREAKOUT
+    ═══════════════════════════════ */
+    async function montarBreakout(portal, cont, cfg) {
+        let entradas = cfg.entradas || [];
+        const titulo = esc(cfg.titulo || '🧱 Breakout');
+        const clave = 'pg_jug_' + portal + '_juego_breakout';
+        let jugador = null;
+        try { jugador = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (_) {}
+
+        function renderJuego(jug) {
+            cont.innerHTML = `<div class="pgj-caja">
+                <h2>${titulo}</h2>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                    <span class="pgj-info">Jugador: <b style="color:var(--primary,#D8C395)">${esc(jug.nombre)}</b></span>
+                    <button class="pgj-btn pgj-btn-sec" id="pgjSalir" style="min-height:30px;padding:2px 12px;font-size:.7rem">✕ Salir</button>
+                </div>
+                <p class="pgj-score-live" id="pgjScoreLive" style="margin:0 0 8px;text-align:center">PUNTOS: 0</p>
+                <div style="display:flex;justify-content:center">
+                    <canvas id="pgjCv" width="${BK_W}" height="${BK_H}" style="max-width:100%;max-height:min(70vh,${BK_H}px);touch-action:none"></canvas>
+                </div>
+                <p class="pgj-controles" style="text-align:center">Mouse / Touch = mover paleta · ← → = teclado</p>
+            </div>`;
+            const cv = document.getElementById('pgjCv');
+            document.getElementById('pgjSalir').addEventListener('click', () => { cv?._bkclean?.(); inicioBreakout(); });
+            const motor = iniciarBreakout(cv,
+                async (finalPts) => {
+                    cv?._bkclean?.();
+                    if (finalPts > 0 && jug) {
+                        try {
+                            await P.dinamica.registrar(portal, 'juego_breakout', { nombre: jug.nombre, ig: jug.ig||'', metadata: { puntos: finalPts } });
+                            const cfg2 = await P.dinamica.publico(portal, 'juego_breakout');
+                            if (cfg2?.entradas) entradas = cfg2.entradas;
+                        } catch (e) { console.error('[PG Breakout]', e?.message||e); }
+                    }
+                    inicioBreakout('Game over · ' + finalPts + ' pts');
+                },
+                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; }
+            );
+        }
+
+        function inicioBreakout(msg) {
+            cont.innerHTML = `<div class="pgj-caja">
+                <h2>${titulo}</h2>
+                ${cfg.deadline ? `<div class="pgj-deadline"><span class="pgj-deadline-label">Cierra en</span><span class="pgj-deadline-clock" id="pgjClock">…</span></div>` : ''}
+                ${cfg.cerrado ? `<div class="pgj-cerrado-msg">⛔ Este juego ya cerró. Gracias por participar.</div>` : ''}
+                <p class="pgj-sub">Breakout — destruye todos los ladrillos. Mouse/touch para mover la paleta.</p>
+                <div class="pgj-layout">
+                    <div>
+                        ${jugador
+                            ? `<p class="pgj-info" style="margin-bottom:12px">Jugando como <b style="color:var(--primary,#D8C395)">${esc(jugador.nombre)}</b>
+                               <button class="pgj-btn pgj-btn-sec" id="pgjCambiar" style="min-height:30px;padding:2px 10px;font-size:.65rem;margin-left:8px">Cambiar</button></p>
+                               ${msg ? `<p class="pgj-msg" style="margin-bottom:10px">${esc(msg)}</p>` : ''}
+                               <button class="pgj-btn" id="pgjJugar" style="margin-bottom:20px;width:100%;max-width:220px">▶ ${msg ? 'Jugar otra vez' : 'Jugar'}</button>`
+                            : `<form id="pgjForm">
+                                <div><label for="pgjNom">Nombre *</label><input id="pgjNom" required maxlength="40" placeholder="Tu nombre" autocomplete="off"></div>
+                                <div><label for="pgjId">ID de Free Fire</label><input id="pgjId" maxlength="40" placeholder="Ej: 123456789" inputmode="numeric"></div>
+                                <button type="submit" class="pgj-btn">Listo para jugar →</button>
+                                <p class="pgj-msg" id="pgjMsgForm"></p>
+                               </form>`}
+                        <h3 style="font:700 .72rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;color:var(--primary,#D8C395);text-transform:uppercase;margin:0 0 8px">Top 20</h3>
+                        ${lbHTML(entradas)}
+                    </div>
+                    <div class="pgj-canvas-col">
+                        <canvas id="pgjCvPrev" width="${BK_W}" height="${BK_H}" style="opacity:.2;max-height:min(72vh,${BK_H}px)"></canvas>
+                    </div>
+                </div>
+            </div>`;
+            if (cfg.deadline && !cfg.cerrado) relojJuego(cfg.deadline);
+            if (cfg.cerrado) { const b = document.getElementById('pgjJugar'); if (b) { b.disabled=true; b.textContent='⛔ Cerrado'; } }
+            const cv = document.getElementById('pgjCvPrev');
+            if (cv) { const cx = cv.getContext('2d'); cx.fillStyle='#0a0a0a'; cx.fillRect(0,0,BK_W,BK_H); }
+            document.getElementById('pgjForm')?.addEventListener('submit', e => {
+                e.preventDefault();
+                const nombre = document.getElementById('pgjNom').value.trim();
+                const ig = document.getElementById('pgjId').value.trim();
+                const msgEl = document.getElementById('pgjMsgForm');
+                if (!nombre) { msgEl.textContent='El nombre es requerido.'; return; }
+                if (MALAS.test(nombre)) { msgEl.textContent='Ese nombre no está permitido.'; return; }
+                try { localStorage.setItem(clave, JSON.stringify({ nombre, ig })); } catch (_) {}
+                jugador = { nombre, ig }; inicioBreakout();
+            });
+            document.getElementById('pgjCambiar')?.addEventListener('click', () => { try { localStorage.removeItem(clave); } catch (_) {} jugador=null; inicioBreakout(); });
+            document.getElementById('pgjJugar')?.addEventListener('click', () => renderJuego(jugador));
+        }
+
+        inicioBreakout();
+    }
+
+    /* ═══════════════════════════════
+       RENDER BOMBERMAN
+    ═══════════════════════════════ */
+    async function montarBomberman(portal, cont, cfg) {
+        let entradas = cfg.entradas || [];
+        const titulo = esc(cfg.titulo || '💣 Bomberman');
+        const clave = 'pg_jug_' + portal + '_juego_bomberman';
+        let jugador = null;
+        try { jugador = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (_) {}
+
+        function renderJuego(jug) {
+            cont.innerHTML = `<div class="pgj-caja">
+                <h2>${titulo}</h2>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                    <span class="pgj-info">Jugador: <b style="color:var(--primary,#D8C395)">${esc(jug.nombre)}</b></span>
+                    <button class="pgj-btn pgj-btn-sec" id="pgjSalir" style="min-height:30px;padding:2px 12px;font-size:.7rem">✕ Salir</button>
+                </div>
+                <p class="pgj-score-live" id="pgjScoreLive" style="margin:0 0 8px;text-align:center">PUNTOS: 0</p>
+                <div style="display:flex;justify-content:center">
+                    <canvas id="pgjCv" width="${BM_W}" height="${BM_H}" style="max-width:100%;max-height:min(68vh,${BM_H}px)"></canvas>
+                </div>
+                <div class="pgj-dpad pgj-dpad-tetris" id="pgjDpad" style="margin-top:10px">
+                    <div class="pgj-dpad-row"><button data-act="up">⬆</button></div>
+                    <div class="pgj-dpad-row">
+                        <button data-act="lft">⬅</button>
+                        <button data-act="bmb" style="background:rgba(255,100,0,.25);border-color:rgba(255,100,0,.6)">💣<small>BOMBA</small></button>
+                        <button data-act="rgt">➡</button>
+                    </div>
+                    <div class="pgj-dpad-row"><button data-act="dwn">⬇</button></div>
+                </div>
+            </div>`;
+            const cv = document.getElementById('pgjCv');
+            document.getElementById('pgjSalir').addEventListener('click', () => { cv?._bmclean?.(); inicioBomberman(); });
+            const motor = iniciarBomberman(cv,
+                async (finalPts) => {
+                    cv?._bmclean?.();
+                    if (finalPts > 0 && jug) {
+                        try {
+                            await P.dinamica.registrar(portal, 'juego_bomberman', { nombre: jug.nombre, ig: jug.ig||'', metadata: { puntos: finalPts } });
+                            const cfg2 = await P.dinamica.publico(portal, 'juego_bomberman');
+                            if (cfg2?.entradas) entradas = cfg2.entradas;
+                        } catch (e) { console.error('[PG Bomberman]', e?.message||e); }
+                    }
+                    inicioBomberman('Game over · ' + finalPts + ' pts');
+                },
+                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; }
+            );
+            let _dpadIv = null;
+            document.getElementById('pgjDpad')?.addEventListener('pointerdown', e => {
+                const a = e.target.closest('[data-act]')?.dataset.act;
+                if (!a) return; e.preventDefault();
+                const fire = act => {
+                    if (act==='lft') motor.tryMove(-1,0);
+                    if (act==='rgt') motor.tryMove(1,0);
+                    if (act==='up')  motor.tryMove(0,-1);
+                    if (act==='dwn') motor.tryMove(0,1);
+                    if (act==='bmb') motor.placeBomb();
+                };
+                fire(a);
+                if (a !== 'bmb') { clearInterval(_dpadIv); _dpadIv = setInterval(() => fire(a), 180); }
+            });
+            document.getElementById('pgjDpad')?.addEventListener('pointerup',    () => clearInterval(_dpadIv));
+            document.getElementById('pgjDpad')?.addEventListener('pointerleave', () => clearInterval(_dpadIv));
+        }
+
+        function inicioBomberman(msg) {
+            cont.innerHTML = `<div class="pgj-caja">
+                <h2>${titulo}</h2>
+                ${cfg.deadline ? `<div class="pgj-deadline"><span class="pgj-deadline-label">Cierra en</span><span class="pgj-deadline-clock" id="pgjClock">…</span></div>` : ''}
+                ${cfg.cerrado ? `<div class="pgj-cerrado-msg">⛔ Este juego ya cerró. Gracias por participar.</div>` : ''}
+                <p class="pgj-sub">Bomberman — coloca bombas para destruir bloques y eliminar a los 3 enemigos. ¡Cuidado con tus propias explosiones!</p>
+                <div class="pgj-layout">
+                    <div>
+                        ${jugador
+                            ? `<p class="pgj-info" style="margin-bottom:12px">Jugando como <b style="color:var(--primary,#D8C395)">${esc(jugador.nombre)}</b>
+                               <button class="pgj-btn pgj-btn-sec" id="pgjCambiar" style="min-height:30px;padding:2px 10px;font-size:.65rem;margin-left:8px">Cambiar</button></p>
+                               ${msg ? `<p class="pgj-msg" style="margin-bottom:10px">${esc(msg)}</p>` : ''}
+                               <button class="pgj-btn" id="pgjJugar" style="margin-bottom:20px;width:100%;max-width:220px">▶ ${msg ? 'Jugar otra vez' : 'Jugar'}</button>`
+                            : `<form id="pgjForm">
+                                <div><label for="pgjNom">Nombre *</label><input id="pgjNom" required maxlength="40" placeholder="Tu nombre" autocomplete="off"></div>
+                                <div><label for="pgjId">ID de Free Fire</label><input id="pgjId" maxlength="40" placeholder="Ej: 123456789" inputmode="numeric"></div>
+                                <button type="submit" class="pgj-btn">Listo para jugar →</button>
+                                <p class="pgj-msg" id="pgjMsgForm"></p>
+                               </form>`}
+                        <h3 style="font:700 .72rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;color:var(--primary,#D8C395);text-transform:uppercase;margin:0 0 8px">Top 20</h3>
+                        ${lbHTML(entradas)}
+                    </div>
+                    <div class="pgj-canvas-col">
+                        <canvas id="pgjCvPrev" width="${BM_W}" height="${BM_H}" style="opacity:.2;max-height:min(68vh,${BM_H}px)"></canvas>
+                    </div>
+                </div>
+            </div>`;
+            if (cfg.deadline && !cfg.cerrado) relojJuego(cfg.deadline);
+            if (cfg.cerrado) { const b = document.getElementById('pgjJugar'); if (b) { b.disabled=true; b.textContent='⛔ Cerrado'; } }
+            const cv = document.getElementById('pgjCvPrev');
+            if (cv) { const cx = cv.getContext('2d'); cx.fillStyle='#1a1a1a'; cx.fillRect(0,0,BM_W,BM_H); }
+            document.getElementById('pgjForm')?.addEventListener('submit', e => {
+                e.preventDefault();
+                const nombre = document.getElementById('pgjNom').value.trim();
+                const ig = document.getElementById('pgjId').value.trim();
+                const msgEl = document.getElementById('pgjMsgForm');
+                if (!nombre) { msgEl.textContent='El nombre es requerido.'; return; }
+                if (MALAS.test(nombre)) { msgEl.textContent='Ese nombre no está permitido.'; return; }
+                try { localStorage.setItem(clave, JSON.stringify({ nombre, ig })); } catch (_) {}
+                jugador = { nombre, ig }; inicioBomberman();
+            });
+            document.getElementById('pgjCambiar')?.addEventListener('click', () => { try { localStorage.removeItem(clave); } catch (_) {} jugador=null; inicioBomberman(); });
+            document.getElementById('pgjJugar')?.addEventListener('click', () => renderJuego(jugador));
+        }
+
+        inicioBomberman();
+    }
+
+    /* ═══════════════════════════════
        DISPATCHER PRINCIPAL
     ═══════════════════════════════ */
     const TIPOS = [
-        { tipo: 'juego',        render: montarSnake    },
-        { tipo: 'juego_tetris', render: montarTetris   },
-        { tipo: 'juego_3lineas',render: montar3enLinea },
+        { tipo: 'juego',          render: montarSnake     },
+        { tipo: 'juego_tetris',   render: montarTetris    },
+        { tipo: 'juego_3lineas',  render: montar3enLinea  },
+        { tipo: 'juego_pacman',   render: montarPacman    },
+        { tipo: 'juego_breakout', render: montarBreakout  },
+        { tipo: 'juego_bomberman',render: montarBomberman },
     ];
 
     async function montar(portal, destino, tipoForzado) {
@@ -1009,6 +1785,22 @@
     }
     autoMontar();
 
+    /* Modo admin: carga el juego aunque esté inactivo en BD */
+    async function montarAdmin(portal, destino, tipo) {
+        estilos();
+        const def = TIPOS.find(t => t.tipo === tipo);
+        if (!def) { console.warn('[PG Admin] tipo desconocido:', tipo); return; }
+        const cont = contenedor(destino);
+        cont.innerHTML = `<div class="pgj-caja" style="text-align:center;padding:40px;color:var(--gray,#B9B2A4)">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size:1.6rem;color:var(--primary,#D8C395);display:block;margin-bottom:14px"></i>Cargando (modo admin)…</div>`;
+        let cfg = { activo: true, titulo: tipo, entradas: [], cerrado: false };
+        try {
+            const remote = await P.dinamica.publico(portal, tipo);
+            if (remote) cfg = { activo: true, titulo: remote.titulo || tipo, entradas: remote.entradas || [], cerrado: remote.cerrado || false, deadline: remote.deadline, config: remote.config };
+        } catch (_) {}
+        def.render(portal, cont, cfg);
+    }
+
     window.PumasPortal = window.PumasPortal || {};
-    window.PumasPortal.juegos = { montar };
+    window.PumasPortal.juegos = { montar, montarAdmin };
 })();
