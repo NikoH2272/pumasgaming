@@ -37,6 +37,15 @@
   font-size:1.4rem;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
   display:flex;align-items:center;justify-content:center}
 .pgj-dpad button:active{background:rgba(var(--primary-rgb,216,195,149),.35)}
+.pgj-deadline{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-bottom:12px;
+  border:1px solid rgba(var(--primary-rgb,216,195,149),.3);border-radius:6px;
+  background:rgba(var(--primary-rgb,216,195,149),.06)}
+.pgj-deadline-label{color:#B9B2A4;font:700 .68rem var(--font-display,'Michroma',sans-serif);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.pgj-deadline-clock{color:var(--primary,#D8C395);font:900 1rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;margin-left:4px}
+.pgj-deadline-clock.urgente{color:#ff4d4d;animation:pgjblink .6s infinite alternate}
+@keyframes pgjblink{to{opacity:.3}}
+.pgj-cerrado-msg{padding:10px 14px;border:1px solid rgba(229,72,77,.4);border-radius:6px;
+  color:#ff8a8d;font-size:.88rem;margin-bottom:12px;background:rgba(229,72,77,.06)}
 .pgj-tetris-body{display:flex;gap:20px;align-items:flex-start;justify-content:center}
 .pgj-tetris-side{display:none;min-width:150px;flex-shrink:0}
 @media(pointer:fine){.pgj-tetris-side{display:block}}
@@ -258,12 +267,25 @@
             }
         }
 
+        function intervaloMs() {
+            // Velocidad base según puntos acumulados
+            let base = 500;
+            if      (pts >= 10000) base = 250;   // 2x
+            else if (pts >= 5000)  base = 333;   // 1.5x
+            else if (pts >= 2500)  base = 400;   // 1.25x
+            // Cada millón suma dificultad extra
+            const millones = Math.floor(pts / 1000000);
+            if (millones > 0) base = Math.max(50, Math.floor(base / (1 + millones * 0.5)));
+            // Factor por nivel (líneas despejadas)
+            return Math.max(50, base - nivel * 20);
+        }
+
         function step() {
             if (!running) return;
             if (colisiona(pieza.s, px, py + 1)) fijar();
             else py++;
             dibujar();
-            if (running) _tid = setTimeout(step, Math.max(80, 500 - nivel * 40));
+            if (running) _tid = setTimeout(step, intervaloMs());
         }
 
         function iniciar() {
@@ -515,6 +537,25 @@
         document.getElementById('pgjJugar')?.addEventListener('click', () => renderJuego(jugador));
     }
 
+    /* Reloj regresivo en lobbies de juego */
+    function relojJuego(deadline) {
+        const id = 'pgjClock';
+        function tick() {
+            const el = document.getElementById(id);
+            if (!el) { clearInterval(iv); return; }
+            const rem = Math.max(0, Math.floor((new Date(deadline) - Date.now()) / 1000));
+            const d = Math.floor(rem / 86400), h = Math.floor((rem % 86400) / 3600),
+                  m = Math.floor((rem % 3600) / 60), s = rem % 60;
+            el.textContent = d > 0
+                ? `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`
+                : `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            el.className = 'pgj-deadline-clock' + (rem < 3600 ? ' urgente' : '');
+            if (rem === 0) { clearInterval(iv); location.reload(); }
+        }
+        tick();
+        const iv = setInterval(tick, 1000);
+    }
+
     /* ═══════════════════════════════
        RENDER SNAKE
     ═══════════════════════════════ */
@@ -585,6 +626,8 @@
         function inicioSnake(msg) {
             cont.innerHTML = `<div class="pgj-caja"${cfg.config?.fondo ? ` style="background-image:url('${cfg.config.fondo}');background-size:cover;background-blend-mode:overlay"` : ''}>
                 <h2>${titulo}</h2>
+                ${cfg.deadline ? `<div class="pgj-deadline"><span class="pgj-deadline-label">Cierra en</span><span class="pgj-deadline-clock" id="pgjClock">…</span></div>` : ''}
+                ${cfg.cerrado ? `<div class="pgj-cerrado-msg">⛔ Este juego ya cerró. Gracias por participar.</div>` : ''}
                 <p class="pgj-sub">Snake clásico — muros = Game Over. Tu puntuación queda en el ranking.</p>
                 <div class="pgj-layout">
                     <div>
@@ -610,6 +653,8 @@
             </div>`;
             const cv = document.getElementById('pgjCv');
             if (cv) { const cx = cv.getContext('2d'); cx.fillStyle = '#0a0a0a'; cx.fillRect(0, 0, W, W); }
+            if (cfg.deadline && !cfg.cerrado) relojJuego(cfg.deadline);
+            if (cfg.cerrado) { const b = document.getElementById('pgjJugar'); if (b) { b.disabled = true; b.textContent = '⛔ Cerrado'; } }
             document.getElementById('pgjForm')?.addEventListener('submit', e => {
                 e.preventDefault();
                 const nombre = document.getElementById('pgjNom').value.trim();
@@ -718,6 +763,8 @@
         function inicioTetris(msg) {
             cont.innerHTML = `<div class="pgj-caja"${cfg.config?.fondo ? ` style="background-image:url('${cfg.config.fondo}');background-size:cover;background-blend-mode:overlay"` : ''}>
                 <h2>${titulo}</h2>
+                ${cfg.deadline ? `<div class="pgj-deadline"><span class="pgj-deadline-label">Cierra en</span><span class="pgj-deadline-clock" id="pgjClock">…</span></div>` : ''}
+                ${cfg.cerrado ? `<div class="pgj-cerrado-msg">⛔ Este juego ya cerró. Gracias por participar.</div>` : ''}
                 <p class="pgj-sub">Tetris clásico — completa líneas para sumar puntos. Tu mejor puntaje queda en el ranking.</p>
                 <div class="pgj-layout">
                     <div>
@@ -743,6 +790,8 @@
             </div>`;
             const cv = document.getElementById('pgjCvPrev');
             if (cv) { const cx = cv.getContext('2d'); cx.fillStyle = '#0a0a0a'; cx.fillRect(0, 0, T_W, T_H); }
+            if (cfg.deadline && !cfg.cerrado) relojJuego(cfg.deadline);
+            if (cfg.cerrado) { const b = document.getElementById('pgjJugar'); if (b) { b.disabled = true; b.textContent = '⛔ Cerrado'; } }
             document.getElementById('pgjForm')?.addEventListener('submit', e => {
                 e.preventDefault();
                 const nombre = document.getElementById('pgjNom').value.trim();
@@ -840,6 +889,8 @@
             } catch (_) {}
             cont.innerHTML = `<div class="pgj-caja"${cfg.config?.fondo ? ` style="background-image:url('${cfg.config.fondo}');background-size:cover;background-blend-mode:overlay"` : ''}>
                 <h2>${titulo}</h2>
+                ${cfg.deadline ? `<div class="pgj-deadline"><span class="pgj-deadline-label">Cierra en</span><span class="pgj-deadline-clock" id="pgjClock">…</span></div>` : ''}
+                ${cfg.cerrado ? `<div class="pgj-cerrado-msg">⛔ Este juego ya cerró. Gracias por participar.</div>` : ''}
                 <p class="pgj-sub">Tres en línea vs CPU — gana la mayor cantidad de rondas. ¡El jugador con más victorias gana!</p>
                 <div class="pgj-layout">
                     <div>
@@ -865,6 +916,8 @@
             </div>`;
             const cv = document.getElementById('pgjCvPrev');
             if (cv) { const cx = cv.getContext('2d'); cx.fillStyle = '#0a0a0a'; cx.fillRect(0, 0, TL_SIZE, TL_SIZE); }
+            if (cfg.deadline && !cfg.cerrado) relojJuego(cfg.deadline);
+            if (cfg.cerrado) { const b = document.getElementById('pgjJugar'); if (b) { b.disabled = true; b.textContent = '⛔ Cerrado'; } }
             document.getElementById('pgjForm')?.addEventListener('submit', e => {
                 e.preventDefault();
                 const nombre = document.getElementById('pgjNom').value.trim();
