@@ -122,11 +122,11 @@
 
     function _stop() { clearTimeout(_tid); _running = false; }
 
-    function iniciarSnake(canvas, onOver, onScore) {
+    function iniciarSnake(canvas, onOver, onScore, diffBoost = 1.0) {
         _ctx  = canvas.getContext('2d');
         _sn   = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
         _dir  = { x: 1, y: 0 }; _nd = { x: 1, y: 0 };
-        _food = _rndFood(); _pts = 0; _spd = 150; _running = true;
+        _food = _rndFood(); _pts = 0; _spd = Math.max(40, Math.round(150 / diffBoost)); _running = true;
         clearTimeout(_tid);
 
         function step() {
@@ -190,7 +190,7 @@
         { s: [[0,0,1],[1,1,1]],     c: '#FFA726' },
     ];
 
-    function iniciarTetris(canvas, onOver, onScore) {
+    function iniciarTetris(canvas, onOver, onScore, diffBoost = 1.0) {
         const ctx = canvas.getContext('2d');
         let board, pieza, sig, px, py, pts, lineas, nivel, _tid, running;
 
@@ -276,8 +276,8 @@
             // Cada millón suma dificultad extra
             const millones = Math.floor(pts / 1000000);
             if (millones > 0) base = Math.max(50, Math.floor(base / (1 + millones * 0.5)));
-            // Factor por nivel (líneas despejadas)
-            return Math.max(50, base - nivel * 20);
+            // Factor por nivel (líneas despejadas) + diffBoost adaptativo
+            return Math.max(50, Math.floor((base - nivel * 20) / diffBoost));
         }
 
         function step() {
@@ -343,7 +343,7 @@
        MOTOR PAC-MAN
     ═══════════════════════════════ */
     const PM_CELL = 18;
-    // Maze: # wall  . dot  o power  ' ' tunnel/empty  G ghost-house
+    // Maze: # wall  . dot  o power  ' ' tunnel/empty  G ghost-house  P player-start
     const PM_MAZE_SRC = [
         '#####################',
         '#.........#.........#',
@@ -351,21 +351,20 @@
         '#o##.####.#.####.##o#',
         '#.##.####.#.####.##.#',
         '#...................#',
-        '#.##.#.#####.#.##...#',
-        '#.##.#.#####.#.##...#',
-        '#....#...#...#......#',
+        '#.##.#.#####.#.##.#.#',
+        '#....#.......#....#.#',
         '######.#####.######.#',
         '     #.#GGG#.#      .',
         '######.#GGG#.######  ',
         '.......#GGG#.........',
         '######.#####.######  ',
-        '     #...........#  .',
+        '     #.......#      .',
         '######.#####.######  ',
         '#.........#.........#',
         '#.##.####.#.####.##.#',
         '#o..#.....P.....#..o#',
         '###.#.#.#####.#.#.###',
-        '#....#...#...#...#..#',
+        '#....#.......#....#.#',
         '#.######.#.######...#',
         '#...................#',
         '#####################',
@@ -374,7 +373,7 @@
     const PM_COLS = PM_MAZE_SRC[0].length;
     const PM_W = PM_COLS * PM_CELL, PM_H = PM_ROWS * PM_CELL;
 
-    function iniciarPacman(canvas, onOver, onScore) {
+    function iniciarPacman(canvas, onOver, onScore, diffBoost = 1.0) {
         const ctx = canvas.getContext('2d');
         let maze, dots, powers, pacX, pacY, pacDx, pacDy, ndx, ndy;
         let ghosts, score, lives, frightenTick, frightDur, gameOver, won, _tid, running;
@@ -425,7 +424,8 @@
                 return canMove(g.c + d.dx, g.r + d.dy);
             });
             if (!opts.length) { g.dx = -g.dx; g.dy = -g.dy; return; }
-            if (frightened || Math.random() < 0.3) {
+            const randThresh = Math.max(0.05, 0.3 / diffBoost);
+            if (frightened || Math.random() < randThresh) {
                 const pick = opts[Math.floor(Math.random() * opts.length)];
                 g.dx = pick.dx; g.dy = pick.dy;
             } else {
@@ -471,7 +471,7 @@
             if (dots.every(d => d.eaten) && powers.every(p => p.eaten)) { running = false; clearTimeout(_tid); won = true; onOver(score); return; }
 
             draw();
-            if (running) _tid = setTimeout(step, 120);
+            if (running) _tid = setTimeout(step, Math.max(60, Math.floor(120 / diffBoost)));
         }
 
         function draw() {
@@ -554,10 +554,10 @@
     const BK_COLS = 10, BK_ROWS = 7;
     const BK_BW = BK_W / BK_COLS, BK_BH = 18;
 
-    function iniciarBreakout(canvas, onOver, onScore) {
+    function iniciarBreakout(canvas, onOver, onScore, diffBoost = 1.0) {
         const ctx = canvas.getContext('2d');
         const PAD_W = 70, PAD_H = 10, BALL_R = 7;
-        let padX, ballX, ballY, bvx, bvy, bricks, score, lives, _tid, running;
+        let padX, ballX, ballY, bvx, bvy, bricks, score, lives, level, _tid, running;
         const COLORS = ['#FF4444','#FF8C00','#FFD700','#88DD00','#00CCFF','#AA66FF','#FF66AA'];
 
         function initBricks() {
@@ -566,6 +566,8 @@
                 for (let c = 0; c < BK_COLS; c++)
                     bricks.push({ r, c, alive: true, pts: (BK_ROWS - r) * 10 });
         }
+
+        function levelSpd() { return 5 * (1 + Math.floor(level / 2) * 0.1) * diffBoost; }
 
         function step() {
             if (!running) return;
@@ -593,18 +595,24 @@
                 }
             });
             // Speed cap
+            const maxSpd = Math.max(9, levelSpd() * 1.5);
+            const minSpd = Math.max(4, levelSpd() * 0.8);
             const spd = Math.hypot(bvx, bvy);
-            if (spd > 9) { bvx = bvx/spd*9; bvy = bvy/spd*9; }
-            if (spd < 4) { bvx = bvx/spd*4; bvy = bvy/spd*4; }
+            if (spd > maxSpd) { bvx = bvx/spd*maxSpd; bvy = bvy/spd*maxSpd; }
+            if (spd < minSpd) { bvx = bvx/spd*minSpd; bvy = bvy/spd*minSpd; }
             // Fall
             if (ballY - BALL_R > BK_H) { lives--; if (lives <= 0) { running = false; clearTimeout(_tid); onOver(score); return; } resetBall(); }
-            // Win
-            if (bricks.every(b => !b.alive)) { running = false; clearTimeout(_tid); onOver(score); return; }
+            // Win / next level
+            if (bricks.every(b => !b.alive)) { level++; initBricks(); resetBall(); onScore(score); return; }
             draw();
             if (running) _tid = setTimeout(step, 14);
         }
 
-        function resetBall() { ballX = padX; ballY = BK_H - 70; bvx = (Math.random()-0.5)*4; bvy = -5; }
+        function resetBall() {
+            const spd = levelSpd();
+            ballX = padX; ballY = BK_H - 70;
+            bvx = (Math.random() - 0.5) * 4 * (spd / 5); bvy = -spd;
+        }
 
         function draw() {
             ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, BK_W, BK_H);
@@ -623,11 +631,11 @@
             // HUD
             ctx.fillStyle = '#FFD54A'; ctx.font = '12px Michroma,monospace';
             ctx.fillText('♥'.repeat(lives), 6, 20);
-            ctx.fillText('PTS: ' + score, BK_W - 90, 20);
+            ctx.fillText('NV:' + (level+1) + '  PTS: ' + score, BK_W - 120, 20);
         }
 
         function iniciar() {
-            padX = BK_W / 2; score = 0; lives = 3; running = true;
+            padX = BK_W / 2; score = 0; lives = 3; level = 0; running = true;
             initBricks(); resetBall(); clearTimeout(_tid); step();
         }
 
@@ -651,7 +659,7 @@
     const BM_COLS = 15, BM_ROWS = 13, BM_CELL = 30;
     const BM_W = BM_COLS * BM_CELL, BM_H = BM_ROWS * BM_CELL;
 
-    function iniciarBomberman(canvas, onOver, onScore) {
+    function iniciarBomberman(canvas, onOver, onScore, diffBoost = 1.0) {
         const ctx = canvas.getContext('2d');
         let grid, player, enemies, bombs, explosions, score, _tid, running;
 
@@ -682,7 +690,8 @@
 
         function moveEnemy(en) {
             en.tick++;
-            if (en.tick % 8 !== 0) return;
+            const mvInterval = Math.max(3, Math.floor(8 / diffBoost));
+            if (en.tick % mvInterval !== 0) return;
             const nc = en.c + en.dx, nr = en.r + en.dy;
             if (!isPassable(nc, nr) || Math.random() < 0.2) {
                 const dirs = [{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}];
@@ -1035,6 +1044,7 @@
         try { jugador = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (_) {}
 
         function renderJuego(jug) {
+            const diffBoost = calcDiffBoost(entradas, jug.nombre);
             cont.innerHTML = `<div class="pgj-caja"${cfg.config?.fondo ? ` style="background-image:url('${cfg.config.fondo}');background-size:cover;background-blend-mode:overlay"` : ''}>
                 <h2>${titulo}</h2>
                 <p class="pgj-info" style="margin-bottom:14px">
@@ -1087,7 +1097,8 @@
                     }
                     inicioSnake('Game over · ' + finalPts + ' puntos');
                 },
-                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: ' + pts; }
+                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: ' + pts; },
+                diffBoost
             );
         }
 
@@ -1208,6 +1219,7 @@
             });
             document.getElementById('pgjDpad')?.addEventListener('pointerup',    () => clearInterval(_dpadInterval));
             document.getElementById('pgjDpad')?.addEventListener('pointerleave', () => clearInterval(_dpadInterval));
+            const diffBoost = calcDiffBoost(entradas, jug.nombre);
             iniciarTetris(cv,
                 async (finalPts) => {
                     if (cv?._tclean) cv._tclean();
@@ -1224,7 +1236,8 @@
                     }
                     inicioTetris('Game over · ' + finalPts + ' pts');
                 },
-                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: ' + pts; }
+                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: ' + pts; },
+                diffBoost
             );
         }
 
@@ -1437,6 +1450,7 @@
             </div>`;
             const cv = document.getElementById('pgjCv');
             document.getElementById('pgjSalir').addEventListener('click', () => { cv?._pmclean?.(); inicioPacman(); });
+            const diffBoost = calcDiffBoost(entradas, jug.nombre);
             const motor = iniciarPacman(cv,
                 async (finalPts) => {
                     cv?._pmclean?.();
@@ -1449,7 +1463,8 @@
                     }
                     inicioPacman('Game over · ' + finalPts + ' pts');
                 },
-                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; }
+                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; },
+                diffBoost
             );
             document.getElementById('pgjDpad')?.addEventListener('pointerdown', e => {
                 const a = e.target.closest('[data-act]')?.dataset.act;
@@ -1533,6 +1548,7 @@
             </div>`;
             const cv = document.getElementById('pgjCv');
             document.getElementById('pgjSalir').addEventListener('click', () => { cv?._bkclean?.(); inicioBreakout(); });
+            const diffBoost = calcDiffBoost(entradas, jug.nombre);
             const motor = iniciarBreakout(cv,
                 async (finalPts) => {
                     cv?._bkclean?.();
@@ -1545,7 +1561,8 @@
                     }
                     inicioBreakout('Game over · ' + finalPts + ' pts');
                 },
-                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; }
+                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; },
+                diffBoost
             );
         }
 
@@ -1618,18 +1635,22 @@
                 <div style="display:flex;justify-content:center">
                     <canvas id="pgjCv" width="${BM_W}" height="${BM_H}" style="max-width:100%;max-height:min(68vh,${BM_H}px)"></canvas>
                 </div>
-                <div class="pgj-dpad pgj-dpad-tetris" id="pgjDpad" style="margin-top:10px">
-                    <div class="pgj-dpad-row"><button data-act="up">⬆</button></div>
+                <div class="pgj-dpad" id="pgjDpad" style="margin-top:10px;display:flex !important;flex-direction:column;align-items:center;gap:4px">
+                    <div class="pgj-dpad-row"><button data-act="up" style="width:72px;height:72px;font-size:1.6rem">⬆</button></div>
                     <div class="pgj-dpad-row">
-                        <button data-act="lft">⬅</button>
-                        <button data-act="bmb" style="background:rgba(255,100,0,.25);border-color:rgba(255,100,0,.6)">💣<small>BOMBA</small></button>
-                        <button data-act="rgt">➡</button>
+                        <button data-act="lft" style="width:72px;height:72px;font-size:1.6rem">⬅</button>
+                        <div style="width:72px"></div>
+                        <button data-act="rgt" style="width:72px;height:72px;font-size:1.6rem">➡</button>
                     </div>
-                    <div class="pgj-dpad-row"><button data-act="dwn">⬇</button></div>
+                    <div class="pgj-dpad-row"><button data-act="dwn" style="width:72px;height:72px;font-size:1.6rem">⬇</button></div>
+                    <div style="margin-top:8px">
+                        <button data-act="bmb" style="width:220px;height:64px;font-size:1.1rem;background:rgba(255,100,0,.25);border:2px solid rgba(255,100,0,.6);color:#ff8a40;border-radius:8px;font-family:var(--font-display,'Michroma',sans-serif);cursor:pointer;touch-action:manipulation">💣 BOMBA</button>
+                    </div>
                 </div>
             </div>`;
             const cv = document.getElementById('pgjCv');
             document.getElementById('pgjSalir').addEventListener('click', () => { cv?._bmclean?.(); inicioBomberman(); });
+            const diffBoost = calcDiffBoost(entradas, jug.nombre);
             const motor = iniciarBomberman(cv,
                 async (finalPts) => {
                     cv?._bmclean?.();
@@ -1642,7 +1663,8 @@
                     }
                     inicioBomberman('Game over · ' + finalPts + ' pts');
                 },
-                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; }
+                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; },
+                diffBoost
             );
             let _dpadIv = null;
             document.getElementById('pgjDpad')?.addEventListener('pointerdown', e => {
@@ -1710,16 +1732,448 @@
         inicioBomberman();
     }
 
+    /* ─── Dificultad adaptativa basada en ranking ─── */
+    function calcDiffBoost(entradas, jugadorNombre) {
+        if (!entradas || !entradas.length || !jugadorNombre) return 1.0;
+        const myEntry = entradas.find(e => e.nombre === jugadorNombre);
+        const myPts = parseInt(myEntry?.metadata?.puntos || myEntry?.puntos || 0);
+        const otherPts = entradas
+            .filter(e => e.nombre !== jugadorNombre)
+            .map(e => parseInt(e.metadata?.puntos || e.puntos || 0))
+            .filter(s => s > 0)
+            .sort((a, b) => b - a)
+            .slice(0, 10);
+        if (!otherPts.length || myPts <= 0) return 1.0;
+        const avg = otherPts.reduce((a, b) => a + b, 0) / otherPts.length;
+        if (avg <= 0) return 1.0;
+        const gap = (myPts - avg) / avg;
+        if (gap < 0) return Math.max(0.8, 1 + gap * 0.25);
+        if (gap < 0.4) return 1.0;
+        return Math.min(2.0, 1.1 + (gap - 0.4) * 0.5);
+    }
+
+    /* ═══════════════════════════════
+       MOTOR SPACE INVADERS
+    ═══════════════════════════════ */
+    const IV_W = 360, IV_H = 480;
+    const IV_ROWS = 5, IV_COLS = 10;
+
+    function iniciarInvaders(canvas, onOver, onScore, diffBoost = 1.0) {
+        const ctx = canvas.getContext('2d');
+        let invaders, player, bullets, ibullets, score, lives, ivDx, ivTick, shootCooldown, _tid, running;
+
+        function initInvaders() {
+            invaders = [];
+            for (let r = 0; r < IV_ROWS; r++)
+                for (let c = 0; c < IV_COLS; c++)
+                    invaders.push({ r, c, x: 30 + c * 30, y: 55 + r * 28, alive: true });
+            ivDx = 1; ivTick = 0;
+        }
+
+        function step() {
+            if (!running) return;
+            ivTick++;
+            if (shootCooldown > 0) shootCooldown--;
+
+            const alive = invaders.filter(iv => iv.alive);
+            if (!alive.length) { running = false; clearTimeout(_tid); onOver(score + 500); return; }
+
+            const ivInterval = Math.max(4, Math.floor((32 - alive.length / 4) / diffBoost));
+            if (ivTick % ivInterval === 0) {
+                const rightmost = Math.max(...alive.map(iv => iv.x));
+                const leftmost  = Math.min(...alive.map(iv => iv.x));
+                let drop = false;
+                if (rightmost > IV_W - 28 && ivDx > 0) { ivDx = -1; drop = true; }
+                if (leftmost  < 10         && ivDx < 0) { ivDx = 1;  drop = true; }
+                if (drop) alive.forEach(iv => iv.y += 18);
+                else alive.forEach(iv => iv.x += ivDx * 7);
+            }
+
+            if (alive.length && Math.random() < 0.015 * diffBoost) {
+                const shooter = alive[Math.floor(Math.random() * alive.length)];
+                ibullets.push({ x: shooter.x + 14, y: shooter.y + 20 });
+            }
+
+            bullets  = bullets.filter(b => b.y > 0);
+            bullets.forEach(b => b.y -= 10);
+            ibullets = ibullets.filter(b => b.y < IV_H);
+            ibullets.forEach(b => b.y += 5 * diffBoost);
+
+            bullets.forEach(b => {
+                if (b.y < 0) return;
+                invaders.forEach(iv => {
+                    if (!iv.alive) return;
+                    if (b.x > iv.x && b.x < iv.x + 28 && b.y > iv.y && b.y < iv.y + 22) {
+                        iv.alive = false; b.y = -100;
+                        score += iv.r < 2 ? 30 : iv.r < 4 ? 20 : 10;
+                        onScore(score);
+                    }
+                });
+            });
+
+            ibullets.forEach(b => {
+                if (Math.abs(b.x - player.x) < 16 && b.y > IV_H - 44 && b.y < IV_H - 12) {
+                    b.y = IV_H + 100; lives--;
+                    if (lives <= 0) { running = false; clearTimeout(_tid); onOver(score); return; }
+                }
+            });
+
+            if (alive.some(iv => iv.y > IV_H - 55)) { running = false; clearTimeout(_tid); onOver(score); return; }
+
+            draw();
+            if (running) _tid = setTimeout(step, 16);
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000'; ctx.fillRect(0, 0, IV_W, IV_H);
+            ctx.strokeStyle = 'rgba(0,229,255,.06)'; ctx.lineWidth = .5;
+            for (let i = 0; i < IV_W; i += 30) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,IV_H); ctx.stroke(); }
+            invaders.filter(iv => iv.alive).forEach(iv => {
+                const e = iv.r < 2 ? '👾' : iv.r < 4 ? '🛸' : '🤖';
+                ctx.font = '18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(e, iv.x + 14, iv.y + 11);
+            });
+            ctx.fillStyle = '#4dff91';
+            ctx.beginPath(); ctx.moveTo(player.x, IV_H - 38); ctx.lineTo(player.x - 18, IV_H - 22); ctx.lineTo(player.x + 18, IV_H - 22); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#4dff91'; ctx.fillRect(player.x - 3, IV_H - 44, 6, 8);
+            ctx.fillStyle = '#FFD54A';
+            bullets.forEach(b => { ctx.fillRect(b.x - 2, b.y - 6, 4, 12); });
+            ctx.fillStyle = '#FF4444';
+            ibullets.forEach(b => { ctx.fillRect(b.x - 2, b.y - 6, 4, 12); });
+            ctx.fillStyle = '#FFD54A'; ctx.font = '12px Michroma,monospace'; ctx.textAlign = 'left';
+            ctx.fillText('♥'.repeat(lives) + '  PTS: ' + score, 6, 16);
+        }
+
+        function shoot() { if (!running || shootCooldown > 0) return; bullets.push({ x: player.x, y: IV_H - 46 }); shootCooldown = 15; }
+
+        function iniciar() {
+            initInvaders(); player = { x: IV_W / 2 };
+            bullets = []; ibullets = []; score = 0; lives = 3; shootCooldown = 0; running = true;
+            clearTimeout(_tid); step();
+        }
+
+        let _keys = {};
+        const _moveIv = setInterval(() => {
+            if (!running) return;
+            if (_keys['ArrowLeft'])  player.x = Math.max(18, player.x - 6);
+            if (_keys['ArrowRight']) player.x = Math.min(IV_W - 18, player.x + 6);
+        }, 16);
+        function onKey(e) {
+            _keys[e.key] = e.type === 'keydown';
+            if (e.type === 'keydown' && e.key === ' ') { e.preventDefault(); shoot(); }
+            if (['ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+        }
+        document.addEventListener('keydown', onKey); document.addEventListener('keyup', onKey);
+        const _clean = () => { running=false; clearTimeout(_tid); clearInterval(_moveIv); document.removeEventListener('keydown',onKey); document.removeEventListener('keyup',onKey); };
+        canvas._ivclean = _clean;
+        iniciar();
+        return { stop: _clean, shoot, moveLeft: () => { player.x = Math.max(18, player.x - 8); }, moveRight: () => { player.x = Math.min(IV_W-18, player.x + 8); } };
+    }
+
+    /* ═══════════════════════════════
+       MOTOR FLAPPY BIRD
+    ═══════════════════════════════ */
+    const FB_W = 320, FB_H = 480;
+
+    function iniciarFlappy(canvas, onOver, onScore, diffBoost = 1.0) {
+        const ctx = canvas.getContext('2d');
+        let bird, pipes, score, pipeTimer, _tid, running;
+        const GRAVITY = 0.38 * Math.min(1.5, diffBoost);
+        const FLAP_V  = -7;
+        const PIPE_W  = 52;
+        const GAP     = Math.max(90, Math.floor(155 / diffBoost));
+        const PIPE_SPD = Math.min(5, 2 + diffBoost * 0.5);
+
+        function addPipe() {
+            const gapY = 80 + Math.floor(Math.random() * (FB_H - 160 - GAP));
+            pipes.push({ x: FB_W + 10, gapY, passed: false });
+        }
+
+        function step() {
+            if (!running) return;
+            bird.vy += GRAVITY;
+            bird.y  += bird.vy;
+            pipeTimer++;
+            if (pipeTimer >= 90) { addPipe(); pipeTimer = 0; }
+            pipes.forEach(p => p.x -= PIPE_SPD);
+            pipes = pipes.filter(p => p.x > -PIPE_W - 10);
+            pipes.forEach(p => {
+                if (!p.passed && p.x + PIPE_W < bird.x) { p.passed = true; score++; onScore(score); }
+            });
+            if (bird.y + 12 >= FB_H - 20 || bird.y - 12 <= 0) { running=false; clearTimeout(_tid); onOver(score); return; }
+            for (const p of pipes) {
+                if (bird.x + 10 > p.x && bird.x - 10 < p.x + PIPE_W) {
+                    if (bird.y - 12 < p.gapY || bird.y + 12 > p.gapY + GAP) { running=false; clearTimeout(_tid); onOver(score); return; }
+                }
+            }
+            draw();
+            if (running) _tid = setTimeout(step, 16);
+        }
+
+        function draw() {
+            ctx.fillStyle = '#0a1a2a'; ctx.fillRect(0, 0, FB_W, FB_H);
+            // Stars
+            ctx.fillStyle = 'rgba(255,255,255,.35)';
+            for (let i = 0; i < 20; i++) { ctx.fillRect((i*53+7)%FB_W, (i*37+11)%280, 2, 2); }
+            // Ground
+            ctx.fillStyle = '#2a5a1a'; ctx.fillRect(0, FB_H-20, FB_W, 20);
+            ctx.fillStyle = '#3a7a2a'; ctx.fillRect(0, FB_H-20, FB_W, 5);
+            // Pipes
+            ctx.fillStyle = '#228B22';
+            pipes.forEach(p => {
+                ctx.fillRect(p.x, 0, PIPE_W, p.gapY);
+                ctx.fillRect(p.x, p.gapY + GAP, PIPE_W, FB_H - (p.gapY + GAP));
+                ctx.fillStyle = '#1a6a1a';
+                ctx.fillRect(p.x - 4, p.gapY - 14, PIPE_W + 8, 14);
+                ctx.fillRect(p.x - 4, p.gapY + GAP, PIPE_W + 8, 14);
+                ctx.fillStyle = '#228B22';
+            });
+            // Bird
+            ctx.font = '22px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.save(); ctx.translate(bird.x, bird.y);
+            ctx.rotate(Math.min(Math.PI/4, Math.max(-Math.PI/6, bird.vy * 0.06)));
+            ctx.fillText('🐦', 0, 0); ctx.restore();
+            // Score
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 22px Michroma,monospace'; ctx.textAlign = 'center';
+            ctx.fillText(score, FB_W/2, 32);
+        }
+
+        function flap() { if (running) bird.vy = FLAP_V; }
+
+        function iniciar() {
+            bird = { x: 80, y: FB_H/2, vy: -3 };
+            pipes = []; score = 0; pipeTimer = 60; running = true;
+            clearTimeout(_tid); step();
+        }
+
+        function onKey(e) { if (e.key === ' ' || e.key === 'ArrowUp') { e.preventDefault(); flap(); } }
+        document.addEventListener('keydown', onKey);
+        canvas.addEventListener('click', flap);
+        canvas.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, { passive: false });
+        const _clean = () => { running=false; clearTimeout(_tid); document.removeEventListener('keydown',onKey); };
+        canvas._fbclean = _clean;
+        iniciar();
+        return { stop: _clean, flap };
+    }
+
+    /* ═══════════════════════════════
+       RENDER SPACE INVADERS
+    ═══════════════════════════════ */
+    async function montarInvaders(portal, cont, cfg) {
+        let entradas = cfg.entradas || [];
+        const titulo = esc(cfg.titulo || '🚀 Space Invaders');
+        const clave = 'pg_jug_' + portal + '_juego_invaders';
+        let jugador = null;
+        try { jugador = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (_) {}
+
+        function renderJuego(jug) {
+            const diffBoost = calcDiffBoost(entradas, jug.nombre);
+            cont.innerHTML = `<div class="pgj-caja">
+                <h2>${titulo}</h2>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                    <span class="pgj-info">Jugador: <b style="color:var(--primary,#D8C395)">${esc(jug.nombre)}</b></span>
+                    <button class="pgj-btn pgj-btn-sec" id="pgjSalir" style="min-height:30px;padding:2px 12px;font-size:.7rem">✕ Salir</button>
+                </div>
+                <p class="pgj-score-live" id="pgjScoreLive" style="margin:0 0 8px;text-align:center">PUNTOS: 0</p>
+                <div style="display:flex;justify-content:center">
+                    <canvas id="pgjCv" width="${IV_W}" height="${IV_H}" style="max-width:100%;max-height:min(70vh,${IV_H}px)"></canvas>
+                </div>
+                <div class="pgj-dpad" id="pgjDpad" style="margin-top:10px;display:flex !important;flex-direction:column;align-items:center;gap:6px">
+                    <div class="pgj-dpad-row">
+                        <button data-act="lft" style="width:100px;height:72px;font-size:1.6rem">⬅</button>
+                        <button data-act="sht" style="width:120px;height:72px;font-size:1rem;background:rgba(77,255,145,.2);border-color:rgba(77,255,145,.6);color:#4dff91;font-family:var(--font-display,'Michroma',sans-serif)">🚀 DISPARAR</button>
+                        <button data-act="rgt" style="width:100px;height:72px;font-size:1.6rem">➡</button>
+                    </div>
+                </div>
+            </div>`;
+            const cv = document.getElementById('pgjCv');
+            document.getElementById('pgjSalir').addEventListener('click', () => { cv?._ivclean?.(); inicioInvaders(); });
+            const motor = iniciarInvaders(cv,
+                async (finalPts) => {
+                    cv?._ivclean?.();
+                    if (finalPts > 0 && jug) {
+                        try {
+                            await P.dinamica.registrar(portal, 'juego_invaders', { nombre: jug.nombre, ig: jug.ig||'', metadata: { puntos: finalPts } });
+                            const cfg2 = await P.dinamica.publico(portal, 'juego_invaders');
+                            if (cfg2?.entradas) entradas = cfg2.entradas;
+                        } catch (e) { console.error('[PG Invaders]', e?.message||e); }
+                    }
+                    inicioInvaders('Game over · ' + finalPts + ' pts');
+                },
+                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; },
+                diffBoost
+            );
+            let _dpadIv = null;
+            document.getElementById('pgjDpad')?.addEventListener('pointerdown', e => {
+                const a = e.target.closest('[data-act]')?.dataset.act;
+                if (!a) return; e.preventDefault();
+                if (a === 'sht') { motor.shoot(); return; }
+                const move = () => { if (a==='lft') motor.moveLeft(); if (a==='rgt') motor.moveRight(); };
+                move(); clearInterval(_dpadIv); _dpadIv = setInterval(move, 60);
+            });
+            document.getElementById('pgjDpad')?.addEventListener('pointerup',    () => clearInterval(_dpadIv));
+            document.getElementById('pgjDpad')?.addEventListener('pointerleave', () => clearInterval(_dpadIv));
+        }
+
+        function inicioInvaders(msg) {
+            cont.innerHTML = `<div class="pgj-caja">
+                <h2>${titulo}</h2>
+                ${cfg.deadline ? `<div class="pgj-deadline"><span class="pgj-deadline-label">Cierra en</span><span class="pgj-deadline-clock" id="pgjClock">…</span></div>` : ''}
+                ${cfg.cerrado ? `<div class="pgj-cerrado-msg">⛔ Este juego ya cerró. Gracias por participar.</div>` : ''}
+                <p class="pgj-sub">Space Invaders — dispara a los invasores antes de que lleguen. ¡Filas superiores valen más puntos!</p>
+                <div class="pgj-layout">
+                    <div>
+                        ${jugador
+                            ? `<p class="pgj-info" style="margin-bottom:12px">Jugando como <b style="color:var(--primary,#D8C395)">${esc(jugador.nombre)}</b>
+                               <button class="pgj-btn pgj-btn-sec" id="pgjCambiar" style="min-height:30px;padding:2px 10px;font-size:.65rem;margin-left:8px">Cambiar</button></p>
+                               ${msg ? `<p class="pgj-msg" style="margin-bottom:10px">${esc(msg)}</p>` : ''}
+                               <button class="pgj-btn" id="pgjJugar" style="margin-bottom:20px;width:100%;max-width:220px">▶ ${msg ? 'Jugar otra vez' : 'Jugar'}</button>`
+                            : `<form id="pgjForm">
+                                <div><label for="pgjNom">Nombre *</label><input id="pgjNom" required maxlength="40" placeholder="Tu nombre" autocomplete="off"></div>
+                                <div><label for="pgjId">ID de Free Fire</label><input id="pgjId" maxlength="40" placeholder="Ej: 123456789" inputmode="numeric"></div>
+                                <button type="submit" class="pgj-btn">Listo para jugar →</button>
+                                <p class="pgj-msg" id="pgjMsgForm"></p>
+                               </form>`}
+                        <h3 style="font:700 .72rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;color:var(--primary,#D8C395);text-transform:uppercase;margin:0 0 8px">Top 20</h3>
+                        ${lbHTML(entradas)}
+                    </div>
+                    <div class="pgj-canvas-col">
+                        <canvas id="pgjCvPrev" width="${IV_W}" height="${IV_H}" style="opacity:.2;max-height:min(72vh,${IV_H}px)"></canvas>
+                    </div>
+                </div>
+            </div>`;
+            if (cfg.deadline && !cfg.cerrado) relojJuego(cfg.deadline);
+            if (cfg.cerrado) { const b = document.getElementById('pgjJugar'); if (b) { b.disabled=true; b.textContent='⛔ Cerrado'; } }
+            const cv = document.getElementById('pgjCvPrev');
+            if (cv) { const cx = cv.getContext('2d'); cx.fillStyle='#000'; cx.fillRect(0,0,IV_W,IV_H); }
+            document.getElementById('pgjForm')?.addEventListener('submit', e => {
+                e.preventDefault();
+                const nombre = document.getElementById('pgjNom').value.trim();
+                const ig = document.getElementById('pgjId').value.trim();
+                const msgEl = document.getElementById('pgjMsgForm');
+                if (!nombre) { msgEl.textContent='El nombre es requerido.'; return; }
+                if (MALAS.test(nombre)) { msgEl.textContent='Ese nombre no está permitido.'; return; }
+                try { localStorage.setItem(clave, JSON.stringify({ nombre, ig })); } catch (_) {}
+                jugador = { nombre, ig }; inicioInvaders();
+            });
+            document.getElementById('pgjCambiar')?.addEventListener('click', () => { try { localStorage.removeItem(clave); } catch (_) {} jugador=null; inicioInvaders(); });
+            document.getElementById('pgjJugar')?.addEventListener('click', () => renderJuego(jugador));
+        }
+
+        inicioInvaders();
+    }
+
+    /* ═══════════════════════════════
+       RENDER FLAPPY BIRD
+    ═══════════════════════════════ */
+    async function montarFlappy(portal, cont, cfg) {
+        let entradas = cfg.entradas || [];
+        const titulo = esc(cfg.titulo || '🐦 Flappy Bird');
+        const clave = 'pg_jug_' + portal + '_juego_flappy';
+        let jugador = null;
+        try { jugador = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (_) {}
+
+        function renderJuego(jug) {
+            const diffBoost = calcDiffBoost(entradas, jug.nombre);
+            cont.innerHTML = `<div class="pgj-caja">
+                <h2>${titulo}</h2>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+                    <span class="pgj-info">Jugador: <b style="color:var(--primary,#D8C395)">${esc(jug.nombre)}</b></span>
+                    <button class="pgj-btn pgj-btn-sec" id="pgjSalir" style="min-height:30px;padding:2px 12px;font-size:.7rem">✕ Salir</button>
+                </div>
+                <p class="pgj-score-live" id="pgjScoreLive" style="margin:0 0 8px;text-align:center">PUNTOS: 0</p>
+                <div style="display:flex;justify-content:center">
+                    <canvas id="pgjCv" width="${FB_W}" height="${FB_H}" style="max-width:100%;max-height:min(70vh,${FB_H}px);cursor:pointer"></canvas>
+                </div>
+                <p class="pgj-controles" style="text-align:center;margin-top:6px">Toca / Espacio / Click = volar</p>
+                <div class="pgj-dpad" id="pgjDpad" style="margin-top:8px">
+                    <div class="pgj-dpad-row">
+                        <button data-act="flp" style="width:280px;height:72px;font-size:1.2rem">🐦 VOLAR</button>
+                    </div>
+                </div>
+            </div>`;
+            const cv = document.getElementById('pgjCv');
+            document.getElementById('pgjSalir').addEventListener('click', () => { cv?._fbclean?.(); inicioFlappy(); });
+            const motor = iniciarFlappy(cv,
+                async (finalPts) => {
+                    cv?._fbclean?.();
+                    if (finalPts > 0 && jug) {
+                        try {
+                            await P.dinamica.registrar(portal, 'juego_flappy', { nombre: jug.nombre, ig: jug.ig||'', metadata: { puntos: finalPts } });
+                            const cfg2 = await P.dinamica.publico(portal, 'juego_flappy');
+                            if (cfg2?.entradas) entradas = cfg2.entradas;
+                        } catch (e) { console.error('[PG Flappy]', e?.message||e); }
+                    }
+                    inicioFlappy('Game over · ' + finalPts + ' tuberías');
+                },
+                (pts) => { const el = document.getElementById('pgjScoreLive'); if (el) el.textContent = 'PUNTOS: '+pts; },
+                diffBoost
+            );
+            document.getElementById('pgjDpad')?.addEventListener('pointerdown', e => {
+                if (e.target.closest('[data-act="flp"]')) { e.preventDefault(); motor.flap(); }
+            });
+        }
+
+        function inicioFlappy(msg) {
+            cont.innerHTML = `<div class="pgj-caja">
+                <h2>${titulo}</h2>
+                ${cfg.deadline ? `<div class="pgj-deadline"><span class="pgj-deadline-label">Cierra en</span><span class="pgj-deadline-clock" id="pgjClock">…</span></div>` : ''}
+                ${cfg.cerrado ? `<div class="pgj-cerrado-msg">⛔ Este juego ya cerró. Gracias por participar.</div>` : ''}
+                <p class="pgj-sub">Flappy Bird — toca para volar y esquivar las tuberías. ¡Cuántas más pases, mayor tu puntaje!</p>
+                <div class="pgj-layout">
+                    <div>
+                        ${jugador
+                            ? `<p class="pgj-info" style="margin-bottom:12px">Jugando como <b style="color:var(--primary,#D8C395)">${esc(jugador.nombre)}</b>
+                               <button class="pgj-btn pgj-btn-sec" id="pgjCambiar" style="min-height:30px;padding:2px 10px;font-size:.65rem;margin-left:8px">Cambiar</button></p>
+                               ${msg ? `<p class="pgj-msg" style="margin-bottom:10px">${esc(msg)}</p>` : ''}
+                               <button class="pgj-btn" id="pgjJugar" style="margin-bottom:20px;width:100%;max-width:220px">▶ ${msg ? 'Jugar otra vez' : 'Jugar'}</button>`
+                            : `<form id="pgjForm">
+                                <div><label for="pgjNom">Nombre *</label><input id="pgjNom" required maxlength="40" placeholder="Tu nombre" autocomplete="off"></div>
+                                <div><label for="pgjId">ID de Free Fire</label><input id="pgjId" maxlength="40" placeholder="Ej: 123456789" inputmode="numeric"></div>
+                                <button type="submit" class="pgj-btn">Listo para jugar →</button>
+                                <p class="pgj-msg" id="pgjMsgForm"></p>
+                               </form>`}
+                        <h3 style="font:700 .72rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;color:var(--primary,#D8C395);text-transform:uppercase;margin:0 0 8px">Top 20</h3>
+                        ${lbHTML(entradas)}
+                    </div>
+                    <div class="pgj-canvas-col">
+                        <canvas id="pgjCvPrev" width="${FB_W}" height="${FB_H}" style="opacity:.2;max-height:min(72vh,${FB_H}px)"></canvas>
+                    </div>
+                </div>
+            </div>`;
+            if (cfg.deadline && !cfg.cerrado) relojJuego(cfg.deadline);
+            if (cfg.cerrado) { const b = document.getElementById('pgjJugar'); if (b) { b.disabled=true; b.textContent='⛔ Cerrado'; } }
+            const cv = document.getElementById('pgjCvPrev');
+            if (cv) { const cx = cv.getContext('2d'); cx.fillStyle='#0a1a2a'; cx.fillRect(0,0,FB_W,FB_H); }
+            document.getElementById('pgjForm')?.addEventListener('submit', e => {
+                e.preventDefault();
+                const nombre = document.getElementById('pgjNom').value.trim();
+                const ig = document.getElementById('pgjId').value.trim();
+                const msgEl = document.getElementById('pgjMsgForm');
+                if (!nombre) { msgEl.textContent='El nombre es requerido.'; return; }
+                if (MALAS.test(nombre)) { msgEl.textContent='Ese nombre no está permitido.'; return; }
+                try { localStorage.setItem(clave, JSON.stringify({ nombre, ig })); } catch (_) {}
+                jugador = { nombre, ig }; inicioFlappy();
+            });
+            document.getElementById('pgjCambiar')?.addEventListener('click', () => { try { localStorage.removeItem(clave); } catch (_) {} jugador=null; inicioFlappy(); });
+            document.getElementById('pgjJugar')?.addEventListener('click', () => renderJuego(jugador));
+        }
+
+        inicioFlappy();
+    }
+
     /* ═══════════════════════════════
        DISPATCHER PRINCIPAL
     ═══════════════════════════════ */
     const TIPOS = [
-        { tipo: 'juego',          render: montarSnake     },
-        { tipo: 'juego_tetris',   render: montarTetris    },
-        { tipo: 'juego_3lineas',  render: montar3enLinea  },
-        { tipo: 'juego_pacman',   render: montarPacman    },
-        { tipo: 'juego_breakout', render: montarBreakout  },
-        { tipo: 'juego_bomberman',render: montarBomberman },
+        { tipo: 'juego',           render: montarSnake     },
+        { tipo: 'juego_tetris',    render: montarTetris    },
+        { tipo: 'juego_3lineas',   render: montar3enLinea  },
+        { tipo: 'juego_pacman',    render: montarPacman    },
+        { tipo: 'juego_breakout',  render: montarBreakout  },
+        { tipo: 'juego_bomberman', render: montarBomberman },
+        { tipo: 'juego_invaders',  render: montarInvaders  },
+        { tipo: 'juego_flappy',    render: montarFlappy    },
     ];
 
     async function montar(portal, destino, tipoForzado) {

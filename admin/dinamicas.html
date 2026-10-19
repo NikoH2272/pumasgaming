@@ -18,8 +18,17 @@
 .din-portal-bar label{font:700 .72rem 'Michroma',sans-serif;letter-spacing:.1em;color:#D8C395;text-transform:uppercase;white-space:nowrap}
 .din-portal-bar select{background:#0c0c0c;border:1px solid rgba(216,195,149,.3);color:#F4EEDC;border-radius:5px;padding:7px 12px;font:inherit;font-size:.88rem;outline:none;min-width:200px}
 /* ── Layout ── */
-.din-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;margin-top:4px}
+.din-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:4px}
+@media(max-width:860px){.din-grid{grid-template-columns:1fr}}
 .din-card{background:rgba(255,255,255,.04);border:1px solid rgba(216,195,149,.22);border-radius:10px;overflow:hidden}
+/* Juego 2 columnas: probar | leaderboard */
+.din-juego-2col{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;margin-top:10px}
+@media(max-width:900px){.din-juego-2col{grid-template-columns:1fr}}
+/* Deadline row */
+.din-deadline-row{display:flex;align-items:center;gap:8px;margin:8px 0 6px;flex-wrap:wrap}
+.din-deadline-row label{font-size:.73rem;color:#999;white-space:nowrap}
+.din-deadline-row input[type=datetime-local]{background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#F4EEDC;border-radius:5px;padding:6px 9px;font:inherit;font-size:.82rem;outline:none;flex:1;min-width:0}
+.din-deadline-row input[type=datetime-local]:focus{border-color:#D8C395}
 .din-card-head{display:flex;align-items:center;gap:12px;padding:16px 18px;background:rgba(216,195,149,.06);border-bottom:1px solid rgba(216,195,149,.14)}
 .din-card-head h3{flex:1;margin:0;font:700 .92rem 'Michroma',sans-serif;letter-spacing:.06em;color:#D8C395}
 .din-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
@@ -51,7 +60,8 @@
 .din-table td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.06);color:#F4EEDC;vertical-align:middle}
 .din-table td .del-btn{background:none;border:none;color:#ff7070;cursor:pointer;font-size:.85rem;padding:2px 5px;opacity:.7;border-radius:4px}
 .din-table td .del-btn:hover{opacity:1;background:rgba(255,77,77,.15)}
-.din-table-wrap{max-height:220px;overflow-y:auto;border:1px solid rgba(216,195,149,.14);border-radius:6px}
+.din-table-wrap{max-height:320px;overflow-y:auto;border:1px solid rgba(216,195,149,.14);border-radius:6px}
+.din-table-wrap.tall{max-height:480px}
 /* Poll results */
 .poll-opt-bar{margin:6px 0}
 .poll-opt-label{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:3px;color:#D8C395}
@@ -130,7 +140,7 @@
     <div class="din-grid">
 
         <!-- ═══ REGISTRO DE EQUIPOS ═══ -->
-        <div class="din-card" id="card-registro">
+        <div class="din-card" id="card-registro" style="grid-column:1/-1">
             <div class="din-card-head">
                 <div class="din-icon" style="background:rgba(77,163,255,.15);color:#4da6ff"><i class="fa-solid fa-clipboard-list"></i></div>
                 <h3>Registro de equipos</h3>
@@ -192,7 +202,7 @@
                     </div>
                 </details>
                 <p class="din-status" id="status-registro"></p>
-                <div class="din-table-wrap">
+                <div class="din-table-wrap tall">
                     <table class="din-table">
                         <thead><tr><th>#</th><th>Equipo</th><th>Representante</th><th>Nº</th><th>IG</th><th></th></tr></thead>
                         <tbody id="tbody-registro"><tr><td colspan="6" class="din-empty">Selecciona un portal</td></tr></tbody>
@@ -212,7 +222,7 @@
         </div>
 
         <!-- ═══ ENCUESTAS (multi) ═══ -->
-        <div class="din-card" id="card-encuestas">
+        <div class="din-card" id="card-encuestas" style="grid-column:1/-1">
             <div class="din-card-head">
                 <div class="din-icon" style="background:rgba(255,184,77,.15);color:#ffb84d"><i class="fa-solid fa-square-poll-vertical"></i></div>
                 <h3>Encuestas</h3>
@@ -394,19 +404,21 @@
         </div>
 
         <!-- ═══ SORTEOS ═══ -->
-        <div class="din-card">
+        <div class="din-card" style="grid-column:1/-1">
             <div class="din-card-head">
                 <div class="din-icon" style="background:rgba(255,213,74,.15);color:#FFD54A"><i class="fa-solid fa-dice"></i></div>
                 <h3>Sorteos</h3>
-                <span class="din-badge activo">Siempre activo</span>
+                <a class="btn-mini" href="sorteo.html" style="margin-left:auto;font-size:.72rem;padding:5px 12px"><i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir sorteos</a>
             </div>
             <div class="din-card-body">
-                <p style="font-size:.85rem;color:#aaa;margin:0 0 14px">Los sorteos por portal se gestionan en su propia sección. Activa o desactiva el sorteo de cada portal desde ahí.</p>
-                <a class="btn-mini" href="sorteo.html"><i class="fa-solid fa-dice"></i> Ir a Sorteos</a>
+                <p style="font-size:.8rem;color:#666;margin:0 0 14px">Acceso rápido al sorteo de cada portal. Abre directamente o gestiona desde la sección completa.</p>
+                <div id="sorteos-portales" style="display:flex;flex-wrap:wrap;gap:8px">
+                    <span style="color:#555;font-size:.82rem">Selecciona un portal para ver los accesos...</span>
+                </div>
             </div>
         </div>
 
-        <!-- ═══ JUEGO RETRO ═══ -->
+        <!-- ═══ JUEGOS RETRO ═══ -->
         <!-- SNAKE -->
         <div class="din-card" id="card-juego" style="grid-column:1/-1">
             <div class="din-card-head">
@@ -419,11 +431,17 @@
                     <label class="din-toggle"><input type="checkbox" id="toggle-juego"><span class="din-toggle-track"></span></label>
                     <span style="font-size:.83rem;color:#aaa">Activar Snake público</span>
                 </div>
-                <div style="display:flex;gap:8px;margin:10px 0;align-items:center">
+                <div class="din-deadline-row">
+                    <label><i class="fa-solid fa-clock"></i> Cierra:</label>
+                    <input type="datetime-local" id="juego-deadline">
+                    <button class="btn-mini" id="btn-juego-deadline" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                    <button class="btn-mini" id="btn-juego-nodeadline" title="Quitar límite" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div style="display:flex;gap:8px;margin:6px 0 10px;align-items:center">
                     <input type="url" id="juego-fondo" placeholder="URL del fondo (opcional)" style="flex:1;padding:8px 10px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
                     <button class="btn-mini" id="btn-juego-fondo-save"><i class="fa-solid fa-image"></i> Fondo</button>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
+                <div style="display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start">
                     <div>
                         <div class="game-hud">
                             <span>PUNTUACIÓN: <span id="game-score">0</span></span>
@@ -470,73 +488,337 @@
         </div>
 
         <!-- TETRIS -->
-        <div class="din-card" id="card-juego_tetris">
+        <div class="din-card" id="card-juego_tetris" style="grid-column:1/-1">
             <div class="din-card-head">
                 <div class="din-icon" style="background:rgba(0,229,255,.15);color:#00E5FF"><i class="fa-solid fa-th"></i></div>
                 <h3>🟦 Tetris</h3>
                 <span class="din-badge" id="badge-juego_tetris">Inactivo</span>
             </div>
             <div class="din-card-body">
-                <div class="din-toggle-wrap">
-                    <label class="din-toggle"><input type="checkbox" id="toggle-juego_tetris"><span class="din-toggle-track"></span></label>
-                    <span style="font-size:.83rem;color:#aaa">Activar Tetris público</span>
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+                    <div class="din-toggle-wrap" style="margin-bottom:0">
+                        <label class="din-toggle"><input type="checkbox" id="toggle-juego_tetris"><span class="din-toggle-track"></span></label>
+                        <span style="font-size:.83rem;color:#aaa">Activar público</span>
+                    </div>
+                    <div class="din-deadline-row" style="margin:0;flex:1">
+                        <label><i class="fa-solid fa-clock"></i> Cierra:</label>
+                        <input type="datetime-local" id="juego_tetris-deadline">
+                        <button class="btn-mini" id="btn-juego_tetris-deadline" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                        <button class="btn-mini" id="btn-juego_tetris-nodeadline" title="Quitar límite" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="url" id="juego_tetris-fondo" placeholder="URL fondo (opcional)" style="width:200px;padding:7px 9px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
+                    <button class="btn-mini" id="btn-juego_tetris-fondo-save"><i class="fa-solid fa-image"></i></button>
+                    <button class="btn-mini" id="btn-probar-juego_tetris" style="white-space:nowrap"><i class="fa-solid fa-play"></i> Probar</button>
                 </div>
-                <div style="display:flex;gap:8px;margin:10px 0;align-items:center">
-                    <input type="url" id="juego_tetris-fondo" placeholder="URL del fondo (opcional)" style="flex:1;padding:8px 10px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
-                    <button class="btn-mini" id="btn-juego_tetris-fondo-save"><i class="fa-solid fa-image"></i> Fondo</button>
-                </div>
-                <p class="din-section-label" style="margin-top:4px"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
-                <div class="din-table-wrap">
-                    <table class="din-table">
-                        <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
-                        <tbody id="tbody-lb-juego_tetris"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
-                    </table>
-                </div>
-                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-                    <button class="btn-mini" data-lb-wa="juego_tetris"><i class="fa-brands fa-whatsapp"></i> WA</button>
-                    <button class="btn-mini" data-lb-csv="juego_tetris"><i class="fa-solid fa-file-csv"></i> CSV</button>
-                    <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_tetris"><i class="fa-solid fa-trash"></i> Limpiar</button>
-                </div>
-                <p class="din-status" id="status-juego_tetris"></p>
-                <div class="din-url-box" id="url-juego_tetris" style="display:none">
-                    <i class="fa-solid fa-link"></i><span id="url-juego_tetris-txt"></span>
-                    <button onclick="copiarUrl('juego_tetris')">Copiar</button>
+                <div class="din-juego-2col">
+                    <div id="probar-juego_tetris"></div>
+                    <div>
+                        <p class="din-section-label" style="margin-top:0"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
+                        <div class="din-table-wrap">
+                            <table class="din-table">
+                                <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
+                                <tbody id="tbody-lb-juego_tetris"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                            <button class="btn-mini" data-lb-wa="juego_tetris"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                            <button class="btn-mini" data-lb-csv="juego_tetris"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                            <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_tetris"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                        </div>
+                        <p class="din-status" id="status-juego_tetris"></p>
+                        <div class="din-url-box" id="url-juego_tetris" style="display:none">
+                            <i class="fa-solid fa-link"></i><span id="url-juego_tetris-txt"></span>
+                            <button onclick="copiarUrl('juego_tetris')">Copiar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- 3 EN LÍNEA -->
-        <div class="din-card" id="card-juego_3lineas">
+        <div class="din-card" id="card-juego_3lineas" style="grid-column:1/-1">
             <div class="din-card-head">
                 <div class="din-icon" style="background:rgba(216,195,149,.15);color:#D8C395"><i class="fa-solid fa-hashtag"></i></div>
                 <h3>✕○ 3 en Línea</h3>
                 <span class="din-badge" id="badge-juego_3lineas">Inactivo</span>
             </div>
             <div class="din-card-body">
-                <div class="din-toggle-wrap">
-                    <label class="din-toggle"><input type="checkbox" id="toggle-juego_3lineas"><span class="din-toggle-track"></span></label>
-                    <span style="font-size:.83rem;color:#aaa">Activar 3 en Línea público</span>
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+                    <div class="din-toggle-wrap" style="margin-bottom:0">
+                        <label class="din-toggle"><input type="checkbox" id="toggle-juego_3lineas"><span class="din-toggle-track"></span></label>
+                        <span style="font-size:.83rem;color:#aaa">Activar público</span>
+                    </div>
+                    <div class="din-deadline-row" style="margin:0;flex:1">
+                        <label><i class="fa-solid fa-clock"></i> Cierra:</label>
+                        <input type="datetime-local" id="juego_3lineas-deadline">
+                        <button class="btn-mini" id="btn-juego_3lineas-deadline" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                        <button class="btn-mini" id="btn-juego_3lineas-nodeadline" title="Quitar límite" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="url" id="juego_3lineas-fondo" placeholder="URL fondo (opcional)" style="width:200px;padding:7px 9px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
+                    <button class="btn-mini" id="btn-juego_3lineas-fondo-save"><i class="fa-solid fa-image"></i></button>
+                    <button class="btn-mini" id="btn-probar-juego_3lineas" style="white-space:nowrap"><i class="fa-solid fa-play"></i> Probar</button>
                 </div>
-                <div style="display:flex;gap:8px;margin:10px 0;align-items:center">
-                    <input type="url" id="juego_3lineas-fondo" placeholder="URL del fondo (opcional)" style="flex:1;padding:8px 10px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
-                    <button class="btn-mini" id="btn-juego_3lineas-fondo-save"><i class="fa-solid fa-image"></i> Fondo</button>
+                <div class="din-juego-2col">
+                    <div id="probar-juego_3lineas"></div>
+                    <div>
+                        <p class="din-section-label" style="margin-top:0"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
+                        <div class="din-table-wrap">
+                            <table class="din-table">
+                                <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
+                                <tbody id="tbody-lb-juego_3lineas"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                            <button class="btn-mini" data-lb-wa="juego_3lineas"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                            <button class="btn-mini" data-lb-csv="juego_3lineas"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                            <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_3lineas"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                        </div>
+                        <p class="din-status" id="status-juego_3lineas"></p>
+                        <div class="din-url-box" id="url-juego_3lineas" style="display:none">
+                            <i class="fa-solid fa-link"></i><span id="url-juego_3lineas-txt"></span>
+                            <button onclick="copiarUrl('juego_3lineas')">Copiar</button>
+                        </div>
+                    </div>
                 </div>
-                <p class="din-section-label" style="margin-top:4px"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
-                <div class="din-table-wrap">
-                    <table class="din-table">
-                        <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
-                        <tbody id="tbody-lb-juego_3lineas"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
-                    </table>
+            </div>
+        </div>
+
+        <!-- PAC-MAN -->
+        <div class="din-card" id="card-juego_pacman" style="grid-column:1/-1">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(255,213,74,.15);color:#FFD54A"><i class="fa-solid fa-ghost"></i></div>
+                <h3>🟡 Pac-Man</h3>
+                <span class="din-badge" id="badge-juego_pacman">Inactivo</span>
+            </div>
+            <div class="din-card-body">
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+                    <div class="din-toggle-wrap" style="margin-bottom:0">
+                        <label class="din-toggle"><input type="checkbox" id="toggle-juego_pacman"><span class="din-toggle-track"></span></label>
+                        <span style="font-size:.83rem;color:#aaa">Activar público</span>
+                    </div>
+                    <div class="din-deadline-row" style="margin:0;flex:1">
+                        <label><i class="fa-solid fa-clock"></i> Cierra:</label>
+                        <input type="datetime-local" id="juego_pacman-deadline">
+                        <button class="btn-mini" id="btn-juego_pacman-deadline" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                        <button class="btn-mini" id="btn-juego_pacman-nodeadline" title="Quitar límite" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="url" id="juego_pacman-fondo" placeholder="URL fondo (opcional)" style="width:200px;padding:7px 9px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
+                    <button class="btn-mini" id="btn-juego_pacman-fondo-save"><i class="fa-solid fa-image"></i></button>
+                    <button class="btn-mini" id="btn-probar-juego_pacman" style="white-space:nowrap"><i class="fa-solid fa-play"></i> Probar</button>
                 </div>
-                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
-                    <button class="btn-mini" data-lb-wa="juego_3lineas"><i class="fa-brands fa-whatsapp"></i> WA</button>
-                    <button class="btn-mini" data-lb-csv="juego_3lineas"><i class="fa-solid fa-file-csv"></i> CSV</button>
-                    <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_3lineas"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                <div class="din-juego-2col">
+                    <div id="probar-juego_pacman"></div>
+                    <div>
+                        <p class="din-section-label" style="margin-top:0"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
+                        <div class="din-table-wrap">
+                            <table class="din-table">
+                                <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
+                                <tbody id="tbody-lb-juego_pacman"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                            <button class="btn-mini" data-lb-wa="juego_pacman"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                            <button class="btn-mini" data-lb-csv="juego_pacman"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                            <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_pacman"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                        </div>
+                        <p class="din-status" id="status-juego_pacman"></p>
+                        <div class="din-url-box" id="url-juego_pacman" style="display:none">
+                            <i class="fa-solid fa-link"></i><span id="url-juego_pacman-txt"></span>
+                            <button onclick="copiarUrl('juego_pacman')">Copiar</button>
+                        </div>
+                    </div>
                 </div>
-                <p class="din-status" id="status-juego_3lineas"></p>
-                <div class="din-url-box" id="url-juego_3lineas" style="display:none">
-                    <i class="fa-solid fa-link"></i><span id="url-juego_3lineas-txt"></span>
-                    <button onclick="copiarUrl('juego_3lineas')">Copiar</button>
+            </div>
+        </div>
+
+        <!-- BREAKOUT -->
+        <div class="din-card" id="card-juego_breakout" style="grid-column:1/-1">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(255,107,53,.15);color:#FF6B35"><i class="fa-solid fa-table-cells-large"></i></div>
+                <h3>🧱 Breakout</h3>
+                <span class="din-badge" id="badge-juego_breakout">Inactivo</span>
+            </div>
+            <div class="din-card-body">
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+                    <div class="din-toggle-wrap" style="margin-bottom:0">
+                        <label class="din-toggle"><input type="checkbox" id="toggle-juego_breakout"><span class="din-toggle-track"></span></label>
+                        <span style="font-size:.83rem;color:#aaa">Activar público</span>
+                    </div>
+                    <div class="din-deadline-row" style="margin:0;flex:1">
+                        <label><i class="fa-solid fa-clock"></i> Cierra:</label>
+                        <input type="datetime-local" id="juego_breakout-deadline">
+                        <button class="btn-mini" id="btn-juego_breakout-deadline" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                        <button class="btn-mini" id="btn-juego_breakout-nodeadline" title="Quitar límite" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="url" id="juego_breakout-fondo" placeholder="URL fondo (opcional)" style="width:200px;padding:7px 9px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
+                    <button class="btn-mini" id="btn-juego_breakout-fondo-save"><i class="fa-solid fa-image"></i></button>
+                    <button class="btn-mini" id="btn-probar-juego_breakout" style="white-space:nowrap"><i class="fa-solid fa-play"></i> Probar</button>
+                </div>
+                <div class="din-juego-2col">
+                    <div id="probar-juego_breakout"></div>
+                    <div>
+                        <p class="din-section-label" style="margin-top:0"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
+                        <div class="din-table-wrap">
+                            <table class="din-table">
+                                <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
+                                <tbody id="tbody-lb-juego_breakout"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                            <button class="btn-mini" data-lb-wa="juego_breakout"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                            <button class="btn-mini" data-lb-csv="juego_breakout"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                            <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_breakout"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                        </div>
+                        <p class="din-status" id="status-juego_breakout"></p>
+                        <div class="din-url-box" id="url-juego_breakout" style="display:none">
+                            <i class="fa-solid fa-link"></i><span id="url-juego_breakout-txt"></span>
+                            <button onclick="copiarUrl('juego_breakout')">Copiar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOMBERMAN -->
+        <div class="din-card" id="card-juego_bomberman" style="grid-column:1/-1">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(229,72,77,.15);color:#ff8a8d"><i class="fa-solid fa-bomb"></i></div>
+                <h3>💣 Bomberman</h3>
+                <span class="din-badge" id="badge-juego_bomberman">Inactivo</span>
+            </div>
+            <div class="din-card-body">
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+                    <div class="din-toggle-wrap" style="margin-bottom:0">
+                        <label class="din-toggle"><input type="checkbox" id="toggle-juego_bomberman"><span class="din-toggle-track"></span></label>
+                        <span style="font-size:.83rem;color:#aaa">Activar público</span>
+                    </div>
+                    <div class="din-deadline-row" style="margin:0;flex:1">
+                        <label><i class="fa-solid fa-clock"></i> Cierra:</label>
+                        <input type="datetime-local" id="juego_bomberman-deadline">
+                        <button class="btn-mini" id="btn-juego_bomberman-deadline" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                        <button class="btn-mini" id="btn-juego_bomberman-nodeadline" title="Quitar límite" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="url" id="juego_bomberman-fondo" placeholder="URL fondo (opcional)" style="width:200px;padding:7px 9px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
+                    <button class="btn-mini" id="btn-juego_bomberman-fondo-save"><i class="fa-solid fa-image"></i></button>
+                    <button class="btn-mini" id="btn-probar-juego_bomberman" style="white-space:nowrap"><i class="fa-solid fa-play"></i> Probar</button>
+                </div>
+                <div class="din-juego-2col">
+                    <div id="probar-juego_bomberman"></div>
+                    <div>
+                        <p class="din-section-label" style="margin-top:0"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
+                        <div class="din-table-wrap">
+                            <table class="din-table">
+                                <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
+                                <tbody id="tbody-lb-juego_bomberman"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                            <button class="btn-mini" data-lb-wa="juego_bomberman"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                            <button class="btn-mini" data-lb-csv="juego_bomberman"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                            <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_bomberman"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                        </div>
+                        <p class="din-status" id="status-juego_bomberman"></p>
+                        <div class="din-url-box" id="url-juego_bomberman" style="display:none">
+                            <i class="fa-solid fa-link"></i><span id="url-juego_bomberman-txt"></span>
+                            <button onclick="copiarUrl('juego_bomberman')">Copiar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SPACE INVADERS -->
+        <div class="din-card" id="card-juego_invaders" style="grid-column:1/-1">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(100,220,255,.15);color:#64dcff"><i class="fa-solid fa-rocket"></i></div>
+                <h3>🚀 Space Invaders</h3>
+                <span class="din-badge" id="badge-juego_invaders">Inactivo</span>
+            </div>
+            <div class="din-card-body">
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+                    <div class="din-toggle-wrap" style="margin-bottom:0">
+                        <label class="din-toggle"><input type="checkbox" id="toggle-juego_invaders"><span class="din-toggle-track"></span></label>
+                        <span style="font-size:.83rem;color:#aaa">Activar público</span>
+                    </div>
+                    <div class="din-deadline-row" style="margin:0;flex:1">
+                        <label><i class="fa-solid fa-clock"></i> Cierra:</label>
+                        <input type="datetime-local" id="juego_invaders-deadline">
+                        <button class="btn-mini" id="btn-juego_invaders-deadline" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                        <button class="btn-mini" id="btn-juego_invaders-nodeadline" title="Quitar límite" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="url" id="juego_invaders-fondo" placeholder="URL fondo (opcional)" style="width:200px;padding:7px 9px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
+                    <button class="btn-mini" id="btn-juego_invaders-fondo-save"><i class="fa-solid fa-image"></i></button>
+                    <button class="btn-mini" id="btn-probar-juego_invaders" style="white-space:nowrap"><i class="fa-solid fa-play"></i> Probar</button>
+                </div>
+                <div class="din-juego-2col">
+                    <div id="probar-juego_invaders"></div>
+                    <div>
+                        <p class="din-section-label" style="margin-top:0"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
+                        <div class="din-table-wrap">
+                            <table class="din-table">
+                                <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
+                                <tbody id="tbody-lb-juego_invaders"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                            <button class="btn-mini" data-lb-wa="juego_invaders"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                            <button class="btn-mini" data-lb-csv="juego_invaders"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                            <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_invaders"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                        </div>
+                        <p class="din-status" id="status-juego_invaders"></p>
+                        <div class="din-url-box" id="url-juego_invaders" style="display:none">
+                            <i class="fa-solid fa-link"></i><span id="url-juego_invaders-txt"></span>
+                            <button onclick="copiarUrl('juego_invaders')">Copiar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLAPPY BIRD -->
+        <div class="din-card" id="card-juego_flappy" style="grid-column:1/-1">
+            <div class="din-card-head">
+                <div class="din-icon" style="background:rgba(255,193,7,.15);color:#ffc107"><i class="fa-solid fa-dove"></i></div>
+                <h3>🐦 Flappy Bird</h3>
+                <span class="din-badge" id="badge-juego_flappy">Inactivo</span>
+            </div>
+            <div class="din-card-body">
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px">
+                    <div class="din-toggle-wrap" style="margin-bottom:0">
+                        <label class="din-toggle"><input type="checkbox" id="toggle-juego_flappy"><span class="din-toggle-track"></span></label>
+                        <span style="font-size:.83rem;color:#aaa">Activar público</span>
+                    </div>
+                    <div class="din-deadline-row" style="margin:0;flex:1">
+                        <label><i class="fa-solid fa-clock"></i> Cierra:</label>
+                        <input type="datetime-local" id="juego_flappy-deadline">
+                        <button class="btn-mini" id="btn-juego_flappy-deadline" style="white-space:nowrap"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                        <button class="btn-mini" id="btn-juego_flappy-nodeadline" title="Quitar límite" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <input type="url" id="juego_flappy-fondo" placeholder="URL fondo (opcional)" style="width:200px;padding:7px 9px;background:#0a0b10;border:1px solid rgba(216,195,149,.3);color:#fff;border-radius:4px;font-size:.82rem">
+                    <button class="btn-mini" id="btn-juego_flappy-fondo-save"><i class="fa-solid fa-image"></i></button>
+                    <button class="btn-mini" id="btn-probar-juego_flappy" style="white-space:nowrap"><i class="fa-solid fa-play"></i> Probar</button>
+                </div>
+                <div class="din-juego-2col">
+                    <div id="probar-juego_flappy"></div>
+                    <div>
+                        <p class="din-section-label" style="margin-top:0"><i class="fa-solid fa-trophy"></i> Tabla de líderes</p>
+                        <div class="din-table-wrap">
+                            <table class="din-table">
+                                <thead><tr><th>#</th><th>Jugador</th><th>ID</th><th>Pts</th><th></th></tr></thead>
+                                <tbody id="tbody-lb-juego_flappy"><tr><td colspan="5" class="din-empty">Selecciona un portal</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                            <button class="btn-mini" data-lb-wa="juego_flappy"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                            <button class="btn-mini" data-lb-csv="juego_flappy"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                            <button class="btn-mini" style="background:rgba(255,77,77,.15);border-color:rgba(255,77,77,.4);color:#ff7070" data-lb-clear="juego_flappy"><i class="fa-solid fa-trash"></i> Limpiar</button>
+                        </div>
+                        <p class="din-status" id="status-juego_flappy"></p>
+                        <div class="din-url-box" id="url-juego_flappy" style="display:none">
+                            <i class="fa-solid fa-link"></i><span id="url-juego_flappy-txt"></span>
+                            <button onclick="copiarUrl('juego_flappy')">Copiar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -556,6 +838,11 @@
                             <option value="juego">Snake</option>
                             <option value="juego_tetris">Tetris</option>
                             <option value="juego_3lineas">3 en Línea</option>
+                            <option value="juego_pacman">Pac-Man</option>
+                            <option value="juego_breakout">Breakout</option>
+                            <option value="juego_bomberman">Bomberman</option>
+                            <option value="juego_invaders">Space Invaders</option>
+                            <option value="juego_flappy">Flappy Bird</option>
                         </select>
                     </div>
                     <div>
@@ -672,6 +959,7 @@
     selPortal.addEventListener('change', () => {
         portalActual = selPortal.value;
         cargarTodo();
+        actualizarSorteoPortales();
     });
 
     /* ── URL pública base ── */
@@ -682,11 +970,11 @@
         return base + portalActual + '/';
     }
 
-    const JUEGO_TIPOS = ['juego','juego_tetris','juego_3lineas'];
-    const JUEGO_NOMBRES = { juego: 'Snake', juego_tetris: 'Tetris', juego_3lineas: '3 en Línea' };
+    const JUEGO_TIPOS = ['juego','juego_tetris','juego_3lineas','juego_pacman','juego_breakout','juego_bomberman','juego_invaders','juego_flappy'];
+    const JUEGO_NOMBRES = { juego: 'Snake', juego_tetris: 'Tetris', juego_3lineas: '3 en Línea', juego_pacman: 'Pac-Man', juego_breakout: 'Breakout', juego_bomberman: 'Bomberman', juego_invaders: 'Space Invaders', juego_flappy: 'Flappy Bird' };
 
     function actualizarUrls() {
-        ['registro','encuesta','juego','juego_tetris','juego_3lineas'].forEach(t => {
+        ['registro','encuesta','juego','juego_tetris','juego_3lineas','juego_pacman','juego_breakout','juego_bomberman'].forEach(t => {
             const box = document.getElementById('url-' + t);
             const txt = document.getElementById('url-' + t + '-txt');
             if (txt) txt.textContent = urlPublica(t);
@@ -708,11 +996,17 @@
     /* ── Cargar todo ── */
     async function cargarTodo() {
         actualizarUrls();
+        actualizarSorteoPortales();
         await Promise.all([
             cargarDinamica('registro'),
             cargarDinamica('juego'),
             cargarDinamica('juego_tetris'),
             cargarDinamica('juego_3lineas'),
+            cargarDinamica('juego_pacman'),
+            cargarDinamica('juego_breakout'),
+            cargarDinamica('juego_bomberman'),
+            cargarDinamica('juego_invaders'),
+            cargarDinamica('juego_flappy'),
             cargarEncuestas(),
         ]);
     }
@@ -1721,6 +2015,70 @@
         });
     });
 
+    // Botones "Probar" — cargan el juego inline en la card (modo admin, sin requerir activo=true)
+    ['juego_tetris','juego_3lineas','juego_pacman','juego_breakout','juego_bomberman','juego_invaders','juego_flappy'].forEach(tipo => {
+        document.getElementById('btn-probar-' + tipo)?.addEventListener('click', function() {
+            const div = document.getElementById('probar-' + tipo);
+            if (!div) return;
+            if (div.innerHTML.trim()) { div.innerHTML = ''; this.innerHTML = '<i class="fa-solid fa-play"></i> Probar'; return; }
+            this.innerHTML = '<i class="fa-solid fa-stop"></i> Cerrar';
+            window.PumasPortal?.juegos?.montarAdmin(portalActual, 'probar-' + tipo, tipo);
+        });
+    });
+
+    // Deadline guardar/quitar para todos los juegos (Snake usa IDs con guión, los demás con guión-bajo)
+    JUEGO_TIPOS.forEach(tipo => {
+        const inputId = tipo + '-deadline';
+        const btnSave  = document.getElementById('btn-' + tipo + '-deadline');
+        const btnClear = document.getElementById('btn-' + tipo + '-nodeadline');
+        btnSave?.addEventListener('click', async () => {
+            const val = document.getElementById(inputId)?.value;
+            const st  = document.getElementById('status-' + tipo);
+            if (!val) { alert('Selecciona fecha y hora.'); return; }
+            if (st) { st.textContent = 'Guardando…'; st.className = 'din-status'; }
+            try {
+                await P.dinamica.config(portalActual, tipo, { deadline: new Date(val).toISOString() });
+                await cargarDinamica(tipo);
+                if (st) { st.textContent = '✔ Cierre guardado'; st.className = 'din-status ok'; setTimeout(()=>st.textContent='',2500); }
+            } catch(e) { if (st) { st.textContent = e.message; st.className = 'din-status err'; } }
+        });
+        btnClear?.addEventListener('click', async () => {
+            const st = document.getElementById('status-' + tipo);
+            if (st) { st.textContent = 'Quitando…'; st.className = 'din-status'; }
+            try {
+                await P.dinamica.config(portalActual, tipo, { quitarDeadline: true });
+                const inp = document.getElementById(inputId); if (inp) inp.value = '';
+                await cargarDinamica(tipo);
+                if (st) { st.textContent = '✔ Límite removido'; st.className = 'din-status ok'; setTimeout(()=>st.textContent='',2500); }
+            } catch(e) { if (st) { st.textContent = e.message; st.className = 'din-status err'; } }
+        });
+    });
+
+    // Cargar deadline actual en los inputs cuando se carga la sesión
+    const _origRenderLB = renderLeaderboard;
+    function renderLeaderboard(tipo) {
+        _origRenderLB(tipo);
+        if (!JUEGO_TIPOS.includes(tipo)) return;
+        const ses = sesiones[tipo] || {};
+        const inp = document.getElementById(tipo + '-deadline');
+        if (inp && ses.deadline) inp.value = toLocal(ses.deadline);
+        else if (inp) inp.value = '';
+    }
+
+    // Sorteos: poblar links de portales cuando cambia el portal seleccionado
+    function actualizarSorteoPortales() {
+        const wrap = document.getElementById('sorteos-portales');
+        if (!wrap) return;
+        const portalObj = P.PORTALES[portalActual];
+        if (!portalObj) { wrap.innerHTML = '<span style="color:#555;font-size:.82rem">Sin portal seleccionado</span>'; return; }
+        const baseUrl = window.location.origin + window.location.pathname.replace('admin/dinamicas.html','');
+        const sorteoUrl = baseUrl + 'portales/' + portalActual + '/sorteo.html';
+        wrap.innerHTML = `
+            <a href="${sorteoUrl}" target="_blank" class="btn-mini" style="gap:6px"><i class="fa-solid fa-shuffle"></i> Ver sorteo</a>
+            <button class="btn-mini" onclick="navigator.clipboard.writeText('${sorteoUrl}').then(()=>alert('URL copiada'))"><i class="fa-solid fa-copy"></i> Copiar URL</button>
+        `;
+    }
+
     // Exportar WA / CSV / Limpiar (event delegation)
     document.addEventListener('click', async e => {
         const btnWa    = e.target.closest('[data-lb-wa]');
@@ -2215,5 +2573,6 @@
 
 })();
 </script>
+<script src="../portal-kit/juegos.js?v=20261019a"></script>
 </body>
 </html>
