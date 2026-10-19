@@ -353,7 +353,7 @@
         '#...................#',
         '#.##.#.#####.#.##.#.#',
         '#....#.......#....#.#',
-        '######.#####.######.#',
+        '######.##D##.######.#',
         '     #.#GGG#.#      .',
         '######.#GGG#.######  ',
         '.......#GGG#.........',
@@ -400,28 +400,44 @@
             return ch === '#';
         }
 
-        function canMove(c, r) { return !isWall(c, r); }
+        function canMove(c, r) {
+            if (c < 0 || c >= PM_COLS || r < 0 || r >= PM_ROWS) return false;
+            const ch = maze[r]?.[c];
+            return ch !== '#' && ch !== 'D'; // Pac-Man blocked by door
+        }
+
+        function canMoveGhost(c, r) {
+            if (c < 0 || c >= PM_COLS || r < 0 || r >= PM_ROWS) return false;
+            return maze[r]?.[c] !== '#'; // ghosts pass through D
+        }
 
         function initGhosts() {
-            // Spawn from ghost house ~center
-            const gc = 10, gr = 11;
+            // Ghost house interior: cols 8-10, rows 9-11 (G cells). Exit door: col 9 row 8 (D)
             ghosts = [
-                { c: gc,   r: gr, dx: 1,  dy: 0,  color: '#FF0000', mode: 'exit', tick: 0  }, // Blinky
-                { c: gc+1, r: gr, dx: -1, dy: 0,  color: '#FFB8FF', mode: 'exit', tick: 30 }, // Pinky
-                { c: gc-1, r: gr, dx: 0,  dy: -1, color: '#00FFFF', mode: 'exit', tick: 60 }, // Inky
-                { c: gc+1, r: gr, dx: 0,  dy: 1,  color: '#FFB852', mode: 'exit', tick: 90 }, // Clyde
+                { c: 9,  r: 10, dx: 0, dy: -1, color: '#FF0000', mode: 'exit', delay: 0,   tick: 0 }, // Blinky
+                { c: 8,  r: 10, dx: -1,dy: 0,  color: '#FFB8FF', mode: 'exit', delay: 50,  tick: 0 }, // Pinky
+                { c: 10, r: 10, dx: 1, dy: 0,  color: '#00FFFF', mode: 'exit', delay: 100, tick: 0 }, // Inky
+                { c: 9,  r: 11, dx: 0, dy: -1, color: '#FFB852', mode: 'exit', delay: 150, tick: 0 }, // Clyde
             ];
         }
 
         function moveGhost(g) {
             g.tick++;
-            if (g.mode === 'exit' && g.tick < g.tick) return;
+            if (g.mode === 'exit') {
+                if (g.tick < g.delay) return;
+                const exitCol = 9;
+                if (g.c < exitCol && canMoveGhost(g.c + 1, g.r)) { g.c++; return; }
+                if (g.c > exitCol && canMoveGhost(g.c - 1, g.r)) { g.c--; return; }
+                if (canMoveGhost(g.c, g.r - 1)) { g.r--; }
+                if (g.r <= 6) { g.mode = 'chase'; g.dx = 1; g.dy = 0; }
+                return;
+            }
             const frightened = frightenTick > 0;
             // Possible directions
             const dirs = [{dx:1,dy:0},{dx:-1,dy:0},{dx:0,dy:1},{dx:0,dy:-1}];
             const opts = dirs.filter(d => {
                 if (d.dx === -g.dx && d.dy === -g.dy) return false; // no reverse
-                return canMove(g.c + d.dx, g.r + d.dy);
+                return canMoveGhost(g.c + d.dx, g.r + d.dy);
             });
             if (!opts.length) { g.dx = -g.dx; g.dy = -g.dy; return; }
             const randThresh = Math.max(0.05, 0.3 / diffBoost);
@@ -438,7 +454,7 @@
                 g.dx = best.dx; g.dy = best.dy;
             }
             const nc = g.c + g.dx, nr = g.r + g.dy;
-            if (canMove(nc, nr)) { g.c = nc; g.r = nr; }
+            if (canMoveGhost(nc, nr)) { g.c = nc; g.r = nr; }
         }
 
         function step() {
@@ -456,8 +472,8 @@
 
             if (frightenTick > 0) frightenTick--;
 
-            // Move ghosts
-            ghosts.forEach(g => { if (Math.random() < 0.5) moveGhost(g); });
+            // Move ghosts (always move exiting ghosts; random for chase)
+            ghosts.forEach(g => { if (g.mode === 'exit' || Math.random() < 0.5) moveGhost(g); });
 
             // Ghost collision
             ghosts.forEach(g => {

@@ -1973,6 +1973,15 @@
         if (urlBox) urlBox.style.display = ses.activo ? 'flex' : 'none';
         if (fondo)  fondo.value = ses.config?.fondo || '';
 
+        // Rellenar input de deadline si existe
+        if (JUEGO_TIPOS.includes(tipo)) {
+            const inp = document.getElementById(tipo + '-deadline');
+            if (inp) {
+                const dl = ses.deadline;
+                inp.value = dl ? new Date(new Date(dl).getTime() - new Date(dl).getTimezoneOffset()*60000).toISOString().slice(0,16) : '';
+            }
+        }
+
         // Cargar ganador guardado en config
         renderGanadorActual();
 
@@ -2053,17 +2062,6 @@
             } catch(e) { if (st) { st.textContent = e.message; st.className = 'din-status err'; } }
         });
     });
-
-    // Cargar deadline actual en los inputs cuando se carga la sesión
-    const _origRenderLB = renderLeaderboard;
-    function renderLeaderboard(tipo) {
-        _origRenderLB(tipo);
-        if (!JUEGO_TIPOS.includes(tipo)) return;
-        const ses = sesiones[tipo] || {};
-        const inp = document.getElementById(tipo + '-deadline');
-        if (inp && ses.deadline) inp.value = toLocal(ses.deadline);
-        else if (inp) inp.value = '';
-    }
 
     // Sorteos: poblar links de portales cuando cambia el portal seleccionado
     function actualizarSorteoPortales() {
