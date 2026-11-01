@@ -3,14 +3,14 @@
   "configurations": [
     {
       "name": "pumas-static",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "5173"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "5173", "--no-clipboard"],
       "port": 5173
     },
     {
       "name": "pumas-static-5174",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "5174"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "5174", "--no-clipboard"],
       "port": 5174
     }
   ]
