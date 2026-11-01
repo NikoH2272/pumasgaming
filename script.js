@@ -1,4 +1,4 @@
-let _sP = [], _cN = {}, _eE = new Set(), _sLO = [], _sML = [], _lPB64 = null, _fPB64 = null, _gE = [], _gTK = [], _gNS = 0, _rFD = [];
+﻿let _sP = [], _cN = {}, _eE = new Set(), _sLO = [], _sML = [], _lPB64 = null, _fPB64 = null, _gE = [], _gTK = [], _gNS = 0, _rFD = [];
 
 async function prepararRenombradoEquipos() {
     let fI = document.getElementById('fileInput'), fs = fI ? Array.from(fI.files) : [];
@@ -216,7 +216,7 @@ async function _cTP() {
     let cT = document.getElementById('contenedorTopEquiposPublicos'), cK = document.getElementById('contenedorTopKillersPublicos');
     if (!cT && !cK) return;
     let sC = null;
-    if (typeof supabase !== 'undefined' && supabase.createClient) sC = supabase.createClient("https://bqemjroiegybdzksddkn.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo");
+    if (typeof supabase !== 'undefined' && supabase.createClient) sC = supabase.createClient("https://ejgxcuveubgjbvdlnimr.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZ3hjdXZldWJnamJ2ZGxuaW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0OTI3NDYsImV4cCI6MjEwOTA2ODc0Nn0.aAYCjQxetfnJpoKMvg9IYtU6dpwIU-CkXCA5mc8Zhgo");
     if (!sC) return;
     try {
         let { data: sD, error: sE } = await sC.from('salas_resultados').select('equipo_nombre, total_score');
@@ -308,8 +308,8 @@ async function registrarSorteo(e) {
     const codigoSerial = `PUMAS-${codigoAleatorio}`;
 
     const supabaseClientSorteo = supabase.createClient(
-        "https://bqemjroiegybdzksddkn.supabase.co", 
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo"
+        "https://ejgxcuveubgjbvdlnimr.supabase.co", 
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZ3hjdXZldWJnamJ2ZGxuaW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0OTI3NDYsImV4cCI6MjEwOTA2ODc0Nn0.aAYCjQxetfnJpoKMvg9IYtU6dpwIU-CkXCA5mc8Zhgo"
     );
 
     try {
@@ -358,8 +358,8 @@ async function verificarEstadoSorteo() {
     if (!btnSorteo) return;
 
     const supabaseClientSorteo = supabase.createClient(
-        "https://bqemjroiegybdzksddkn.supabase.co", 
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo"
+        "https://ejgxcuveubgjbvdlnimr.supabase.co", 
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZ3hjdXZldWJnamJ2ZGxuaW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0OTI3NDYsImV4cCI6MjEwOTA2ODc0Nn0.aAYCjQxetfnJpoKMvg9IYtU6dpwIU-CkXCA5mc8Zhgo"
     );
 
     try {

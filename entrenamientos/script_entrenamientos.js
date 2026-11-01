@@ -1,4 +1,4 @@
-let globalEquipos = [];
+﻿let globalEquipos = [];
 let globalTopKillers = [];
 
 // Variables globales para el calendario
@@ -23,8 +23,8 @@ function cambiarPestanaPublica(pestana) {
     if (elegida === 'vip') cargarResultadosVipPublicos();
 }
 
-const SUPABASE_URL = "https://bqemjroiegybdzksddkn.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo";
+const SUPABASE_URL = "https://ejgxcuveubgjbvdlnimr.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZ3hjdXZldWJnamJ2ZGxuaW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0OTI3NDYsImV4cCI6MjEwOTA2ODc0Nn0.aAYCjQxetfnJpoKMvg9IYtU6dpwIU-CkXCA5mc8Zhgo";
 const supabaseClient = (typeof supabase !== 'undefined' && supabase.createClient) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 async function cargarSesiones() {

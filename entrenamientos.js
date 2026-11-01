@@ -1,6 +1,6 @@
-/* Entrenamientos del portal: calendario + listado + estadísticas (Supabase) */
+﻿/* Entrenamientos del portal: calendario + listado + estadísticas (Supabase) */
 (function(){
-  const sb=supabase.createClient("https://bqemjroiegybdzksddkn.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxZW1qcm9pZWd5YmR6a3NkZGtuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NzgwNDIsImV4cCI6MjEwMzE1NDA0Mn0.49gC204FPWSNxWYa6eZFBgWJgr7ZvFax5mqOM9lyGPo");
+  const sb=supabase.createClient("https://ejgxcuveubgjbvdlnimr.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZ3hjdXZldWJnamJ2ZGxuaW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0OTI3NDYsImV4cCI6MjEwOTA2ODc0Nn0.aAYCjQxetfnJpoKMvg9IYtU6dpwIU-CkXCA5mc8Zhgo");
   const $=id=>document.getElementById(id);
   const MES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
   const ZONA_HORARIA='America/Bogota';
