@@ -41,6 +41,18 @@ function semanaISO(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.g
 function rangoSemana(d){const l=new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()||7)-1)),f=new Date(l.getFullYear(),l.getMonth(),l.getDate()+6),o={day:'numeric',month:'short'};return l.toLocaleDateString('es',o)+' – '+f.toLocaleDateString('es',o);}
 async function parsearSesion(s){
   const vacio={teams:{},players:{},salas:0,kills:0};
+  const [sr, kr] = await Promise.all([
+    sb.from('salas_resultados').select('numero_sala,equipo_nombre,total_score,kill_score,es_booyah').eq('sesion_id', s.id),
+    sb.from('top_killers').select('jugador_nombre,kills').eq('sesion_id', s.id)
+  ]);
+  if(sr.error) throw sr.error;
+  if(kr.error) throw kr.error;
+  if(sr.data && sr.data.length){
+    const out={teams:{},players:{},salas:new Set(sr.data.map(r=>r.numero_sala)).size,kills:0};
+    sr.data.forEach(r=>{const e=out.teams[r.equipo_nombre] ||= {p:0,b:0,k:0};e.p+=r.total_score||0;e.b+=r.es_booyah?1:0;e.k+=r.kill_score||0;out.kills+=r.kill_score||0;});
+    (kr.data||[]).forEach(r=>{const e=out.players[r.jugador_nombre] ||= {k:0,s:0};e.k+=r.kills||0;e.s++;});
+    return out;
+  }
   if(!s.archivo_url) return vacio;
   const {data:fl}=await sb.storage.from('entrenamientos_logs').list(s.archivo_url);
   if(!fl) return vacio;

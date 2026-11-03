@@ -44,11 +44,6 @@ async function cargarSesiones() {
 
         if (error) throw error;
 
-        if (!sesiones || sesiones.length === 0) {
-            document.getElementById('calendarGrid').innerHTML = `<div style="grid-column: span 7; text-align:center; color: var(--gray); padding: 20px;">Sin registros disponibles.</div>`;
-            return;
-        }
-
         let statEntrenamientos = document.getElementById('statTotalEntrenamientos');
         if (statEntrenamientos) statEntrenamientos.textContent = sesiones.length;
 
@@ -63,17 +58,29 @@ async function cargarSesiones() {
             sesionesPorFecha[dateStr].push(sesion);
         });
 
-        // Renderizar el calendario con el mes actual
+        // Abrir el último mes con resultados cuando el actual está vacío.
+        const mesVisible = currentYear + '-' + String(currentMonth + 1).padStart(2, '0');
+        if (sesiones.length && !Object.keys(sesionesPorFecha).some(d => d.startsWith(mesVisible))) {
+            const ultimaFecha = diaLocal(sesiones[0].fecha);
+            currentYear = Number(ultimaFecha.slice(0, 4));
+            currentMonth = Number(ultimaFecha.slice(5, 7)) - 1;
+        }
         renderCalendar(currentMonth, currentYear);
         // Si hoy hubo entrenos, se despliegan solos
         const hoyStr = diaLocal(new Date().toISOString());
-        if (sesionesPorFecha[hoyStr]) {
-            const celda = [...document.querySelectorAll('#calendarGrid .calendar-day')].find(d => (d.getAttribute('onclick') || '').includes(hoyStr));
-            if (celda) seleccionarDia(hoyStr, celda);
+        const fechaSeleccionada = sesionesPorFecha[hoyStr] ? hoyStr : sesiones.length ? diaLocal(sesiones[0].fecha) : null;
+        if (fechaSeleccionada) {
+            const celda = [...document.querySelectorAll('#calendarGrid .calendar-day')].find(d => (d.getAttribute('onclick') || '').includes(fechaSeleccionada));
+            if (celda) seleccionarDia(fechaSeleccionada, celda);
         }
         
         // Calcular topkillers y equipos
         await calcularTablaGlobalAcumulada(sesiones);
+        if (!sesiones.length) {
+            document.getElementById('daySessionsContainer').style.display = 'block';
+            document.getElementById('selectedDayTitle').textContent = 'Sin entrenamientos publicados';
+            document.getElementById('bodySesionesDia').innerHTML = '<tr><td colspan="2">Los resultados aparecerán aquí cuando se publique un entrenamiento de Pumas.</td></tr>';
+        }
 
     } catch (err) {
         console.error("Error al cargar sesiones públicas:", err);
@@ -188,6 +195,18 @@ function rangoSemana(d){const l=inicioSemana(d),f=new Date(l.getFullYear(),l.get
 const MIN_SALAS_KILLER=3; // mínimo de salas jugadas para entrar a los top killers
 async function parsearSesion(s){
   const vacio={teams:{},players:{},salas:0,kills:0};
+  const [sr, kr] = await Promise.all([
+    supabaseClient.from('salas_resultados').select('numero_sala,equipo_nombre,total_score,kill_score,es_booyah').eq('sesion_id', s.id),
+    supabaseClient.from('top_killers').select('jugador_nombre,kills').eq('sesion_id', s.id)
+  ]);
+  if(sr.error) throw sr.error;
+  if(kr.error) throw kr.error;
+  if(sr.data && sr.data.length){
+    const out={teams:{},players:{},salas:new Set(sr.data.map(r=>r.numero_sala)).size,kills:0};
+    sr.data.forEach(r=>{const e=out.teams[r.equipo_nombre] ||= {p:0,b:0,k:0};e.p+=r.total_score||0;e.b+=r.es_booyah?1:0;e.k+=r.kill_score||0;out.kills+=r.kill_score||0;});
+    (kr.data||[]).forEach(r=>{const e=out.players[r.jugador_nombre] ||= {k:0,s:0};e.k+=r.kills||0;e.s++;});
+    return out;
+  }
   if(!s.archivo_url) return vacio;
   const {data:fl}=await supabaseClient.storage.from('entrenamientos_logs').list(s.archivo_url);
   if(!fl) return vacio;

@@ -418,6 +418,7 @@ function descargar() {
 async function guardarEntrenamientoEnSupabase() {
     if (!supabaseClient) return;
 
+    let etapa = 'validar los archivos';
     try {
         let titulo = TITULO_ENTRENO;
         let jornada = document.getElementById('selectTipoPartida') ? document.getElementById('selectTipoPartida').value : "NORMAL";
@@ -427,79 +428,28 @@ async function guardarEntrenamientoEnSupabase() {
 
         const fileInput = document.getElementById('fileInput');
         let files = Array.from(fileInput.files);
-        let folderName = `entreno_${fecha.toLocaleDateString('en-CA',{timeZone:'America/Bogota'})}_${titulo.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}_${Date.now()}`;
-
-        if (files.length > 0 && processedFilesTexts.length === files.length) {
-            try {
-                for (let i = 0; i < files.length; i++) {
-                    let nombreLimpio = files[i].name.replace(/[^a-zA-Z0-9_.-]/g, '_');
-                    let filePath = `${folderName}/${nombreLimpio}`;
-                    let blobModificado = new Blob([processedFilesTexts[i]], { type: 'text/plain' });
-                    await supabaseClient.storage.from('entrenamientos_logs').upload(filePath, blobModificado);
-                }
-            } catch (storageErr) {
-                console.warn("Aviso: No se pudieron subir los archivos al Storage.", storageErr);
-            }
+        if (!files.length || processedFilesTexts.length !== files.length || !globalEquipos.length) {
+            throw new Error('Genera la tabla con los archivos de las salas antes de publicar.');
         }
-
-        const { data: sesionData, error: sesionError } = await supabaseClient
-            .from('entrenamientos_sesiones')
-            .insert([{ titulo, jornada, fecha: fecha.toISOString(), moderador, archivo_url: folderName }])
-            .select()
-            .single();
-
-        if (sesionError) throw sesionError;
-        const sesionId = sesionData.id;
-
-        let salasRows = [];
-        globalEquipos.forEach(eq => {
-            Object.keys(eq.salasPuntos).forEach(indexSala => {
-                let numSala = parseInt(indexSala) + 1;
-                let puntosSala = eq.salasPuntos[indexSala];
-                let killsSala = eq.salasKills ? (eq.salasKills[indexSala] || 0) : 0;
-                let rankSala = eq.salasRank ? (eq.salasRank[indexSala] || 0) : 0;
-
-                salasRows.push({
-                    sesion_id: sesionId,
-                    numero_sala: numSala,
-                    equipo_nombre: eq.name,
-                    rank: rankSala,
-                    kill_score: killsSala,
-                    rank_score: rankSala,
-                    total_score: puntosSala,
-                    es_booyah: (rankSala === 1)
-                });
+        if (isNaN(fecha.getTime())) throw new Error('La fecha del entrenamiento no es válida.');
+        const salasRows = [], killersRows = [];
+        processedFilesTexts.forEach((text, i) => {
+            let currentTeam = null;
+            text.split('\n').forEach(line => {
+                const team = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
+                if (team) {
+                    currentTeam = team[1].trim();
+                    salasRows.push({numero_sala:i+1, equipo_nombre:currentTeam, rank:+team[2],
+                        kill_score:+team[3], rank_score:+team[4], total_score:+team[5], es_booyah:+team[2]===1});
+                }
+                const player = line.match(/NAME:\s*(.+?)\s+ID:\s*\d+.*?KILL:\s*(\d+)/i);
+                if (player && currentTeam) killersRows.push({jugador_nombre:player[1].trim(), equipo_nombre:currentTeam, kills:+player[2]});
             });
         });
-
-        if (salasRows.length > 0) {
-            await supabaseClient.from('salas_resultados').insert(salasRows);
-        }
-
-        let killersRows = [];
-        processedFilesTexts.forEach(text => {
-            let lines = text.split('\n');
-            let currentTeam = "Pumas Squad";
-            
-            lines.forEach(line => {
-                const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:/i);
-                if (teamMatch) currentTeam = teamMatch[1].trim();
-
-                const playerMatch = line.match(/NAME:\s*(.+?)\s+ID:\s*(\d+).*?KILL:\s*(\d+)/i);
-                if (playerMatch) {
-                    killersRows.push({
-                        sesion_id: sesionId,
-                        jugador_nombre: playerMatch[1].trim(),
-                        equipo_nombre: currentTeam,
-                        kills: parseInt(playerMatch[3])
-                    });
-                }
-            });
-        });
-
-        if (killersRows.length > 0) {
-            await supabaseClient.from('top_killers').insert(killersRows);
-        }
+        if (!salasRows.length) throw new Error('Los archivos no contienen resultados de equipos.');
+        etapa = 'guardar el entrenamiento con tu sesión de administrador';
+        const res = await window.PumasPortal.entrenos.guardarPumas({titulo,jornada,fecha,moderador,salas:salasRows,killers:killersRows});
+        const sesionId = res.id;
 
         // Resultados completos (.csv): se guardan con el id de este entreno (completos_admin.js)
         if (typeof window.alGuardarEntreno === 'function') {
@@ -510,8 +460,10 @@ async function guardarEntrenamientoEnSupabase() {
         // Revisión de equipos que no cumplieron las salas (GENERAR BANEO, admin.html)
         if (typeof window.alTerminarEntreno === 'function') window.alTerminarEntreno();
     } catch (error) {
-        console.error("Error crítico:", error);
-        alert("Ocurrió un error al guardar en la base de datos.");
+        const detalle = [error.code, error.message, error.details, error.hint].filter(Boolean).join(' · ') || String(error);
+        const mensaje = 'No se completó la publicación al ' + etapa + ': ' + detalle;
+        console.error(mensaje);
+        alert(mensaje);
     }
 }
 
@@ -1245,6 +1197,64 @@ async function cambiarEstadoInscripcion(id, nuevoEstado) {
         cargarEntrenamientosProgramadosAdmin();
     } catch(err) {
         alert("Error al cambiar el estado.");
+    }
+}
+
+// ==========================================
+// HISTORIAL DE SESIONES (sección Borrar)
+// ==========================================
+async function cargarListaEntrenamientosParaBorrar() {
+    const tbody = document.getElementById('tablaListaEntrenamientosAdmin');
+    if (!tbody) return;
+    if (!supabaseClient) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e0897c;padding:20px;">Sin conexión a la base de datos.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--primary);padding:20px;">Cargando sesiones...</td></tr>`;
+    try {
+        const { data: sesiones, error } = await supabaseClient
+            .from('entrenamientos_sesiones')
+            .select('id, titulo, jornada, moderador, fecha')
+            .order('fecha', { ascending: false });
+        if (error) throw error;
+        if (!sesiones || sesiones.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:20px;">No hay sesiones registradas.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = sesiones.map(s => {
+            const fecha = new Date(s.fecha).toLocaleString('es-CO', { timeZone: 'America/Bogota', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            return `<tr>
+                <td style="padding:10px;color:var(--gray);font-size:.85rem;">${s.id}</td>
+                <td style="padding:10px;color:#fff;font-weight:bold;">${s.titulo || '—'}</td>
+                <td style="padding:10px;color:var(--gray);">${s.jornada || '—'}</td>
+                <td style="padding:10px;color:var(--gray);">${s.moderador || '—'}</td>
+                <td style="padding:10px;color:var(--gray);text-align:center;">${fecha}</td>
+                <td style="padding:10px;text-align:center;">
+                    <button onclick="borrarSesionIndividual(${s.id})" style="background:rgba(255,85,85,.15);color:#ff8a8d;border:1px solid rgba(255,85,85,.4);padding:5px 12px;border-radius:4px;font-family:'Michroma';font-size:.75rem;cursor:pointer;">
+                        <i class="fa-solid fa-trash"></i> BORRAR
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    } catch (err) {
+        console.error('Error al cargar sesiones:', err);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e0897c;padding:20px;">Error al cargar: ${err.message || 'Error desconocido'}</td></tr>`;
+    }
+}
+
+async function borrarSesionIndividual(id) {
+    if (!confirm(`¿Borrar la sesión #${id} y todos sus resultados? Esta acción no se puede deshacer.`)) return;
+    if (!supabaseClient) return;
+    try {
+        await supabaseClient.from('top_killers').delete().eq('sesion_id', id);
+        await supabaseClient.from('salas_resultados').delete().eq('sesion_id', id);
+        const { error } = await supabaseClient.from('entrenamientos_sesiones').delete().eq('id', id);
+        if (error) throw error;
+        alert('Sesión borrada correctamente.');
+        cargarListaEntrenamientosParaBorrar();
+    } catch (err) {
+        console.error('Error al borrar sesión:', err);
+        alert('Error al borrar la sesión: ' + (err.message || 'Error desconocido'));
     }
 }
 

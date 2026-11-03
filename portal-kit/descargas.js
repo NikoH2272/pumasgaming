@@ -234,5 +234,5 @@
 @media(max-width:640px){.res-row,.ses-row{flex-wrap:wrap}.pg-ses-acc{width:100%;justify-content:flex-start}.pg-dl-btn{min-height:38px}}`;
     document.head.appendChild(st);
 
-    window.PumasDescargas = { botones, fecha, fechaHTML };
+    window.PumasDescargas = { botones, fecha, fechaHTML, detalle };
 })();

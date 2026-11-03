@@ -22,8 +22,8 @@
     <link rel="stylesheet" href="portal-kit/latam.css?v=20261013e">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="portal-kit/portal.js?v=20261013e" data-portal="principal" data-modo="publico"></script>
-    <script src="portal-kit/descargas.js?v=20261013e"></script>
+    <script src="portal-kit/portal.js?v=20261103b" data-portal="principal" data-modo="publico"></script>
+    <script src="portal-kit/descargas.js?v=20261103b"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
 </head>
 <body>
@@ -45,7 +45,6 @@
             <li><a href="/entrenamientos/" onclick="closeMenu()">Entrenamientos</a></li>
             <li><a href="#jersey" onclick="closeMenu()">Jerseys</a></li>
             <li><a href="#comunidad" onclick="closeMenu()">Comunidad</a></li>
-            <li><a href="#latam" onclick="closeMenu()">LATAM</a></li>
             <li data-nav-aliados hidden><a href="#aliados" onclick="closeMenu()">Aliados</a></li>
             <li><a href="#rankings" onclick="closeMenu()">Rankings</a></li>
             <li><a href="#resultados" onclick="closeMenu()">Herramienta FF</a></li>
@@ -98,15 +97,6 @@
         </aside>
     </div>
     <p class="train-more"><a href="entrenamientos/">Ver historial completo y resultados <i class="fa-solid fa-arrow-right"></i></a></p>
-</section>
-
-<section id="latam">
-
-    <div class="latam-cabecera"><img src="entrenoslatam/imagenes/latam.png" alt="Entrenos LATAM" onerror="this.parentElement.hidden=true"></div>
-    <h2 class="section-title">Entrenos LATAM</h2>
-    <p class="latam-intro">Pumas y sus ligas aliadas: entrena en cualquiera. Cada una tiene su portal de resultados y su grupo.</p>
-    <div class="latam-grid" id="latamPortales"></div>
-    <p class="train-more"><a href="entrenoslatam/">Ver resultados LATAM: calendario, semana e histórico <i class="fa-solid fa-arrow-right"></i></a></p>
 </section>
 
 <!-- Torneos aliados: solo sale si se activa en Admin → Inicio -->
@@ -192,23 +182,7 @@
     </div>
 </section>
 
-<section id="rankingsLatam">
-    <h2 class="section-title">Rankings LATAM</h2>
-    <div id="latamLeyenda"></div>
-    <div class="rank-grid">
-        <div class="card-box">
-            <div class="rank-head"><i class="fa-solid fa-earth-americas"></i><h3 id="latamTituloEq">Top 10 Equipos LATAM · Semana</h3></div>
-            <div id="latamTopEquipos" class="rank-list"><p>Cargando equipos...</p></div>
-        </div>
-        <div class="card-box">
-            <div class="rank-head"><i class="fa-solid fa-skull"></i><h3 id="latamTituloKill">Top 10 Killers LATAM · Semana</h3></div>
-            <div id="latamTopKillers" class="rank-list"><p>Cargando killers...</p></div>
-        </div>
-    </div>
-    <p class="train-more"><a href="entrenoslatam/#historico">Ver ranking histórico LATAM <i class="fa-solid fa-arrow-right"></i></a></p>
-</section>
-
-    <section id="resultados" class="tool-section">
+<section id="resultados" class="tool-section">
         <h2 class="section-title">Creador de Resultados Free Fire</h2>
         <div class="tool-container">
             <p class="tool-desc">
@@ -300,9 +274,7 @@
         }
     </script>
     <script src="script.js"></script>
-    <script src="entrenamientos.js?v=20261013e"></script>
-    <script src="portal-kit/latam.js?v=20261013e"></script>
-    <script>Latam.iniciarIndex();</script>
+    <script src="entrenamientos.js?v=20261103b"></script>
     <script src="portal-kit/aliados.js?v=20261013e"></script>
     <script src="portal-kit/juegos.js?v=20261014a"></script>
 </body>

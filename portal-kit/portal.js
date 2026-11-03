@@ -230,6 +230,11 @@
 
     /* ---------------- Entrenos: guardar (herramientas) y corregir (superadmin) ---------------- */
     const entrenos = {
+        guardarPumas: d => rpcAdmin('pumas_guardar_entreno', {
+            p_titulo: d.titulo, p_jornada: d.jornada || null,
+            p_fecha: d.fecha.toISOString(), p_moderador: d.moderador || null,
+            p_salas: d.salas, p_killers: d.killers
+        }),
         // d: { portal, titulo, jornada, fecha (Date), moderador, salas: [...], killers: [...] }
         guardar: d => rpcAdmin('guardar_entreno', {
             p_portal: d.portal, p_titulo: d.titulo, p_jornada: d.jornada || null,

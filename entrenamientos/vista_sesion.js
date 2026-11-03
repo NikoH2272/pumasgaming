@@ -54,11 +54,19 @@ async function procesarSesionUnica(id){
   modal.style.display='flex';
   body.innerHTML='<p class="vista-cargando">Cargando entrenamiento...</p>';
   try{
-    const {data:fl,error}=await supabaseClient.storage.from('entrenamientos_logs').list(s.archivo_url||'');
-    if(error||!fl||!fl.length){body.innerHTML='<p class="vista-cargando">No se encontraron archivos de este entrenamiento.</p>';return;}
-    fl.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
-    const textos=await Promise.all(fl.map(async f=>{const {data}=await supabaseClient.storage.from('entrenamientos_logs').download(s.archivo_url+'/'+f.name);return data?await data.text():'';}));
-    const d=parsearLogsVista(textos);
+    let d;
+    try {
+      const r=await PumasDescargas.detalle({portal:'entrenamientos',id:s.id});
+      d={eqs:r.eqs.sort((a,b)=>b.totalScore-a.totalScore),tks:r.killers,salas:r.n,rw:r.rW};
+    } catch(error) {
+      if(!s.archivo_url) throw error;
+      const {data:fl,error:storageError}=await supabaseClient.storage.from('entrenamientos_logs').list(s.archivo_url);
+      if(storageError) throw storageError;
+      if(!fl||!fl.length) throw new Error('No se encontraron resultados de este entrenamiento.');
+      fl.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+      const textos=await Promise.all(fl.map(async f=>{const {data,error}=await supabaseClient.storage.from('entrenamientos_logs').download(s.archivo_url+'/'+f.name);if(error)throw error;return data.text();}));
+      d=parsearLogsVista(textos);
+    }
     const meta={titulo:s.titulo||'ENTRENOS PUMAS GG',jornada:s.jornada,moderador:s.moderador,fecha:s.fecha,fechaTxt:_vFecha(s.fecha)};
     _vistaMeta=meta;
     const sc=Math.min(1,(Math.min(window.innerWidth-40,880)-60)/800);
