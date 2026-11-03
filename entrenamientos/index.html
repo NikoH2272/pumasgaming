@@ -157,8 +157,9 @@
             <div class="tabla-contenedor">
                 <div class="header-card-title">
                     <i class="fa-solid fa-skull" style="color: var(--primary);"></i>
-                    <h3>Top 10 Killers<span class="wk-range">Por KDA (kills ÷ salas) y por kills totales · mínimo 3 salas</span></h3>
+                    <h3>Top 20 Killers<span class="wk-range">20 jugadores · mínimo 3 salas</span></h3>
                 </div>
+                <div class="orden-toggle" id="ordenKillers" role="group" aria-label="Ordenar Top 20 Killers"><span>Ordenar por</span><button type="button" class="orden-btn on" data-orden="kda" onclick="ordenarKillers('kda')" title="Kills ÷ salas">KDA</button><button type="button" class="orden-btn" data-orden="kill" onclick="ordenarKillers('kill')" title="Kills totales">KILLS</button></div>
                 <div class="top-killers-grid" id="gridTopKillersGlobal" style="max-height: none; overflow-y: visible;">
                     <div style="color: var(--gray); text-align:center; padding: 20px;">Cargando killers...</div>
                 </div>
@@ -170,7 +171,7 @@
             <div class="tabla-contenedor" style="min-height:auto;">
                 <div class="header-card-title"><i class="fa-solid fa-trophy" style="color: var(--primary);"></i><h3>Top 100 Equipos Históricos</h3><span class="header-leyenda"><b>PG</b> Puntos Generales · <b>PR</b> Puntos Reales</span></div>
                 <div class="orden-toggle" id="ordenHistorico" role="group" aria-label="Ordenar histórico"><span>Ordenar por</span><button type="button" class="orden-btn on" data-orden="pr" onclick="ordenarHistorico('pr')" title="Puntos Reales = PG ÷ sesiones">PR</button><button type="button" class="orden-btn" data-orden="pg" onclick="ordenarHistorico('pg')" title="Puntos Generales = total de puntos">PG</button><button type="button" class="orden-btn" data-orden="kill" onclick="ordenarHistorico('kill')" title="Kills totales">KILLS</button> <small id="notaHistorico">Orden: PR (PG ÷ sesiones) → booyah</small></div>
-                <p style="color:var(--gray);margin-bottom:16px;">Acumulado de todos los entrenamientos de la base de datos. PR = PG ÷ sesiones, en número entero; desempate por booyah.</p>
+                <p id="criterioHistorico" style="color:var(--gray);margin-bottom:16px;">Se muestran todos los equipos hasta que 50 alcancen al menos 3 sesiones. PR = PG ÷ sesiones; desempate por booyah.</p>
                 <p class="leyenda-tabla"><b>SESIONES</b> entrenos jugados · <b>BOOYAH</b> victorias · <b>KILL</b> kills · <b>PG</b> Puntos Generales (total) · <b>PR</b> Puntos Reales (PG ÷ sesiones, en número entero)</p>
                 <div class="tabla-doble"><table class="tabla-estilizada"><thead><tr><th>#</th><th>EQUIPO</th><th style="text-align:center;">SESIONES</th><th style="text-align:center;">BOOYAH</th><th style="text-align:center;">KILL</th><th style="text-align:center;" title="Puntos Generales (total)">PG</th><th style="text-align:center;" title="Puntos Reales = PG ÷ sesiones">PR</th></tr></thead><tbody id="bodyTop100a"><tr><td colspan="5" style="text-align:center;color:var(--gray);">Calculando...</td></tr></tbody></table><table class="tabla-estilizada"><thead><tr><th>#</th><th>EQUIPO</th><th style="text-align:center;">SESIONES</th><th style="text-align:center;">BOOYAH</th><th style="text-align:center;">KILL</th><th style="text-align:center;" title="Puntos Generales (total)">PG</th><th style="text-align:center;" title="Puntos Reales = PG ÷ sesiones">PR</th></tr></thead><tbody id="bodyTop100b"><tr><td colspan="5" style="text-align:center;color:var(--gray);">Calculando...</td></tr></tbody></table></div>
             </div>
@@ -243,7 +244,7 @@
     <script src="../portal-kit/dinamicas.js?v=20261014a"></script>
     <script src="../portal-kit/juegos.js?v=20261014a"></script>
     <script src="../portal-kit/latam.js?v=20261013e"></script>
-    <script src="script_entrenamientos.js?v=20261103b"></script>
+    <script src="script_entrenamientos.js?v=20261103c"></script>
     <script src="vista_sesion.js?v=20261103b"></script>
     <script src="../portal-kit/completos.js?v=20261013e"></script>
     <script>PumasCompletos.montarPublico('pumasAvanzadas', 'entrenamientos');</script>
