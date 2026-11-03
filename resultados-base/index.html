@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creador de Resultados · Pumas Gaming</title>
+    <link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* ── Variables ── */
+        :root {
+            --primary: #D8C395;
+            --bg: #0a0a0c;
+            --bg2: #121317;
+            --gray: #6b7280;
+            --light: #e5e7eb;
+            --border: rgba(220,204,156,0.25);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--light);
+            font-family: 'Trebuchet MS', sans-serif;
+            min-height: 100vh;
+            padding: 24px 16px 48px;
+        }
+
+        /* ── Header ── */
+        .pg-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .pg-header img { width: 44px; height: 44px; object-fit: contain; }
+        .pg-header h1 {
+            font-family: 'Michroma', sans-serif;
+            font-size: 1rem;
+            color: var(--primary);
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        /* ── Contenedor principal ── */
+        .tool-container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        /* ── Formulario ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label {
+            font-family: 'Michroma', sans-serif;
+            font-size: .68rem;
+            color: var(--primary);
+            letter-spacing: .06em;
+        }
+
+        input[type="text"], select {
+            background: #0e0f12;
+            border: 1px solid var(--border);
+            color: var(--light);
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: .88rem;
+            width: 100%;
+            outline: none;
+            transition: border-color .2s;
+        }
+        input[type="text"]:focus, select:focus { border-color: var(--primary); }
+
+        input[type="file"] {
+            background: #0e0f12;
+            border: 1px dashed var(--border);
+            color: var(--gray);
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: .82rem;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* ── Renombrar equipos ── */
+        .renombrar-box {
+            display: none;
+            margin-top: 18px;
+            background: rgba(0,0,0,.45);
+            padding: 18px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .renombrar-box h3 {
+            font-family: 'Michroma', sans-serif;
+            font-size: .9rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        #listaEquiposInputs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+        .equipo-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: rgba(255,255,255,.03);
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        .equipo-row span { color: var(--gray); font-size: .82rem; min-width: 130px; }
+        .equipo-row input { flex: 1; }
+
+        /* ── Botones ── */
+        .btn {
+            background: var(--primary);
+            color: #0a0a0c;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 6px;
+            font-family: 'Michroma', sans-serif;
+            font-size: .78rem;
+            letter-spacing: .06em;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: opacity .2s;
+        }
+        .btn:hover { opacity: .85; }
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--border);
+        }
+
+        /* ── Resultado ── */
+        .result-box {
+            margin-top: 24px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .result-actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* ── Tabla de captura (la imagen 4:5) ── */
+        #tablaCaptura {
+            width: 800px;
+            height: 1000px;
+            position: relative;
+            font-family: 'Trebuchet MS', sans-serif;
+            color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+            border: 2px solid rgba(220,204,156,.3);
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0a0a0c 0%, #121317 50%, #050507 100%);
+        }
+
+        footer {
+            text-align: center;
+            color: var(--gray);
+            font-size: .75rem;
+            margin-top: 48px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="tool-container">
+
+    <div class="pg-header">
+        <img src="../imagenes/LOGO PUMAS WEB.png" alt="Pumas Gaming" onerror="this.hidden=true">
+        <h1>Creador de Resultados Free Fire</h1>
+    </div>
+
+    <!-- Modo y moderador -->
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Modo de cálculo y ordenamiento</label>
+            <select id="selectModoCalculo" onchange="renderizarResultadosFromState()">
+                <option value="1">1. Normal (Score Total Estándar)</option>
+                <option value="2">2. Solo Posición (RankScore)</option>
+                <option value="3">3. Solo Kills (Puntos por Kill)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Moderador / Admin</label>
+            <input type="text" id="inputModerador" placeholder="Ej: Mod · PumasZee">
+        </div>
+    </div>
+
+    <!-- Logos -->
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Logo propio (imagen)</label>
+            <input type="file" id="inputLogoFile" accept="image/*" onchange="cargarImagenLocal(event,'logo')">
+        </div>
+        <div class="form-group">
+            <label>Fondo propio 4:5 (imagen)</label>
+            <input type="file" id="inputFondoFile" accept="image/*" onchange="cargarImagenLocal(event,'fondo')">
+        </div>
+    </div>
+
+    <!-- Título y jornada -->
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Título del torneo</label>
+            <input type="text" id="inputTituloTorneo" value="LIGA PUMAS GAMING" oninput="renderizarResultadosFromState()">
+        </div>
+        <div class="form-group">
+            <label>Jornada</label>
+            <input type="text" id="inputJornadaTorneo" value="JORNADA 1" oninput="renderizarResultadosFromState()">
+        </div>
+    </div>
+
+    <!-- Fecha y color -->
+    <div class="form-grid">
+        <div class="form-group">
+            <label>Fecha</label>
+            <input type="text" id="inputFechaTorneo" value="03 SEP 2026" oninput="renderizarResultadosFromState()">
+        </div>
+        <div class="form-group">
+            <label>Color de fuente</label>
+            <select id="selectColorFuente" onchange="renderizarResultadosFromState()">
+                <option value="#ffffff" selected>Blanco Estándar</option>
+                <option value="#DCCC9C">Dorado Oficial (#DCCC9C)</option>
+                <option value="#959595">Gris Suave (#959595)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Archivos log -->
+    <div class="form-group" style="margin-bottom:0">
+        <label>Archivos .log / .txt (seleccionar todos a la vez)</label>
+        <input type="file" id="fileInput" multiple accept=".txt,.log" onchange="prepararRenombradoEquipos()">
+    </div>
+
+    <!-- Renombrar equipos -->
+    <div class="renombrar-box" id="seccionRenombrar">
+        <h3>Editar nombres de equipos</h3>
+        <div id="listaEquiposInputs"></div>
+        <button class="btn" style="margin-top:14px" onclick="procesarConNombresPersonalizados()">
+            Confirmar nombres y generar tabla
+        </button>
+    </div>
+
+    <!-- Resultado -->
+    <div id="outputTablasLadoALado" class="result-box"></div>
+
+</div>
+
+<footer>&copy; 2026 Pumas Gaming · Creador de Resultados</footer>
+
+<script>
+/* ================================================================
+   Lógica de resultados — extraída de script.js (Pumas Gaming)
+   ================================================================ */
+
+let _gE = [], _gTK = [], _gNS = 0, _rFD = [];
+let _lPB64 = null, _fPB64 = null;
+
+/* ---- Leer archivos y mostrar renombrado ---- */
+async function prepararRenombradoEquipos() {
+    const fI = document.getElementById('fileInput');
+    const fs = fI ? Array.from(fI.files) : [];
+    if (!fs.length) return;
+
+    _rFD = [];
+    const equiposUnicos = new Set();
+
+    for (const f of fs) {
+        const t = await f.text();
+        _rFD.push(t);
+        t.split('\n').forEach(l => {
+            const m = l.match(/TeamName:\s*(.+?)\s+Rank:/i);
+            if (m) equiposUnicos.add(m[1].trim());
+        });
+    }
+
+    const c = document.getElementById('listaEquiposInputs');
+    c.innerHTML = '';
+    Array.from(equiposUnicos).forEach(eq => {
+        const row = document.createElement('div');
+        row.className = 'equipo-row';
+        row.innerHTML = `
+            <span>Original: <strong>${eq}</strong></span>
+            <input type="text" class="input-nombre-editable" data-original="${eq}" value="${eq}">`;
+        c.appendChild(row);
+    });
+
+    document.getElementById('seccionRenombrar').style.display = 'block';
+}
+
+function procesarConNombresPersonalizados() {
+    const dR = {};
+    document.querySelectorAll('.input-nombre-editable').forEach(i => {
+        dR[i.dataset.original] = i.value.trim() || i.dataset.original;
+    });
+    _xL(_rFD, dR);
+}
+
+/* ---- Parser de logs ---- */
+function _xL(tA, rM) {
+    const eM = {}, jM = {}, rW = [];
+    const nS = tA.length;
+
+    tA.forEach((t, i) => {
+        const ls = t.split('\n');
+        let sWT = null, sWTS = 0, sWKS = 0;
+
+        ls.forEach(l => {
+            const tM = l.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
+            if (tM) {
+                const rT = tM[1].trim(), nm = rM[rT] || rT;
+                if (!eM[nm]) eM[nm] = { name: nm, totalScore: 0, killScore: 0, rankScore: 0, salasPuntos: {}, salasKills: {}, salasBooyah: {}, salasJugadas: 0, booyahsCount: 0 };
+                const tS = parseInt(tM[5]), kS = parseInt(tM[3]), rS = parseInt(tM[4]), rk = parseInt(tM[2]);
+                eM[nm].totalScore += tS; eM[nm].killScore += kS; eM[nm].rankScore += rS;
+                eM[nm].salasPuntos[i] = tS; eM[nm].salasKills[i] = kS; eM[nm].salasJugadas++;
+                if (rk === 1) { eM[nm].salasBooyah[i] = true; eM[nm].booyahsCount++; sWT = nm; sWTS = tS; sWKS = kS; }
+            }
+            const pM = l.match(/NAME:\s*(.+?)\s+ID:\s*\d+.*?KILL:\s*(\d+)/i);
+            if (pM) {
+                const pN = pM[1].trim(), pK = parseInt(pM[2]);
+                if (!jM[pN]) jM[pN] = { name: pN, kills: 0 };
+                jM[pN].kills += pK;
+            }
+        });
+
+        rW.push(sWT ? { sala: i + 1, team: sWT, points: sWTS, kills: sWKS }
+                     : { sala: i + 1, team: 'N/D', points: 0, kills: 0 });
+    });
+
+    _gE = Object.values(eM);
+    _gTK = Object.values(jM).sort((a, b) => b.kills - a.kills);
+    _gNS = nS;
+    window._rWGlobal = rW;
+    renderizarResultadosFromState();
+}
+
+/* ---- Imagen ---- */
+function cargarImagenLocal(e, tp) {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => { if (tp === 'logo') _lPB64 = ev.target.result; else _fPB64 = ev.target.result; renderizarResultadosFromState(); };
+    r.readAsDataURL(f);
+}
+
+/* ---- Render ---- */
+function renderizarResultadosFromState() {
+    if (!_gE.length) return;
+    renderizarResultados(_gE, _gTK, _gNS);
+}
+
+function renderizarResultados(eqs, tKs, nS) {
+    const tC = document.getElementById('inputTituloTorneo').value || 'LIGA PUMAS GAMING';
+    const jC = document.getElementById('inputJornadaTorneo').value || 'JORNADA 1';
+    const fC = document.getElementById('inputFechaTorneo').value || '';
+    const cF = document.getElementById('selectColorFuente').value || '#ffffff';
+    const mC = document.getElementById('selectModoCalculo').value || '1';
+    const nM = (document.getElementById('inputModerador').value.trim() || 'PUMAS ZEE').toUpperCase();
+    const lU = _lPB64 || '../imagenes/LOGO PUMAS WEB.png';
+    const fU = _fPB64 || '';
+
+    const fV  = fU ? `background-image:url('${fU}');background-size:cover;background-position:center;`
+                   : `background:linear-gradient(135deg,#0a0a0c 0%,#121317 50%,#050507 100%);`;
+    const fCo = 'rgba(18,19,23,0.95)';
+
+    let eqO = [...eqs].map(eq => ({ ...eq, totalCalculado: mC === '2' ? eq.rankScore : mC === '3' ? eq.killScore : eq.totalScore }));
+    if (mC === '1') eqO.sort((a, b) => b.totalScore  - a.totalScore);
+    else if (mC === '2') eqO.sort((a, b) => b.rankScore  - a.rankScore);
+    else eqO.sort((a, b) => b.killScore - a.killScore);
+
+    const tKL  = [...tKs].slice(0, 15);
+    const tM   = mC === '2' ? 'TABLA SOLO POSICIÓN (RANKSCORE)' : mC === '3' ? 'TABLA SOLO KILLS' : 'TABLA GENERAL (ESTÁNDAR)';
+    const rWData = window._rWGlobal || [];
+
+    const salasHead = Array.from({ length: Math.min(nS, 6) }).map((_, i) =>
+        `<th style="padding:4px;text-align:center;">S${i + 1}</th>`).join('');
+
+    const filas = eqO.map((eq, i) => {
+        const cFila = i === 0 ? '#DCCC9C' : i === 1 ? '#959595' : cF;
+        const salas = Array.from({ length: Math.min(nS, 6) }).map((_, s) => {
+            const pS = eq.salasPuntos[s];
+            return pS !== undefined
+                ? `<td style="text-align:center;padding:3.5px;color:${cF};">${pS}</td>`
+                : `<td style="text-align:center;padding:3.5px;color:#6b7280;">-</td>`;
+        }).join('');
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,.06);">
+            <td style="padding:3.5px;font-weight:bold;color:${cFila};">#${i + 1}</td>
+            <td style="padding:3.5px;font-weight:bold;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${eq.name}</td>
+            ${salas}
+            <td style="text-align:center;padding:3.5px;color:#DCCC9C;font-weight:bold;">${eq.killScore}</td>
+            <td style="text-align:center;padding:3.5px;color:${cFila};font-weight:bold;">${eq.totalCalculado}</td>
+        </tr>`;
+    }).join('');
+
+    const booyahs = rWData.length
+        ? rWData.map(rw => `
+            <div style="font-size:.7rem;background:rgba(18,19,23,.85);padding:5px 6px;border-radius:5px;border:1px solid rgba(220,204,156,.2);text-align:center;">
+                <div style="color:#DCCC9C;font-family:Michroma,sans-serif;font-weight:bold;margin-bottom:2px;">SALA ${rw.sala} 👑</div>
+                <div style="color:${cF};font-weight:bold;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${rw.team}</div>
+                <div style="color:#6b7280;font-size:.65rem;margin-top:2px;">Pts: <strong style="color:#DCCC9C;">${rw.points}</strong> | K: <strong style="color:#DCCC9C;">${rw.kills}</strong></div>
+            </div>`).join('')
+        : `<div style="color:#6b7280;font-size:.75rem;padding:6px;">No hay datos de Booyah.</div>`;
+
+    const killers = tKL.map((tk, i) => {
+        const cP = i === 0 ? '#DCCC9C' : cF;
+        return `<div style="font-size:.7rem;background:rgba(18,19,23,.85);padding:5px 6px;border-radius:5px;border:1px solid rgba(220,204,156,.2);display:flex;justify-content:space-between;align-items:center;">
+            <div><span style="color:${cP};font-weight:bold;margin-right:3px;">#${i + 1}</span><span style="color:${cF};font-weight:bold;max-width:60px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">${tk.name}</span></div>
+            <span style="color:#DCCC9C;font-weight:bold;">${tk.kills}</span>
+        </div>`;
+    }).join('');
+
+    const h = `
+    <div id="tablaCaptura" style="width:800px;height:1000px;${fV}position:relative;font-family:'Trebuchet MS',sans-serif;color:${cF};padding:20px;box-sizing:border-box;border:2px solid rgba(220,204,156,.3);border-radius:12px;">
+
+        <!-- Logo -->
+        <div style="position:absolute;top:18px;right:30px;">
+            <img src="${lU}" style="width:65px;height:65px;object-fit:contain;border-radius:50%;border:2px solid #DCCC9C;background:rgba(18,19,23,.8);">
+        </div>
+
+        <!-- Encabezado -->
+        <div style="text-align:center;position:absolute;top:18px;left:40px;right:40px;">
+            <h1 style="font-family:Michroma,sans-serif;font-size:1.6rem;color:#DCCC9C;margin:0;text-transform:uppercase;text-shadow:2px 2px 4px rgba(0,0,0,.8);">${tC}</h1>
+            <div style="font-family:Michroma,sans-serif;font-size:.9rem;margin-top:3px;font-weight:bold;letter-spacing:1px;">${jC}${fC ? ' — ' + fC : ''} | MODERADOR: ${nM}</div>
+        </div>
+
+        <!-- Tabla general -->
+        <div style="position:absolute;top:85px;left:35px;width:730px;background:${fCo};padding:8px;border-radius:8px;border:1px solid rgba(220,204,156,.3);max-height:410px;overflow:hidden;">
+            <div style="color:#DCCC9C;font-family:Michroma,sans-serif;font-size:.85rem;margin-bottom:4px;font-weight:bold;">${tM}</div>
+            <table style="width:100%;border-collapse:collapse;font-size:.76rem;color:${cF};">
+                <thead>
+                    <tr style="color:#DCCC9C;font-family:Michroma,sans-serif;border-bottom:2px solid rgba(220,204,156,.3);font-size:.78rem;">
+                        <th style="text-align:left;padding:4px;">#</th>
+                        <th style="text-align:left;padding:4px;">EQUIPO</th>
+                        ${salasHead}
+                        <th style="padding:4px;text-align:center;">KILL</th>
+                        <th style="padding:4px;text-align:center;">TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>${filas}</tbody>
+            </table>
+        </div>
+
+        <!-- Booyahs -->
+        <div style="position:absolute;top:520px;left:35px;width:730px;background:${fCo};padding:8px;border-radius:8px;border:1px solid rgba(220,204,156,.3);">
+            <div style="font-family:Michroma,sans-serif;color:#DCCC9C;margin-bottom:4px;font-size:.82rem;font-weight:bold;">BOOYAH POR SALA (VICTORIAS)</div>
+            <div style="display:grid;grid-template-columns:repeat(${Math.min(Math.max(rWData.length,1),6)},1fr);gap:6px;">${booyahs}</div>
+        </div>
+
+        <!-- Top killers -->
+        <div style="position:absolute;top:660px;left:35px;width:730px;background:${fCo};padding:8px;border-radius:8px;border:1px solid rgba(220,204,156,.3);">
+            <div style="font-family:Michroma,sans-serif;color:#DCCC9C;margin-bottom:4px;font-size:.82rem;font-weight:bold;">TOP 15 KILLERS MÁS LETALES</div>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;">${killers}</div>
+        </div>
+
+    </div>`;
+
+    document.getElementById('outputTablasLadoALado').innerHTML = `
+        <div style="overflow-x:auto;padding-bottom:10px;">${h}</div>
+        <div class="result-actions">
+            <button class="btn" onclick="descargar()"><i class="fa-solid fa-download"></i> Descargar imagen 4:5</button>
+        </div>`;
+}
+
+/* ---- Descargar ---- */
+function descargar() {
+    const el = document.getElementById('tablaCaptura');
+    if (!el) { alert('Primero cargá los archivos .log.'); return; }
+    html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#0a0a0c', logging: false })
+        .then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'Tabla_Resultados_Pumas.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        })
+        .catch(() => alert('Error al generar la imagen.'));
+}
+</script>
+</body>
+</html>

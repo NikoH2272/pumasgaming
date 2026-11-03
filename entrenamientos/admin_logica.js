@@ -1050,7 +1050,10 @@ function copiarTextoMetricas() {
 // PROGRAMAR ENTRENAMIENTOS (CUPOS Y STAFF)
 // ==========================================
 async function guardarProgramacion() {
-    if (!supabaseClient) return;
+    if (!supabaseClient) {
+        alert("Error: no se pudo conectar a la base de datos. Recarga la página e intenta de nuevo.");
+        return;
+    }
 
     let titulo = document.getElementById('progTitulo').value.trim();
     let fecha = document.getElementById('progFecha').value;
