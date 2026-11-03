@@ -9,6 +9,8 @@ directas con la clave pública no llevan esa sesión y Supabase las rechaza.
    del proyecto Supabase. Requiere las tablas de Pumas y las funciones de
    permisos de las migraciones 28 y 32. No ejecutar migraciones antiguas
    indiscriminadamente ni habilitar escrituras públicas para resolver el 401.
+   Después ejecutar `sql/51_guardado_pumas_tipo_id.sql`: adapta el ID al tipo
+   real de `entrenamientos_sesiones.id` (UUID o bigint).
 2. Publicar los cambios del frontend en GitHub Pages, incluidos
    `portal-kit/portal.js`, `portal-kit/descargas.js`, `entrenamientos.js`,
    `entrenamientos/admin_logica.js`, `entrenamientos/script_entrenamientos.js`,

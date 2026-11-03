@@ -263,7 +263,27 @@ let _semanaPumas=[],_semInfo=null;
 function ordenarHistorico(orden){
   document.querySelectorAll('#ordenHistorico .orden-btn').forEach(x=>x.classList.toggle('on',x.dataset.orden===orden));
   const n=document.getElementById('notaHistorico'); if(n) n.textContent=_textoOrden(orden);
-  _llenar('bodyTop100a','bodyTop100b',[..._historicoPumas].sort(_ordenPumas[orden]).slice(0,100));
+  const conMinimo=_historicoPumas.filter(e=>e.ses>=3);
+  const filtrar=conMinimo.length>=50;
+  const criterio=document.getElementById('criterioHistorico');
+  if(criterio) criterio.textContent=filtrar
+    ? 'Solo equipos con al menos 3 sesiones. PR = PG ÷ sesiones; desempate por booyah.'
+    : 'Se muestran todos los equipos hasta que 50 alcancen al menos 3 sesiones. PR = PG ÷ sesiones; desempate por booyah.';
+  _llenar('bodyTop100a','bodyTop100b',[...(filtrar?conMinimo:_historicoPumas)].sort(_ordenPumas[orden]).slice(0,100));
+}
+let _killersPumas=[],_ordenKillers='kda';
+function ordenarKillers(orden){
+  _ordenKillers=orden==='kill'?'kill':'kda';
+  document.querySelectorAll('#ordenKillers .orden-btn').forEach(x=>x.classList.toggle('on',x.dataset.orden===_ordenKillers));
+  const g=document.getElementById('gridTopKillersGlobal');if(!g)return;
+  const lista=[..._killersPumas].sort(_ordenKillers==='kill'
+    ? (a,b)=>b.k-a.k||b.kda-a.kda||a.name.localeCompare(b.name)
+    : (a,b)=>b.kda-a.kda||b.k-a.k||a.name.localeCompare(b.name)).slice(0,20);
+  const cabecera='<div class="killer-head"><span>#</span><span>JUGADOR</span><span>SALAS</span><span>KILLS</span><span>KDA</span></div>';
+  const columna=(filas,inicio)=>`<div><h4 class="killers-sub">Puestos ${inicio+1}–${inicio+filas.length}</h4>${cabecera}${filas.map((tk,i)=>`<div class="killer-card k5"><span style="color:${_col(inicio+i)};font-weight:bold;">#${inicio+i+1}</span><span class="k-name" title="${esc(tk.name)}">${esc(tk.name)}</span><span class="k-num">${tk.s}</span><span class="k-num">${tk.k}</span><span class="k-num">${tk.kda.toFixed(2)}</span></div>`).join('')}</div>`;
+  g.innerHTML=lista.length
+    ? `<div class="killers-doble">${columna(lista.slice(0,10),0)}${lista.length>10?columna(lista.slice(10),10):''}</div><p class="killers-nota">Solo cuentan jugadores con ${MIN_SALAS_KILLER} salas o más.</p>`
+    : '<p class="killers-nota">Sin jugadores con 3 salas o más.</p>';
 }
 // Top 50 de la semana ordenable: PR, PG o KILLS
 function ordenarSemana(orden){
@@ -301,11 +321,10 @@ async function calcularTablaGlobalAcumulada(sesiones){
   _historicoPumas=todo.eq;
   const _o=document.querySelector('#ordenHistorico .orden-btn.on');
   ordenarHistorico(_o?_o.dataset.orden:'pr');
-  // Top killers en dos tablas: por KDA (kills ÷ salas) y por kills totales (mínimo 3 salas)
-  const g=document.getElementById('gridTopKillersGlobal');
+  // Veinte jugadores, con puestos 1–10 y 11–20; ordenables por KDA o kills.
+  _killersPumas=todo.pl;
+  ordenarKillers(_ordenKillers);
   const porKills=[...todo.pl].sort((a,b)=>b.k-a.k||b.kda-a.kda);
-  const lista=(arr,res)=>arr.length?`<div class="killer-head"><span>#</span><span>JUGADOR</span><span>SALAS</span><span>KILLS</span><span>KDA</span></div>`+arr.slice(0,10).map((tk,i)=>`<div class="killer-card k5"><span style="color:${_col(i)};font-weight:bold;">#${i+1}</span><span class="k-name">${esc(tk.name)}</span><span class="k-num">${tk.s}</span><span class="k-num"${res==='k'?` style="color:${_col(i)};"`:''}>${tk.k}</span><span class="k-num"${res==='kda'?` style="color:${_col(i)};"`:''}>${tk.kda.toFixed(2)}</span></div>`).join(''):'<div style="color:var(--gray);text-align:center;padding:20px;">Sin jugadores con 3 salas o más.</div>';
-  if(g) g.innerHTML=`<div class="killers-doble"><div><h4 class="killers-sub">Por KDA <small>kills ÷ salas</small></h4>${lista(todo.pl,'kda')}</div><div><h4 class="killers-sub">Por kills totales <small>sin fórmula</small></h4>${lista(porKills,'k')}</div></div><p class="killers-nota">Solo cuentan jugadores con ${MIN_SALAS_KILLER} salas o más.</p>`;
   // Destacados (mismo bloque que Entrenos LATAM)
   if(window.Latam&&Latam.pintarDestacados){
     const eqs=todo.eq.map(e=>({...e,kps:e.k/e.ses,entrenos:1}));
