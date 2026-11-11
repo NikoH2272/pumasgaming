@@ -32,7 +32,13 @@
 .an-acciones{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
 .an-guardados{display:grid;gap:8px;margin-top:10px}
 .an-item{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border:1px solid rgba(216,195,149,.2);border-radius:6px;background:rgba(0,0,0,.3)}
-.an-item small{color:#9a9a9a}`;
+.an-item small{color:#9a9a9a}
+.an-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.an-tab{padding:7px 12px;border:1px solid rgba(216,195,149,.35);border-radius:6px;background:transparent;color:#D8C395;font-size:.78rem;cursor:pointer}
+.an-tab.activa{background:#D8C395;color:#0a0b10;font-weight:bold}
+.an-prev{width:540px;max-width:100%;height:675px;overflow:hidden;border:1px solid rgba(216,195,149,.3);border-radius:6px}
+.an-prev[hidden]{display:none}
+.an-esc{width:1080px;height:1350px;transform:scale(.5);transform-origin:0 0}`;
 
     function montar(contId, opts) {
         const cont = document.getElementById(contId);
@@ -63,7 +69,7 @@
             <div class="an-imgs" data-an="imgs"></div>
             <div class="an-acciones" data-an="acciones" hidden>
                 <button class="btn-access" data-an="guardar"><i class="fa-solid fa-cloud-arrow-up"></i> Guardar análisis</button>
-                <button class="btn-access btn-outline" data-an="descargar"><i class="fa-solid fa-download"></i> Descargar las 2 imágenes</button>
+                <button class="btn-access btn-outline" data-an="descargar"><i class="fa-solid fa-download"></i> Descargar todas las imágenes</button>
             </div>
             <div class="an-bloque">
                 <h3><i class="fa-solid fa-clock-rotate-left"></i> ANÁLISIS GUARDADOS</h3>
@@ -78,7 +84,7 @@
             const t = ++turno;
             const [reps, logs, csvs] = await Promise.all([leer($('json')), leer($('log')), leer($('csv'))]);
             if (t !== turno) return;
-            const bins = Array.from($('bin').files || []).map(f => ({ nombre: f.name, id: C().idDeArchivo(f.name) }));
+            const bins = Array.from($('bin').files || []).map(f => ({ nombre: f.name, id: C().idDeArchivo(f.name), file: f }));
             actual = null; $('imgs').innerHTML = ''; $('acciones').hidden = true;
             const errores = [];
             // Salas: una por replay .json (número y fecha de la partida)
@@ -109,6 +115,19 @@
             try {
                 res = C().emparejar(salas.map(s => s.r.nombre), salas.filter(s => s.csv).map(s => s.csv), {}, salas.map(s => s.r), salas.map(s => s.log ? s.log.texto : ''));
             } catch (e) { msg('⚠ ' + esc(e.message), '#ff8a8d'); return; }
+            // .bin de cada sala: daño, headshots, impactos, gloo, reanimaciones, derribos y kills (portal-kit/replay-bin.js)
+            let conBin = 0;
+            if (window.PumasBin) {
+                msg('Leyendo los .bin...');
+                const avisosBin = [];
+                await Promise.all(salas.map(async (s, i) => {
+                    if (!s.bin || !res.salas[i]) return;
+                    try { C().aplicarBin(res.salas[i], PumasBin.leer(await s.bin.file.arrayBuffer())); conBin++; }
+                    catch (e) { avisosBin.push(`${s.bin.nombre}: ${e.message}`); }
+                }));
+                if (t !== turno) return;
+                if (avisosBin.length) { msg('⚠ ' + avisosBin.map(esc).join('<br>⚠ '), '#ff8a8d'); return; }
+            }
             // Puntos por sala de los .log (para la escuadra destacada)
             const puntos = new Map();
             salas.forEach((s, i) => {
@@ -118,14 +137,40 @@
                     if (m) { const k = m[1].trim(); const x = puntos.get(k) || { name: k, salasPuntos: {} }; x.salasPuntos[i] = +m[2]; puntos.set(k, x); }
                 });
             });
-            const r = C().calcular(res.salas, salas.every(s => s.log) ? [...puntos.values()] : []);
-            actual = { salas: res.salas, r };
-            const meta = metaImagen();
-            $('imgs').innerHTML = C().imagenHTML(r, meta) + C().imagenSalasHTML(r, meta);
+            const puntosLog = salas.every(s => s.log) ? [...puntos.values()] : [];
+            const r = C().calcular(res.salas, puntosLog);
+            actual = { salas: res.salas, r, puntosLog };
+            pintarImagenes();
             $('acciones').hidden = false;
             const conCsv = salas.filter(s => s.csv).length, conLog = salas.filter(s => s.log).length;
-            msg(`✔ ${salas.length} salas completas (.json + .bin)` + (conLog ? ` · ${conLog} con .log` : conCsv ? ' · sin .log: las kills salen del .csv' : ' · sin .log: las kills salen del replay (cuentan derribos y eliminaciones)') +
-                (conCsv ? ` · ${conCsv} con .csv` : ' · sin .csv: no hay daño, headshots ni gloo') + '.', '#6ee7a8');
+            msg(`✔ ${salas.length} salas completas (.json + .bin)` + (conLog ? ` · ${conLog} con .log` : conCsv ? ' · sin .log: las kills salen del .csv' : conBin ? ' · sin .log: las kills salen del .bin' : ' · sin .log: las kills salen del replay (cuentan derribos y eliminaciones)') +
+                (conCsv ? ` · ${conCsv} con .csv` : conBin ? ' · daño, headshots y gloo salen del .bin' : ' · sin .csv: no hay daño, headshots ni gloo') + '.', '#6ee7a8');
+        }
+
+        // Imágenes 4:5 nuevas (portal-kit/imagenes-resultados.js): una pestaña por imagen, vista previa al 50 %
+        let imagenes = [], vista = 0;
+        function pintarImagenes() {
+            if (!actual) return;
+            const meta = metaImagen();
+            if (!window.PumasImagenes) { imagenes = []; $('imgs').innerHTML = C().imagenHTML(actual.r, meta) + C().imagenSalasHTML(actual.r, meta); return; }
+            imagenes = PumasImagenes.generar({ salas: actual.salas, r: actual.r, puntosLog: actual.puntosLog, meta, base: o.base || '../' });
+            vista = Math.min(vista, imagenes.length - 1);
+            $('imgs').innerHTML = `<div class="an-tabs">${imagenes.map((im, i) => `<button type="button" class="an-tab${i === vista ? ' activa' : ''}" data-img="${i}">${esc(im.titulo)}</button>`).join('')}</div>
+                ${imagenes.map((im, i) => `<div class="an-prev"${i === vista ? '' : ' hidden'} data-prev="${i}"><div class="an-esc">${im.html}</div></div>`).join('')}
+                <button class="btn-access btn-outline" data-an="una"><i class="fa-solid fa-image"></i> Descargar esta imagen</button>`;
+            $('imgs').querySelectorAll('[data-img]').forEach(b => b.onclick = () => {
+                vista = +b.dataset.img;
+                $('imgs').querySelectorAll('[data-img]').forEach(x => x.classList.toggle('activa', x === b));
+                $('imgs').querySelectorAll('[data-prev]').forEach(x => { x.hidden = +x.dataset.prev !== vista; });
+            });
+            $('una').onclick = () => descargarImagen(vista);
+        }
+        async function descargarImagen(i) {
+            const im = imagenes[i];
+            if (!im) return;
+            const caja = $('imgs').querySelector(`[data-prev="${i}"]`), oculto = caja.hidden;
+            caja.hidden = false;   // html2canvas necesita la imagen visible
+            try { await PumasImagenes.descargar(im.id, im.nombre); } finally { caja.hidden = oculto; }
         }
 
         function metaImagen() {
@@ -152,6 +197,10 @@
         }
 
         async function descargar() {
+            if (imagenes.length) {
+                for (let i = 0; i < imagenes.length; i++) { await descargarImagen(i); await new Promise(r => setTimeout(r, 400)); }
+                return;
+            }
             for (const [id, nombre] of [['capturaAvanzada', 'Analisis_Destacados.png'], ['capturaPorSala', 'Analisis_Por_Sala.png']]) {
                 const el = document.getElementById(id);
                 if (!el) continue;
@@ -184,7 +233,7 @@
         }
 
         ['json', 'bin', 'log', 'csv'].forEach(k => $(k).addEventListener('change', revisar));
-        ['fecha', 'titulo', 'mod'].forEach(k => $(k).addEventListener('change', () => { if (actual) { const m = metaImagen(); $('imgs').innerHTML = C().imagenHTML(actual.r, m) + C().imagenSalasHTML(actual.r, m); } }));
+        ['fecha', 'titulo', 'mod'].forEach(k => $(k).addEventListener('change', pintarImagenes));
         $('guardar').addEventListener('click', guardar);
         $('descargar').addEventListener('click', descargar);
         C().habilitado(o.portal).then(ok => { if (!ok) msg(`⚠ Este evento no tiene habilitado el análisis (Admin → Resultados completos): puedes generar las imágenes, pero no guardar.`, '#FFD54A'); });

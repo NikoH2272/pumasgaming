@@ -196,7 +196,7 @@
             if (!j) {
                 const n = nombre.get(id) || ('JUGADOR ' + (id % 16777216));
                 const lg = enLog(n);
-                j = { equipo: nombreEquipo(escuadra(id)), jugador: n, account_id: lg ? lg.account_id : '', kills: 0, dano: 0, headshots: 0, hits: 0, disparos: 0,
+                j = { pid: id, equipo: nombreEquipo(escuadra(id)), jugador: n, account_id: lg ? lg.account_id : '', kills: 0, dano: 0, headshots: 0, hits: 0, disparos: 0,
                     revividos: 0, gloo: 0, vivo: Math.round(dur), asistencias: 0, derribos: 0, booyah: false, arma: '', armas: [],
                     extra: { caidas: 0, levantado: 0 }, _armas: {} };
                 jug.set(id, j);
@@ -266,11 +266,13 @@
             j.derribos = j.kills;
             const lg = enLog(j.jugador);
             if (lg) j.kills = lg.kills;
+            j.killsLog = !!lg;
             delete j._armas; delete j._caida;
             return j;
         });
         return {
-            match_id: String(d.MatchID || ''), mapa: ent(d.MapID) || null, modo: ent(d.GroupMode) || null, fuente: 'replay', duracion: Math.round(dur),
+            // El MatchID tiene 19 dígitos: leído como número pierde precisión, se toma del texto
+            match_id: (/"MatchID"\s*:\s*(\d+)/.exec(String(texto || '')) || [])[1] || String(d.MatchID || ''), mapa: ent(d.MapID) || null, modo: ent(d.GroupMode) || null, fuente: 'replay', duracion: Math.round(dur),
             jugadores, primeraSangre: primera, killLejana: lejana,
             eliminados
         };
@@ -290,6 +292,58 @@
             if (!j.vivo) j.vivo = r.vivo;
         });
         return Object.assign(csv, { duracion: rep.duracion, primeraSangre: rep.primeraSangre, killLejana: rep.killLejana, eliminados: rep.eliminados });
+    }
+
+    /* ---------------- Estadísticas del .bin (portal-kit/replay-bin.js) en una sala ---------------- */
+    // b = PumasBin.leer(...). Cada jugador guarda lo del .bin en extra.bin. Si la sala no trae .csv,
+    // el daño, headshots, impactos, gloo, revividas, derribos (y las kills, si no hay .log) salen del .bin.
+    function aplicarBin(s, b) {
+        if (!s || !b) return s;
+        equiposDelBin(s, b);
+        aplicarStatsBin(s, b);
+        return s;
+    }
+    // Equipos sin nombre en el .json (ESCUADRA n: los que nadie eliminó) → nombre real del .bin
+    function equiposDelBin(s, b) {
+        if (!s || !b) return s;
+        const ren = {};
+        (b.equipos || new Map()).forEach((nombre, sq) => { ren['ESCUADRA ' + sq] = nombre; });
+        const R = n => ren[n] || n;
+        if (Object.keys(ren).length) {
+            s.jugadores.forEach(j => {
+                j.equipo = R(j.equipo);
+                if (j.extra && j.extra.vs) { const vs = {}; Object.entries(j.extra.vs).forEach(([k, v]) => { vs[R(k)] = (vs[R(k)] || 0) + v; }); j.extra.vs = vs; }
+            });
+            (s.eliminados || []).forEach(e => { e.equipo = R(e.equipo); e.por = R(e.por); });
+            if (s.primeraSangre) s.primeraSangre.equipo = R(s.primeraSangre.equipo);
+            if (s.killLejana) s.killLejana.equipo = R(s.killLejana.equipo);
+        }
+        return s;
+    }
+    function aplicarStatsBin(s, b) {
+        const porNick = new Map([...b.jugadores.values()].filter(x => x.nick).map(x => [norm(x.nick), x]));
+        const soloReplay = s.fuente === 'replay';
+        s.jugadores.forEach(j => {
+            const x = (j.pid !== undefined && b.jugadores.get(j.pid))
+                || (j.account_id && b.cuentas.has(String(j.account_id)) && b.jugadores.get(b.cuentas.get(String(j.account_id))))
+                || porNick.get(norm(j.jugador));
+            if (!x) return;
+            j.extra = Object.assign({}, j.extra, { bin: { kills: x.kills, dano: x.dano, impactos: x.impactos, hs: x.hs, torso: x.torso, piernas: x.piernas,
+                gloo: x.gloo, reanimo: x.reanimo, revivido: x.revivido, derribos: x.derribos, derribado: x.derribado } });
+            if (!j.account_id && x.account_id) j.account_id = x.account_id;
+            if (!soloReplay) return;
+            if (!j.killsLog) j.kills = x.kills;
+            j.dano = x.dano; j.headshots = x.hs; j.hits = x.impactos; j.gloo = x.gloo; j.revividos = x.reanimo; j.derribos = x.derribos;
+            const armas = new Map(j.armas.map(a => [a.n, a]));
+            Object.entries(x.armas).forEach(([id, d]) => {
+                const n = nombreArma(+id), a = armas.get(n) || { n, d: 0, k: 0, hs: 0, s: 0 };
+                a.d += d; armas.set(n, a);
+            });
+            j.armas = [...armas.values()].sort((a, b2) => b2.k - a.k || b2.d - a.d);
+            j.arma = j.armas.length ? j.armas[0].n : '';
+        });
+        if (soloReplay) s.fuente = 'bin';
+        return s;
     }
 
     /* ---------------- Emparejar .csv / .json con las salas ---------------- */
@@ -776,7 +830,7 @@
     }
 
     window.PumasCompletos = {
-        leerCSV, partidaDesdeCSV, partidaDesdeReplay, jugadoresDeLog, nombreArma, combinar, aCSV, emparejar, calcular, filasBD, salasDesdeBD, idDeArchivo,
+        leerCSV, partidaDesdeCSV, partidaDesdeReplay, jugadoresDeLog, nombreArma, combinar, aplicarBin, equiposDelBin, aCSV, emparejar, calcular, filasBD, salasDesdeBD, idDeArchivo,
         habilitados, habilitado, destacadosHTML, escuadraHTML, salasHTML, imagenHTML, imagenSalasHTML, listaDestacados, tablasSalas, traerTodo, estilos, montarPublico, MAPAS, GRUPOS,
         guardar: (portal, sesion, filas) => P.stats.guardar(portal, sesion, filas),
         olvidarConfig: () => { cfgCache = null; }

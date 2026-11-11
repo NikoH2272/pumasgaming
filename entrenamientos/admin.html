@@ -183,7 +183,7 @@
             <!-- Solo en "Cargar con estadísticas" (completos_admin.js): repetición .json/.bin y resultados completos .csv -->
             <div class="bloque-stats" id="bloqueCompletos" hidden>
                 <h3><i class="fa-solid fa-chart-simple"></i> ESTADÍSTICAS DE LA SALA</h3>
-                <p class="form-hint" style="margin:0">Sube los archivos de <b>4 a 6 salas</b>: por cada sala su <b>match .log</b> (arriba), su <b>replay .json</b> y su <b>.bin</b>. Se emparejan por el número de la partida que va en el nombre. Con el .json salen tiempo vivo, primera sangre, kill más lejana, caídas y armas de las kills; el .csv de resultados completos es opcional y suma daño, headshots, revividas y paredes gloo.</p>
+                <p class="form-hint" style="margin:0">Sube los archivos de <b>4 a 6 salas</b>: por cada sala su <b>match .log</b> (arriba), su <b>replay .json</b> y su <b>.bin</b>. Se emparejan por el número de la partida que va en el nombre. Con el .json salen tiempo vivo, primera sangre, kill más lejana, caídas y armas de las kills; con el .bin, daño, headshots, impactos, paredes gloo, reanimaciones y derribos. El .csv de resultados completos es opcional.</p>
                 <div class="stats-grid">
                     <div class="form-group">
                         <label>REPLAYS (.json) · 4 A 6</label>
@@ -632,10 +632,12 @@
             cambiarPestanaAdmin('cargar');
         });
     </script>
-    <script src="../portal-kit/completos.js?v=20261013e"></script>
+    <script src="../portal-kit/completos.js?v=20261111d"></script>
     <script src="admin_logica.js?v=20261103b"></script>
-    <script src="completos_admin.js?v=20261013e"></script>
-    <script src="../portal-kit/generador-csv.js?v=20261013e"></script>
+    <script src="../portal-kit/imagenes-resultados.js?v=20261111b"></script>
+    <script src="completos_admin.js?v=20261111b"></script>
+    <script src="../portal-kit/replay-bin.js?v=20261111c"></script>
+    <script src="../portal-kit/generador-csv.js?v=20261111c"></script>
     <script src="../portal-kit/cupos-control.js?v=20261013e"></script>
     <script src="config_portal.js?v=20261103b"></script>
     <script src="caidas.js?v=20261013e"></script>

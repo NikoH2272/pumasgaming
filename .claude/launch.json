@@ -12,6 +12,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["serve", "-l", "5174", "--no-clipboard"],
       "port": 5174
+    },
+    {
+      "name": "prueba-generador",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "5180", "--no-clipboard", "C:/Users/nicolas/AppData/Local/Temp/claude/50ef4b76ddaeead7/73732d97-d2b6-4682-9373-6604d22db9cb/scratchpad/web"],
+      "port": 5180
     }
   ]
 }

@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "preview:resultados": "node scripts/vista-local.cjs"
+  },
   "dependencies": {
     "motion": "^14.2.0"
   }

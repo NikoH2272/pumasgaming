@@ -32,6 +32,14 @@
         revive_teammate_nums: 'COMPAÑEROS REVIVIDOS', oil_kill: 'KILLS CON BARRIL', pet_skill_name: 'MASCOTA'
     };
     const etiqueta = c => ETIQUETAS[c] || c.replace(/_/g, ' ').toUpperCase();
+    // Lo que sale del .bin por jugador (portal-kit/replay-bin.js). Daño e impactos incluyen los golpes a paredes gloo, como el .csv oficial.
+    const BIN_CAMPOS = [['dano', 'DAÑO'], ['impactos', 'IMPACTOS'], ['hs', 'HEADSHOTS'], ['torso', 'IMPACTOS AL TORSO'],
+        ['piernas', 'IMPACTOS A LAS PIERNAS'], ['gloo', 'PAREDES GLOO'], ['reanimo', 'REANIMÓ A COMPAÑEROS'], ['revivido', 'VECES REVIVIDO'],
+        ['derribos', 'DERRIBOS'], ['derribado', 'VECES DERRIBADO']];
+    const BIN_EQUIPO = ['dano', 'impactos', 'hs', 'gloo', 'reanimo', 'derribos', 'derribado'];
+    const cabBin = (nombre, conCsv) => conCsv ? nombre + ' (.BIN)' : nombre;
+    const pctHs = o => o && o.impactos ? (o.hs / o.impactos * 100).toFixed(1) : '';
+    const armasBinDe = armas => Object.entries(armas || {}).filter(([, dn]) => dn > 0).sort((a, b) => b[1] - a[1]);
     const esNum = v => /^-?\d+(\.\d+)?$/.test(String(v).trim());
     const esBool = v => /^(true|false)$/i.test(String(v).trim());
     const fechaNombre = n => (/(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/.exec(n || '') || [])[1] || '';
@@ -70,7 +78,7 @@
         const turno = ++turnoGen;   // si suben otro archivo mientras se lee, solo cuenta la última lectura
         const [reps, logs, cs] = await Promise.all([leerArchivos('genReplays'), leerArchivos('genLogs'), leerArchivos('genCsvs')]);
         if (turno !== turnoGen) return;
-        const bins = Array.from(($('genBins') || {}).files || []).map(f => ({ nombre: f.name, id: C().idDeArchivo(f.name) }));
+        const bins = Array.from(($('genBins') || {}).files || []).map(f => ({ nombre: f.name, id: C().idDeArchivo(f.name), file: f }));
         gen = null;
         ['genEquipos', 'genJugadores', 'genDetalle'].forEach(id => { $(id).disabled = true; });
         $('genVista').innerHTML = ''; $('genChecklist').innerHTML = '';
@@ -107,17 +115,29 @@
         mapa.forEach(x => { if (x.bin && !x.json && !x.csv && !x.log) avisos.push(`${x.bin.nombre}: no hay .json, .log ni .csv de esa partida.`); });
         lista.forEach(x => { if (x.json && !x.bin) avisos.push(`Sala ${x.id}: falta su .bin.`); });
 
-        // 2) Jugadores y equipos de cada sala (.log + .json + .csv)
+        // .bin de cada sala: daño, impactos, headshots, gloo, reanimaciones y derribos por jugador (se cruzan con el .json por PlayerID)
+        if (window.PumasBin) {
+            const porLeer = lista.filter(x => x.bin && x.json);
+            if (porLeer.length) { gInfo.textContent = `Leyendo ${porLeer.length} .bin...`; gInfo.style.color = ''; }
+            await Promise.all(porLeer.map(async x => {
+                try { x.binDatos = PumasBin.leer(await x.bin.file.arrayBuffer()); }
+                catch (e) { avisos.push(`${x.bin.nombre}: no se pudo leer (${e.message}).`); }
+            }));
+            if (turno !== turnoGen) return;
+        }
+
+        // 2) Jugadores y equipos de cada sala (.log + .json + .csv + .bin)
         const ofi = $('genOficial').value === '1' ? await nombresOficiales() : {};
         if (turno !== turnoGen) return;
         const nom = n => ofi[String(n || '').toUpperCase()] || n;
         const equipos = new Map(), jugadores = new Map(), detalle = [], colsCsv = [];
-        let conLog = false, conReplay = false, conCsv = false;
+        let conLog = false, conReplay = false, conCsv = false, conBin = false;
         lista.forEach((x, i) => {
             x.sala = i + 1;
             const logJug = x.log ? C().jugadoresDeLog(x.log.texto) : [];
             let rep = null;
             if (x.json) { try { rep = C().partidaDesdeReplay(x.json.texto, logJug, {}); } catch (e) { avisos.push(`${x.json.nombre}: ${e.message}`); } }
+            if (rep && x.binDatos) C().equiposDelBin(rep, x.binDatos);   // nombre real de los equipos que nadie eliminó
             conLog = conLog || !!x.log; conReplay = conReplay || !!rep; conCsv = conCsv || !!x.csv;
             x.mapa = (rep && rep.mapa) || (x.csv && x.csv.mapa) || null;
             x.modo = (rep && rep.modo) || (x.csv && x.csv.modo) || null;
@@ -146,6 +166,13 @@
             filas.forEach(f => { if (f.rep) { nombreRep[f.rep.equipo] = nombreRep[f.rep.equipo] || {}; if (f.equipo) nombreRep[f.rep.equipo][f.equipo] = (nombreRep[f.rep.equipo][f.equipo] || 0) + 1; } });
             const eqRep = n => { const o = nombreRep[n] || {}; const top = Object.entries(o).sort((a, b) => b[1] - a[1])[0]; return top ? top[0] : nom(n); };
             filas.forEach(f => { if (!f.equipo) f.equipo = f.rep ? eqRep(f.rep.equipo) : 'SIN EQUIPO'; });
+            // Estadísticas del .bin: mismo PlayerID que el .json (y de paso el account_id si no vino del .log)
+            if (x.binDatos) filas.forEach(f => {
+                const s = f.rep && f.rep.pid !== undefined ? x.binDatos.jugadores.get(f.rep.pid) : null;
+                if (!s) return;
+                f.bin = s; conBin = true;
+                if (!f.id && s.account_id) f.id = s.account_id;
+            });
 
             // Puntos de cada equipo en la sala: del .log; si no hay, calculados (posición + 1 por kill)
             const killsDe = f => f.killsLog !== undefined ? f.killsLog : f.csv ? f.csv.kills : f.rep ? f.rep.kills : 0;
@@ -188,12 +215,17 @@
                     vivo: (c && c.vivo) || (r && r.vivo) || 0,
                     bajas: r ? r.derribos : '', caidas: r ? xr.caidas : '', levantado: r ? xr.levantado : '',
                     primera: r ? (xr.primeraSangre ? 1 : 0) : '', distancia: Math.max(xr.distancia || 0, xc.distancia || 0) || '',
-                    rematados: r ? (xr.fin || 0) : '', vs, armasKills, bin: x.bin ? 'SI' : 'NO', c
+                    rematados: r ? (xr.fin || 0) : '', vs, armasKills, bin: x.bin ? 'SI' : 'NO', c, b: f.bin || null
                 };
                 detalle.push(d);
                 const k = d.id ? 'id' + d.id : 'n' + norm(d.jugador);
                 const a = jugadores.get(k) || { jugador: d.jugador, id: d.id, equipo: d.equipo, salas: 0, kills: 0, porSala: {}, vivo: 0, booyahs: 0, bajas: 0, caidas: 0, levantado: 0,
-                    primeras: 0, distancia: 0, rematados: 0, vs: {}, armasKills: {}, salasRep: 0, salasCsv: 0, csv: {}, armasCsv: {} };
+                    primeras: 0, distancia: 0, rematados: 0, vs: {}, armasKills: {}, salasRep: 0, salasCsv: 0, csv: {}, armasCsv: {}, salasBin: 0, bin: {}, armasBin: {} };
+                if (d.b) {
+                    a.salasBin++;
+                    BIN_CAMPOS.forEach(([cmp]) => { a.bin[cmp] = (a.bin[cmp] || 0) + (d.b[cmp] || 0); });
+                    Object.entries(d.b.armas).forEach(([id, dn]) => { const n2 = C().nombreArma(+id); a.armasBin[n2] = (a.armasBin[n2] || 0) + dn; });
+                }
                 a.salas++; a.kills += d.kills; a.porSala[i] = d.kills; a.vivo += d.vivo; a.equipo = d.equipo;
                 if (d.booyah) a.booyahs++;
                 if (r) {
@@ -220,6 +252,7 @@
                     if (r) { t.rematados += d.rematados || 0; Object.entries(vs).forEach(([rv, nn]) => { t.vs[rv] = (t.vs[rv] || 0) + nn; }); t.recibidas += d.caidas || 0; }
                     if (c) ['damage', 'headshots', 'revive_teammate_times', 'icewall_use', 'assists', 'knock_down', 'healing_to_teammates', 'damage_taken', 'moving_distance']
                         .forEach(col => { if (esNum(c.crudo[col])) t.suma[col] = (t.suma[col] || 0) + Number(c.crudo[col]); });
+                    if (d.b) { t.bin = t.bin || {}; BIN_CAMPOS.forEach(([cmp]) => { t.bin[cmp] = (t.bin[cmp] || 0) + (d.b[cmp] || 0); }); }
                     t.vivo += d.vivo; t.nVivo++;
                 }
             });
@@ -227,7 +260,7 @@
         const colsCsvSumables = colsCsv.filter(c => !CSV_NO_SUMAR.test(c) && detalle.some(d => d.c && (esNum(d.c.crudo[c]) || esBool(d.c.crudo[c]))));
 
         gen = {
-            numSalas: lista.length, salas: lista, conLog, conReplay, conCsv, colsCsv, colsCsvSumables, detalle,
+            numSalas: lista.length, salas: lista, conLog, conReplay, conCsv, conBin, colsCsv, colsCsvSumables, detalle,
             equipos: [...equipos.values()].sort((a, b) => b.total - a.total || b.booyahs - a.booyahs || b.kills - a.kills),
             jugadores: [...jugadores.values()].sort((a, b) => b.kills - a.kills || a.jugador.localeCompare(b.jugador))
         };
@@ -241,11 +274,31 @@
         const nOfi = gen.equipos.filter(e => e.oficial).length;
         gInfo.innerHTML = `✔ ${lista.length} sala(s) · ${gen.equipos.length} equipos (${nOfi} registrados) · ${gen.jugadores.length} jugadores · ${detalle.length} filas de detalle.` +
             (conLog ? '' : ' Sin .log: las kills salen del .csv o del replay y los puntos se calculan (posición + 1 por kill).') +
+            (conBin ? ` Con estadísticas del .bin en ${lista.filter(x => x.binDatos).length} sala(s).` : '') +
             (avisos.length ? '<br>⚠ ' + avisos.map(esc).join('<br>⚠ ') : '');
         gInfo.style.color = avisos.length ? '#FFD54A' : '#6ee7a8';
-        const fe = filasEquipos();
-        $('genVista').innerHTML = `<div class="gen-scroll"><table class="gen-tabla"><thead><tr>${fe.cab.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead>
-            <tbody>${fe.filas.map(f => `<tr>${f.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+        pintarVista();
+    }
+
+    // Vista previa: las 3 tablas que se descargan, con las columnas del .bin resaltadas
+    let vistaTipo = 'equipos', vistaSoloBin = false;
+    const CAB_BIN_EXTRA = ['% HEADSHOT', 'DAÑO PROMEDIO POR SALA', 'ARMA CON MÁS DAÑO', 'DAÑO POR ARMA'];
+    const CAB_BASE = /^(POS|EQUIPO|JUGADOR|ID|SALAS?|PARTIDA|MAPA)$/;
+    function pintarVista() {
+        const cont = $('genVista');
+        if (!gen) { cont.innerHTML = ''; return; }
+        const { cab, filas } = vistaTipo === 'equipos' ? filasEquipos() : vistaTipo === 'jugadores' ? filasJugadores() : filasDetalle();
+        const deBin = new Set(gen.conBin ? [...BIN_CAMPOS.map(c => c[1]), ...CAB_BIN_EXTRA].map(n => cabBin(n, gen.conCsv)) : []);
+        const idx = cab.map((h, i) => i).filter(i => !vistaSoloBin || deBin.has(cab[i]) || CAB_BASE.test(cab[i]));
+        const tab = (t, n) => `<button type="button" class="gen-tab${vistaTipo === t ? ' activa' : ''}" data-vista="${t}">${n}</button>`;
+        cont.innerHTML = `<div class="gen-tabs">${tab('equipos', 'EQUIPOS')}${tab('jugadores', 'JUGADORES')}${tab('detalle', 'DETALLE POR SALA')}
+                <label class="gen-solobin"${gen.conBin ? '' : ' style="display:none"'}><input type="checkbox" id="genSoloBin"${vistaSoloBin ? ' checked' : ''}> Solo columnas del .bin</label>
+                <span class="gen-cuenta">${filas.length} filas · ${idx.length} columnas${gen.conBin ? ' · <span class="gen-marca">■</span> sale del .bin' : ''}</span></div>
+            <div class="gen-scroll"><table class="gen-tabla"><thead><tr>${idx.map(i => `<th${deBin.has(cab[i]) ? ' class="bin"' : ''}>${esc(cab[i])}</th>`).join('')}</tr></thead>
+            <tbody>${filas.map(f => `<tr>${idx.map(i => `<td${deBin.has(cab[i]) ? ' class="bin"' : ''}>${esc(f[i])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+        cont.querySelectorAll('.gen-tab').forEach(b => b.addEventListener('click', () => { vistaTipo = b.dataset.vista; pintarVista(); }));
+        const sb = $('genSoloBin');
+        if (sb) sb.addEventListener('change', () => { vistaSoloBin = sb.checked; pintarVista(); });
     }
 
     const top = o => Object.entries(o || {}).sort((a, b) => b[1] - a[1])[0];
@@ -258,6 +311,7 @@
             cab: ['POS', 'EQUIPO', 'REGISTRADO', 'SALAS', 'BOOYAHS', 'PTS KILLS', 'PTS POSICIÓN', ...s.map(i => 'PTS S' + (i + 1)), ...s.map(i => 'POS S' + (i + 1)), 'TOTAL', 'FUENTE PUNTOS',
                 'TIEMPO VIVO PROMEDIO',
                 ...(gen.conReplay ? ['EQUIPOS ELIMINADOS', 'RIVAL CON MÁS BAJAS', 'BAJAS A ESE RIVAL', 'CAÍDAS SUFRIDAS'] : []),
+                ...(gen.conBin ? [...BIN_EQUIPO.map(cmp => cabBin(BIN_CAMPOS.find(c => c[0] === cmp)[1], gen.conCsv)), cabBin('% HEADSHOT', gen.conCsv)] : []),
                 ...(gen.conCsv ? csvCols.map(c => c[1]) : [])],
             filas: gen.equipos.map((e, k) => {
                 const t = top(e.vs);
@@ -265,6 +319,7 @@
                     ...s.map(i => e.porSala[i] ?? ''), ...s.map(i => e.posSala[i] ?? ''), e.total, [...e.fuentes].join(' + '),
                     e.nVivo ? mmss(e.vivo / e.nVivo) : '',
                     ...(gen.conReplay ? [e.rematados, t ? t[0] : '', t ? t[1] : '', e.recibidas] : []),
+                    ...(gen.conBin ? [...BIN_EQUIPO.map(cmp => e.bin ? e.bin[cmp] || 0 : ''), pctHs(e.bin)] : []),
                     ...(gen.conCsv ? csvCols.map(c => e.suma[c[0]] !== undefined ? Math.round(e.suma[c[0]]) : '') : [])];
             })
         };
@@ -275,6 +330,8 @@
         const cab = ['POS', 'JUGADOR', 'ID', 'EQUIPO', 'SALAS', ...s.map(i => 'K S' + (i + 1)), 'KILLS', 'BOOYAHS', 'TIEMPO VIVO PROMEDIO'];
         if (gen.conReplay) cab.push('BAJAS (REPLAY)', 'CAÍDAS', 'VECES LEVANTADO', 'PRIMERAS SANGRES', 'EQUIPOS REMATADOS', 'RIVAL CON MÁS BAJAS', 'BAJAS A ESE RIVAL', 'ARMAS DE LAS KILLS');
         cab.push('KILL MÁS LEJANA (m)');
+        if (gen.conBin) cab.push(...BIN_CAMPOS.map(c => cabBin(c[1], gen.conCsv)), cabBin('% HEADSHOT', gen.conCsv), cabBin('DAÑO PROMEDIO POR SALA', gen.conCsv),
+            cabBin('ARMA CON MÁS DAÑO', gen.conCsv), cabBin('DAÑO POR ARMA', gen.conCsv));
         const csvBase = [['dano', 'DAÑO'], ['hs', 'HEADSHOTS'], ['hits', 'IMPACTOS'], ['disparos', 'DISPAROS'], ['revividas', 'REVIVIDAS'], ['gloo', 'PAREDES GLOO'], ['asistencias', 'ASISTENCIAS'], ['derribos', 'DERRIBOS']];
         if (gen.conCsv) cab.push(...csvBase.map(c => c[1]), '% HEADSHOT', 'PRECISIÓN %', 'ARMA PRINCIPAL', 'DAÑO POR ARMA', ...gen.colsCsvSumables.map(etiqueta));
         const filas = gen.jugadores.map((j, k) => {
@@ -283,6 +340,11 @@
             if (gen.conReplay) f.push(rep ? j.bajas : '', rep ? j.caidas : '', rep ? j.levantado : '', rep ? j.primeras : '', rep ? j.rematados : '',
                 rep && t ? t[0] : '', rep && t ? t[1] : '', rep ? listaArmas(j.armasKills) : '');
             f.push(j.distancia || '');
+            if (gen.conBin) {
+                const bn = j.salasBin > 0, ab = armasBinDe(j.armasBin);
+                f.push(...BIN_CAMPOS.map(c => bn ? j.bin[c[0]] || 0 : ''), bn ? pctHs(j.bin) : '', bn ? Math.round((j.bin.dano || 0) / j.salasBin) : '',
+                    bn && ab.length ? ab[0][0] : '', bn ? ab.map(([n, dn]) => `${n}: ${dn}`).join(' | ') : '');
+            }
             if (gen.conCsv) {
                 const v = col => csv && j.csv[col] !== undefined ? Math.round(j.csv[col] * 100) / 100 : '';
                 f.push(...csvBase.map(c => v(c[0])),
@@ -300,11 +362,14 @@
     function filasDetalle() {
         const cab = ['SALA', 'PARTIDA', 'FECHA', 'MAPA', 'MODO', '.BIN', 'EQUIPO', 'JUGADOR', 'ID', 'KILLS', 'FUENTE KILLS', 'BOOYAH', 'TIEMPO VIVO', 'KILL MÁS LEJANA (m)'];
         if (gen.conReplay) cab.push('BAJAS (REPLAY)', 'CAÍDAS', 'VECES LEVANTADO', 'PRIMERA SANGRE', 'EQUIPOS REMATADOS', 'BAJAS POR RIVAL', 'ARMAS DE LAS KILLS');
+        if (gen.conBin) cab.push(...BIN_CAMPOS.map(c => cabBin(c[1], gen.conCsv)), cabBin('% HEADSHOT', gen.conCsv), cabBin('DAÑO POR ARMA', gen.conCsv));
         if (gen.conCsv) cab.push('DAÑO', 'HEADSHOTS', 'IMPACTOS', 'DISPAROS', '% HEADSHOT', 'PRECISIÓN %', 'REVIVIDAS', 'PAREDES GLOO', 'ASISTENCIAS', 'DERRIBOS', 'DAÑO POR ARMA',
             ...gen.colsCsv.map(c => 'CSV · ' + etiqueta(c)));
         const filas = gen.detalle.map(d => {
             const f = [d.sala, d.partida, d.fecha, d.mapa, d.modo, d.bin, d.equipo, d.jugador, d.id, d.kills, d.fuenteKills, d.booyah ? 'SI' : 'NO', mmss(d.vivo), d.distancia];
             if (gen.conReplay) f.push(d.bajas, d.caidas, d.levantado, d.primera, d.rematados, listaArmas(d.vs), listaArmas(d.armasKills));
+            if (gen.conBin) f.push(...BIN_CAMPOS.map(c => d.b ? d.b[c[0]] || 0 : ''), d.b ? pctHs(d.b) : '',
+                d.b ? armasBinDe(d.b.armas).map(([id, dn]) => `${C().nombreArma(+id)}: ${dn}`).join(' | ') : '');
             if (gen.conCsv) {
                 const c = d.c;
                 f.push(...(c ? [c.dano, c.headshots, c.hits, c.disparos, c.hits ? (c.headshots / c.hits * 100).toFixed(1) : '', c.disparos ? (c.hits / c.disparos * 100).toFixed(1) : '',
@@ -343,6 +408,15 @@
 .gen-tabla { width: 100%; border-collapse: collapse; font-size: .82rem; }
 .gen-tabla th { position: sticky; top: 0; padding: 8px 6px; background: #121317; color: #D8C395; font-family: 'Michroma'; font-size: .6rem; text-align: left; }
 .gen-tabla td { padding: 6px; border-top: 1px solid rgba(255,255,255,.06); color: #ddd; white-space: nowrap; }
+.gen-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+.gen-tab { padding: 7px 12px; border: 1px solid rgba(216,195,149,.35); border-radius: 6px; background: transparent; color: #D8C395; font-family: 'Michroma'; font-size: .6rem; cursor: pointer; }
+.gen-tab.activa { background: #D8C395; color: #121317; }
+.gen-solobin { display: flex; align-items: center; gap: 6px; color: #ddd; font-size: .8rem; cursor: pointer; }
+.gen-solobin input { width: auto; }
+.gen-cuenta { margin-left: auto; color: #999; font-size: .75rem; }
+.gen-marca { color: #7cc4ff; }
+.gen-tabla th.bin { color: #7cc4ff; }
+.gen-tabla td.bin { background: rgba(124,196,255,.07); }
 .gen-scroll { max-height: 420px; overflow: auto; margin-top: 12px; border: 1px solid rgba(216,195,149,.2); border-radius: 6px; }`;
 
     function montar(contId) {
@@ -357,6 +431,8 @@
         cont.innerHTML = `
             <p class="tool-desc">
                 Sube los <b>replays</b> de cada sala: el <code>.json</code> y su <code>.bin</code> (se cruzan por el número de la partida).
+                Del <code>.bin</code> salen daño, impactos, headshots, impactos al torso y piernas, daño por arma, paredes gloo, reanimaciones y derribos de cada jugador
+                (el daño total puede variar unos puntos del oficial).
                 El <code>.log</code> es opcional (da las kills y puntos oficiales de la sala) y el <code>.csv</code> de resultados completos también
                 (suma daño, headshots, curación, distancia y todas sus columnas). Descarga el CSV de <b>equipos</b>, el de <b>jugadores</b> (todo el entreno)
                 y el <b>detalle</b> (cada jugador en cada sala, con todas las métricas). No se guarda nada en la base.

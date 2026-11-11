@@ -1,0 +1,4 @@
+Imagenes por defecto de los personajes para "Cara a cara" (Analisis de entrenos):
+  mvp1.png  -> MVP 1 (lado izquierdo)
+  mvp2.png  -> MVP 2 (lado derecho)
+PNG con fondo transparente, vertical (recomendado 900x1200 o mas). El personaje del MVP 1 mirando a la derecha y el del MVP 2 mirando a la izquierda.
