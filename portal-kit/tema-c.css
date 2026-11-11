@@ -1,0 +1,273 @@
+/* =====================================================================
+   PUMAS GAMING · Tema "corte diagonal" para las páginas públicas de un portal
+   (Entrenamientos, Estadísticas...). Se carga DESPUÉS del style.css de la página
+   y solo aplica con <body class="c-tema">. La portada usa /inicio.css.
+   No cambia --font-display: las imágenes 4:5 que se descargan siguen con Michroma.
+   Paleta: tinta #141414 · superficies #1D1D1D / #242424 · línea #363636 · gris #959595
+           piel #F2F2F2 · oro #DCCC9C
+   ===================================================================== */
+.c-tema {
+  --tinta: #141414; --s1: #1D1D1D; --s2: #242424; --linea: #363636; --gris-c: #959595;
+  --gris-claro: #c9c4b8; --piel: #F2F2F2; --oro: #DCCC9C; --oro-claro: #efe3bd;
+  --pad: clamp(20px, 5vw, 64px);
+  --f-disp: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --f-txt: 'Barlow', 'Segoe UI', sans-serif;
+  --primary: #DCCC9C; --accent-yellow: #DCCC9C; --light: #F2F2F2; --gray: #a9a397;
+  --dark: #141414; --secondary: #1D1D1D; --dark-card: #1D1D1D; --line: #363636;
+  background: var(--tinta);
+  color: var(--piel);
+  font: 16px/1.55 var(--f-txt);
+  -webkit-font-smoothing: antialiased;
+  scrollbar-color: var(--oro) var(--tinta);
+}
+.c-tema::before { display: none; }
+.c-tema ::selection { background: var(--oro); color: var(--tinta); }
+.c-tema a:focus-visible, .c-tema button:focus-visible, .c-tema input:focus-visible, .c-tema select:focus-visible { outline: 2px solid var(--oro); outline-offset: 3px; }
+
+.c-disp, .c-tema .section-title, .c-tema .header-card-title h3, .c-tema .vista-head h3 {
+  font-family: var(--f-disp); font-style: italic; font-weight: 800; text-transform: uppercase; letter-spacing: .005em;
+}
+
+/* ---------- Encabezado ---------- */
+.c-tema .site-header { position: sticky; top: 0; z-index: 1000; min-height: 0; gap: 20px; padding: 14px var(--pad); border-bottom: 1px solid #222; background: rgba(20, 20, 20, .92); backdrop-filter: blur(10px); }
+.c-tema .logo-img { width: 40px; height: 40px; }
+.c-tema .logo { font: italic 800 24px/1 var(--f-disp); letter-spacing: .01em; text-transform: uppercase; color: var(--piel); }
+.c-tema .main-nav ul { gap: clamp(14px, 2vw, 28px); }
+.c-tema .main-nav ul li a { padding: 6px 0; color: var(--gris-claro) !important; font: 600 13px var(--f-txt); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; }
+.c-tema .main-nav ul li a::after { display: none; }
+.c-tema .main-nav ul li a:hover, .c-tema .main-nav ul li a[aria-current], .c-tema .main-nav ul li a.c-activo { color: var(--oro) !important; }
+.c-tema .main-nav ul li a[aria-current], .c-tema .main-nav ul li a.c-activo { box-shadow: inset 0 -2px var(--oro); }
+.c-tema .main-nav .btn-access { padding: 8px 14px !important; border: 1px solid var(--linea); border-radius: 0; background: none; color: var(--piel) !important; font-size: 12px !important; }
+.c-tema .menu-toggle { border-radius: 0; border-color: var(--linea); }
+@media (max-width: 1024px) {
+  .c-tema .main-nav.is-active { background: var(--tinta); border-bottom: 1px solid var(--linea); }
+  .c-tema .main-nav ul li a { display: block; padding: 14px 0; font-size: 15px; }
+}
+
+/* ---------- Portada de la página ---------- */
+.c-tema .c-cab { position: relative; overflow: hidden; padding: clamp(48px, 7vw, 84px) var(--pad) 0; border-bottom: 1px solid #222; background: var(--tinta); text-align: left; }
+.c-tema .c-cab .c-rayo { position: absolute; right: 18%; top: -40px; width: 64px; height: 520px; background: var(--oro); transform: skewX(-24deg); pointer-events: none; }
+.c-tema .c-cab .c-rayo.fino { right: 14%; width: 12px; opacity: .7; }
+.c-tema .c-cab h1 { position: relative; z-index: 1; max-width: 900px; margin: 0; font: italic 800 clamp(52px, 7vw, 92px)/.88 var(--f-disp); text-transform: uppercase; color: var(--piel); }
+.c-tema .c-cab h1 em, .c-tema .c-cab h1 span { color: var(--oro); font-style: italic; }
+.c-tema .c-cab > p { position: relative; z-index: 1; max-width: 560px; margin: 18px 0 0; color: var(--gris-claro); font-size: 18px; }
+.c-tema .c-cifras { position: relative; z-index: 1; display: inline-grid; grid-template-columns: repeat(4, auto); margin-top: 40px; border: 1px solid var(--linea); border-bottom: 0; background: var(--s1); }
+.c-tema .c-cifras div { padding: 16px 28px; }
+.c-tema .c-cifras div + div { border-left: 1px solid var(--linea); }
+.c-tema .c-cifras b { display: block; font: 700 34px/1 var(--f-disp); font-variant-numeric: tabular-nums; color: var(--oro); }
+.c-tema .c-cifras small { color: var(--gris-c); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+
+/* ---------- Bloques, títulos y tablas ---------- */
+.c-tema .tabla-contenedor { border: 1px solid var(--linea); border-radius: 0; background: var(--s1); box-shadow: none; }
+.c-tema .header-card-title { border-bottom-color: var(--linea); }
+.c-tema .header-card-title h3 { font-size: clamp(24px, 2.6vw, 30px); line-height: 1; color: var(--piel); }
+.c-tema .header-card-title i { color: var(--oro) !important; }
+.c-tema .section-title { color: var(--piel); font-size: clamp(40px, 5vw, 56px); }
+.c-tema .section-title::after { display: none; }
+.c-tema .wk-range, .c-tema .header-leyenda, .c-tema .leyenda-tabla { color: var(--gris) !important; }
+.c-tema .tabla-estilizada th { color: var(--gris-claro); border-bottom-color: var(--linea); font: 600 12px var(--f-txt); letter-spacing: .1em; }
+.c-tema .tabla-estilizada td { border-bottom-color: #2a2a2a; font-variant-numeric: tabular-nums; }
+.c-tema .tabla-estilizada tbody tr:hover { background: rgba(220, 204, 156, .05); }
+.c-tema .orden-toggle .orden-btn { border-radius: 0; border-color: var(--linea); font-family: var(--f-txt); font-weight: 700; letter-spacing: .1em; }
+.c-tema .orden-toggle .orden-btn.on { background: var(--oro); border-color: var(--oro); color: var(--tinta); }
+.c-tema .btn-ver, .c-tema .btn-access, .c-tema .btn-generar { border-radius: 0 !important; font-family: var(--f-txt) !important; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.c-tema .btn-ver { border: 1px solid var(--oro); background: transparent; color: var(--oro); }
+.c-tema .btn-ver:hover { background: var(--oro); color: var(--tinta); }
+.c-tema .killer-card { position: relative; border: 1px solid var(--linea); border-radius: 0; background: var(--s2); }
+.c-tema .killer-card::after { content: ""; position: absolute; right: 0; top: 0; width: 14px; height: 14px; background: var(--oro); clip-path: polygon(0 0, 100% 0, 100% 100%); }
+
+/* Calendario */
+.c-tema .calendar-container { border-radius: 0; }
+.c-tema .calendar-day { position: relative; border-radius: 0; background: var(--s2); color: var(--gris-claro); font: 700 18px var(--f-disp); font-variant-numeric: tabular-nums; }
+.c-tema .calendar-day.has-session { background: #2b2820; color: var(--oro); }
+.c-tema .calendar-day.has-session::after { content: ""; position: absolute; right: 0; top: 0; width: 12px; height: 12px; background: var(--oro); clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.c-tema .calendar-day.selected-day { background: var(--oro); color: var(--tinta); }
+
+/* Detalle de un entreno (modal) */
+.c-tema .modal-vista-box { border-color: var(--linea); border-radius: 0; background: var(--s1); }
+.c-tema .vista-head h3 { font-size: 30px; color: var(--piel); }
+
+/* ---------- Módulo Estadísticas (portal-kit/completos.js) ---------- */
+.c-tema .cpl-pestanas { border-radius: 0; border-color: var(--linea); }
+.c-tema .cpl-pest { border-radius: 0; font: italic 800 18px var(--f-disp); letter-spacing: .02em; }
+.c-tema .cpl-pest-ind { border-radius: 0; }
+.c-tema .cpl-chip { border-radius: 0; font-family: var(--f-txt); font-weight: 600; }
+.c-tema .cpl-sel { border-radius: 0; border-color: var(--linea); background: var(--tinta); }
+.c-tema .cpl-dest { position: relative; border-color: var(--linea); border-radius: 0; background: var(--s1); }
+.c-tema .cpl-dest::after { content: ""; position: absolute; right: 0; top: 0; width: 16px; height: 16px; background: var(--oro); clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.c-tema .cpl-dest b { font: italic 800 22px/1.1 var(--f-disp); text-transform: uppercase; }
+.c-tema .cpl-escuadra { border-radius: 0; background: linear-gradient(135deg, rgba(220, 204, 156, .16), var(--s1)); }
+.c-tema .cpl-escuadra > b { font: italic 800 30px/1 var(--f-disp); text-transform: uppercase; }
+.c-tema .cpl-tabla { border-color: var(--linea); border-radius: 0; background: var(--s1); }
+.c-tema .cpl-tabla h4 { font: italic 800 22px var(--f-disp); text-transform: uppercase; letter-spacing: .01em; color: var(--piel); }
+.c-tema .cpl-tabla h4 i { color: var(--oro); }
+.c-tema .cpl-tabla th { color: var(--gris-claro); }
+.c-tema .cpl-larga thead th { background: var(--s1); }
+
+/* ---------- Pie ---------- */
+.c-tema footer { border-top: 1px solid var(--linea); background: var(--tinta); color: var(--gris-c); }
+.c-tema .pg-creditos { color: var(--gris-claro); }
+
+/* ---------- Celular ---------- */
+@media (max-width: 760px) {
+  .c-tema .logo { font-size: 18px; white-space: nowrap; }
+  .c-tema .logo-img { width: 34px; height: 34px; }
+  .c-tema .c-cab .c-rayo { right: -18px; width: 30px; }
+  .c-tema .c-cab .c-rayo.fino { right: -40px; width: 8px; }
+  .c-tema .c-cab h1, .c-tema .c-cab > p { max-width: 82%; }
+  .c-tema .c-cifras { display: grid; grid-template-columns: 1fr 1fr; margin: 32px calc(-1 * var(--pad)) 0; border-left: 0; border-right: 0; }
+  .c-tema .c-cifras div { padding: 16px var(--pad); }
+  .c-tema .c-cifras div:nth-child(3) { border-left: 0; }
+  .c-tema .c-cifras div:nth-child(n+3) { border-top: 1px solid var(--linea); }
+  .c-tema .cpl-pest { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) { .c-tema * { transition: none !important; } }
+
+/* La pestaña activa del menú la marca la página con style="color: var(--primary)" */
+.c-tema .main-nav ul li a[style*="var(--primary)"] { color: var(--oro) !important; box-shadow: inset 0 -2px var(--oro); }
+.c-tema .c-cab:not(.hero) { padding-bottom: clamp(40px, 5vw, 56px); }
+.c-tema .c-stats-cuerpo { max-width: 1280px; margin: 0 auto; padding: clamp(28px, 4vw, 48px) var(--pad) clamp(56px, 7vw, 80px); }
+
+/* ---------- Destacados (latam.js: Top Booyah, Jugador más letal...) ---------- */
+.c-tema .dest-card { position: relative; gap: 8px; padding: 22px 20px !important; border: 1px solid var(--linea) !important; border-radius: 0 !important; background: var(--s1) !important; box-shadow: none !important; }
+.c-tema .dest-card::after { content: ""; position: absolute; right: 0; top: 0; width: 18px; height: 18px; background: var(--oro); clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.c-tema .subtitulo-bloque, .c-tema #pumasDestacados .subtitulo-bloque { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; color: var(--piel); font: italic 800 26px/1 var(--f-disp); text-transform: uppercase; letter-spacing: .01em; }
+.c-tema .subtitulo-bloque i { color: var(--oro); font-size: 18px; }
+.c-tema .dest-card .muted, .c-tema #pumasDestacados .muted { margin: 0 0 8px; color: var(--gris-claro); font-size: 14px; }
+.c-tema .dest-fila { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; padding: 12px 14px; border: 1px solid var(--linea); border-radius: 0; background: var(--s2); }
+/* posición: gris; la #1 en oro (la página la marca con su color en línea) */
+.c-tema .dest-fila > b { color: var(--gris-c) !important; font: 700 22px var(--f-disp); font-variant-numeric: tabular-nums; }
+.c-tema .dest-fila > b[style*="D8C395"], .c-tema .dest-fila > b[style*="primary"] { color: var(--oro) !important; }
+.c-tema .dest-nombre { color: var(--piel); font-weight: 700; }
+.c-tema .dest-nombre small { margin-top: 2px; color: var(--gris-c); font-size: 13px; font-weight: 500; }
+.c-tema .dest-fila em { color: var(--oro); font: 700 20px var(--f-disp); font-style: normal; font-variant-numeric: tabular-nums; }
+.c-tema .mvp { gap: 14px; margin-bottom: 6px; padding: 18px; border: 1px solid var(--oro); border-radius: 0; background: linear-gradient(135deg, rgba(220, 204, 156, .16), var(--s1) 70%); }
+.c-tema .mvp-icono { color: var(--oro); font-size: 34px; }
+.c-tema .mvp-nombre { color: var(--piel); font: italic 800 32px/1 var(--f-disp); text-transform: uppercase; }
+.c-tema .mvp small { color: var(--gris-c); }
+.c-tema .mvp-datos { gap: 10px; }
+.c-tema .mvp-datos span { padding: 12px 8px; border: 1px solid var(--linea); background: var(--tinta); color: var(--gris-c); font-size: 12px; font-weight: 600; letter-spacing: .1em; }
+.c-tema .mvp-datos b { margin-bottom: 2px; color: var(--oro); font: 700 36px/1 var(--f-disp); font-variant-numeric: tabular-nums; }
+@media (max-width: 760px) {
+  .c-tema .dest-card { padding: 18px 14px !important; }
+  .c-tema .mvp-nombre { font-size: 26px; }
+  .c-tema .mvp-datos b { font-size: 30px; }
+}
+/* 4 columnas solo en pantallas grandes: en laptop los nombres y las cifras no caben */
+.c-tema .dest-grid, .c-tema #pumasDestacados { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (min-width: 1500px) { .c-tema .dest-grid, .c-tema #pumasDestacados { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .c-tema .dest-grid, .c-tema #pumasDestacados { grid-template-columns: 1fr; } }
+
+/* ---------- Tablas dobles (Top 50 1–25 | 26–50, Histórico): lado a lado solo si caben ---------- */
+.c-tema .tabla-estilizada { display: table; width: 100%; }
+.c-tema .tabla-estilizada caption, .c-tema #modulo-equipos caption, .c-tema #modulo-top100 caption { display: table-caption; padding: 0 0 10px; color: var(--oro); font: italic 800 18px var(--f-disp); letter-spacing: .02em; text-align: left; text-transform: uppercase; }
+/* Teléfonos muy angostos: la tabla se desliza de lado en vez de apretarse */
+@media (max-width: 430px) {
+  .c-tema .tablas-pumas .tabla-estilizada, .c-tema .tabla-doble .tabla-estilizada { display: block; overflow-x: auto; }
+  .c-tema #modulo-equipos caption, .c-tema #modulo-top100 caption { display: block; }
+}
+/* Puestos #2 y #3: la página los pinta plata/bronce en línea; en el tema van en gris claro (el #1 sigue en oro).
+   Solo en la vista general: la imagen 4:5 del detalle del entreno conserva sus colores. */
+.c-tema #vistaGeneral [style*="B9B2A4"], .c-tema #vistaGeneral [style*="cd7f32"] { color: var(--gris-claro) !important; }
+/* Celular: cada equipo es una ficha (style.css); aquí, al estilo C */
+@media (max-width: 640px) {
+  .c-tema :is(#modulo-equipos, #modulo-top100) .tabla-estilizada tr { border: 1px solid var(--linea); border-radius: 0; background: var(--s2); }
+  .c-tema :is(#modulo-equipos, #modulo-top100) .tabla-estilizada td.eq-nombre { font: italic 800 19px/1.1 var(--f-disp) !important; text-transform: uppercase; }
+  .c-tema :is(#modulo-equipos, #modulo-top100) .tabla-estilizada td.c-pr { color: var(--oro); font: 700 24px/1 var(--f-disp) !important; }
+  .c-tema :is(#modulo-equipos, #modulo-top100) .tabla-estilizada td.c-pos { font: 700 18px var(--f-disp) !important; }
+  .c-tema .tabla-estilizada td[data-l]::before { margin-bottom: 2px; color: var(--gris-c); font: 600 10px var(--f-txt); letter-spacing: .1em; }
+  .c-tema .tabla-estilizada td.c-pr::before { color: var(--oro); }
+}
+/* Botón para ver del 26 al 50 en el celular (script_entrenamientos.js) */
+.c-tema .ver-mas { min-height: 48px; margin-top: 12px; border: 1px solid var(--oro) !important; border-radius: 0 !important; background: transparent !important; color: var(--oro) !important; font: 700 13px var(--f-txt) !important; letter-spacing: .12em; text-transform: uppercase; }
+.c-tema .ver-mas:hover { background: rgba(220, 204, 156, .1) !important; }
+.c-tema .tabla-estilizada th { letter-spacing: .04em; white-space: nowrap; }
+.c-tema .tabla-estilizada td:first-child { color: var(--gris-c); font: 700 17px var(--f-disp); }
+@media (max-width: 1499px) {
+  .c-tema .tablas-pumas, .c-tema .tabla-doble { grid-template-columns: 1fr !important; gap: 22px !important; }
+}
+
+/* ---------- Entrenos del día seleccionado (bajo el calendario) ---------- */
+.c-tema #daySessionsContainer > div:first-child { border-top-color: var(--linea) !important; }
+.c-tema #selectedDayTitle { display: flex; align-items: center; gap: 10px; margin: 0 0 14px !important; color: var(--piel) !important; font: italic 800 26px/1.05 var(--f-disp) !important; text-transform: uppercase; }
+.c-tema #selectedDayTitle i { color: var(--oro); font-size: 18px; }
+/* Va en la columna angosta junto al calendario: cada entreno como tarjeta (nombre y fecha arriba, botones abajo) */
+.c-tema #daySessionsContainer .tabla-estilizada, .c-tema #daySessionsContainer tbody { display: block; width: 100%; }
+.c-tema #daySessionsContainer thead { display: none; }
+.c-tema #daySessionsContainer tr { position: relative; display: grid; gap: 12px; margin-bottom: 10px; padding: 16px; border: 1px solid var(--linea); background: var(--s2); }
+.c-tema #daySessionsContainer tr::after { content: ""; position: absolute; right: 0; top: 0; width: 16px; height: 16px; background: var(--oro); clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.c-tema #daySessionsContainer td { display: block; padding: 0; border: 0; text-align: left !important; }
+.c-tema #daySessionsContainer td:first-child { color: var(--piel) !important; font: italic 800 22px/1.1 var(--f-disp) !important; text-transform: uppercase; }
+.c-tema #daySessionsContainer td[colspan] { color: var(--gris-claro) !important; font: 500 15px var(--f-txt) !important; text-transform: none; }
+.c-tema #daySessionsContainer .pg-ses-acc { display: flex; flex-wrap: wrap; justify-content: flex-start !important; gap: 8px; }
+.c-tema #daySessionsContainer .pg-ses-acc > *, .c-tema #daySessionsContainer .pg-dl-btn { flex: 1 1 auto; justify-content: center; }
+/* Fecha y botón "Descargar" (portal-kit/descargas.js) */
+.c-tema .pg-fecha { margin-top: 6px; padding: 3px 10px; border: 1px solid var(--linea); border-radius: 0; background: var(--s2); color: var(--gris-claro); font: 600 13px var(--f-txt); font-style: normal; text-transform: none; }
+.c-tema .pg-fecha i { color: var(--oro); }
+.c-tema .pg-dl-btn { min-height: 40px; padding: 8px 14px; border: 1px solid var(--linea); border-radius: 0; color: var(--piel); font: 700 12px var(--f-txt); letter-spacing: .1em; text-transform: uppercase; transition: border-color .15s ease, color .15s ease; }
+.c-tema .pg-dl-btn:hover { border-color: var(--oro); background: transparent; color: var(--oro); }
+.c-tema .pg-dl-btn i { color: var(--oro); }
+.c-tema #daySessionsContainer .btn-ver { min-height: 40px; padding: 8px 14px; font-size: 12px; }
+@media (max-width: 560px) {
+  .c-tema #selectedDayTitle { font-size: 22px !important; }
+}
+
+/* ---------- Cupos (entrenamientos/script_cupos.js) ---------- */
+.c-tema .c-cupos { display: grid; gap: 18px; max-width: 1100px; margin: 0 auto; padding: clamp(28px, 4vw, 48px) var(--pad) clamp(56px, 7vw, 80px); }
+.c-tema .c-cupos-estado { margin: 0; padding: 40px 0; color: var(--gris-claro); text-align: center; }
+.c-tema .c-cupos-vacio { display: grid; justify-items: center; gap: 6px; padding: 48px 24px; border: 1px solid var(--linea); background: var(--s1); text-align: center; }
+.c-tema .c-cupos-vacio i { font-size: 28px; color: var(--oro); }
+.c-tema .c-cupos-vacio p { margin: 6px 0 0; color: var(--piel); font: italic 800 26px/1.1 var(--f-disp); text-transform: uppercase; }
+.c-tema .c-cupos-vacio small { color: var(--gris-c); font-size: 14px; }
+.c-tema .c-cupos-vacio.error i { color: #e2847a; }
+.c-tema .c-cupo { position: relative; padding: clamp(20px, 3vw, 28px); border: 1px solid var(--linea); background: var(--s1); }
+.c-tema .c-cupo::after { content: ""; position: absolute; right: 0; top: 0; width: 22px; height: 22px; background: var(--oro); clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.c-tema .c-cupo.pendiente { border-style: dashed; border-color: rgba(220, 204, 156, .45); }
+.c-tema .c-cupo-cab { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px 28px; }
+.c-tema .c-cupo h2 { margin: 0 0 10px; color: var(--piel); font-size: clamp(28px, 3.4vw, 36px); line-height: 1; }
+.c-tema .c-vip { display: inline-flex; align-items: center; gap: 6px; margin-right: 10px; padding: 4px 10px; background: var(--oro); color: var(--tinta); font: 700 12px var(--f-txt); font-style: normal; letter-spacing: .1em; vertical-align: middle; }
+.c-tema .c-cupo-dato { display: flex; align-items: baseline; gap: 8px; margin: 4px 0; color: var(--gris-claro); font-size: 15px; }
+.c-tema .c-cupo-dato i { width: 16px; color: var(--oro); }
+.c-tema .c-cupo-dato.aviso { color: var(--oro-claro); }
+.c-tema .c-cupo-num { margin-left: 4px; color: var(--oro); font: 700 24px/1 var(--f-disp); font-variant-numeric: tabular-nums; }
+.c-tema .c-btn-cupo { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 12px 24px !important; border: 1px solid transparent; border-radius: 0 !important; font: 700 13px var(--f-txt) !important; letter-spacing: .14em; text-transform: uppercase; text-decoration: none; cursor: pointer; }
+.c-tema .btn-access.c-btn-cupo { background: var(--oro); color: var(--tinta) !important; }
+.c-tema .btn-access.c-btn-cupo:hover { background: var(--oro-claro); }
+.c-tema .c-btn-cupo.espera { border: 1px dashed rgba(220, 204, 156, .5); background: transparent; color: var(--oro-claro); cursor: not-allowed; opacity: 1; }
+.c-tema .c-btn-cupo.agotado { border-color: var(--linea); background: var(--s2); color: var(--gris-c); cursor: not-allowed; opacity: 1; }
+.c-tema .c-btn-cupo.secundario { width: 100%; margin-top: 10px; border-color: var(--linea); background: transparent; color: var(--gris-claro); }
+.c-tema .c-btn-cupo.secundario:hover { border-color: var(--oro); color: var(--oro); }
+.c-tema .c-cupo-cuenta { display: grid; justify-items: center; gap: 4px; margin-top: 18px; padding: 16px; border: 1px dashed rgba(220, 204, 156, .45); background: rgba(220, 204, 156, .05); text-align: center; }
+.c-tema .c-cupo-cuenta small { color: var(--gris-claro); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+.c-tema .c-cupo-cuenta b { color: var(--oro); font: 700 clamp(34px, 6vw, 48px)/1 var(--f-disp); font-variant-numeric: tabular-nums; }
+.c-tema .c-cupo-lista { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--linea); }
+.c-tema .c-cupo-lista h4 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 12px; color: var(--piel); font: italic 800 20px var(--f-disp); text-transform: uppercase; }
+.c-tema .c-cupo-lista h4 span { color: var(--oro); font-style: normal; font-variant-numeric: tabular-nums; }
+.c-tema .c-cupo-equipos { display: flex; flex-wrap: wrap; gap: 8px; }
+.c-tema .c-eq { padding: 6px 12px; border: 1px solid var(--linea); background: var(--s2); color: var(--piel); font-size: 14px; font-weight: 600; }
+.c-tema .c-eq.staff { border-color: var(--oro); background: rgba(220, 204, 156, .1); }
+.c-tema .c-eq.staff i { margin-left: 4px; color: var(--oro); }
+
+/* Formulario de inscripción y ventana de confirmación */
+.c-tema .c-modal { position: fixed; inset: 0; z-index: 2100; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, .82); backdrop-filter: blur(5px); }
+.c-tema .c-modal-caja { position: relative; width: 100%; max-width: 500px; padding: 28px; border: 1px solid var(--linea); border-top: 4px solid var(--oro); background: var(--s1); box-shadow: 0 24px 60px rgba(0, 0, 0, .5); }
+.c-tema .c-modal-x { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border: 1px solid var(--linea); background: transparent; color: var(--piel); cursor: pointer; }
+.c-tema .c-modal-x:hover { border-color: var(--oro); color: var(--oro); }
+.c-tema #modalTitulo, .c-tema .c-exito h3 { margin: 0 44px 18px 0; padding-bottom: 12px; border-bottom: 1px solid var(--linea); color: var(--piel); font-size: 28px; line-height: 1; }
+.c-tema .c-campo { margin-bottom: 18px; }
+.c-tema .c-campo label { display: block; margin-bottom: 8px; color: var(--gris-claro); font: 600 12px var(--f-txt); letter-spacing: .12em; text-transform: uppercase; }
+.c-tema .c-campo input, .c-tema .c-campo select { width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid var(--linea); border-radius: 0; background: var(--tinta); color: var(--piel); caret-color: var(--oro); }
+.c-tema .c-campo input::placeholder { color: #8f8a7e; }
+.c-tema .c-tel { display: flex; gap: 10px; }
+.c-tema .c-tel select { width: 140px; flex-shrink: 0; }
+.c-tema .c-modal-caja > .btn-access.c-btn-cupo { width: 100%; margin-top: 6px; }
+.c-tema .c-nota-vip { margin: 0 0 16px; padding: 12px 14px; border: 1px solid rgba(220, 204, 156, .5); background: rgba(220, 204, 156, .08); color: var(--oro-claro); font-size: 14px; text-align: left; }
+.c-tema .c-exito { text-align: center; }
+.c-tema .c-exito h3 { margin-right: 0; padding-bottom: 0; border-bottom: 0; }
+.c-tema .c-exito-icono { display: block; margin-bottom: 10px; color: #7fd4a0; font-size: 36px; }
+.c-tema .c-exito > p { margin: 0 0 16px; color: var(--piel); }
+.c-tema .c-exito .btn-access.c-btn-cupo { display: flex; width: 100%; }
+@media (max-width: 560px) {
+  .c-tema .c-cupo-acc, .c-tema .c-cupo-acc .c-btn-cupo { width: 100%; }
+  .c-tema .c-tel select { width: 112px; }
+}

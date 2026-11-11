@@ -72,8 +72,22 @@ async function procesarSesionUnica(id){
     const sc=Math.min(1,(Math.min(window.innerWidth-40,880)-60)/800);
     body.innerHTML=`<div class="vista-head"><h3>${esc(meta.titulo)}</h3><span>${esc(meta.jornada||'NORMAL')} · ${meta.fechaTxt}</span></div>
       <div id="vistaScaleWrap" style="width:${800*sc}px;height:${1000*sc}px;margin:0 auto;"><div id="vistaScaleInner" data-sc="${sc}" style="width:800px;height:1000px;transform:scale(${sc});transform-origin:top left;">${capturaHTML(d,meta)}</div></div>
-      <div class="vista-actions"><button class="btn-generar" onclick="descargarVista()"><i class="fa-solid fa-download"></i> DESCARGAR IMAGEN 4:5</button></div>`;
+      <div class="vista-actions"><button class="btn-generar" onclick="descargarVista()"><i class="fa-solid fa-download"></i> DESCARGAR IMAGEN 4:5</button></div>
+      ${window.PumasCompletos?`<div class="vista-actions"><button class="btn-generar" id="btnStatsSesion" onclick="verStatsSesion('${esc(String(s.id))}')" aria-expanded="false" aria-controls="statsSesion"><i class="fa-solid fa-chart-simple"></i> VER ESTADÍSTICAS</button></div>
+      <div id="statsSesion" class="vista-stats" hidden></div>`:''}`;
   }catch(e){console.error(e);body.innerHTML='<p class="vista-cargando">Error al cargar el entrenamiento.</p>';}
+}
+
+// Estadísticas del entreno (replays .json/.bin y resultados completos): TOP · ESTADÍSTICAS · ACUMULADOS
+async function verStatsSesion(id){
+  const caja=document.getElementById('statsSesion'),btn=document.getElementById('btnStatsSesion');
+  if(!caja||!window.PumasCompletos) return;
+  const abrir=caja.hidden;
+  caja.hidden=!abrir;
+  // Se despliega con un fundido corto (sin desplazamiento si el sistema pide reducir movimiento)
+  if(abrir&&caja.animate){const r=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;caja.animate(r?{opacity:[0,1]}:{opacity:[0,1],transform:['translateY(10px)','none']},{duration:r?150:300,easing:'cubic-bezier(0.16, 1, 0.3, 1)'});}
+  if(btn){btn.setAttribute('aria-expanded',String(abrir));btn.innerHTML=abrir?'<i class="fa-solid fa-chevron-up"></i> OCULTAR ESTADÍSTICAS':'<i class="fa-solid fa-chart-simple"></i> VER ESTADÍSTICAS';}
+  if(abrir&&!caja.dataset.cargado){caja.dataset.cargado='1';await PumasCompletos.montarSesion(caja,'entrenamientos',id);caja.scrollIntoView({behavior:'smooth',block:'start'});}
 }
 
 function descargarVista(){

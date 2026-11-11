@@ -4,13 +4,21 @@
    · Secciones y tarjetas: aparecen al llegar a ellas (una vez), escalonadas.
    · Cifras de la portada: cuentan desde 0 hasta su valor.
    · Menú en celular: los enlaces bajan uno tras otro.
-   No hace nada si el usuario pidió "reducir movimiento" en su sistema.
+   Con "reducir movimiento" en el sistema: sin entradas ni desplazamientos; solo queda
+   un fundido corto que confirma acciones (abrir el menú). Todo se ve desde el inicio.
    Lo carga portal.js; las páginas no tienen que hacer nada.
    ===================================================================== */
 (function () {
     const M = window.Motion;
-    if (!M || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!M) return;
     const { animate, inView, stagger } = M;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const navR = document.getElementById('mainNav');
+        if (navR) new MutationObserver(() => {
+            if (navR.classList.contains('is-active') && getComputedStyle(navR).position === 'absolute') animate(navR, { opacity: [0.4, 1] }, { duration: 0.15 });
+        }).observe(navR, { attributes: true, attributeFilter: ['class'] });
+        return;
+    }
     const SALIDA = [0.22, 1, 0.36, 1];   // frena suave al final
     const modo = (document.querySelector('script[data-modo]') || {}).dataset || {};
     const publico = modo.modo === 'publico';

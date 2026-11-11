@@ -169,7 +169,7 @@ function renderizarResultados(eqs, tKs, nS) {
     `<div style="position:absolute;top:520px;left:35px;width:730px;background:${fCo};padding:8px;border-radius:8px;border:1px solid rgba(220,204,156,0.3);"><div style="font-family:'Michroma';color:#DCCC9C;margin-bottom:4px;font-size:0.82rem;font-weight:bold;">BOOYAH POR SALA (VICTORIAS)</div><div style="display:grid;grid-template-columns:repeat(${Math.min(Math.max(rWData.length, 1), 6)}, 1fr);gap:6px;">` +
     (rWData.length ? rWData.map(rw => `
         <div style="font-size:0.7rem;background:rgba(18,19,23,0.85);padding:5px 6px;border-radius:5px;border:1px solid rgba(220,204,156,0.2);text-align:center;">
-            <div style="color:#DCCC9C;font-family:'Michroma';font-weight:bold;margin-bottom:2px;">SALA ${rw.sala} 👑</div>
+            <div style="color:#DCCC9C;font-family:'Michroma';font-weight:bold;margin-bottom:2px;">SALA ${rw.sala} <i class="fa-solid fa-crown" aria-hidden="true"></i></div>
             <div style="color:${cF};font-weight:bold;max-width:95px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 auto;" title="${rw.team}">${rw.team}</div>
             <div style="color:var(--gray);font-size:0.65rem;margin-top:2px;">Pts: <strong style="color:#DCCC9C;">${rw.points}</strong> | K: <strong style="color:#DCCC9C;">${rw.kills}</strong></div>
         </div>
@@ -281,7 +281,7 @@ async function registrarSorteo(e) {
 
     const respuestaUsuario = parseInt(document.getElementById('sorteoCaptcha').value);
     if (respuestaUsuario !== respuestaCaptchaCorrecta) {
-        alert("❌ Verificación anti-bot incorrecta. Intenta de nuevo.");
+        alert("La verificación anti-bot no es correcta. Resuelve la suma de nuevo.");
         document.getElementById('sorteoCaptcha').value = "";
         generarCaptcha();
         return;
@@ -294,7 +294,7 @@ async function registrarSorteo(e) {
     const contacto = document.getElementById('sorteoContacto').value.trim();
 
     if (!equipo || !representante || !igEquipo || !contacto) {
-        alert("❌ Todos los campos son obligatorios.");
+        alert("Faltan datos: completa todos los campos para inscribirte.");
         return;
     }
 
@@ -327,9 +327,9 @@ async function registrarSorteo(e) {
 
         if (error) {
             if (error.code === '23505') {
-                alert("❌ Este equipo ya se encuentra registrado en el sorteo. Solo se permite una entrada por equipo.");
+                alert("Este equipo ya está registrado en el sorteo. Solo se permite una entrada por equipo.");
             } else {
-                alert("❌ Hubo un error al registrar: " + error.message);
+                alert("No se pudo registrar tu equipo. Intenta de nuevo en un momento. Detalle: " + error.message);
             }
             boton.innerText = "REGISTRAR EQUIPO Y GENERAR TICKET";
             boton.disabled = false;
@@ -389,7 +389,7 @@ async function verificarEstadoSorteo() {
                         uiSeg.innerText = "00";
                     }
 
-                    btnSorteo.innerText = "⛔ INSCRIPCIONES CERRADAS";
+                    btnSorteo.innerText = "INSCRIPCIONES CERRADAS";
                     btnSorteo.disabled = true;
                     btnSorteo.style.background = "#333";
                     btnSorteo.style.color = "#888";

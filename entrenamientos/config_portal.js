@@ -19,7 +19,7 @@
         ['killers', 'Top killers', 'Jugadores con más kills', 'fa-skull'],
         ['top100', 'Top 100', 'Ranking de jugadores', 'fa-ranking-star'],
         ['destacados', 'Destacados', 'Destacados del entreno', 'fa-star'],
-        ['analisis', 'Análisis de entrenos', 'Pestaña con estadísticas avanzadas', 'fa-chart-simple'],
+        ['analisis', 'Estadísticas', 'Módulo Estadísticas: TOP, estadísticas y acumulados por jugador, equipo y mapa', 'fa-chart-simple'],
         ['vip', 'Resultados equipos VIP', 'Pestaña de resultados VIP', 'fa-shield-halved']
     ];
     // Módulos del panel (los mismos de la navegación del admin)

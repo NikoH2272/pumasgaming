@@ -2,6 +2,7 @@
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZ3hjdXZldWJnamJ2ZGxuaW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0OTI3NDYsImV4cCI6MjEwOTA2ODc0Nn0.aAYCjQxetfnJpoKMvg9IYtU6dpwIU-CkXCA5mc8Zhgo";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const escH = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const normEquipo = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
 window.addEventListener('DOMContentLoaded', cargarEntrenamientosActivos);
@@ -47,7 +48,7 @@ async function cargarEntrenamientosActivos() {
         entrenamientos = (entrenamientos || []).filter(e => (e.tipo === 'VIP') === soloVip && (!e.cierra_en || new Date(e.cierra_en) > new Date()));
 
         if (!entrenamientos || entrenamientos.length === 0) {
-            contenedor.innerHTML = `<div style="text-align:center; color:var(--gray); padding:40px; background: var(--dark-card); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">${window.CUPOS_TIPO === 'VIP' ? 'No hay cupos VIP abiertos en este momento.' : 'No hay entrenamientos programados en este momento. Vuelve pronto.'}</div>`;
+            contenedor.innerHTML = `<div class="c-cupos-vacio"><i class="fa-regular fa-calendar" aria-hidden="true"></i><p>${window.CUPOS_TIPO === 'VIP' ? 'No hay cupos VIP abiertos en este momento.' : 'No hay entrenamientos programados en este momento.'}</p><small>Los nuevos entrenos se publican en los grupos de la comunidad.</small></div>`;
             return;
         }
 
@@ -64,68 +65,55 @@ async function cargarEntrenamientosActivos() {
             });
         }
 
-        contenedor.innerHTML = '';
-        entrenamientos.forEach(ent => {
-            let listaEquipos = equiposPorEntrenamiento[ent.id] || [];
-            let inscritos = listaEquipos.length; // Resta automáticamente los cupos del staff y los públicos
-            let cuposRestantes = ent.cupos_totales - inscritos;
-            let fechaStr = new Date(ent.fecha).toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' });
-            
-            // Generar el bloque visual de los equipos confirmados
-            let listaHTML = '';
-            if (listaEquipos.length > 0) {
-                listaHTML = `<div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <h4 style="color: var(--primary); font-family: 'Michroma'; font-size: 0.9rem; margin-bottom: 10px;">📋 EQUIPOS CONFIRMADOS (${inscritos}/${ent.cupos_totales}):</h4>
-                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">`;
-                
-                listaEquipos.forEach(eq => {
-                    let esStaff = eq.telefono === 'REGISTRO STAFF';
-                    let badge = esStaff ? `<i class="fa-solid fa-shield-halved" style="color: var(--primary); margin-left: 5px;" title="Asegurado por Staff"></i>` : '';
-                    let colorFondo = esStaff ? 'rgba(216,195,149, 0.15)' : 'rgba(255,255,255,0.05)';
-                    let borde = esStaff ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.1)';
-                    
-                    listaHTML += `<span style="background: ${colorFondo}; border: ${borde}; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; color: #fff;">${eq.nombre_jugador} ${badge}</span>`;
-                });
-                
-                listaHTML += `</div></div>`;
-            }
-
+        contenedor.innerHTML = entrenamientos.map(ent => {
+            const listaEquipos = equiposPorEntrenamiento[ent.id] || [];
+            const inscritos = listaEquipos.length; // cuenta los cupos del staff y los públicos
+            const cuposRestantes = ent.cupos_totales - inscritos;
+            const fechaStr = new Date(ent.fecha).toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' });
             const abre = ent.publicar_en ? new Date(ent.publicar_en).getTime() : 0;
             const pendiente = abre > Date.now();
-            const contador = pendiente ? `
-                <div style="margin-top: 15px; padding: 14px; text-align: center; border: 1px dashed rgba(255,213,74,0.55); background: rgba(255,213,74,0.07); border-radius: 8px;">
-                    <div style="color: var(--gray); font-size: 0.8rem;"><i class="fa-solid fa-hourglass-half" style="color:#FFD54A"></i> LAS INSCRIPCIONES SE ABREN EN</div>
-                    <div data-abre="${abre}" style="color: #FFE38A; font-family: 'Michroma'; font-size: clamp(1.4rem, 5vw, 2rem); font-weight: bold; margin: 6px 0; font-variant-numeric: tabular-nums;">${tiempoRestante(abre - Date.now())}</div>
-                    <div style="color: var(--gray); font-size: 0.8rem;">${new Date(abre).toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' })}</div>
-                </div>` : '';
+            const vip = ent.tipo === 'VIP';
 
-            let btnInscribir = pendiente
-                ? `<button disabled style="background: rgba(255,213,74,0.15); color: #FFE38A; padding: 10px 20px; border-radius: 6px; font-family: 'Michroma'; font-weight: bold; border: 1px solid rgba(255,213,74,0.5);"><i class="fa-solid fa-lock"></i> AÚN NO ABRE</button>`
-                : cuposRestantes > 0 
-                ? `<button onclick="abrirModalInscripcion('${ent.id}', '${ent.titulo.replace(/'/g, "\\'")}', '${ent.link_grupo}', '${ent.tipo === 'VIP' ? 'VIP' : 'PUBLICO'}')" class="btn-access" style="padding: 10px 20px; border:none; cursor:pointer;">INSCRIBIR EQUIPO</button>`
-                : `<button disabled style="background: var(--secondary); color: var(--dark); padding: 10px 20px; border-radius: 6px; font-family: 'Michroma'; font-weight: bold; border:none;">CUPOS AGOTADOS</button>`;
+            // Equipos confirmados (los del staff van marcados)
+            const lista = inscritos ? `<div class="c-cupo-lista">
+                    <h4>Equipos confirmados <span>${inscritos} / ${ent.cupos_totales}</span></h4>
+                    <div class="c-cupo-equipos">${listaEquipos.map(eq => {
+                        const staff = eq.telefono === 'REGISTRO STAFF';
+                        return `<span class="c-eq${staff ? ' staff' : ''}">${escH(eq.nombre_jugador)}${staff ? ' <i class="fa-solid fa-shield-halved" title="Asegurado por el staff" aria-label="Asegurado por el staff"></i>' : ''}</span>`;
+                    }).join('')}</div></div>` : '';
 
-            contenedor.innerHTML += `
-                <div style="background: var(--dark-card); border: 1px solid rgba(216,195,149, 0.2); border-left: 4px solid ${pendiente ? '#FFD54A' : 'var(--primary)'}; border-radius: 10px; padding: 25px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+            const contador = pendiente ? `<div class="c-cupo-cuenta">
+                    <small><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i> Las inscripciones se abren en</small>
+                    <b data-abre="${abre}">${tiempoRestante(abre - Date.now())}</b>
+                    <small>${new Date(abre).toLocaleString('es-CO', { dateStyle: 'long', timeStyle: 'short' })}</small></div>` : '';
+
+            const boton = pendiente
+                ? `<button type="button" class="c-btn-cupo espera" disabled><i class="fa-solid fa-lock" aria-hidden="true"></i> Aún no abre</button>`
+                : cuposRestantes > 0
+                ? `<button type="button" class="btn-access c-btn-cupo" data-inscribir="${escH(ent.id)}" data-titulo="${escH(ent.titulo)}" data-link="${escH(ent.link_grupo)}" data-tipo="${vip ? 'VIP' : 'PUBLICO'}">Inscribir equipo</button>`
+                : `<button type="button" class="c-btn-cupo agotado" disabled>Cupos agotados</button>`;
+
+            return `<article class="c-cupo${pendiente ? ' pendiente' : ''}">
+                    <div class="c-cupo-cab">
                         <div>
-                            <h2 style="color: var(--light); font-family: 'Michroma'; font-size: 1.4rem; margin:0 0 10px 0;">${ent.tipo === 'VIP' ? '<span style="display:inline-block;padding:3px 8px;margin-right:8px;border-radius:4px;background:#FFD54A;color:#1a1400;font-size:.7rem;vertical-align:middle"><i class="fa-solid fa-crown"></i> SOLO VIP</span>' : ''}${ent.titulo}</h2>
-                            <div style="color: var(--gray); font-size: 0.95rem; margin-bottom: 5px;"><i class="fa-regular fa-clock" style="color: var(--primary);"></i> ${fechaStr}</div>
-                            ${ent.cierra_en ? `<div style="color: #FFE38A; font-size: 0.9rem; margin-bottom: 5px;"><i class="fa-solid fa-hourglass-end"></i> Inscripciones hasta las ${new Date(ent.cierra_en).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' })} (hora Colombia)</div>` : ''}
-                            <div style="color: var(--gray); font-size: 0.95rem;"><i class="fa-solid fa-users" style="color: var(--primary);"></i> Cupos disponibles: <strong style="color: #D8C395; font-family:'Michroma'; font-size:1.1rem;">${cuposRestantes} / ${ent.cupos_totales}</strong></div>
+                            <h2 class="c-disp">${vip ? '<span class="c-vip"><i class="fa-solid fa-crown" aria-hidden="true"></i> Solo VIP</span>' : ''}${escH(ent.titulo)}</h2>
+                            <p class="c-cupo-dato"><i class="fa-regular fa-clock" aria-hidden="true"></i> ${fechaStr}</p>
+                            ${ent.cierra_en ? `<p class="c-cupo-dato aviso"><i class="fa-solid fa-hourglass-end" aria-hidden="true"></i> Inscripciones hasta las ${new Date(ent.cierra_en).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: 'numeric', minute: '2-digit' })} (hora Colombia)</p>` : ''}
+                            <p class="c-cupo-dato"><i class="fa-solid fa-users" aria-hidden="true"></i> Cupos disponibles <b class="c-cupo-num">${Math.max(0, cuposRestantes)} / ${ent.cupos_totales}</b></p>
                         </div>
-                        <div>${btnInscribir}</div>
+                        <div class="c-cupo-acc">${boton}</div>
                     </div>
                     ${contador}
-                    ${listaHTML}
-                </div>
-            `;
-        });
+                    ${lista}
+                </article>`;
+        }).join('');
+        contenedor.querySelectorAll('[data-inscribir]').forEach(b => b.addEventListener('click', () =>
+            abrirModalInscripcion(b.dataset.inscribir, b.dataset.titulo, b.dataset.link, b.dataset.tipo)));
         arrancarRelojCupos();
 
     } catch (err) {
         console.error("Error al cargar cupos:", err);
-        contenedor.innerHTML = `<div style="text-align:center; color:#ff3333; padding:40px;">Error al cargar la información de la base de datos.</div>`;
+        contenedor.innerHTML = `<div class="c-cupos-vacio error"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i><p>No se pudieron cargar los entrenos.</p><small>Revisa tu conexión y recarga la página.</small></div>`;
     }
 }
 
@@ -136,7 +124,7 @@ function abrirModalInscripcion(id, titulo, link, tipo) {
     if (!nota) {
         nota = document.createElement('div');
         nota.id = 'notaVip';
-        nota.style.cssText = 'margin-bottom:14px;padding:10px 12px;border:1px solid rgba(255,213,74,.55);background:rgba(255,213,74,.08);border-radius:6px;color:#FFE38A;font-size:.9rem';
+        nota.className = 'c-nota-vip';
         nota.innerHTML = '<i class="fa-solid fa-crown"></i> <b>Cupo solo para VIP:</b> escribe el <b>mismo nombre de equipo</b> y el <b>mismo número</b> con que te registraste como VIP. Si no coinciden, no te da el cupo.';
         document.getElementById('modalTitulo').after(nota);
     }
@@ -223,20 +211,17 @@ function mostrarIngresoGrupo(equipo, link) {
     const esc = t => String(t || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const valido = /^https:\/\//.test(String(link || ''));
     const fondo = document.createElement('div');
-    fondo.style.cssText = 'position:fixed;inset:0;z-index:2100;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.85);backdrop-filter:blur(5px)';
+    fondo.className = 'c-modal';
+    fondo.style.display = 'flex';
     fondo.innerHTML = `
-        <div role="dialog" aria-modal="true" style="width:100%;max-width:440px;padding:26px;background:var(--dark-card);border:1px solid rgba(216,195,149,.35);border-radius:12px;text-align:center">
-            <div style="font-size:2.2rem;color:#6ee7a8"><i class="fa-solid fa-circle-check"></i></div>
-            <h3 style="color:var(--primary);font-family:'Michroma';font-size:1.1rem;margin:8px 0 6px">¡INSCRIPCIÓN EXITOSA!</h3>
-            <p style="color:var(--light);margin:0 0 14px"><b>${esc(equipo)}</b> quedó inscrito.</p>
+        <div class="c-modal-caja c-exito" role="dialog" aria-modal="true" aria-labelledby="tituloExito">
+            <i class="fa-solid fa-circle-check c-exito-icono" aria-hidden="true"></i>
+            <h3 id="tituloExito" class="c-disp">Inscripción confirmada</h3>
+            <p><b>${esc(equipo)}</b> quedó inscrito.</p>
             ${valido ? `
-            <div style="display:flex;gap:10px;align-items:flex-start;text-align:left;padding:12px;border:1px solid rgba(255,213,74,.55);background:rgba(255,213,74,.08);border-radius:8px;color:#FFE38A;margin-bottom:14px">
-                <i class="fa-solid fa-circle-exclamation" style="margin-top:3px"></i>
-                <div><b>Antes de unirte:</b> al entrar al grupo escribe el <b>nombre de tu equipo</b> (<b>${esc(equipo)}</b>) para que el staff te identifique y te pase la sala.</div>
-            </div>
-            <p style="color:var(--gray);font-size:.9rem;margin:0 0 16px">Para unirte al grupo toca <b>ABRIR</b>.</p>
-            <a href="${esc(link)}" target="_blank" rel="noopener" data-abrir class="btn-access" style="display:block;padding:12px 20px;text-decoration:none"><i class="fa-brands fa-whatsapp"></i> ABRIR</a>` : ''}
-            <button type="button" data-cerrar style="margin-top:10px;width:100%;padding:10px;background:transparent;color:var(--gray);border:1px solid rgba(255,255,255,.15);border-radius:6px;cursor:pointer">Cerrar</button>
+            <div class="c-nota-vip"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> <b>Antes de unirte:</b> al entrar al grupo escribe el <b>nombre de tu equipo</b> (<b>${esc(equipo)}</b>) para que el staff te identifique y te pase la sala.</div>
+            <a href="${esc(link)}" target="_blank" rel="noopener" data-abrir class="btn-access c-btn-cupo"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Abrir el grupo</a>` : ''}
+            <button type="button" data-cerrar class="c-btn-cupo secundario">Cerrar</button>
         </div>`;
     const cerrar = () => fondo.remove();
     fondo.querySelector('[data-cerrar]').onclick = cerrar;

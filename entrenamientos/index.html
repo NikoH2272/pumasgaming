@@ -13,17 +13,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Historial de Entrenamientos | Pumas Gaming</title>
-    <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;1,700;1,800&family=Barlow:wght@400;500;600;700&family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../portal-kit/latam.css?v=20261013e">
-    <link rel="stylesheet" href="style.css?v=20261013e">
+    <link rel="stylesheet" href="style.css?v=20261111b">
+    <link rel="stylesheet" href="../portal-kit/tema-c.css?v=20261111l">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../portal-kit/portal.js?v=20261103b" data-portal="entrenamientos" data-modo="publico"></script>
+    <script src="../portal-kit/portal.js?v=20261111b" data-portal="entrenamientos" data-modo="publico"></script>
     <script src="../portal-kit/descargas.js?v=20261103b"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
 </head>
-<body>
+<body class="c-tema">
 
 <header class="site-header">
     <div class="logo-container">
@@ -40,34 +41,22 @@
             <li id="navDinamicas" hidden><a href="dinamicas.html"><i class="fa-solid fa-bolt"></i> Dinámicas</a></li>
             <li id="navJuegos" hidden><a href="juegos.html"><i class="fa-solid fa-gamepad"></i> Juegos</a></li>
             <li><a href="#" onclick="cambiarPestanaPublica('global')" id="navGlobal" style="color: var(--primary);"><i class="fa-solid fa-globe"></i> General</a></li>
-            <li><a href="#" onclick="cambiarPestanaPublica('analisis')" id="navAnalisis" style="color: var(--secondary);"><i class="fa-solid fa-chart-simple"></i> Análisis de entrenos</a></li>
+            <li><a href="estadisticas.html" id="navAnalisis" style="color: var(--secondary);"><i class="fa-solid fa-chart-simple"></i> Estadísticas</a></li>
             <li><a href="#" onclick="cambiarPestanaPublica('vip')" id="navVip" style="color: var(--secondary);"><i class="fa-solid fa-shield-halved"></i> Resultados Equipos VIP</a></li>
             <li><a href="login.html" class="btn-access" style="padding: 8px 18px; font-size: 0.9rem;"><i class="fa-solid fa-user-lock"></i> Iniciar Sesión</a></li>
         </ul>
     </nav>
 </header>
 
-    <section class="hero">
-        <h1>Historial de Entrenamientos <span>Pumas Gaming</span></h1>
-        <p>Panel de control global y consolidado de sesiones de práctica oficiales.</p>
-        
-        <div style="display: flex; justify-content: center; gap: 20px; margin-top: 30px; flex-wrap: wrap;">
-            <div style="background: var(--dark-card); border: 1px solid rgba(216,195,149,0.3); padding: 15px 25px; border-radius: 8px; text-align: center; min-width: 140px;">
-                <div style="color: var(--gray); font-size: 0.8rem; font-family: 'Michroma';">EQUIPOS</div>
-                <div id="statTotalEquipos" style="color: var(--primary); font-family: 'Michroma'; font-size: 1.5rem; font-weight: bold;">0</div>
-            </div>
-            <div style="background: var(--dark-card); border: 1px solid rgba(216,195,149,0.3); padding: 15px 25px; border-radius: 8px; text-align: center; min-width: 140px;">
-                <div style="color: var(--gray); font-size: 0.8rem; font-family: 'Michroma';">KILLS</div>
-                <div id="statTotalKills" style="color: var(--primary); font-family: 'Michroma'; font-size: 1.5rem; font-weight: bold;">0</div>
-            </div>
-            <div style="background: var(--dark-card); border: 1px solid rgba(216,195,149,0.3); padding: 15px 25px; border-radius: 8px; text-align: center; min-width: 140px;">
-                <div style="color: var(--gray); font-size: 0.8rem; font-family: 'Michroma';">MAPAS JUGADOS</div>
-                <div id="statTotalMapas" style="color: var(--primary); font-family: 'Michroma'; font-size: 1.5rem; font-weight: bold;">0</div>
-            </div>
-            <div style="background: var(--dark-card); border: 1px solid rgba(216,195,149,0.3); padding: 15px 25px; border-radius: 8px; text-align: center; min-width: 140px;">
-                <div style="color: var(--gray); font-size: 0.8rem; font-family: 'Michroma';">ENTRENAMIENTOS</div>
-                <div id="statTotalEntrenamientos" style="color: var(--primary); font-family: 'Michroma'; font-size: 1.5rem; font-weight: bold;">0</div>
-            </div>
+    <section class="hero c-cab" aria-labelledby="tit-entrenos">
+        <div class="c-rayo" aria-hidden="true"></div><div class="c-rayo fino" aria-hidden="true"></div>
+        <h1 id="tit-entrenos">Historial de <em>entrenamientos</em></h1>
+        <p>Resultados, rankings y estadísticas de los entrenamientos oficiales de Pumas Gaming.</p>
+        <div class="c-cifras stats-hero" aria-label="Cifras de los entrenamientos">
+            <div><b id="statTotalEquipos">0</b><small>Equipos</small></div>
+            <div><b id="statTotalKills">0</b><small>Kills</small></div>
+            <div><b id="statTotalMapas">0</b><small>Salas jugadas</small></div>
+            <div><b id="statTotalEntrenamientos">0</b><small>Entrenos</small></div>
         </div>
     </section>
 
@@ -185,16 +174,7 @@
         </div>
     </main>
 
-    <!-- VISTA: ANÁLISIS DE ENTRENOS (estadísticas de los replays y resultados completos de la sala) -->
-    <section id="vistaAnalisis" style="display: none; width: 100%; max-width: 1100px; margin: 40px auto; padding: 0 20px;">
-        <div class="tabla-contenedor" style="min-height: auto;">
-            <div class="header-card-title">
-                <i class="fa-solid fa-chart-simple" style="color: var(--primary);"></i>
-                <h3>Análisis de entrenos</h3>
-            </div>
-            <div id="pumasAvanzadas"><p style="color: var(--gray); text-align: center; padding: 20px;">Todavía no hay entrenos con análisis.</p></div>
-        </div>
-    </section>
+    <!-- El módulo ESTADÍSTICAS (TOP · ESTADÍSTICAS · ACUMULADOS) está en estadisticas.html -->
 
     <!-- VISTA 2: RESULTADOS EQUIPOS VIP -->
     <section id="vistaVip" style="display: none; width: 100%; max-width: 1100px; margin: 40px auto; padding: 0 20px;">
@@ -244,10 +224,9 @@
     <script src="../portal-kit/dinamicas.js?v=20261014a"></script>
     <script src="../portal-kit/juegos.js?v=20261014a"></script>
     <script src="../portal-kit/latam.js?v=20261013e"></script>
-    <script src="script_entrenamientos.js?v=20261103c"></script>
-    <script src="vista_sesion.js?v=20261103b"></script>
-    <script src="../portal-kit/completos.js?v=20261013e"></script>
-    <script>PumasCompletos.montarPublico('pumasAvanzadas', 'entrenamientos');</script>
+    <script src="script_entrenamientos.js?v=20261111a"></script>
+    <script src="vista_sesion.js?v=20261111b"></script>
+    <script src="../portal-kit/completos.js?v=20261111h"></script>
     <script>
         // Mostrar links de nav cuando hay dinámica o juego activos
         (async function () {

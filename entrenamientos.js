@@ -100,8 +100,8 @@ function semanaObjetivo(parsed){
 }
 
   const set=(id,v)=>{const el=$(id); if(el) el.textContent=v;};
-  const colr=i=>i===0?'var(--primary)':i===1?'#B9B2A4':i===2?'#cd7f32':'var(--gray)';
-  function rank(id,arr,val,vacio){const el=$(id); if(el) el.innerHTML=arr.length?arr.map((x,i)=>`<div class="rank-row"><span><b style="color:${colr(i)};">#${i+1}</b> ${esc(x.name)}</span><em>${val(x)}</em></div>`).join(''):`<p>${vacio}</p>`;}
+  // Posición con clase (top1..top3): el color lo pone el estilo de cada página
+  function rank(id,arr,val,vacio){const el=$(id); if(el) el.innerHTML=arr.length?arr.map((x,i)=>`<div class="rank-row${i<3?' top'+(i+1):''}"><span><b class="pos">${i+1}</b> ${esc(x.name)}</span><em>${val(x)}</em></div>`).join(''):`<p>${vacio}</p>`;}
   function pintarStats(parsed){const t=agregar(parsed);set('stEntrenos',parsed.length);set('stKills',t.kills);set('stSalas',t.salas);set('stEquipos',t.eq.length);}
   async function estadisticas(ses){
     set('stEntrenos',ses.length);

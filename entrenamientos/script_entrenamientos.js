@@ -302,13 +302,14 @@ function _llenar(idA,idB,lista,vacio){
   const cap=(tb,txt)=>{const tbl=tb.closest('table');let c=tbl.querySelector('caption');if(!c)c=tbl.createCaption();c.textContent=txt;};
   cap(A,`PUESTOS 1 – ${m}`);
   cap(B,lista.length>m?`PUESTOS ${m+1} – ${lista.length}`:'');
-  // En el celular: solo los primeros 10 hasta tocar "Ver los N"
+  // En el celular: los primeros 25 (la primera tabla) hasta tocar "Ver del 26 al 50"
   const cont=A.closest('table').parentElement; cont.classList.add('tablas-pumas');
   let b=cont.nextElementSibling&&cont.nextElementSibling.classList.contains('ver-mas')?cont.nextElementSibling:null;
   if(!b){b=document.createElement('button');b.type='button';b.className='ver-mas';cont.after(b);cont.classList.add('recortar');
     b.addEventListener('click',()=>{cont.classList.toggle('recortar');b._t();if(cont.classList.contains('recortar'))cont.scrollIntoView({block:'start'});});}
-  b._t=()=>{b.innerHTML=cont.classList.contains('recortar')?`<i class="fa-solid fa-chevron-down"></i> Ver los ${lista.length}`:'<i class="fa-solid fa-chevron-up"></i> Ver menos';};
-  b.hidden=lista.length<=10; b._t();
+  b._t=()=>{const abierto=!cont.classList.contains('recortar');b.setAttribute('aria-expanded',String(abierto));
+    b.innerHTML=abierto?'<i class="fa-solid fa-chevron-up" aria-hidden="true"></i> Ver menos':`<i class="fa-solid fa-chevron-down" aria-hidden="true"></i> Ver del ${m+1} al ${lista.length}`;};
+  b.hidden=lista.length<=m; b._t();
 }
 async function calcularTablaGlobalAcumulada(sesiones){
   const parsed=await parsearTodas(sesiones);

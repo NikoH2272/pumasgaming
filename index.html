@@ -13,269 +13,287 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Pumas Gaming | Portal Oficial</title>
+    <meta name="description" content="Pumas Gaming: entrenamientos oficiales de Free Fire, rankings semanales, estadísticas, jerseys y el creador de resultados.">
+    <meta name="theme-color" content="#141414">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Carter+One&family=Emilys+Candy&family=Jersey+25&family=Michroma&display=swap" rel="stylesheet">
+    <!-- Barlow / Barlow Condensed: portada · Michroma: la imagen que genera el Creador de resultados -->
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;1,700;1,800&family=Barlow:wght@400;500;600;700&family=Michroma&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=20261013e">
+    <link rel="stylesheet" href="style.css?v=20261111a">
     <link rel="stylesheet" href="portal-kit/latam.css?v=20261013e">
+    <link rel="stylesheet" href="inicio.css?v=20261111c">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="portal-kit/portal.js?v=20261103b" data-portal="principal" data-modo="publico"></script>
+    <script src="portal-kit/portal.js?v=20261111b" data-portal="principal" data-modo="publico"></script>
     <script src="portal-kit/descargas.js?v=20261103b"></script>
     <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
 </head>
-<body>
+<body class="c-home">
 
 <header class="site-header">
-    <div class="logo-container">
-        <img src="imagenes/LOGO PUMAS WEB.png" alt="Logo Pumas Gaming" class="logo-img">
-        <div class="logo">PUMAS GAMING</div>
-    </div>
+    <a class="logo-container" href="/" aria-label="Pumas Gaming, inicio">
+        <img src="imagenes/LOGO PUMAS WEB.png" alt="" class="logo-img">
+        <span class="logo">Pumas Gaming</span>
+    </a>
 
-    <button class="menu-toggle" aria-label="Abrir menú" onclick="toggleMenu()">
+    <button class="menu-toggle" aria-label="Abrir menú" aria-controls="mainNav" onclick="toggleMenu()">
         <span class="bar"></span>
         <span class="bar"></span>
         <span class="bar"></span>
     </button>
 
-    <nav class="main-nav" id="mainNav">
+    <nav class="main-nav" id="mainNav" aria-label="Principal">
         <ul>
-            <li><a href="/entrenamientos/" onclick="closeMenu()">Entrenamientos</a></li>
+            <li><a href="/" aria-current="page" onclick="closeMenu()">Inicio</a></li>
+            <li><a href="/entrenamientos/" onclick="closeMenu()">Entrenos</a></li>
+            <li><a href="/entrenamientos/estadisticas.html" onclick="closeMenu()">Estadísticas</a></li>
+            <li><a href="#rankings" onclick="closeMenu()">Rankings</a></li>
             <li><a href="#jersey" onclick="closeMenu()">Jerseys</a></li>
             <li><a href="#comunidad" onclick="closeMenu()">Comunidad</a></li>
-            <li data-nav-aliados hidden><a href="#aliados" onclick="closeMenu()">Aliados</a></li>
-            <li><a href="#rankings" onclick="closeMenu()">Rankings</a></li>
-            <li><a href="#resultados" onclick="closeMenu()">Herramienta FF</a></li>
-            <li><a href="/admin/login.html" class="btn-admin-nav" onclick="closeMenu()" style="color: var(--primary);"><i class="fa-solid fa-lock"></i> Admin</a></li>
+            <li><a href="#resultados" onclick="closeMenu()">Herramienta</a></li>
+            <li class="nav-admin"><a href="/admin/login.html" onclick="closeMenu()"><i class="fa-solid fa-lock" aria-hidden="true"></i> Admin</a></li>
         </ul>
     </nav>
 </header>
 
- <section class="portal-hero" aria-labelledby="hero-title">
-        <div class="hero-copy">
-            <div class="eyebrow">Comunidad competitiva · Free Fire</div>
-            <h1 id="hero-title">Nacidos para <span>competir.</span></h1>
-            <p>Pumas Gaming reúne a equipos que juegan con carácter. Entrena, sigue la competencia y crea tus resultados desde un solo lugar.</p>
-            <div class="hero-actions">
-                <a href="#entrenamientos" class="btn-access">Apartar cupo de entreno</a>
-                <a href="#comunidad" class="btn-access btn-outline">Entrar a la comunidad</a>
-                <a href="/entrenamientos/juegos.html" class="btn-access btn-outline">🎮 Juegos</a>
-                <a href="/entrenamientos/dinamicas.html" class="btn-access btn-outline">⚡ Dinámicas</a>
-            </div>
-        </div>
-        <div class="hero-mark" aria-hidden="true">
-            <img src="/imagenes/LOGO PUMAS WEB.png" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-            <span class="mark-fallback">PG</span>
-        </div>
-    </section>
-
-    <section id="entrenamientos">
-    <h2 class="section-title">Entrenamientos Oficiales</h2>
-    <div class="train-layout">
-        <article class="card-box train-main" id="trainMain"><p>Cargando entrenos...</p></article>
-        <aside class="train-side">
-            <div class="card-box">
-                <h3>Estadísticas</h3>
-                <div class="stat-grid">
-                    <div><b id="stEntrenos">…</b><small>Entrenamientos</small></div>
-                    <div><b id="stKills">…</b><small>Kills</small></div>
-                    <div><b id="stSalas">…</b><small>Salas jugadas</small></div>
-                    <div><b id="stEquipos">…</b><small>Equipos</small></div>
-                </div>
-            </div>
-            <div class="card-box"><h3>Cómo apartar cupo</h3>
-                <ol class="steps">
-                    <li>Entra a la página de cupos y elige un entreno abierto.</li>
-                    <li>Inscribe tu equipo con nombre y teléfono.</li>
-                    <li>Únete al grupo de coordinación que se abre al confirmar.</li>
-                                        <li>Tambien puedes apartar en los grupos en entrenamiento mas abajo</li>
-                </ol>
-                <a href="entrenamientos/cupos.html" class="btn-access btn-big"><i class="fa-solid fa-ticket"></i> Apartar mi cupo</a>
-            </div>
-        </aside>
+<main>
+<!-- Portada: titular, video del jersey con los cortes dorados y las cifras (las llena entrenamientos.js) -->
+<section class="portal-hero" aria-labelledby="hero-title">
+    <div class="c-rayo" aria-hidden="true"></div><div class="c-rayo fino" aria-hidden="true"></div>
+    <video class="c-hero-video" src="videos/jersey.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+    <div class="c-redes" aria-label="Redes de Pumas Gaming">
+        <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+        <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+        <a href="https://discord.gg/pqyf7fnQF" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+        <a href="https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd" target="_blank" rel="noopener" aria-label="WhatsApp de entrenamientos"><i class="fa-brands fa-whatsapp"></i></a>
     </div>
-    <p class="train-more"><a href="entrenamientos/">Ver historial completo y resultados <i class="fa-solid fa-arrow-right"></i></a></p>
-</section>
-
-<!-- Torneos aliados: solo sale si se activa en Admin → Inicio -->
-<section id="aliados" hidden>
-    <h2 class="section-title">Torneos aliados</h2>
-    <p class="aliados-intro">Torneos de nuestras ligas aliadas. Entra, revisa las bases e inscribe a tu equipo.</p>
-    <div class="aliados-grid" id="aliadosGrid"></div>
-</section>
-
-<section id="jersey">
-    <h2 class="section-title">Jerseys Oficiales 2026</h2>
-    <div class="jersey-grid">
-        <article class="card-box jersey-card">
-            <h3>Edición Pumas Elite</h3>
-            <p>Confeccionado con microfibra avanzada de alto rendimiento para garantizar frescura y comodidad bajo máxima presión en torneos.</p>
-            <video src="videos/jersey.mp4" autoplay muted loop playsinline>Tu navegador no soporta el elemento de video.</video>
-        </article>
-        <article class="card-box jersey-card">
-            <h3>Edición Especial USA Pro</h3>
-            <p>Diseño exclusivo optimizado para la competición de alto nivel en el circuito internacional Free Fire USA.</p>
-            <video src="videos/jerseyUSA.mp4" autoplay muted loop playsinline>Tu navegador no soporta el elemento de video.</video>
-        </article>
+    <div class="hero-copy">
+        <h1 id="hero-title" class="c-disp">Nacidos para<br><em>competir.</em></h1>
+        <p>Pumas Gaming reúne a equipos que juegan con carácter. Entrena, sigue la competencia y crea tus resultados desde un solo lugar.</p>
+        <div class="hero-actions">
+            <a href="entrenamientos/cupos.html" class="c-btn oro">Apartar cupo <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            <a href="#comunidad" class="c-btn borde">Entrar a la comunidad</a>
+        </div>
+    </div>
+    <div class="hero-stats" aria-label="Cifras de los entrenamientos">
+        <div><b id="stEntrenos">…</b><small>Entrenos</small></div>
+        <div><b id="stKills">…</b><small>Kills</small></div>
+        <div><b id="stSalas">…</b><small>Salas</small></div>
+        <div><b id="stEquipos">…</b><small>Equipos</small></div>
     </div>
 </section>
 
-<section id="comunidad">
-    <h2 class="section-title">Comunidad</h2>
-    <div class="community-grid">
-        <article class="card-box community-card">
-            <div class="cc-head"><i class="fa-brands fa-whatsapp"></i><h3>Entrenamientos Oficiales</h3></div>
-            <p>Horario: 10 AM México en adelante</p>
-            <a href="https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd" class="btn-access" target="_blank" rel="noopener">Unirse al WhatsApp</a>
-        </article>
-                <article class="card-box community-card">
-            <div class="cc-head"><i class="fa-brands fa-whatsapp"></i><h3>Entrenamientos Oficiales Liga</h3></div>
-            <p>Horario: 10 AM México en adelante</p>
-            <a href="https://chat.whatsapp.com/CVnTo8XyLTv0PRRYRFYUr9" class="btn-access" target="_blank" rel="noopener">Unirse al WhatsApp</a>
-        </article>
-        <article class="card-box community-card">
-            <div class="cc-head"><i class="fa-brands fa-discord"></i><h3>Servidor Discord</h3></div>
-            <p>Charla, busca equipo y entérate de todo.</p>
-            <a href="https://discord.gg/pqyf7fnQF" class="btn-access" target="_blank" rel="noopener">Unirse al Discord</a>
-        </article>
-        <article class="card-box community-card">
-            <div class="cc-head"><i class="fa-brands fa-whatsapp"></i><h3>Comunidad & Dinámicas</h3></div>
-            <p>Eventos, dinámicas y más actividades.</p>
-            <a href="https://chat.whatsapp.com/I1h2liVoE2c5LjY6sbKk1a" class="btn-access" target="_blank" rel="noopener">Unirse al WhatsApp</a>
-        </article>
-        <article class="card-box community-card">
-            <div class="cc-head"><i class="fa-solid fa-share-nodes"></i><h3>Zona de Redes</h3></div>
-            <p>Síguenos en nuestras plataformas oficiales:</p>
-            <div class="social-row">
-                <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i><span>Oficial</span></a>
-                <a href="https://www.instagram.com/pumas_e7_gaming" target="_blank" rel="noopener"><i class="fa-brands fa-square-instagram"></i><span>USA Pro</span></a>
-                <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i><span>TikTok</span></a>
-                <a href="https://www.instagram.com/entrenos.pumas.gg/" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i><span>Entrenos</span></a>
+<!-- Entrenamientos: cómo apartar cupo + accesos, y el calendario con los últimos entrenos -->
+<section id="entrenamientos" aria-labelledby="tit-entrenos">
+    <div class="c-claro">
+        <div class="a">
+            <h2 id="tit-entrenos" class="c-disp">Entrenamientos<br><em>oficiales</em></h2>
+            <p>Salas diarias desde las 10 AM México, con resultados, kills y estadísticas sacadas directo de la sala.</p>
+            <ol class="c-pasos">
+                <li>Entra a la página de cupos y elige un entreno abierto.</li>
+                <li>Inscribe tu equipo con nombre y teléfono.</li>
+                <li>Únete al grupo de coordinación que se abre al confirmar.</li>
+                <li>También puedes apartar en los grupos de la comunidad, más abajo.</li>
+            </ol>
+            <div class="acc">
+                <a href="entrenamientos/cupos.html" class="c-btn tinta"><i class="fa-solid fa-ticket" aria-hidden="true"></i> Apartar mi cupo</a>
+                <a href="entrenamientos/" class="c-btn borde" style="color:var(--tinta);border-color:#8d8878">Ver resultados</a>
             </div>
+        </div>
+        <div class="b">
+            <a class="c-item" href="entrenamientos/cupos.html"><i class="fa-solid fa-ticket" aria-hidden="true"></i><div><h3 class="c-disp">Cupos</h3><p>Elige un entreno abierto y confirma tu equipo.</p></div></a>
+            <a class="c-item" href="entrenamientos/"><i class="fa-solid fa-ranking-star" aria-hidden="true"></i><div><h3 class="c-disp">Rankings</h3><p>Top 50 semanal e histórico por PR, PG y kills.</p></div></a>
+            <a class="c-item" href="entrenamientos/estadisticas.html"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><div><h3 class="c-disp">Estadísticas</h3><p>Daño, headshots y acumulados por jugador, equipo y mapa.</p></div></a>
+            <a class="c-item" href="entrenamientos/juegos.html"><i class="fa-solid fa-gamepad" aria-hidden="true"></i><div><h3 class="c-disp">Juegos</h3><p>Retos para la comunidad.</p></div></a>
+            <a class="c-item" href="entrenamientos/dinamicas.html"><i class="fa-solid fa-bolt" aria-hidden="true"></i><div><h3 class="c-disp">Dinámicas</h3><p>Eventos, encuestas y premios.</p></div></a>
+            <a class="c-item" href="entrenoslatam/"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i><div><h3 class="c-disp">Entrenos LATAM</h3><p>Resultados de las ligas aliadas en un solo lugar.</p></div></a>
+        </div>
+    </div>
+    <div class="c-sec">
+        <article id="trainMain" aria-live="polite"><p>Cargando entrenos...</p></article>
+        <p class="c-mas"><a href="entrenamientos/" class="c-btn borde">Ver historial completo <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></p>
+    </div>
+</section>
+
+<!-- Rankings de la semana (los llena entrenamientos.js) -->
+<section id="rankings" class="c-sec c-rank" aria-labelledby="tit-rank">
+    <div class="c-tit"><h2 id="tit-rank" class="c-disp">Rankings de la <em>semana</em></h2><a href="entrenamientos/">Top 50 completo <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div>
+    <div class="c-rank-grid">
+        <div class="c-tabla">
+            <h3 id="tituloTopEq">Top 10 Equipos · Semana</h3>
+            <div id="contenedorTopEquiposPublicos" class="rank-list"><p>Cargando equipos...</p></div>
+        </div>
+        <div class="c-tabla">
+            <h3 id="tituloTopKill">Top 10 Killers · Semana</h3>
+            <div id="contenedorTopKillersPublicos" class="rank-list"><p>Cargando killers...</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- Jerseys -->
+<section id="jersey" class="c-sec c-jerseys" aria-labelledby="tit-jersey">
+    <div class="c-tit"><h2 id="tit-jersey" class="c-disp">Jerseys <em>oficiales 2026</em></h2></div>
+    <div class="c-jgrid">
+        <article class="c-jer">
+            <video src="videos/jersey.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Video del jersey Edición Pumas Elite"></video>
+            <div><h3 class="c-disp">Edición Pumas Elite</h3><p>Microfibra de alto rendimiento: frescura y comodidad bajo máxima presión en torneos.</p></div>
         </article>
-        <article class="card-box community-card card-slot">
-            <!-- NUEVA TARJETA: reemplaza este bloque copiando una tarjeta de arriba -->
-            <i class="fa-solid fa-plus"></i><span>Proximos eventos</span>
+        <article class="c-jer">
+            <video src="videos/jerseyUSA.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Video del jersey Edición Especial USA Pro"></video>
+            <div><h3 class="c-disp">Edición Especial USA Pro</h3><p>Diseño exclusivo para la competición de alto nivel en el circuito internacional Free Fire USA.</p></div>
         </article>
+    </div>
+</section>
+
+<!-- Comunidad -->
+<section id="comunidad" class="c-sec" aria-labelledby="tit-comunidad">
+    <div class="c-tit"><h2 id="tit-comunidad" class="c-disp">La <em>comunidad</em></h2></div>
+    <div class="c-cards">
+        <article class="c-card"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><h3 class="c-disp">Entrenos oficiales</h3><p>Horario: 10 AM México en adelante.</p><a href="https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
+        <article class="c-card"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><h3 class="c-disp">Entrenos liga</h3><p>Horario: 10 AM México en adelante.</p><a href="https://chat.whatsapp.com/CVnTo8XyLTv0PRRYRFYUr9" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
+        <article class="c-card"><i class="fa-brands fa-discord" aria-hidden="true"></i><h3 class="c-disp">Discord</h3><p>Charla, busca equipo y entérate de todo.</p><a href="https://discord.gg/pqyf7fnQF" target="_blank" rel="noopener">Unirse al Discord</a></article>
+        <article class="c-card"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><h3 class="c-disp">Comunidad y dinámicas</h3><p>Eventos, dinámicas y más actividades.</p><a href="https://chat.whatsapp.com/I1h2liVoE2c5LjY6sbKk1a" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
+    </div>
+    <div class="c-redes-fila" aria-label="Redes oficiales">
+        <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener"><i class="fa-brands fa-instagram" aria-hidden="true"></i>Oficial</a>
+        <a href="https://www.instagram.com/pumas_e7_gaming" target="_blank" rel="noopener"><i class="fa-brands fa-square-instagram" aria-hidden="true"></i>USA Pro</a>
+        <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok" aria-hidden="true"></i>TikTok</a>
+        <a href="https://www.instagram.com/entrenos.pumas.gg/" target="_blank" rel="noopener"><i class="fa-brands fa-instagram" aria-hidden="true"></i>Entrenos</a>
     </div>
 </section>
 
 <!-- Sorteo del inicio: sale aquí solo cuando está activo (Admin → Inicio o Sorteos) -->
 <div id="pgSorteo" hidden></div>
 
-<!-- Juego activo: Snake sale aquí cuando está activo en Admin → Dinámicas → Juego -->
+<!-- Juego activo: sale aquí cuando está activo en Admin → Dinámicas → Juego -->
 <div id="pgJuego"></div>
 
-<section id="rankings">
-    <h2 class="section-title">Rankings Pumas</h2>
-    <div class="rank-grid">
-        <div class="card-box">
-            <div class="rank-head"><i class="fa-solid fa-ranking-star"></i><h3 id="tituloTopEq">Top 10 Equipos · Semana</h3></div>
-            <div id="contenedorTopEquiposPublicos" class="rank-list"><p>Cargando equipos...</p></div>
+<!-- Creador de resultados (script.js) -->
+<section id="resultados" class="tool-section" aria-labelledby="tit-herramienta">
+    <div class="c-cta">
+        <div class="a"><h2 id="tit-herramienta" class="c-disp">Crea tus<br>resultados</h2><p>La herramienta gratuita de Pumas arma tus tablas desde los .log de la sala, con tu logo y tu fondo.</p></div>
+        <div class="b">
+            <div class="c-paso"><b>1</b>Sube los .log o .txt de cada sala.</div>
+            <div class="c-paso"><b>2</b>Elige cómo se calculan los puntos y revisa los nombres.</div>
+            <div class="c-paso"><b>3</b>Descarga la imagen lista para publicar.</div>
         </div>
-        <div class="card-box">
-            <div class="rank-head"><i class="fa-solid fa-skull"></i><h3 id="tituloTopKill">Top 10 Killers · Semana</h3></div>
-            <div id="contenedorTopKillersPublicos" class="rank-list"><p>Cargando killers...</p></div>
+    </div>
+    <div class="tool-container">
+        <p class="tool-desc">Carga tus archivos <code>.log</code> o <code>.txt</code>, elige el modo de cálculo y genera tus tablas.</p>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="selectModoCalculo">Modo de cálculo y orden</label>
+                <select id="selectModoCalculo" class="dropdown-select" onchange="renderizarResultadosFromState()">
+                    <option value="1">1. Normal (Score Total Estándar)</option>
+                    <option value="2">2. Solo Posición (RankScore)</option>
+                    <option value="3">3. Solo Kills (Puntos por Kill)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="inputModerador">Moderador / admin</label>
+                <input type="text" id="inputModerador" placeholder="Ej: Mod · PumasZee">
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="inputLogoFile">Logo propio (imagen)</label>
+                <input type="file" id="inputLogoFile" class="file-input-custom" accept="image/*" onchange="cargarImagenLocal(event, 'logo')">
+            </div>
+            <div class="form-group">
+                <label for="inputFondoFile">Fondo propio 4:5 (imagen)</label>
+                <input type="file" id="inputFondoFile" class="file-input-custom" accept="image/*" onchange="cargarImagenLocal(event, 'fondo')">
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="inputTituloTorneo">Título del torneo</label>
+                <input type="text" id="inputTituloTorneo" value="LIGA PUMAS GAMING" oninput="renderizarResultadosFromState()">
+            </div>
+            <div class="form-group">
+                <label for="inputJornadaTorneo">Jornada</label>
+                <input type="text" id="inputJornadaTorneo" value="JORNADA 1" oninput="renderizarResultadosFromState()">
+            </div>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="inputFechaTorneo">Fecha</label>
+                <input type="text" id="inputFechaTorneo" value="03 SEP 2026" oninput="renderizarResultadosFromState()">
+            </div>
+            <div class="form-group">
+                <label for="selectColorFuente">Color de las letras</label>
+                <select id="selectColorFuente" class="dropdown-select" onchange="renderizarResultadosFromState()">
+                    <option value="#ffffff" selected>Blanco estándar</option>
+                    <option value="#DCCC9C">Dorado oficial (#DCCC9C)</option>
+                    <option value="#959595">Gris suave (#959595)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group c-subir">
+            <label for="fileInput">Archivos de las salas (.log o .txt)</label>
+            <input type="file" id="fileInput" multiple accept=".txt,.log" onchange="prepararRenombradoEquipos()">
+            <div id="seccionRenombrar" style="display: none; margin-top: 20px; background: rgba(0,0,0,0.4); padding: 20px;">
+                <h3 class="c-disp" style="color: var(--primary); margin: 0 0 10px; font-size: 1.5rem;">Editar nombres de equipos</h3>
+                <div id="listaEquiposInputs" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;"></div>
+                <button onclick="procesarConNombresPersonalizados()" class="btn-generar c-btn oro" style="margin-top: 15px;">
+                    Confirmar nombres y generar tabla
+                </button>
+            </div>
+        </div>
+
+        <div class="results-wrapper">
+            <div id="outputTablasLadoALado" class="result-box" style="margin-top: 25px;"></div>
         </div>
     </div>
 </section>
+</main>
 
-<section id="resultados" class="tool-section">
-        <h2 class="section-title">Creador de Resultados Free Fire</h2>
-        <div class="tool-container">
-            <p class="tool-desc">
-                Carga tus archivos <code>.log</code> o <code>.txt</code>, selecciona el modo de cálculo y ordenamiento, y genera tus tablas profesionales.
-            </p>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>MODO DE CÁLCULO Y ORDENAMIENTO</label>
-                    <select id="selectModoCalculo" class="dropdown-select" onchange="renderizarResultadosFromState()">
-                        <option value="1">1. Normal (Score Total Estándar)</option>
-                        <option value="2">2. Solo Posición (RankScore)</option>
-                        <option value="3">3. Solo Kills (Puntos por Kill)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>MODERADOR / ADMIN</label>
-                    <input type="text" id="inputModerador" placeholder="Ej: Mod · PumasZee">
-                </div>
-            </div>
-
-            <div class="form-grid" style="margin-top: 15px;">
-                <div class="form-group">
-                    <label>LOGO PROPIO (SUBIR ARCHIVO)</label>
-                    <input type="file" id="inputLogoFile" class="file-input-custom" accept="image/*" onchange="cargarImagenLocal(event, 'logo')">
-                </div>
-                <div class="form-group">
-                    <label>FONDO PROPIO 4:5 (SUBIR ARCHIVO)</label>
-                    <input type="file" id="inputFondoFile" class="file-input-custom" accept="image/*" onchange="cargarImagenLocal(event, 'fondo')">
-                </div>
-            </div>
-
-            <div class="form-grid" style="margin-top: 15px;">
-                <div class="form-group">
-                    <label>TÍTULO DEL TORNEO (GRANDE)</label>
-                    <input type="text" id="inputTituloTorneo" value="LIGA PUMAS GAMING" oninput="renderizarResultadosFromState()">
-                </div>
-                <div class="form-group">
-                    <label>JORNADA</label>
-                    <input type="text" id="inputJornadaTorneo" value="JORNADA 1" oninput="renderizarResultadosFromState()">
-                </div>
-            </div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>FECHA</label>
-                    <input type="text" id="inputFechaTorneo" value="03 SEP 2026" oninput="renderizarResultadosFromState()">
-                </div>
-                <div class="form-group">
-                    <label>COLOR DE FUENTE</label>
-                    <select id="selectColorFuente" class="dropdown-select" onchange="renderizarResultadosFromState()">
-                        <option value="#ffffff" selected>Blanco Estándar</option>
-                        <option value="#DCCC9C">Dorado Oficial (#DCCC9C)</option>
-                        <option value="#959595">Gris Suave (#959595)</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group" style="margin-top: 15px;">
-                <input type="file" id="fileInput" multiple accept=".txt,.log" onchange="prepararRenombradoEquipos()">
-                <div id="seccionRenombrar" style="display: none; margin-top: 20px; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 8px;">
-                    <h3 style="color: var(--primary); margin-bottom: 10px; font-family: 'Michroma'; font-size: 1.1rem;">Editar Nombres de Equipos</h3>
-                    <div id="listaEquiposInputs" style="display: flex; flex-direction: column; gap: 8px; max-height: 250px; overflow-y: auto;"></div>
-                    <button onclick="procesarConNombresPersonalizados()" class="btn-generar" style="margin-top: 15px; padding: 10px 20px;">
-                        CONFIRMAR NOMBRES Y GENERAR TABLA
-                    </button>
-                </div>
-            </div>
-
-
-            <div class="results-wrapper">
-                <div id="outputTablasLadoALado" class="result-box" style="margin-top: 25px;"></div>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <p>&copy; 2026 PUMAS GAMING. Todos los derechos reservados. Diseñado para alto rendimiento competitivo.</p>
-    </footer>
+<footer class="c-pie">
+    <div>
+        <a class="logo-container" href="/"><img src="imagenes/LOGO PUMAS WEB.png" alt="" class="logo-img"><span class="logo">Pumas Gaming</span></a>
+        <p>&copy; 2026 Pumas Gaming. Todos los derechos reservados.</p>
+    </div>
+    <div>
+        <h4>Secciones</h4>
+        <a href="/entrenamientos/">Entrenamientos</a>
+        <a href="/entrenamientos/estadisticas.html">Estadísticas</a>
+        <a href="/entrenamientos/cupos.html">Apartar cupo</a>
+        <a href="/entrenoslatam/">Entrenos LATAM</a>
+    </div>
+    <div>
+        <h4>Síguenos</h4>
+        <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener">TikTok</a>
+        <a href="https://discord.gg/pqyf7fnQF" target="_blank" rel="noopener">Discord</a>
+        <a href="/admin/login.html">Admin</a>
+    </div>
+</footer>
 
     <script>
         function toggleMenu() {
             const nav = document.getElementById('mainNav');
-            nav.classList.toggle('is-active');
+            const abierto = nav.classList.toggle('is-active');
+            const b = document.querySelector('.menu-toggle');
+            if (b) b.setAttribute('aria-expanded', String(abierto));
         }
         function closeMenu() {
-            const nav = document.getElementById('mainNav');
-            nav.classList.remove('is-active');
+            document.getElementById('mainNav').classList.remove('is-active');
+            const b = document.querySelector('.menu-toggle');
+            if (b) b.setAttribute('aria-expanded', 'false');
+        }
+        // Con "reducir movimiento" los videos quedan quietos en su primer cuadro
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.querySelectorAll('video[autoplay]').forEach(v => { v.removeAttribute('autoplay'); v.pause(); });
         }
     </script>
-    <script src="script.js"></script>
-    <script src="entrenamientos.js?v=20261103b"></script>
-    <script src="portal-kit/aliados.js?v=20261013e"></script>
+    <script src="script.js?v=20261111a"></script>
+    <script src="entrenamientos.js?v=20261111a"></script>
     <script src="portal-kit/juegos.js?v=20261014a"></script>
 </body>
 </html>

@@ -762,7 +762,7 @@ html.pg-verificando body{visibility:hidden}
             try { await navigator.clipboard.writeText(url); ok = true; } catch (e) { }
             const aviso = document.createElement('div');
             aviso.className = 'pg-compartir-aviso';
-            aviso.textContent = ok ? '✔ Enlace copiado' : url;
+            aviso.textContent = ok ? 'Enlace copiado' : url;
             document.body.appendChild(aviso);
             setTimeout(() => aviso.remove(), 2200);
         });
@@ -930,7 +930,8 @@ html.pg-verificando body{visibility:hidden}
     else { montarNav(); segmentar(); montarSeccionesAdmin(); montarAnimaciones(); }
 
     // Créditos del creador en el pie de página (todas las páginas; las que no tienen pie, menos el login, reciben uno)
-    const CREADOR = { usuario: '@coach.nikoh', url: 'https://www.instagram.com/coach.nikoh/' };
+    // Página hecha por PROYECTN (logo en imagenes/proyectn.png, blanco sobre transparente)
+    const CREADOR = { marca: 'PROYECTN', logo: KIT + '../imagenes/proyectn.png', usuario: '@coach_nikoh', url: 'https://www.instagram.com/coach_nikoh/' };
     function montarCreditos() {
         if (document.querySelector('.pg-creditos')) return;
         let pie = document.querySelector('footer');
@@ -942,14 +943,17 @@ html.pg-verificando body{visibility:hidden}
         if (!document.getElementById('pgCreditosCss')) {
             const st = document.createElement('style');
             st.id = 'pgCreditosCss';
-            st.textContent = `.pg-creditos{margin:8px 0 0;font-size:.82rem;opacity:.85;text-align:center}
-.pg-creditos a{display:inline-flex;align-items:center;gap:5px;color:var(--primary,#D8C395);font-weight:bold;text-decoration:none}
-.pg-creditos a:hover{text-decoration:underline}`;
+            st.textContent = `.pg-creditos{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 12px;margin:10px 0 0;font-size:.82rem;opacity:.9;text-align:center}
+.pg-creditos a{display:inline-flex;align-items:center;gap:6px;min-height:32px;color:var(--primary,#D8C395);font-weight:bold;text-decoration:none}
+.pg-creditos a:hover{text-decoration:underline;text-underline-offset:3px}
+.pg-creditos .pg-proyectn{gap:8px;color:inherit;letter-spacing:.14em}
+.pg-creditos .pg-proyectn img{width:22px;height:22px;object-fit:contain}`;
             document.head.appendChild(st);
         }
         const p = document.createElement('p');
         p.className = 'pg-creditos';
-        p.innerHTML = `Página creada por <a href="${CREADOR.url}" target="_blank" rel="noopener" aria-label="Instagram de ${CREADOR.usuario}"><i class="fa-brands fa-instagram"></i> ${CREADOR.usuario}</a>`;
+        p.innerHTML = `<span>Página creada</span><a class="pg-proyectn" href="${CREADOR.url}" target="_blank" rel="noopener" aria-label="By ${CREADOR.marca}, Instagram ${CREADOR.usuario}"><img src="${CREADOR.logo}" alt="" onerror="this.remove()">BY ${CREADOR.marca}</a>` +
+            `<a href="${CREADOR.url}" target="_blank" rel="noopener" aria-label="Instagram de ${CREADOR.usuario}"><i class="fa-brands fa-instagram" aria-hidden="true"></i> ${CREADOR.usuario}</a>`;
         pie.appendChild(p);
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montarCreditos);

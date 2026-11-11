@@ -36,6 +36,8 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 30 | `30_cupos_vip_baneos_portales.sql` | Habilita VIP y baneos por portal, repara permisos de roles, valida el portal al inscribirse y revoca el RPC sin ámbito; AZA queda sin VIP | ☐ |
 | 31 | `31_usuarios_por_portal.sql` | Usuarios propios de cada portal: el admin del portal crea su staff (solo entra a ese portal) y el superadmin ve los usuarios de cada portal y crea sus administradores | ☐ |
 | 32 | `32_secciones_por_usuario.sql` | Usuarios del portal: a cada usuario del staff se le eligen las secciones del panel que ve (herramienta, cupos, baneados…), además de su rol | ☐ |
+| 52 | `52_stats_bin.sql` | Estadísticas del replay .bin en `stats_jugadores`: columnas `torso`, `piernas`, `revivido`, `derribado`, `rematados`, `primera_sangre`, `kill_lejana` y `fuente`, y `guardar_stats` que las guarda (requiere 23). Ver `docs/ESTADISTICAS_REPLAY_BIN.md` | ☐ |
+| 53 | `53_stats_bin_rellenar.sql` | Rellena las columnas del 52 en los entrenos ya guardados (copia desde `extra`). Solo toca filas con `fuente` vacía | ☐ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 

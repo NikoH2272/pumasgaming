@@ -57,7 +57,13 @@
         47: 'PARAFAL', 48: 'WOODPECKER', 50: 'MAG7', 51: 'SICKLE', 54: 'KORD', 55: 'M1917', 58: 'UZI', 74: 'G36', 75: 'M24', 86: 'CHARGE BUSTER', 89: 'AC80',
         93: 'TREATMENT PISTOL', 123: 'M60-III', 150: 'BIZON', 193: 'AUG-I', 196: 'FGL24', 197: 'VSK94', 228: 'MAC10-I', 601: 'GRENADE', 608: 'FLASH FREEZE',
         629: 'GROZA', 632: 'GOLDM249-X', 633: 'SVD', 635: 'AWM', 637: 'THOMPSON-GOLD', 638: 'THOMPSON-X', 805: 'M24-I', 806: 'M24-II',
-        21002: 'M590', 21006: 'WINCHESTER', 21007: 'WINCHESTER-I', 21008: 'WINCHESTER-II' };
+        21002: 'M590', 21006: 'WINCHESTER', 21007: 'WINCHESTER-I', 21008: 'WINCHESTER-II',
+        // Sacadas de 192 .csv de resultados completos (weapon_id → weapon_name)
+        2: 'M4A1', 5: 'M1014', 6: 'AK', 7: 'UMP', 9: 'EAGLE', 20: 'M1873', 24: 'FAMAS', 29: 'SPAS12', 33: 'AN94', 36: 'RGS50', 38: 'HOOK GUN',
+        49: 'VECTOR', 53: 'FF KNIFE', 57: 'KINGFISHER', 60: 'MP5-I', 61: 'M60-I', 63: 'M14-I', 73: 'G36', 80: 'M4A1-I', 81: 'M4A1-II', 82: 'M4A1-III',
+        88: 'MAC10', 120: 'MP5-II', 121: 'MP5-III', 122: 'M60-II', 126: 'M14-II', 127: 'M14-III', 178: 'SCAR-I', 179: 'SCAR-II',
+        181: 'TROGON (ESCOPETA)', 182: 'TROGON (GRANADA)', 184: 'M1014-I', 185: 'M1014-II', 186: 'M1014-III', 194: 'AUG-II', 195: 'AUG-III',
+        229: 'MAC10-II', 630: 'GOLDGROZA-X', 631: 'M249', 634: 'GOLDSVD-Y', 636: 'GOLDAWM-Y', 807: 'M24-III', 21001: 'HEALING PISTOL-Y', 21009: 'WINCHESTER-III' };
     const LS_ARMAS = 'pg_armas_ff';   // los .csv enseñan nombres nuevos (id → nombre) y se recuerdan en este navegador
     let armasAprendidas = null;
     function aprendidas() {
@@ -74,7 +80,8 @@
         });
         if (cambio) { try { localStorage.setItem(LS_ARMAS, JSON.stringify(m)); } catch (e) { /* sin almacenamiento: solo esta vez */ } }
     }
-    const nombreArma = id => aprendidas()[id] || ARMAS_FF[id] || ('ARMA #' + id);
+    // Ids negativos (el .json los trae a veces en kills por zona, caída...) no son armas
+    const nombreArma = id => (+id < 0 ? '' : aprendidas()[id] || ARMAS_FF[id] || ('ARMA #' + id));
 
     // weapon_usages: JSON con comillas dobles; a veces viene con comillas simples (estilo Python)
     function leerArmas(txt) {
@@ -91,7 +98,7 @@
     // Métricas extra del .csv que también se guardan (extra) y salen en los destacados
     const EXTRAS_CSV = { recibido: 'damage_taken', curacion: 'healing_to_teammates', curacionPropia: 'healing_to_self', recorrido: 'moving_distance',
         botiquines: 'medkit_use', granadas: 'grenade_use', derribado: 'be_knocked_down_count', levantadoCsv: 'revived_times', rescates: 'rescue_times',
-        enfrentamientos: 'engage_count', vehiculo: 'vehicle_move_distance', glooRotas: 'icewall_destroyed_times' };
+        enfrentamientos: 'engage_count', vehiculo: 'vehicle_move_distance', glooRotas: 'icewall_destroyed_times', torso: 'torso_hits', piernas: 'leg_hits' };
     function extrasCSV(r) {
         const x = {};
         Object.entries(EXTRAS_CSV).forEach(([k, col]) => { const v = ent(r[col]); if (v > 0) x[k] = v; });
@@ -518,6 +525,13 @@
         sala: s.sala, match_id: s.match_id, mapa: s.mapa, modo: s.modo, equipo: j.equipo, jugador: j.jugador, account_id: j.account_id,
         kills: j.kills, dano: j.dano, headshots: j.headshots, hits: j.hits, disparos: j.disparos, revividos: j.revividos, gloo: j.gloo,
         vivo: j.vivo, asistencias: j.asistencias, derribos: j.derribos, booyah: j.booyah, arma: j.arma, armas: j.armas,
+        // Columnas de sql/52 (del .bin; si no hay, del .csv o del .json)
+        torso: ((j.extra || {}).bin || {}).torso ?? (j.extra || {}).torso ?? 0,
+        piernas: ((j.extra || {}).bin || {}).piernas ?? (j.extra || {}).piernas ?? 0,
+        revivido: ((j.extra || {}).bin || {}).revivido ?? (j.extra || {}).levantadoCsv ?? (j.extra || {}).levantado ?? 0,
+        derribado: ((j.extra || {}).bin || {}).derribado ?? (j.extra || {}).derribado ?? (j.extra || {}).caidas ?? 0,
+        rematados: (j.extra || {}).fin || 0, primera_sangre: !!(j.extra || {}).primeraSangre,
+        kill_lejana: (j.extra || {}).distancia || null, fuente: s.fuente === 'replay' || s.fuente === 'bin' ? s.fuente : 'csv',
         // extra: lo del .json (caídas, primera sangre, kill más lejana) y de dónde salió la sala
         extra: Object.assign({}, j.extra || {}, s.fuente === 'replay' ? { fuente: 'replay' } : {},
             s.primeraSangre && j.extra && j.extra.primeraSangre ? { victima: s.primeraSangre.victima, armaPS: s.primeraSangre.arma, tiempoPS: s.primeraSangre.tiempo } : {},
@@ -530,10 +544,16 @@
     function salasDesdeBD(filas) {
         const m = new Map();
         filas.forEach(f => {
-            const x = f.extra || {};
+            const x = Object.assign({}, f.extra || {});
+            // Columnas de sql/52 → mismos campos que usa el cálculo (si la fila es vieja, quedan los del extra)
+            if (f.fuente === 'bin' || (x.bin && f.fuente !== 'csv')) x.bin = Object.assign({ torso: f.torso, piernas: f.piernas, revivido: f.revivido, derribado: f.derribado, derribos: f.derribos }, x.bin || {});
+            if (f.rematados && !x.fin) x.fin = f.rematados;
+            if (f.primera_sangre && !x.primeraSangre) x.primeraSangre = 1;
+            if (f.kill_lejana && !x.distancia) x.distancia = f.kill_lejana;
+            if (f.torso !== undefined && x.torso === undefined) { x.torso = f.torso; x.piernas = f.piernas; }
             const k = (f.sesion_id || '') + '|' + f.sala;
             const s = m.get(k) || { sala: f.sala, sesion: f.sesion_id, fecha: f.fecha || f.creado || '', titulo: f.titulo || '',
-                match_id: f.match_id, mapa: f.mapa, modo: f.modo, jugadores: [], fuente: x.fuente === 'replay' ? 'replay' : 'csv' };
+                match_id: f.match_id, mapa: f.mapa, modo: f.modo, jugadores: [], fuente: (f.fuente || x.fuente) === 'replay' ? 'replay' : (f.fuente || 'csv') };
             const j = { equipo: f.equipo, jugador: f.jugador, account_id: f.account_id, kills: f.kills, dano: f.dano, headshots: f.headshots,
                 hits: f.hits, disparos: f.disparos, revividos: f.revividos, gloo: f.gloo, vivo: f.vivo, asistencias: f.asistencias,
                 derribos: f.derribos, booyah: f.booyah, arma: f.arma, armas: f.armas || [], extra: x };
@@ -617,6 +637,69 @@
         ].filter(t => t.titulo !== 'PRIMERA SANGRE Y KILL MÁS LEJANA' || s.some(x => x.primeraSangre || x.killLejana));
     }
 
+    // Tablas de detalle (página pública): jugadores, equipos, armas y el booyah de cada sala.
+    // Usan lo del .bin (derribos, veces derribado/revivido, impactos) y lo del .json (rematados, primera sangre, rival con más bajas).
+    function tablasDetalle(salas) {
+        const dano = salas.some(s => s.fuente !== 'replay');
+        const top = o => Object.entries(o || {}).sort((a, b) => b[1] - a[1])[0] || null;
+        const rival = t => t ? `${t[0]} (${t[1]})` : '—';
+        const jug = new Map(), eqs = new Map(), armas = {};
+        salas.forEach(s => {
+            const enSala = new Set();
+            s.jugadores.forEach(j => {
+                const x = j.extra || {}, b = x.bin || {};
+                const derribos = b.derribos !== undefined ? b.derribos : (j.derribos || 0);
+                const k = norm(j.account_id || j.jugador);
+                const p = jug.get(k) || { jugador: j.jugador, equipo: j.equipo, salas: 0, kills: 0, dano: 0, hs: 0, hits: 0, derribos: 0, gloo: 0, revivio: 0, revivido: 0, primeras: 0, rematados: 0, vs: {} };
+                p.salas++; p.kills += j.kills || 0; p.dano += j.dano || 0; p.hs += j.headshots || 0; p.hits += j.hits || 0; p.derribos += derribos;
+                p.gloo += j.gloo || 0; p.revivio += j.revividos || 0; p.revivido += b.revivido !== undefined ? b.revivido : (x.levantado || x.levantadoCsv || 0);
+                p.primeras += x.primeraSangre ? 1 : 0; p.rematados += x.fin || 0; p.equipo = j.equipo;
+                Object.entries(x.vs || {}).forEach(([r, n]) => { p.vs[r] = (p.vs[r] || 0) + n; });
+                jug.set(k, p);
+                const ke = norm(j.equipo);
+                const e = eqs.get(ke) || { equipo: j.equipo, salas: 0, booyahs: 0, kills: 0, dano: 0, hs: 0, derribos: 0, gloo: 0, rematados: 0, vivo: 0, n: 0, vs: {} };
+                if (!enSala.has(ke)) { enSala.add(ke); e.salas++; if (s.jugadores.some(z => z.booyah && norm(z.equipo) === ke)) e.booyahs++; }
+                e.kills += j.kills || 0; e.dano += j.dano || 0; e.hs += j.headshots || 0; e.derribos += derribos; e.gloo += j.gloo || 0;
+                e.rematados += x.fin || 0; e.vivo += j.vivo || 0; e.n++;
+                Object.entries(x.vs || {}).forEach(([r, n]) => { e.vs[r] = (e.vs[r] || 0) + n; });
+                eqs.set(ke, e);
+                (j.armas || []).forEach(a => {
+                    if (/^(FIST|PUÑO|ARMA #-?\d+)$/i.test(a.n) || /-SUM$/.test(a.n)) return;
+                    const y = armas[a.n] = armas[a.n] || { arma: a.n, kills: 0, dano: 0, usos: 0 };
+                    y.kills += a.k || 0; y.dano += a.d || 0; y.usos++;
+                });
+            });
+        });
+        const pct = (a, b) => b ? (a / b * 100).toFixed(1) + '%' : '—';
+        const lj = [...jug.values()].sort((a, b) => b.kills - a.kills || b.dano - a.dano).slice(0, 15);
+        const le = [...eqs.values()].sort((a, b) => b.rematados - a.rematados || b.kills - a.kills);
+        const la = Object.values(armas).filter(a => a.kills || a.dano).sort((a, b) => b.kills - a.kills || b.dano - a.dano).slice(0, 10);
+        const booyah = salas.map(s => {
+            const g = s.jugadores.find(j => j.booyah);
+            if (!g) return [s.etiqueta || 'S' + s.sala, MAPAS[s.mapa] || '—', '—', '', ...(dano ? ['', '', ''] : []), ''];
+            const esq = s.jugadores.filter(j => norm(j.equipo) === norm(g.equipo));
+            const sum = f => esq.reduce((a, j) => a + (f(j) || 0), 0);
+            const mvp = esq.slice().sort((a, b) => b.kills - a.kills || (b.dano || 0) - (a.dano || 0))[0];
+            return [s.etiqueta || 'S' + s.sala, MAPAS[s.mapa] || '—', g.equipo, sum(j => j.kills), ...(dano ? [fmt(sum(j => j.dano)), sum(j => j.headshots), sum(j => j.gloo)] : []),
+                mvp ? `${mvp.jugador} (${mvp.kills})` : '—'];
+        });
+        return [
+            { titulo: 'JUGADORES · DETALLE', icono: 'fa-user',
+                cab: ['#', 'JUGADOR', 'EQUIPO', 'SALAS', 'KILLS', ...(dano ? ['DAÑO', 'HS', '% HS', 'GLOO', 'REVIVIÓ'] : []), 'DERRIBOS', 'VECES LEVANTADO', '1ª SANGRE', 'REMATÓ', 'MÁS BAJAS A'],
+                filas: lj.map((p, i) => [i + 1, p.jugador, p.equipo, p.salas, p.kills, ...(dano ? [fmt(p.dano), p.hs, pct(p.hs, p.hits), p.gloo, p.revivio] : []),
+                    p.derribos, p.revivido, p.primeras || '—', p.rematados || '—', rival(top(p.vs))]) },
+            { titulo: 'EQUIPOS · QUIÉN ELIMINÓ A QUIÉN', icono: 'fa-people-group',
+                cab: ['#', 'EQUIPO', 'SALAS', 'BOOYAHS', 'EQUIPOS ELIMINADOS', 'KILLS', ...(dano ? ['DAÑO', 'HS', 'GLOO'] : []), 'DERRIBOS', 'VIVO PROM.', 'MÁS BAJAS A'],
+                filas: le.map((e, i) => [i + 1, e.equipo, e.salas, e.booyahs, e.rematados, e.kills, ...(dano ? [fmt(e.dano), e.hs, e.gloo] : []), e.derribos,
+                    e.n ? mmss(e.vivo / e.n) : '—', rival(top(e.vs))]) },
+            { titulo: 'ARMAS MÁS USADAS', icono: 'fa-gun',
+                cab: ['#', 'ARMA', 'KILLS', ...(dano ? ['DAÑO'] : []), 'JUGADORES QUE LA USARON'],
+                filas: la.map((a, i) => [i + 1, a.arma, a.kills, ...(dano ? [fmt(a.dano)] : []), a.usos]) },
+            { titulo: 'BOOYAH POR SALA · CÓMO JUGÓ LA ESCUADRA', icono: 'fa-trophy',
+                cab: ['SALA', 'MAPA', 'EQUIPO', 'KILLS', ...(dano ? ['DAÑO', 'HS', 'GLOO'] : []), 'MVP DE LA ESCUADRA'], filas: booyah }
+        ].filter(t => t.filas.length);
+    }
+
     /* ---------------- HTML: tarjetas y tablas (página pública) ---------------- */
     const D = (icono, titulo, valor, detalle) => `<div class="cpl-dest"><i class="fa-solid ${icono}"></i><div><small>${titulo}</small><b>${valor}</b>${detalle ? `<span>${detalle}</span>` : ''}</div></div>`;
     function destacadosHTML(r) {
@@ -628,8 +711,123 @@
             <div class="cpl-esc-nums">${e.promPts !== null ? `<span><b>${e.promPts.toFixed(1)}</b>pts/sala</span>` : ''}${e.promDano > 0 ? `<span><b>${Math.round(e.promDano).toLocaleString('es')}</b>daño/sala</span>` : ''}
             <span><b>${e.promKills.toFixed(1)}</b>kills/sala</span><span><b>${Math.round(e.constancia * 100)}%</b>constancia</span></div></div>`;
     }
-    function salasHTML(r) {
-        return tablasSalas(r).map(t => `<div class="cpl-tabla">
+    // ACUMULADOS: totales de todas las salas del filtro, por jugador, por equipo y por mapa
+    function tablasAcumulados(salas) {
+        const dano = salas.some(s => s.fuente !== 'replay');
+        const top = o => Object.entries(o || {}).sort((a, b) => b[1] - a[1])[0] || null;
+        const conN = t => t ? `${t[0]} (${t[1]})` : '—';
+        const prom = (a, n, f) => n ? (f ? f(a / n) : (a / n).toFixed(1)) : '—';
+        const pct = (a, b) => b ? (a / b * 100).toFixed(1) + '%' : '—';
+        const jug = new Map(), eqs = new Map(), mapas = new Map();
+        salas.forEach(s => {
+            const mapa = MAPAS[s.mapa] || (s.mapa ? 'MAPA ' + s.mapa : 'SIN MAPA');
+            const m = mapas.get(mapa) || { mapa, salas: 0, kills: 0, dano: 0, hs: 0, gloo: 0, duracion: 0, booyahs: {}, killers: {}, armas: {} };
+            m.salas++; m.duracion += s.duracion || Math.max(0, ...s.jugadores.map(j => j.vivo || 0));
+            const g = s.jugadores.find(j => j.booyah);
+            if (g) m.booyahs[g.equipo] = (m.booyahs[g.equipo] || 0) + 1;
+            const enSala = new Set();
+            s.jugadores.forEach(j => {
+                const x = j.extra || {}, b = x.bin || {};
+                const derribos = b.derribos !== undefined ? b.derribos : (j.derribos || 0);
+                const derribado = b.derribado !== undefined ? b.derribado : (x.derribado || x.caidas || 0);
+                const revivido = b.revivido !== undefined ? b.revivido : (x.levantadoCsv || x.levantado || 0);
+                m.kills += j.kills || 0; m.dano += j.dano || 0; m.hs += j.headshots || 0; m.gloo += j.gloo || 0;
+                m.killers[j.jugador] = (m.killers[j.jugador] || 0) + (j.kills || 0);
+                (j.armas || []).forEach(a => { if (a.k && !/^(FIST|PUÑO|ARMA #-?\d+)$/i.test(a.n) && !/-SUM$/.test(a.n)) m.armas[a.n] = (m.armas[a.n] || 0) + a.k; });
+                // Jugador
+                const k = norm(j.account_id || j.jugador);
+                const p = jug.get(k) || { jugador: j.jugador, equipo: j.equipo, salas: 0, kills: 0, dano: 0, hs: 0, hits: 0, torso: 0, piernas: 0, gloo: 0, revivio: 0,
+                    revivido: 0, derribos: 0, derribado: 0, booyahs: 0, primeras: 0, rematados: 0, vivo: 0, porMapa: {} };
+                p.salas++; p.kills += j.kills || 0; p.dano += j.dano || 0; p.hs += j.headshots || 0; p.hits += j.hits || 0;
+                p.torso += b.torso !== undefined ? b.torso : (x.torso || 0); p.piernas += b.piernas !== undefined ? b.piernas : (x.piernas || 0);
+                p.gloo += j.gloo || 0; p.revivio += j.revividos || 0; p.revivido += revivido; p.derribos += derribos; p.derribado += derribado;
+                p.booyahs += j.booyah ? 1 : 0; p.primeras += x.primeraSangre ? 1 : 0; p.rematados += x.fin || 0; p.vivo += j.vivo || 0; p.equipo = j.equipo;
+                p.porMapa[mapa] = (p.porMapa[mapa] || 0) + (j.kills || 0);
+                jug.set(k, p);
+                // Equipo
+                const ke = norm(j.equipo);
+                const e = eqs.get(ke) || { equipo: j.equipo, salas: 0, booyahs: 0, kills: 0, dano: 0, hs: 0, gloo: 0, derribos: 0, derribado: 0, rematados: 0, vivo: 0, n: 0, porMapa: {}, vs: {} };
+                if (!enSala.has(ke)) { enSala.add(ke); e.salas++; if (g && norm(g.equipo) === ke) e.booyahs++; }
+                e.kills += j.kills || 0; e.dano += j.dano || 0; e.hs += j.headshots || 0; e.gloo += j.gloo || 0; e.derribos += derribos; e.derribado += derribado;
+                e.rematados += x.fin || 0; e.vivo += j.vivo || 0; e.n++;
+                e.porMapa[mapa] = (e.porMapa[mapa] || 0) + (j.kills || 0);
+                Object.entries(x.vs || {}).forEach(([rv, n]) => { e.vs[rv] = (e.vs[rv] || 0) + n; });
+                eqs.set(ke, e);
+            });
+            mapas.set(mapa, m);
+        });
+        const lj = [...jug.values()].sort((a, b) => b.kills - a.kills || b.dano - a.dano);
+        const le = [...eqs.values()].sort((a, b) => b.booyahs - a.booyahs || b.kills - a.kills);
+        const lm = [...mapas.values()].sort((a, b) => b.salas - a.salas || a.mapa.localeCompare(b.mapa));
+        return [
+            { titulo: `ACUMULADO POR JUGADOR · ${lj.length}`, icono: 'fa-user',
+                cab: ['#', 'JUGADOR', 'EQUIPO', 'SALAS', 'KILLS', 'K/SALA', ...(dano ? ['DAÑO', 'DAÑO/SALA', 'HS', '% HS', 'TORSO', 'PIERNAS', 'GLOO', 'REVIVIÓ'] : []),
+                    'VECES REVIVIDO', 'DERRIBOS', 'VECES DERRIBADO', 'BOOYAHS', '1ª SANGRE', 'REMATÓ', 'VIVO PROM.', 'MEJOR MAPA'],
+                filas: lj.map((p, i) => [i + 1, p.jugador, p.equipo, p.salas, p.kills, prom(p.kills, p.salas),
+                    ...(dano ? [fmt(p.dano), prom(p.dano, p.salas, fmt), p.hs, pct(p.hs, p.hits), p.torso, p.piernas, p.gloo, p.revivio] : []),
+                    p.revivido, p.derribos, p.derribado, p.booyahs, p.primeras, p.rematados, prom(p.vivo, p.salas, mmss), conN(top(p.porMapa))]) },
+            { titulo: `ACUMULADO POR EQUIPO · ${le.length}`, icono: 'fa-people-group',
+                cab: ['#', 'EQUIPO', 'SALAS', 'BOOYAHS', 'KILLS', 'K/SALA', ...(dano ? ['DAÑO', 'DAÑO/SALA', 'HS', 'GLOO'] : []), 'DERRIBOS', 'VECES DERRIBADO',
+                    'EQUIPOS ELIMINADOS', 'VIVO PROM.', 'MEJOR MAPA', 'MÁS BAJAS A'],
+                filas: le.map((e, i) => [i + 1, e.equipo, e.salas, e.booyahs, e.kills, prom(e.kills, e.salas), ...(dano ? [fmt(e.dano), prom(e.dano, e.salas, fmt), e.hs, e.gloo] : []),
+                    e.derribos, e.derribado, e.rematados, prom(e.vivo, e.n, mmss), conN(top(e.porMapa)), conN(top(e.vs))]) },
+            { titulo: `ACUMULADO POR MAPA · ${lm.length}`, icono: 'fa-map-location-dot',
+                cab: ['MAPA', 'SALAS', 'KILLS', 'K/SALA', ...(dano ? ['DAÑO', 'HS', 'GLOO'] : []), 'DURACIÓN PROM.', 'MÁS BOOYAHS', 'MÁS KILLS', 'ARMA CON MÁS KILLS'],
+                filas: lm.map(m => [m.mapa, m.salas, m.kills, prom(m.kills, m.salas), ...(dano ? [fmt(m.dano), m.hs, m.gloo] : []), prom(m.duracion, m.salas, mmss),
+                    conN(top(m.booyahs)), conN(top(m.killers)), conN(top(m.armas))]) }
+        ].filter(t => t.filas.length);
+    }
+
+    // Buscador de ACUMULADOS: oculta las filas que no tienen el texto y dice cuántas quedan
+    function filtrarFilas(cont, texto) {
+        const q = norm(texto), filas = [...cont.querySelectorAll('.cpl-larga tbody tr')];
+        filas.forEach(tr => { tr.hidden = !!q && !norm(tr.textContent).includes(q); });
+        const cuenta = cont.querySelector('.cpl-cuenta');
+        if (cuenta) {
+            const n = filas.filter(tr => !tr.hidden).length;
+            cuenta.textContent = q ? (n ? `Mostrando ${n} de ${filas.length} filas` : 'Ninguna fila tiene ese texto. Prueba con parte del nombre.') : '';
+        }
+    }
+    const buscadorHTML = valor => `<input type="search" class="cpl-sel cpl-buscar" data-buscar placeholder="Buscar jugador, equipo o mapa..." aria-label="Buscar en los acumulados" value="${esc(valor)}">
+        <p class="cpl-cuenta" aria-live="polite"></p>`;
+
+    /* ---------- Pestañas TOP · ESTADÍSTICAS · ACUMULADOS y su movimiento ---------- */
+    // El resaltado dorado es una pieza aparte que se desliza de la pestaña anterior a la nueva;
+    // el contenido nuevo entra con un fundido corto. Con "reducir movimiento" solo cambia la opacidad.
+    const VISTAS = [['top', 'TOP', 'fa-trophy'], ['stats', 'ESTADÍSTICAS', 'fa-table'], ['acum', 'ACUMULADOS', 'fa-layer-group']];
+    const SALIDA = 'cubic-bezier(0.16, 1, 0.3, 1)';
+    const reducir = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    const posPest = i => `translateX(calc(${i} * (100% + 6px)))`;
+    function pestanasHTML(vista) {
+        const i = Math.max(0, VISTAS.findIndex(v => v[0] === vista));
+        return `<div class="cpl-pestanas" role="group" aria-label="Sección de estadísticas">
+            <span class="cpl-pest-ind" aria-hidden="true" style="transform:${posPest(i)}"></span>
+            ${VISTAS.map(([v, t, ic]) => `<button type="button" class="cpl-pest${vista === v ? ' activo' : ''}" data-vista="${v}" aria-pressed="${vista === v}"><i class="fa-solid ${ic}" aria-hidden="true"></i> ${t}</button>`).join('')}</div>`;
+    }
+    function deslizarPestana(cont, antes, ahora) {
+        const ind = cont.querySelector('.cpl-pest-ind');
+        const a = VISTAS.findIndex(v => v[0] === antes), b = VISTAS.findIndex(v => v[0] === ahora);
+        if (!ind || !ind.animate || a < 0 || b < 0 || a === b) return;
+        if (reducir()) { ind.animate({ opacity: [0.35, 1] }, { duration: 150 }); return; }
+        ind.animate({ transform: [posPest(a), posPest(b)] }, { duration: 340, easing: SALIDA });
+    }
+    function entrar(el) {
+        if (!el || !el.animate) return;
+        el.animate(reducir() ? { opacity: [0, 1] } : { opacity: [0, 1], transform: ['translateY(8px)', 'none'] },
+            { duration: reducir() ? 150 : 260, easing: SALIDA });
+    }
+    // Al redibujar se pierde el foco: vuelve al control que se usó (teclado y lectores de pantalla)
+    function devolverFoco(cont, sel) { const b = sel && cont.querySelector(sel); if (b) b.focus({ preventScroll: true }); }
+
+    function tablasHTML(tablas, clase) {
+        return tablas.map(t => `<div class="cpl-tabla${clase ? ' ' + clase : ''}">
+            <h4><i class="fa-solid ${t.icono}"></i> ${t.titulo}</h4>
+            <div class="cpl-tabla-scroll"><table><thead><tr>${t.cab.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+            <tbody>${t.filas.map(f => `<tr>${f.map((c, i) => `<td${i === 0 ? ' class="cpl-s"' : ''}>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`).join('');
+    }
+
+    function salasHTML(r, extra) {
+        return tablasSalas(r).concat(extra || []).map(t => `<div class="cpl-tabla">
             <h4><i class="fa-solid ${t.icono}"></i> ${t.titulo}</h4>
             <div class="cpl-tabla-scroll"><table><thead><tr>${t.cab.map(c => `<th>${c}</th>`).join('')}</tr></thead>
             <tbody>${t.filas.map(f => `<tr>${f.map((c, i) => `<td${i === 0 ? ' class="cpl-s"' : ''}>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`).join('');
@@ -653,17 +851,38 @@
 .cpl-esc-nums{display:flex;flex-wrap:wrap;gap:14px}.cpl-esc-nums span{color:#9a9a9a;font-size:.72rem}.cpl-esc-nums span b{display:block;color:#D8C395;font-size:1.05rem}
 .cpl-tabla{margin-top:14px;padding:12px;border:1px solid rgba(216,195,149,.2);border-radius:6px;background:rgba(0,0,0,.35)}
 .cpl-tabla h4{margin:0 0 8px;color:#D8C395;font-size:.8rem;letter-spacing:.06em}
-.cpl-tabla-scroll{overflow-x:auto}
+.cpl-tabla-scroll{overflow-x:auto;scrollbar-color:#D8C395 #121317;scrollbar-width:thin}
 .cpl-tabla table{width:100%;border-collapse:collapse;font-size:.85rem}
 .cpl-tabla th{padding:6px 8px;color:#9a9a9a;font-size:.66rem;text-align:left;white-space:nowrap;border-bottom:1px solid rgba(216,195,149,.25)}
-.cpl-tabla td{padding:7px 8px;color:#eee;white-space:nowrap;border-top:1px solid rgba(255,255,255,.06)}
+.cpl-tabla td{padding:7px 8px;color:#eee;white-space:nowrap;border-top:1px solid rgba(255,255,255,.06);font-variant-numeric:tabular-nums}
+.cpl-tabla tbody tr{transition:background-color .15s ease}
+.cpl-tabla tbody tr:hover{background:rgba(216,195,149,.06)}
+.cpl-tabla ::selection,.cpl-dest ::selection{background:#D8C395;color:#0a0b10}
 .cpl-tabla td.cpl-s{color:#D8C395;font-weight:bold}
 .cpl-sel{min-height:38px;padding:6px 10px;border:1px solid rgba(216,195,149,.3);border-radius:4px;background:#0a0b10;color:#fff}
 .cpl-filtros{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
-.cpl-chip{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:6px 14px;border:1px solid rgba(216,195,149,.35);border-radius:20px;background:transparent;color:#D8C395;font-size:.82rem;cursor:pointer}
+.cpl-chip{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:6px 14px;border:1px solid rgba(216,195,149,.35);border-radius:20px;background:transparent;color:#D8C395;font-size:.82rem;cursor:pointer;transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .12s ease}
+.cpl-chip:hover{border-color:#D8C395}
+.cpl-chip:active,.cpl-pest:active{transform:scale(.97)}
 .cpl-chip.activo{background:#D8C395;color:#0a0b10;font-weight:bold}
 .cpl-filtros .cpl-sel{flex:1 1 220px;max-width:100%}
-.cpl-resumen{margin:0 0 12px;color:#9a9a9a;font-size:.85rem}`;
+.cpl-resumen{margin:0 0 12px;color:#9a9a9a;font-size:.85rem}
+.cpl-pestanas{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:14px;padding:4px;border:1px solid rgba(216,195,149,.25);border-radius:8px;background:rgba(0,0,0,.35)}
+.cpl-pest-ind{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 20px) / 3);border-radius:6px;background:#D8C395;box-shadow:0 2px 10px rgba(0,0,0,.35);pointer-events:none}
+.cpl-pest{position:relative;z-index:1;min-height:42px;padding:8px 6px;border:0;border-radius:6px;background:transparent;color:#D8C395;font-family:Michroma,sans-serif;font-size:.72rem;letter-spacing:.06em;cursor:pointer;transition:color .2s ease .06s,transform .12s ease}
+.cpl-pest:not(.activo):hover{color:#fff}
+.cpl-pest{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:520px){.cpl-pest{padding:8px 2px;font-family:inherit;font-weight:800;font-size:.74rem;letter-spacing:.02em}.cpl-pest i{display:none}}
+.cpl-pest.activo{color:#0a0b10}
+.cpl-pest:focus-visible,.cpl-chip:focus-visible,.cpl-sel:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.cpl-buscar{width:100%;box-sizing:border-box;margin-bottom:4px;caret-color:#D8C395}
+.cpl-buscar::placeholder{color:#8f8a7e}
+.cpl-cuenta{min-height:1.2em;margin:4px 0 0;color:#b9b2a4;font-size:.8rem}
+.cpl-cargando{color:#9a9a9a;text-align:center;padding:16px}
+@media (prefers-reduced-motion:reduce){.cpl-chip,.cpl-pest,.cpl-tabla tbody tr{transition:none}.cpl-chip:active,.cpl-pest:active{transform:none}}
+.cpl-larga .cpl-tabla-scroll{max-height:520px;overflow:auto}
+.cpl-larga thead th{position:sticky;top:0;background:#0d0e12;z-index:1}
+.cpl-larga td:nth-child(2){color:#fff;font-weight:bold}`;
         document.head.appendChild(st);
     }
 
@@ -760,7 +979,9 @@
         const bloque = cont.closest('[data-stats-avanzadas]') || cont;
         bloque.hidden = false;
 
-        const estado = { modo: 'general', dia: dias[0], sesion: sesiones[0].id };
+        const estado = { vista: 'top', modo: 'general', dia: dias[0], sesion: sesiones[0].id, buscar: '' };
+        let calc = null;   // { clave, salas, r, resumen } del último filtro
+        let vistaAntes = null, enfocar = null;   // para deslizar el resaltado y devolver el foco
         const cache = new Map();
         const filasDe = async ids => {
             const falta = ids.filter(id => !cache.has(id));
@@ -783,25 +1004,73 @@
                 : estado.modo === 'entreno'
                 ? `<select class="cpl-sel" data-entreno aria-label="Entreno">${sesiones.map(s => `<option value="${esc(s.id)}"${s.id === estado.sesion ? ' selected' : ''}>${esc(nombreSes(s))}</option>`).join('')}</select>`
                 : '';
-            cont.innerHTML = `<div class="cpl-filtros">${chip('general', 'General', 'fa-layer-group')}${chip('dia', 'Por día', 'fa-calendar-day')}${chip('entreno', 'Por entreno', 'fa-gamepad')}${selector}</div>
-                <p style="color:#9a9a9a;text-align:center;padding:16px">Cargando estadísticas...</p>`;
-            cont.querySelectorAll('[data-modo]').forEach(b => b.onclick = () => { estado.modo = b.dataset.modo; pintar(); });
+            const foco = enfocar; enfocar = null;
+            cont.innerHTML = `${pestanasHTML(estado.vista)}
+                <div class="cpl-filtros">${chip('general', 'General', 'fa-layer-group')}${chip('dia', 'Por día', 'fa-calendar-day')}${chip('entreno', 'Por entreno', 'fa-gamepad')}${selector}</div>
+                <p class="cpl-cargando" role="status">Cargando estadísticas...</p>`;
+            deslizarPestana(cont, vistaAntes, estado.vista); vistaAntes = estado.vista;
+            devolverFoco(cont, foco);
+            cont.querySelectorAll('[data-vista]').forEach(b => b.onclick = () => { estado.vista = b.dataset.vista; enfocar = `[data-vista="${b.dataset.vista}"]`; pintar(); });
+            cont.querySelectorAll('[data-modo]').forEach(b => b.onclick = () => { estado.modo = b.dataset.modo; enfocar = `[data-modo="${b.dataset.modo}"]`; pintar(); });
             const sd = cont.querySelector('[data-dia]'), se = cont.querySelector('[data-entreno]');
-            if (sd) sd.onchange = () => { estado.dia = sd.value; pintar(); };
-            if (se) se.onchange = () => { estado.sesion = se.value; pintar(); };
-            let filas, puntos = [];
-            try {
-                [filas, puntos] = await Promise.all([filasDe(ids), ids.length === 1 ? puntosDeSesion(portal, ids[0]) : Promise.resolve([])]);
-            } catch (e) { cont.lastElementChild.textContent = 'No se pudieron cargar las estadísticas.'; return; }
-            const salas = salasDesdeBD(filas);
-            const r = calcular(salas, puntos);
-            const resumen = estado.modo === 'general' ? `General: ${ids.length} entreno${ids.length === 1 ? '' : 's'} · ${salas.length} salas`
-                : estado.modo === 'dia' ? `${diaLargo(estado.dia)}: ${ids.length} entreno${ids.length === 1 ? '' : 's'} · ${salas.length} salas`
-                : `${nombreSes(ses.get(estado.sesion))} · ${salas.length} salas`;
-            cont.lastElementChild.outerHTML = `<p class="cpl-resumen">${esc(resumen)}</p>
-                <div class="cpl-grid">${destacadosHTML(r)}</div>${escuadraHTML(r.escuadra)}${salasHTML(r)}`;
+            if (sd) sd.onchange = () => { estado.dia = sd.value; enfocar = '[data-dia]'; pintar(); };
+            if (se) se.onchange = () => { estado.sesion = se.value; enfocar = '[data-entreno]'; pintar(); };
+            // Mismo filtro que la vez anterior (solo cambió la pestaña): no se vuelve a consultar
+            const clave = estado.modo + '|' + ids.join(',');
+            if (!calc || calc.clave !== clave) {
+                let filas, puntos = [];
+                try {
+                    [filas, puntos] = await Promise.all([filasDe(ids), ids.length === 1 ? puntosDeSesion(portal, ids[0]) : Promise.resolve([])]);
+                } catch (e) { cont.lastElementChild.textContent = 'No se pudieron cargar las estadísticas.'; return; }
+                const salas = salasDesdeBD(filas);
+                const resumen = estado.modo === 'general' ? `General: ${ids.length} entreno${ids.length === 1 ? '' : 's'} · ${salas.length} salas`
+                    : estado.modo === 'dia' ? `${diaLargo(estado.dia)}: ${ids.length} entreno${ids.length === 1 ? '' : 's'} · ${salas.length} salas`
+                    : `${nombreSes(ses.get(estado.sesion))} · ${salas.length} salas`;
+                calc = { clave, salas, r: calcular(salas, puntos), resumen };
+            }
+            const { salas, r, resumen } = calc;
+            const cuerpo = estado.vista === 'top' ? `<div class="cpl-grid">${destacadosHTML(r)}</div>${escuadraHTML(r.escuadra)}`
+                : estado.vista === 'stats' ? salasHTML(r, tablasDetalle(salas))
+                : `${buscadorHTML(estado.buscar)}${tablasHTML(tablasAcumulados(salas), 'cpl-larga')}`;
+            cont.lastElementChild.outerHTML = `<div class="cpl-cuerpo"><p class="cpl-resumen">${esc(resumen)}</p>${cuerpo}</div>`;
+            entrar(cont.lastElementChild);
+            const bus = cont.querySelector('[data-buscar]');
+            if (bus) { bus.oninput = () => { estado.buscar = bus.value; filtrarFilas(cont, bus.value); }; filtrarFilas(cont, bus.value); }
         };
         pintar();
+    }
+
+    // Estadísticas de UN entreno (detalle del entreno en la página pública): TOP · ESTADÍSTICAS · ACUMULADOS
+    async function montarSesion(contId, portal, sesion) {
+        const cont = typeof contId === 'string' ? document.getElementById(contId) : contId;
+        if (!cont) return false;
+        estilos();
+        cont.innerHTML = '<p style="color:#9a9a9a;text-align:center;padding:16px">Cargando estadísticas...</p>';
+        let filas, puntos;
+        try {
+            [filas, puntos] = await Promise.all([
+                traerTodo(() => P.db().from('stats_jugadores').select('*').eq('portal', portal).eq('sesion_id', String(sesion)).order('id')),
+                puntosDeSesion(portal, sesion)]);
+        } catch (e) { cont.innerHTML = '<p style="color:#9a9a9a;text-align:center;padding:16px">No se pudieron cargar las estadísticas.</p>'; return false; }
+        if (!filas.length) { cont.innerHTML = '<p style="color:#9a9a9a;text-align:center;padding:16px">Este entreno no tiene estadísticas (se cargó sin los replays).</p>'; return false; }
+        const salas = salasDesdeBD(filas), r = calcular(salas, puntos);
+        let vista = 'top', buscar = '', vistaAntes = null;
+        const pintar = enfocar => {
+            const cuerpo = vista === 'top' ? `<div class="cpl-grid">${destacadosHTML(r)}</div>${escuadraHTML(r.escuadra)}`
+                : vista === 'stats' ? salasHTML(r, tablasDetalle(salas))
+                : `${buscadorHTML(buscar)}${tablasHTML(tablasAcumulados(salas), 'cpl-larga')}`;
+            cont.innerHTML = `${pestanasHTML(vista)}<div class="cpl-cuerpo">
+                <p class="cpl-resumen">${salas.length} salas · ${new Set(salas.flatMap(s => s.jugadores.map(j => norm(j.equipo)))).size} equipos</p>${cuerpo}</div>`;
+            deslizarPestana(cont, vistaAntes, vista);
+            if (vistaAntes !== null) entrar(cont.querySelector('.cpl-cuerpo'));
+            vistaAntes = vista;
+            devolverFoco(cont, enfocar);
+            cont.querySelectorAll('[data-vista]').forEach(b => b.onclick = () => { vista = b.dataset.vista; pintar(`[data-vista="${vista}"]`); });
+            const bus = cont.querySelector('[data-buscar]');
+            if (bus) { bus.oninput = () => { buscar = bus.value; filtrarFilas(cont, bus.value); }; filtrarFilas(cont, bus.value); }
+        };
+        pintar();
+        return true;
     }
 
     // Puntos por sala de cada equipo (para la escuadra destacada)
@@ -831,7 +1100,7 @@
 
     window.PumasCompletos = {
         leerCSV, partidaDesdeCSV, partidaDesdeReplay, jugadoresDeLog, nombreArma, combinar, aplicarBin, equiposDelBin, aCSV, emparejar, calcular, filasBD, salasDesdeBD, idDeArchivo,
-        habilitados, habilitado, destacadosHTML, escuadraHTML, salasHTML, imagenHTML, imagenSalasHTML, listaDestacados, tablasSalas, traerTodo, estilos, montarPublico, MAPAS, GRUPOS,
+        habilitados, habilitado, destacadosHTML, escuadraHTML, salasHTML, tablasDetalle, tablasAcumulados, tablasHTML, montarSesion, imagenHTML, imagenSalasHTML, listaDestacados, tablasSalas, traerTodo, estilos, montarPublico, MAPAS, GRUPOS,
         guardar: (portal, sesion, filas) => P.stats.guardar(portal, sesion, filas),
         olvidarConfig: () => { cfgCache = null; }
     };

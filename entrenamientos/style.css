@@ -1100,6 +1100,7 @@ footer {
 .vista-head span,.vista-cargando{color:var(--gray);font-size:.85rem}
 .vista-cargando{padding:30px;text-align:center}
 .vista-actions{margin:20px auto 0;max-width:340px}
+.vista-stats{margin-top:22px;padding-top:18px;border-top:1px solid rgba(216,195,149,.2)}
 .vista-texto{margin-top:22px}
 .vista-texto-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:var(--primary);font:800 .7rem var(--font-display)}
 .vista-texto textarea{width:100%;height:210px;padding:12px;border:1px solid rgba(216,195,149,.25);border-radius:2px;color:var(--light);background:#0a0b10;font:inherit;resize:vertical}
@@ -1162,7 +1163,6 @@ footer{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
 @media(max-width:640px){
   .killer-head{font-size:.5rem!important;letter-spacing:0!important}
   .tablas-pumas.recortar table+table{display:none!important}
-  .tablas-pumas.recortar tbody tr:nth-child(n+11){display:none!important}
   .ver-mas{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:44px;margin-top:8px;border:1px solid rgba(216,195,149,.5);border-radius:3px;color:var(--primary);background:rgba(216,195,149,.06);font:800 .72rem var(--font-display);cursor:pointer}
   .ver-mas[hidden]{display:none}
 }
