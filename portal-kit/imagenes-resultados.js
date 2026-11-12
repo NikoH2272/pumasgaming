@@ -138,7 +138,7 @@
             <div style="position:absolute;left:52px;right:52px;top:171px"><h1 class="pg-title" style="font-size:${o.tamTitulo || 88}px">${esc(o.titulo)}</h1><div style="margin-top:17px;font-size:17px;font-weight:500;color:#959595">${esc(o.subtitulo || m.encabezado || 'Free Fire · Entrenos Pumas')}</div></div>
             <main style="position:absolute;left:52px;right:52px;top:320px;bottom:120px">${cuerpo}</main>
             <footer style="position:absolute;left:52px;right:52px;bottom:35px;border-top:2px solid #363636;padding-top:18px;display:flex;align-items:center;justify-content:space-between;font-size:15px;color:#959595">
-                <span style="color:${PIEL};font-weight:600">@${esc(m.instagram || 'pumas.gaming.oficial')}</span><span>${esc(m.demo ? 'DATOS DE PRUEBA' : 'FREE FIRE / PUMAS')}</span><span>Dev por <b style="color:${PIEL}">proyectn.com</b></span>
+                <span style="color:${PIEL};font-weight:600">@${esc(m.instagram || 'pumas.gaming.oficial')}</span><span>${esc(m.demo ? 'DATOS DE PRUEBA' : m.pagina || 'FREE FIRE / PUMAS')}</span><span style="display:flex;align-items:center;gap:9px">${m.logoDev?`<img src="${base}imagenes/personajes/proyectn.png" alt="" style="width:30px;height:30px;object-fit:contain">`:''}Dev por <b style="color:${PIEL}">proyectn.com</b></span>
             </footer>
         </div>`;
     }
@@ -230,5 +230,5 @@
         return a.href;
     }
 
-    window.PumasImagenes = { generar, descargar, datos, horarios, W, H };
+    window.PumasImagenes = { generar, descargar, datos, horarios, W, H, plantilla:lienzo, tabla, fuentes };
 })();

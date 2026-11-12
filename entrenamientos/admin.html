@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styleadmin.css">
+    <link rel="stylesheet" href="metricas.css?v=20261111a">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../portal-kit/portal.js?v=20261111b" data-portal="entrenamientos" data-modo="admin"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -503,38 +504,37 @@
     </section>
 
     <!-- SECCIÓN 5: MÉTRICAS GLOBALES (4:5) -->
-    <section id="seccionMetricas" class="tool-section" style="padding-top: 40px; display: none;">
-        <h2 class="section-title">Métricas Globales (Formato 4:5)</h2>
-        <div class="tool-container">
-            <p class="tool-desc">
-                Genera la tarjeta con el fondo y estadísticas consolidadas de todos los entrenamientos en un formato vertical 4:5.
-            </p>
-
-            <div style="display: flex; justify-content: center; margin-bottom: 25px;">
-                <button onclick="generarVistaPreviaMetricas()" class="btn-generar" style="max-width: 350px; padding: 12px 25px; font-size: 1rem;">
-                    <i class="fa-solid fa-gears"></i> CONFIRMAR Y GENERAR MÉTRICAS
-                </button>
-            </div>
-
-            <div class="results-wrapper">
-                <div id="outputMetricasPreview" class="result-box" style="display: flex; justify-content: center; width: 100%;">
-                    <div style="color: var(--gray); text-align: center; padding: 40px; border: 1px dashed rgba(216,195,149,0.2); border-radius: 8px; width: 100%;">
-                        Haz clic en "Confirmar y Generar Métricas" para renderizar la tarjeta vertical.
-                    </div>
-                </div>
-            </div>
-
-            <div id="contenedorTextoMetricasCopiable" style="display: none; margin-top: 25px; background: rgba(18, 19, 23, 0.95); border: 1px solid rgba(216,195,149, 0.3); border-radius: 8px; padding: 15px; width: 100%;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <span style="font-family: 'Michroma'; color: #D8C395; font-size: 0.85rem;">TEXTO DESCRIPTIVO PARA REDES / DISCORD</span>
-                    <button onclick="copiarTextoMetricas()" style="background: var(--primary); color: var(--dark); border: none; padding: 6px 12px; border-radius: 4px; font-family: 'Michroma'; font-weight: bold; font-size: 0.75rem; cursor: pointer;">
-                        <i class="fa-solid fa-copy"></i> COPIAR TEXTO
-                    </button>
-                </div>
-                <textarea id="inputTextoMetricasCopiable" readonly style="width: 100%; height: 150px; background: #0a0b10; border: 1px solid rgba(216,195,149, 0.2); color: #fff; padding: 10px; border-radius: 6px; font-family: 'Trebuchet MS'; font-size: 0.9rem; resize: none;"></textarea>
-            </div>
-
+    <section id="seccionMetricas" class="tool-section" style="padding-top:40px;display:none">
+      <h2 class="section-title">Resumen semanal y mensual</h2>
+      <div class="tool-container metricas-app">
+        <p class="metricas-intro">Prepara el carrusel de Instagram con los resultados de Pumas: equipos, participación y jugadores del periodo.</p>
+        <div class="metricas-filtros">
+          <label>Periodo<select id="metricasPeriodo"><option value="semana">Semana · lunes a domingo</option><option value="mes">Mes completo</option></select></label>
+          <label>Fecha de referencia<input id="metricasFecha" type="date"></label>
+          <button type="button" id="metricasGenerar" class="metricas-primario">Generar resumen</button>
         </div>
+        <p id="metricasRango" class="metricas-ayuda"></p>
+        <div id="metricasEstado" class="metricas-estado" role="status" aria-live="polite">Elige el periodo y genera el resumen para ver las imágenes y el texto.</div>
+        <div id="metricasResultados" hidden>
+          <div id="metricasCifras" class="metricas-cifras"></div>
+          <div class="metricas-trabajo">
+            <div class="metricas-galeria">
+              <div class="metricas-selector"><label for="metricasImagen">Imagen del carrusel</label><select id="metricasImagen"></select><div class="metricas-navegacion"><button type="button" id="metricasAnterior">Anterior</button><button type="button" id="metricasSiguiente">Siguiente</button></div></div>
+              <div class="metricas-acciones"><button type="button" id="metricasDescargar" class="metricas-primario">Descargar imagen</button><button type="button" id="metricasTodas">Descargar carrusel</button><a id="metricasPNG" hidden>Guardar PNG generado</a></div>
+              <div id="metricasVista" class="metricas-vista" role="tabpanel"><div id="metricasLienzo"></div></div>
+              <p id="metricasPagina" class="metricas-ayuda"></p>
+            </div>
+            <div class="metricas-texto">
+              <div class="metricas-texto-titulo"><h3>Texto para Instagram</h3><button type="button" id="metricasCopiar">Copiar texto</button></div>
+              <label class="metricas-label" for="inputTextoMetricasCopiable">Puedes editarlo antes de copiar</label>
+              <textarea id="inputTextoMetricasCopiable" rows="18"></textarea>
+              <p id="metricasCaracteres" class="metricas-ayuda"></p>
+              <p class="metricas-ayuda">Participación = entrenos jugados ÷ entrenos del periodo. Rendimiento = kills ÷ salas; mínimo 3 salas. PR = puntos ÷ entrenos.</p>
+            </div>
+          </div>
+          <details class="metricas-participantes"><summary id="metricasParticipantesTitulo">Top 20 por participación</summary><div id="metricasParticipantes" class="metricas-tabla-scroll"></div></details>
+        </div>
+      </div>
     </section>
     
 
@@ -633,8 +633,10 @@
         });
     </script>
     <script src="../portal-kit/completos.js?v=20261111h"></script>
-    <script src="admin_logica.js?v=20261103b"></script>
-    <script src="../portal-kit/imagenes-resultados.js?v=20261111b"></script>
+    <script src="admin_logica.js?v=20261111m"></script>
+    <script src="../portal-kit/imagenes-resultados.js?v=20261111m"></script>
+    <script src="../portal-kit/metricas-periodo.js?v=20261111a"></script>
+    <script src="admin_metricas.js?v=20261111b"></script>
     <script src="completos_admin.js?v=20261111b"></script>
     <script src="../portal-kit/replay-bin.js?v=20261111c"></script>
     <script src="../portal-kit/generador-csv.js?v=20261111c"></script>
