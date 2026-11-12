@@ -48,21 +48,29 @@
     }
 
     /* ---------- Cifras que cuentan ---------- */
-    // Las cifras se llenan cuando llegan los datos: se anima cada vez que pasan de 0 a un número
+    // Las cifras se llenan cuando llegan los datos, a veces en varias tandas (la portada suma
+    // sesión por sesión). Si llega un número nuevo a media animación, se sigue contando hasta
+    // el nuevo: nunca se vuelve a escribir un valor viejo encima del dato real.
+    const conteos = new WeakMap();   // b -> { fin, actual, escrito, ctrl }
     const contar = b => {
+        const st = conteos.get(b) || {};
+        if (st.escrito !== undefined && b.textContent === st.escrito) return;   // lo escribió la animación
         const fin = parseInt(String(b.textContent).replace(/[^\d]/g, ''), 10);
-        if (!fin || b.dataset.pgContado === String(fin)) return;
-        b.dataset.pgContado = String(fin);
-        animate(0, fin, {
+        if (!fin || fin === st.fin) return;
+        if (st.ctrl) st.ctrl.stop();
+        const escribir = v => { st.actual = v; st.escrito = Math.round(v).toLocaleString('es'); b.textContent = st.escrito; };
+        st.fin = fin;
+        st.ctrl = animate(st.actual || 0, fin, {
             duration: Math.min(1.4, 0.5 + fin / 4000), ease: SALIDA,
-            onUpdate: v => { b.dataset.pgAnimando = '1'; b.textContent = Math.round(v).toLocaleString('es'); },
-            onComplete: () => { delete b.dataset.pgAnimando; b.textContent = fin.toLocaleString('es'); }
+            onUpdate: escribir, onComplete: () => escribir(fin)
         });
-        setTimeout(() => { if (b.dataset.pgAnimando || b.textContent !== fin.toLocaleString('es')) { delete b.dataset.pgAnimando; b.textContent = fin.toLocaleString('es'); } }, 2000);
+        conteos.set(b, st);
+        // Pestaña sin cuadros (congelada): se deja el número final de todos modos
+        setTimeout(() => { if (st.fin === fin && b.textContent !== fin.toLocaleString('es')) { st.ctrl.stop(); escribir(fin); } }, 2000);
     };
     document.querySelectorAll('.stat-row b, .hero-stats b, .stats-hero b').forEach(b => {
         contar(b);
-        new MutationObserver(() => { if (!b.dataset.pgAnimando) contar(b); }).observe(b, { childList: true, characterData: true, subtree: true });
+        new MutationObserver(() => contar(b)).observe(b, { childList: true, characterData: true, subtree: true });
     });
 
     /* ---------- Secciones y tarjetas al llegar a ellas ---------- */

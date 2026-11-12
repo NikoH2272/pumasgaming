@@ -53,7 +53,7 @@
   padding: 14px var(--pad); border-bottom: 1px solid #222;
   background: rgba(20, 20, 20, .92); backdrop-filter: blur(10px);
 }
-.c-home .logo-container { gap: 12px; text-decoration: none; }
+.c-home .logo-container { gap: 12px; flex-shrink: 0; white-space: nowrap; text-decoration: none; }
 .c-home .logo-img { width: 40px; height: 40px; }
 .c-home .logo { font: italic 800 24px/1 var(--f-disp); letter-spacing: .01em; text-transform: uppercase; color: var(--piel); }
 .c-home .main-nav { margin-left: auto; }
@@ -211,9 +211,14 @@
   .c-home .main-nav ul { gap: 16px; }
 }
 @media (max-width: 1024px) {
-  /* style.css convierte el menú en desplegable a este ancho: mismo estilo C */
-  .c-home .main-nav { margin-left: 0; }
-  .c-home .main-nav.is-active { background: var(--tinta); border-bottom: 1px solid var(--linea); }
+  /* style.css solo hace el menú desplegable a 700px; la portada lo necesita desde aquí
+     (si no, el menú horizontal se monta encima del logo entre 701 y 1024px) */
+  .c-home .menu-toggle { display: flex; margin-left: auto; }
+  .c-home nav.main-nav { position: absolute; top: 100%; left: 0; display: none; width: 100%; margin-left: 0;
+    padding: 18px 22px 24px; background: var(--tinta); border-bottom: 1px solid var(--linea); box-shadow: 0 14px 24px rgba(0, 0, 0, .45);
+    max-height: calc(100svh - 70px); overflow-y: auto; }
+  .c-home nav.main-nav.is-active { display: block; }
+  .c-home .main-nav ul { flex-direction: column; align-items: stretch; gap: 0; }
   .c-home .main-nav ul li a { display: block; padding: 14px 0; font-size: 15px; }
   .c-home .main-nav .nav-admin a { display: inline-flex; margin-top: 8px; }
 }
