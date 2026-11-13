@@ -92,14 +92,27 @@
        Imagen: imagenes/personajes/<Nombre>.png (la carpeta queda junto a portal-kit). */
     const HABILIDADES = { 2606: 'Steffie', 3806: 'Chrono', 4006: 'Skyler', 4406: 'Xayne', 5606: 'Iris', 5806: 'Tatsuya',
         7206: 'Koda', 7306: 'Chrono', 7406: 'Oscar', 7706: 'Morse' };
+    // El .csv oficial nombra la habilidad (skill_name), no al personaje: se traduce para mostrar el personaje y su foto.
+    // Tabla de habilidades activas → personaje (ff_mapeo_armas_habilidades_mascotas.csv). El nombre es el de la foto en imagenes/personajes.
+    const PERSONAJE_DE_SKILL = { 'Drop the Beat': 'Alok', 'Bushido': 'Hayato', 'Time Turner': 'Chrono', 'Camouflage': 'Wukong', 'Master of All': 'K',
+        'Damage Delivered': 'Shirou', 'Hat Trick': 'Luqueta', 'Limelight': 'Wolfrahh', 'Falcon Fervor': 'Maro', 'Healing Heartbeat': 'Dimitri',
+        'Riptide Rhythm': 'Skyler', 'Sustained Raids': 'Jota', 'Tracing Steps': 'Clu', 'Painted Refuge': 'Steffie', 'Raging Reload': 'Jai',
+        "Swordsman's Wrath": 'Over', 'Sharp Shooter': 'Laura', 'Healing Song': 'Kapella', 'Thrill of Battle': 'A124', 'Dash': 'Kelly',
+        'Gear Recycle': 'Shani', 'Vital Vibes': 'Thiva', 'Buzzer Beater': 'Leon', 'Turbodriver': 'Misha', "Gangster's Spirit": 'Antonio',
+        'Arms-dealing': 'Paloma', 'Gluttony': 'Maxim', 'Muay Thai': 'Kla', 'Deadly Rebalance': 'Sonia', 'Rebirth Force': 'Orion', 'Nether Surge': 'Hades',
+        'Graffiti Ambush': 'Santino', 'Bubble of Life': 'Soo Young', 'Bio-Electrical': 'Ryden', 'Bear Claw': 'Miguel', 'Trooper Recall': 'Moco',
+        'Rock It': 'Cla', 'Spinning Spear': 'Kenta', 'Swordslash': 'Tatsuya' };
+    const SKILL_NORM = Object.fromEntries(Object.entries(PERSONAJE_DE_SKILL).map(([k, v]) => [norm(k), v]));
+    const personajeDe = n => (n && SKILL_NORM[norm(n)]) || n;
+    const FOTO_ALIAS = { K: 'k' };   // archivos con otro nombre en imagenes/personajes
     const LS_HAB = 'pg_habilidades_ff';
     let habAprendidas = null;
     const habGuardadas = () => { if (!habAprendidas) { try { habAprendidas = JSON.parse(localStorage.getItem(LS_HAB)) || {}; } catch (e) { habAprendidas = {}; } } return habAprendidas; };
-    const nombreHabilidad = id => (id ? habGuardadas()[id] || HABILIDADES[id] || ('HABILIDAD #' + id) : '');
+    const nombreHabilidad = id => (id ? personajeDe(habGuardadas()[id] || HABILIDADES[id]) || ('HABILIDAD #' + id) : '');
     const RUTA_PERSONAJES = (() => {
         try { return new URL('../imagenes/personajes/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../imagenes/personajes/'; }
     })();
-    const fotoHabilidad = id => { const n = habGuardadas()[id] || HABILIDADES[id]; return n ? RUTA_PERSONAJES + encodeURIComponent(n) + '.png' : ''; };
+    const fotoHabilidad = id => { const n = personajeDe(habGuardadas()[id] || HABILIDADES[id]); return n ? RUTA_PERSONAJES + encodeURIComponent(FOTO_ALIAS[n] || n) + '.png' : ''; };
     // Celda de tabla con la foto del personaje (en texto/CSV sale solo el nombre)
     const celdaHabilidad = (id, extra) => {
         const n = nombreHabilidad(id), f = fotoHabilidad(id), txt = n + (extra ? ' ' + extra : '');
