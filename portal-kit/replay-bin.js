@@ -6,14 +6,30 @@
      101 → ficha del jugador (account_id, PlayerID, nick)
      106 → cada impacto: atacante, víctima, daño, daño extra, arma×2, parte del cuerpo (1 cabeza · 2 torso · 3 piernas)
      139 → derribo (víctima, atacante) · 221 → pared gloo colocada · 393 → reanimación (quien levanta, a quien)
+     117 → zona segura: fase, círculo actual (zz x·1000, zz z·1000, radio), círculo siguiente, estado
+           (1 anunciada · 2 cerrando · 6/7 la última, que se mueve) y duración (zz fin − zz inicio) / 500
    Comprobado contra los .csv de resultados completos (6 salas, 241 jugadores):
      paredes gloo, veces revivido, veces derribado, impactos a las piernas: exactos; headshots 240/241;
      daño por arma 1181/1202 (el total puede variar unos puntos del oficial).
    Uso: PumasBin.leer(arrayBuffer) → { jugadores: Map(PlayerID → stats), cuentas: Map(account_id → PlayerID) }
    ===================================================================== */
 (function (raiz) {
-    const T_JUGADOR = 101, T_IMPACTO = 106, T_KILL = 107, T_DERRIBO = 139, T_GLOO = 221, T_EQUIPOS = 306, T_REANIMA = 393;
-    const QUIERO = new Set([T_JUGADOR, T_IMPACTO, T_KILL, T_DERRIBO, T_GLOO, T_EQUIPOS, T_REANIMA]);
+    const T_JUGADOR = 101, T_IMPACTO = 106, T_KILL = 107, T_ZONA = 117, T_DERRIBO = 139, T_GLOO = 221, T_EQUIPOS = 306, T_REANIMA = 393;
+    const QUIERO = new Set([T_JUGADOR, T_IMPACTO, T_KILL, T_ZONA, T_DERRIBO, T_GLOO, T_EQUIPOS, T_REANIMA]);
+    const zz = n => n % 2 ? -(n + 1) / 2 : n / 2;
+
+    // Mensajes 117 → { inicial: {x, z, r}, fases: [{ fase, anuncia, inicio, fin, x, z, r, movil }] } (coordenadas del mundo, metros)
+    function zonasDe(msgs) {
+        const fases = [];
+        msgs.forEach(m => {
+            if (![1, 6].includes(m.estado) || !m.sig.r) return;
+            const c = msgs.find(x => [2, 7].includes(x.estado) && x.t > m.t && x.fase === m.fase);
+            fases.push({ fase: fases.length + 1, anuncia: Math.round(m.t), inicio: Math.round(c ? c.t : m.t + m.dur), fin: Math.round(c ? c.t + c.dur : m.t + m.dur),
+                x: m.sig.x, z: m.sig.z, r: m.sig.r, movil: m.estado === 6 });
+        });
+        const ini = msgs.find(m => m.act.r);
+        return fases.length ? { inicial: ini ? ini.act : null, fases } : null;
+    }
     const bytesVarint = n => { const o = []; do { let b = n % 128; n = Math.floor(n / 128); if (n) b |= 0x80; o.push(b); } while (n); return o; };
     const contiene = (u8, pat) => {
         outer: for (let i = 0; i + pat.length <= u8.length; i++) { for (let k = 0; k < pat.length; k++) if (u8[i + k] !== pat[k]) continue outer; return true; }
@@ -44,7 +60,7 @@
         const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
         const jug = new Map(), cuentas = new Map(), nombres = new Map(), clanes = new Map(), fichas = [];
         const J = pid => { let j = jug.get(pid); if (!j) { j = nuevo(pid); jug.set(pid, j); } return j; };
-        const impactos = [];
+        const impactos = [], zonaMsgs = [];
         let p = 0, paquetes = 0, ultimo = 0;
         while (p + 10 <= u8.length) {
             const tipo = dv.getUint16(p + 6, true), largo = dv.getUint16(p + 8, true);
@@ -77,6 +93,10 @@
                         const nombre = cad(), tag = cad(), id = uno();
                         if (id) clanes.set(id, { nombre: nombre.trim(), tag: tag.trim(), bytes: bytesVarint(id) });
                     }
+                } else if (tipo === T_ZONA) {
+                    const f = varints(u8, ini, fin, 10), t = dv.getFloat32(p + 1, true);
+                    if (f.length >= 10 && t >= 1) zonaMsgs.push({ t, fase: f[0], estado: f[7], dur: (zz(f[9]) - zz(f[8])) / 500,
+                        act: { x: zz(f[1]) / 1000, z: zz(f[2]) / 1000, r: f[3] }, sig: { x: zz(f[4]) / 1000, z: zz(f[5]) / 1000, r: f[6] } });
                 } else if (tipo === T_IMPACTO) {
                     impactos.push(varints(u8, ini, fin, 8));
                 } else if (tipo === T_KILL) {
@@ -123,7 +143,7 @@
             }
         });
         const equipos = new Map([...votos].map(([s, v]) => [s, [...v].sort((a, b) => b[1] - a[1])[0][0]]));
-        return { jugadores: jug, cuentas, equipos, paquetes, duracion: Math.round(ultimo) };
+        return { jugadores: jug, cuentas, equipos, paquetes, duracion: Math.round(ultimo), zonas: zonasDe(zonaMsgs) };
     }
 
     const api = { leer };

@@ -6,6 +6,7 @@
      3) CARA A CARA (×sala)· MVP 1 vs MVP 2 de cada sala, con la imagen del personaje
      4) DUELO DE ESCUADRAS · top 5 de equipos que más eliminaron + líderes por equipo
      5) ARMAS Y BOOYAHS    · armas con más kills y la escuadra del booyah de cada sala
+     6) ANALÍTICA DE MAPA (×sala) · cierres de zona (del .bin) y zonas calientes de enfrentamientos (del .json)
    Personajes por defecto: imagenes/personajes/mvp1.png y mvp2.png (se cambian en opts.personajes).
    Uso: PumasImagenes.generar({ salas, r, meta, puntosLog, base: '../', estilo: 'crazy'|'pumas' }) → [{ id, nombre, titulo, html }]
         PumasImagenes.descargar(id, nombreArchivo)   (necesita html2canvas)
@@ -92,6 +93,7 @@
             const mvpEsc = esc_.slice().sort((a, b) => b.kills - a.kills || (b.dano || 0) - (a.dano || 0))[0];
             return { sala: i + 1, etiqueta: s.etiqueta || 'S' + (i + 1), mapa: (C().MAPAS || {})[s.mapa] || (s.mapa ? 'MAPA ' + s.mapa : ''), duracion: s.duracion || 0,
                 mvp1: orden[0] || null, mvp2: orden[1] || null, conDano: s.fuente !== 'replay', primeraSangre: s.primeraSangre || null,
+                mapaId: +s.mapa || 0, zonas: s.zonas || null, combates: s.bajasPos || [], eliminados: s.eliminados || [],
                 booyah: ganador ? { equipo: ganador, kills: sum(j => j.kills), dano: sum(j => j.dano), hs: sum(j => j.headshots), gloo: sum(j => j.gloo),
                     revividas: sum(j => j.revividos), mvp: mvpEsc ? mvpEsc.jugador : '', mvpKills: mvpEsc ? mvpEsc.kills : 0 } : null };
         });
@@ -210,6 +212,204 @@
             ${armas.map((a,i)=>`<div style="display:grid;grid-template-columns:40px 165px 1fr 80px 135px;gap:12px;align-items:center;height:64px;background:${i%2?T.fila2:T.fila1};padding:0 16px"><span class="pg-number" style="font-size:25px;color:${T.acento}">${i+1}</span><strong style="font-family:${F_TIT};font-size:31px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.arma)}</strong><div style="height:10px;background:${T.linea}"><div style="height:100%;width:${a.kills/max*100}%;background:${T.acento}"></div></div><span class="pg-number" style="font-size:35px;text-align:right">${a.kills}</span><span class="pg-number" style="font-size:30px;text-align:right;color:${T.gris}">${d.conDano?fmt(a.dano):a.usos}</span></div>`).join('')||'<p class="pg-small">Sin datos de armas disponibles.</p>'}
             <section style="margin-top:37px">${etiquetaSec('BOOYAH POR SALA')}${tabla(cols,filas,{fila:64,fs:25})}</section>`);
     }
+
+    /* ---------------- Analítica de mapa ---------------- */
+    // MapID → imagen del plano (1200 px = plano 0–1000) y calibración mundo → plano:
+    //   u = (x − x0) / lado · 1000 ;  v = (z0 + lado − z) / lado · 1000   (validado con replays de FFWS)
+    const PLANOS = {
+        1:  { img: 'bermuda',    x0: -397.9,  z0: -816.8,  lado: 1840.0 },
+        3:  { img: 'purgatorio', x0: -1000.3, z0: -1079.8, lado: 1826.7 },
+        4:  { img: 'kalahari',   x0: -710.2,  z0: -709.3,  lado: 1419.8 },
+        22: { img: 'nexterra',   x0: -632.9,  z0: -632.4,  lado: 1268.9 },
+        29: { img: 'solara',     x0: -709.7,  z0: -716.9,  lado: 1496.3 }
+    };
+    const fasesValidas = s => (s.zonas && s.zonas.fases || []).filter(f => !s.duracion || f.anuncia < s.duracion);
+    // Fase en la que pasó algo: hasta que termina de cerrar la zona n (lo de después de la última, en la última)
+    const faseDe = (fases, t) => { const i = fases.findIndex(f => t <= f.fin); return i < 0 ? fases.length - 1 : i; };
+
+    // Mapa de calor como PNG (el exportador copia bien las <img>; los degradados radiales no siempre)
+    function calor(puntos, lado, radio) {
+        if (typeof document === 'undefined' || !puntos.length) return '';
+        const c = document.createElement('canvas'); c.width = c.height = lado;
+        const g = c.getContext('2d');
+        puntos.forEach(([x, y]) => {
+            const r = g.createRadialGradient(x, y, 0, x, y, radio);
+            r.addColorStop(0, 'rgba(0,0,0,.20)'); r.addColorStop(1, 'rgba(0,0,0,0)');
+            g.fillStyle = r; g.beginPath(); g.arc(x, y, radio, 0, 7); g.fill();
+        });
+        const im = g.getImageData(0, 0, lado, lado), px = im.data;
+        let max = 0;
+        for (let i = 3; i < px.length; i += 4) if (px[i] > max) max = px[i];
+        if (!max) return '';
+        // Rampa: amarillo → naranja → rojo, más opaco donde hubo más enfrentamientos
+        const rampa = [[255, 236, 120], [255, 160, 40], [235, 40, 30], [150, 0, 20]];
+        for (let i = 0; i < px.length; i += 4) {
+            const a = Math.sqrt(px[i + 3] / max);   // raíz: las zonas con pocas peleas también se ven
+            if (a < .06) { px[i + 3] = 0; continue; }
+            const k = Math.min(rampa.length - 1.001, a * (rampa.length - 1)), j = Math.floor(k), f = k - j, A = rampa[j], B = rampa[j + 1];
+            px[i] = A[0] + (B[0] - A[0]) * f; px[i + 1] = A[1] + (B[1] - A[1]) * f; px[i + 2] = A[2] + (B[2] - A[2]) * f;
+            px[i + 3] = Math.round(Math.min(1, .25 + a * .85) * 215);
+        }
+        g.putImageData(im, 0, 0);
+        return c.toDataURL('image/png');
+    }
+
+    // Puntos calientes: el sitio con más enfrentamientos alrededor, se quita y se busca el siguiente
+    function calientes(pts, radio, n) {
+        let quedan = pts.slice();
+        const out = [];
+        while (out.length < n && quedan.length) {
+            let mejor = null;
+            quedan.forEach(p => {
+                const cerca = quedan.filter(q => Math.hypot(q.u - p.u, q.v - p.v) <= radio);
+                if (!mejor || cerca.length > mejor.cerca.length) mejor = { p, cerca };
+            });
+            if (!mejor || mejor.cerca.length < 4) break;
+            const u = mejor.cerca.reduce((a, q) => a + q.u, 0) / mejor.cerca.length, v = mejor.cerca.reduce((a, q) => a + q.v, 0) / mejor.cerca.length;
+            const ts = mejor.cerca.map(q => q.t).sort((a, b) => a - b);
+            out.push({ u, v, n: mejor.cerca.length, desde: ts[0], hasta: ts[ts.length - 1], fases: mejor.cerca.map(q => q.fase) });
+            quedan = quedan.filter(q => Math.hypot(q.u - u, q.v - v) > radio * 1.6);
+        }
+        return out;
+    }
+
+    function imgMapa(d, s, o, modo) {
+        const P = PLANOS[s.mapaId], fases = fasesValidas(s), base = esc(o.base || '../'), caida = modo === 'caida';
+        const aU = x => (x - P.x0) / P.lado * 1000, aV = z => (P.z0 + P.lado - z) / P.lado * 1000, aR = r => r / P.lado * 1000;
+        // Corte: cuando empieza a cerrar la Z1. Antes son las peleas de la caída (van en su propia imagen, opcional)
+        const corte = fases[0] ? fases[0].inicio : 0;
+        const todos = s.combates.map(c => ({ t: c.t, u: aU(c.x), v: aV(c.z), fase: faseDe(fases, c.t) }))
+            .filter(p => p.u > -20 && p.u < 1020 && p.v > -20 && p.v < 1020);
+        const pts = todos.filter(p => caida ? p.t < corte : p.t >= corte);
+        const dib = caida ? fases.slice(0, 1) : fases;   // en la caída solo se marca dónde cae la Z1
+
+        // Mapa completo (sin recortes) + recuadro con zoom de las últimas zonas, que en el mapa entero quedan chicas
+        const ultimo = fases.length - 1, PX = 600;
+        const top = calientes(pts, caida ? 40 : 50, caida ? 5 : 3);
+        function vista(vx, vy, lado, px, radioPlano, conMarcas, lista = pts) {
+            const k = px / lado, X = u => (u - vx) * k, Y = v => (v - vy) * k;
+            const urlCalor = calor(lista.map(p => [X(p.u), Y(p.v)]).filter(([x, y]) => x > -40 && y > -40 && x < px + 40 && y < px + 40), px, Math.max(6, radioPlano * k));
+            // Círculos de zona (div redondos: el exportador los copia sin problemas)
+            const circulos = dib.map((f, i) => {
+                const u = aU(f.x), v = aV(f.z), r = aR(f.r), fin = i === ultimo || (i === ultimo - 1 && fases[ultimo].movil);
+                const borde = f.movil ? `border:3px dashed ${T.acento}` : fin ? `border:3px solid ${T.acento};background:${T.acento}2E` : `border:2px solid rgba(255,255,255,${.45 + i * .1})`;
+                const tag = r * k > 18 && r * k < px * .9 ? `<span style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);background:${fin || f.movil ? T.acento : T.piel};color:${fin || f.movil ? T.sobre : '#111'};font:800 13px ${F_TIT};padding:1px 5px;line-height:1.2;white-space:nowrap">Z${f.fase}</span>` : '';
+                return `<div style="position:absolute;left:${X(u - r)}px;top:${Y(v - r)}px;width:${2 * r * k}px;height:${2 * r * k}px;border-radius:50%;box-sizing:border-box;${borde}">${tag}</div>`;
+            }).join('');
+            const marcas = conMarcas ? top.map((h, i) => `<div style="position:absolute;left:${X(h.u) - 15}px;top:${Y(h.v) - 15}px;width:30px;height:30px;border-radius:50%;background:${T.fondo};border:3px solid #FFD54A;color:#FFD54A;font:800 18px/24px ${F_TIT};text-align:center">${i + 1}</div>`).join('') : '';
+            return `<img src="${base}imagenes/mapas/${P.img}.png" alt="" style="position:absolute;left:${-vx * k}px;top:${-vy * k}px;width:${1000 * k}px;height:${1000 * k}px;max-width:none;filter:saturate(.55) brightness(.62)">
+                ${urlCalor ? `<img src="${urlCalor}" alt="" style="position:absolute;left:0;top:0;width:${px}px;height:${px}px;max-width:none">` : ''}${circulos}${marcas}`;
+        }
+        // Zoom de las zonas finales: un panel de la imagen "Zonas finales" (todas las salas juntas)
+        if (modo === 'zoom') {
+            const iz = Math.max(0, ultimo - 3), zf = fases[iz];
+            if (!zf) return null;
+            const ladoZ = Math.min(1000, aR(zf.r) * 2.4), zx = Math.min(1000 - ladoZ, Math.max(0, aU(zf.x) - ladoZ / 2)), zy = Math.min(1000 - ladoZ, Math.max(0, aV(zf.z) - ladoZ / 2));
+            const tarde = pts.filter(p => p.fase >= iz), fin = fases.filter(f => !f.movil).slice(-1)[0] || fases[ultimo];
+            return { zf, fin, movil: fases.find(f => f.movil) || null, enfr: tarde.length,
+                elim: s.eliminados.filter(e => faseDe(fases, e.tiempo) >= iz).length,
+                html: px => vista(zx, zy, ladoZ, px, Math.max(4, ladoZ * .03), false, tarde) };
+        }
+        const zoom = '';
+
+        const mapa = `<div style="position:relative;width:${PX}px;height:${PX}px;overflow:hidden;background:#0d1a22;border:1px solid ${T.linea}">
+            ${vista(0, 0, 1000, PX, caida ? 40 : 28, true)}${zoom}
+            <div style="position:absolute;left:12px;bottom:10px;display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.6);padding:6px 10px;font-size:12px;font-weight:600;color:#ddd">Menos<span style="display:inline-block;width:90px;height:9px;background:linear-gradient(90deg,#ffec78,#ffa028,#eb281e,#960014)"></span>Más enfrentamientos</div>
+        </div>`;
+
+        // Lista de cierres
+        const cuenta = (l, i) => l.filter(x => x === i).length;
+        const fasesPts = pts.map(p => p.fase), fasesElim = s.eliminados.map(e => faseDe(fases, e.tiempo));
+        const filaZ = (f, i) => `<div style="display:grid;grid-template-columns:52px 1fr 64px;align-items:center;gap:8px;height:54px;padding:0 12px;background:${i % 2 ? T.fila2 : T.fila1};margin-bottom:3px">
+            <span class="pg-number" style="font-size:27px;color:${f.movil || i === ultimo ? T.acento : T.piel}">Z${f.fase}</span>
+            <div style="min-width:0;line-height:1.15"><div style="font-family:${F_TIT};font-size:21px;font-weight:700;white-space:nowrap">${f.movil ? 'ZONA MÓVIL' : f.r + ' m'} <span style="color:${T.gris};font-size:16px;font-weight:600">· ${f.movil ? 'se mueve desde ' + mmss(f.anuncia) : 'cierra ' + mmss(f.inicio) + '–' + mmss(f.fin)}</span></div>
+            <div style="font-size:12px;color:${T.gris};margin-top:2px;white-space:nowrap">${f.movil ? '' : 'Aviso ' + mmss(f.anuncia) + ' · espera ' + mmss(f.inicio - f.anuncia) + ' · '}${cuenta(fasesElim, i)} eq. eliminados</div></div>
+            <div style="text-align:right"><div class="pg-number" style="font-size:25px;line-height:1">${cuenta(fasesPts, i)}</div><div style="font-size:10px;color:${T.gris};font-weight:700">ENFR.</div></div></div>`;
+        const filaH = (h, i) => {
+            const fz = h.fases.reduce((m, x) => (m[x] = (m[x] || 0) + 1, m), {}), dom = +Object.entries(fz).sort((a, b) => b[1] - a[1])[0][0];
+            return `<div style="display:grid;grid-template-columns:40px 1fr;align-items:center;gap:10px;height:50px;padding:0 12px;background:${i % 2 ? T.fila2 : T.fila1};margin-bottom:3px">
+            <span style="width:30px;height:30px;border-radius:50%;border:3px solid #FFD54A;color:#FFD54A;font:800 18px/24px ${F_TIT};text-align:center">${i + 1}</span>
+            <div style="line-height:1.15"><div style="font-family:${F_TIT};font-size:22px;font-weight:700">${h.n} enfrentamientos</div><div style="font-size:12px;color:${T.gris}">Min ${mmss(h.desde)}–${mmss(h.hasta)} · sobre todo en Z${fases[dom] ? fases[dom].fase : dom + 1}</div></div></div>`;
+        };
+
+        // Línea de tiempo: enfrentamientos por minuto + espera / cierre de cada zona + equipos eliminados
+        const dur = Math.max(s.duracion || 0, ...fases.map(f => f.fin), ...pts.map(p => p.t), 60), ANCHO = 976, tx = t => Math.min(ANCHO, t / dur * ANCHO);
+        const nb = Math.ceil(dur / 60), barras = Array.from({ length: nb }, (_, i) => todos.filter(p => p.t >= i * 60 && p.t < (i + 1) * 60).length), mb = Math.max(1, ...barras);
+        const cierreEn = t => fases.some(f => t >= f.inicio && t < f.fin);
+        const linea = `<div style="position:relative;width:${ANCHO}px;height:205px">
+            ${barras.map((n, i) => `<div style="position:absolute;left:${tx(i * 60) + 1}px;width:${Math.max(2, tx(60) - 3)}px;bottom:70px;height:${Math.round(n / mb * 115)}px;background:${cierreEn(i * 60 + 30) ? T.acento : T.gris};opacity:${(i + 1) * 60 <= corte ? .2 : cierreEn(i * 60 + 30) ? .95 : .55}"></div>`).join('')}
+            <div style="position:absolute;left:0;right:0;bottom:44px;height:22px;background:${T.fila1}"></div>
+            ${fases.map(f => `<div style="position:absolute;left:${tx(f.anuncia)}px;width:${tx(f.inicio) - tx(f.anuncia)}px;bottom:44px;height:22px;background:${T.linea}"></div><div style="position:absolute;left:${tx(f.inicio)}px;width:${Math.max(2, tx(f.fin) - tx(f.inicio))}px;bottom:44px;height:22px;background:${T.acento};color:${T.sobre};font:800 13px/22px ${F_TIT};text-align:center;overflow:hidden">${tx(f.fin) - tx(f.inicio) > 26 ? 'Z' + f.fase : ''}</div>`).join('')}
+            ${s.eliminados.map(e => `<div style="position:absolute;left:${tx(e.tiempo) - 5}px;bottom:30px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid ${T.piel}"></div>`).join('')}
+            ${Array.from({ length: Math.floor(dur / 120) + 1 }, (_, i) => `<span style="position:absolute;left:${tx(i * 120)}px;bottom:4px;transform:translateX(${i ? '-50%' : '0'});font-size:12px;color:${T.gris};font-weight:600">${i * 2}:00</span>`).join('')}
+        </div>`;
+
+
+        // Imagen de la caída: dónde se pelearon los equipos al aterrizar, hasta que empezó a cerrar la Z1
+        function cuerpoCaida() {
+            const elim = s.eliminados.filter(e => e.tiempo < corte);
+            const filaC = (h, i) => `<div style="display:grid;grid-template-columns:44px 1fr 70px;align-items:center;gap:10px;height:62px;padding:0 12px;background:${i % 2 ? T.fila2 : T.fila1};margin-bottom:3px">
+                <span style="width:32px;height:32px;border-radius:50%;border:3px solid #FFD54A;color:#FFD54A;font:800 19px/26px ${F_TIT};text-align:center">${i + 1}</span>
+                <div style="line-height:1.15"><div style="font-family:${F_TIT};font-size:23px;font-weight:700">Punto caliente ${i + 1}</div><div style="font-size:12px;color:${T.gris}">Min ${mmss(h.desde)}–${mmss(h.hasta)}</div></div>
+                <div style="text-align:right"><div class="pg-number" style="font-size:28px;line-height:1">${h.n}</div><div style="font-size:10px;color:${T.gris};font-weight:700">ENFR.</div></div></div>`;
+            const primero = pts.slice().sort((a, b) => a.t - b.t)[0];
+            // Enfrentamientos cada 20 s hasta que cierra la Z1
+            const fin = Math.max(60, corte), paso = 20, nb = Math.ceil(fin / paso), ANCHO = 976, tx = t => Math.min(ANCHO, t / fin * ANCHO);
+            const barras = Array.from({ length: nb }, (_, i) => pts.filter(p => p.t >= i * paso && p.t < (i + 1) * paso).length), mb = Math.max(1, ...barras);
+            const z1 = fases[0];
+            const linea = `<div style="position:relative;width:${ANCHO}px;height:205px">
+                ${barras.map((n, i) => `<div style="position:absolute;left:${tx(i * paso) + 1}px;width:${Math.max(2, tx(paso) - 3)}px;bottom:70px;height:${Math.round(n / mb * 115)}px;background:${T.acento};opacity:.9"></div>`).join('')}
+                <div style="position:absolute;left:0;right:0;bottom:44px;height:22px;background:${T.fila1}"></div>
+                ${z1 ? `<div style="position:absolute;left:${tx(z1.anuncia)}px;right:0;bottom:44px;height:22px;background:${T.linea};color:${T.piel};font:700 13px/22px ${F_TIT};padding-left:8px;white-space:nowrap;overflow:hidden">AVISO Z1 · cierra en ${mmss(z1.inicio - z1.anuncia)}</div>` : ''}
+                ${elim.map(e => `<div style="position:absolute;left:${tx(e.tiempo) - 5}px;bottom:30px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:9px solid ${T.piel}"></div>`).join('')}
+                ${Array.from({ length: Math.floor(fin / 60) + 1 }, (_, i) => `<span style="position:absolute;left:${tx(i * 60)}px;bottom:4px;transform:translateX(${i ? '-50%' : '0'});font-size:12px;color:${T.gris};font-weight:600">${i}:00</span>`).join('')}
+            </div>`;
+            return lienzo('pgImgCaida' + s.sala, { ...o, titulo: 'ZONAS DE CAÍDA', tamTitulo: 80, subtitulo: `Sala ${s.sala} · ${s.mapa || 'Free Fire'} · Peleas al aterrizar, hasta que cierra la Z1 (${mmss(corte)})` }, `
+                <div style="display:grid;grid-template-columns:${PX}px 1fr;gap:22px">
+                    ${mapa}
+                    <div style="min-width:0">
+                        ${resumen([[pts.length, 'ENFRENTAMIENTOS'], [elim.length, 'EQUIPOS FUERA']])}
+                        <div style="margin:-8px 0 22px" class="pg-small">${primero ? 'Primer enfrentamiento: ' + mmss(primero.t) : 'Sin enfrentamientos en la caída'}${z1 ? ' · La Z1 cae en el círculo blanco' : ''}</div>
+                        ${etiquetaSec('PUNTOS MÁS CALIENTES')}${top.map(filaC).join('') || '<p class="pg-small">Pocos enfrentamientos para marcar puntos calientes.</p>'}
+                    </div>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 4px"><h2 class="pg-section" style="margin:0">ENFRENTAMIENTOS CADA 20 SEGUNDOS</h2>
+                    <span class="pg-small">▲ equipo eliminado en la caída</span></div>
+                ${linea}`);
+        }
+        if (caida) return cuerpoCaida();
+        const enCierre = pts.filter(p => cierreEn(p.t)).length;
+        return lienzo('pgImgMapa' + s.sala, { ...o, titulo: 'ANALÍTICA DE MAPA', tamTitulo: 80, subtitulo: `Sala ${s.sala} · ${s.mapa || 'Free Fire'}${s.duracion ? ' · ' + mmss(s.duracion) : ''} · Cierres de zona y zonas calientes` }, `
+            <div style="display:grid;grid-template-columns:${PX}px 1fr;gap:22px">
+                ${mapa}
+                <div style="min-width:0">
+                    ${etiquetaSec('CIERRES DE ZONA')}${fases.map(filaZ).join('')}
+                    <section style="margin-top:18px">${etiquetaSec('ZONAS CALIENTES')}${top.map(filaH).join('') || `<p class="pg-small">Pocos enfrentamientos para marcar puntos calientes.</p>`}</section>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 4px"><h2 class="pg-section" style="margin:0">ENFRENTAMIENTOS POR MINUTO Y ZONA</h2>
+                <span class="pg-small">${pts.length} enfrentamientos desde ${mmss(corte)} (sin la caída) · ${pts.length ? Math.round(enCierre / pts.length * 100) : 0}% mientras cerraba la zona · ▲ equipo eliminado</span></div>
+            ${linea}`);
+    }
+    function imgFinales(d, o) {
+        const paneles = d.porSala.filter(s => PLANOS[s.mapaId] && fasesValidas(s).length > 2).slice(0, 6)
+            .map(s => ({ s, z: imgMapa(d, s, o, 'zoom') })).filter(x => x.z);
+        if (!paneles.length) return '';
+        const cols = paneles.length <= 4 && paneles.length !== 3 ? 2 : 3, gap = 18, ANCHO = 976, px = Math.floor((ANCHO - gap * (cols - 1)) / cols);
+        const tam = cols === 2 ? Math.min(px, 340) : px;
+        const panel = ({ s, z }) => `<div style="min-width:0;background:${T.fila1}">
+            <div style="display:flex;justify-content:space-between;align-items:center;height:34px;padding:0 12px;background:${T.acento};color:${T.sobre}">
+                <b style="font:800 20px ${F_TIT}">SALA ${s.sala}</b><span style="font:700 15px ${F_TIT};letter-spacing:.5px">${esc(String(s.mapa || '').toUpperCase())}</span></div>
+            <div style="position:relative;width:${tam}px;height:${tam}px;overflow:hidden;margin:0 auto;background:#0d1a22">${z.html(tam)}</div>
+            <div style="padding:10px 12px 12px;line-height:1.25">
+                <div style="font-family:${F_TIT};font-size:21px;font-weight:700">Z${z.fin.fase} · ${z.fin.r} m <span style="color:${T.gris};font-size:15px">· cerró ${mmss(z.fin.fin)}</span></div>
+                <div style="font-size:12px;color:${T.gris};margin-top:3px">${z.enfr} enfrentamientos y ${z.elim} eq. eliminados desde Z${z.zf.fase}${z.movil ? ' · zona móvil ' + mmss(z.movil.anuncia) : ''}</div>
+            </div></div>`;
+        return lienzo('pgImgFinales', { ...o, titulo: 'ZONAS FINALES', tamTitulo: 80, subtitulo: `${paneles.length} salas · Dónde cerró la zona y las peleas del final de cada partida` }, `
+            <div style="display:grid;grid-template-columns:repeat(${cols},${px}px);gap:${gap}px">${paneles.map(panel).join('')}</div>
+            <p class="pg-small" style="margin-top:14px">Cada recuadro muestra las últimas zonas de la sala (desde la que dice abajo) · la zona final en rojo · el calor son los enfrentamientos de ese tramo.</p>`);
+    }
+
     /* ---------------- API ---------------- */
     function generar(x) {
         fuentes();
@@ -227,6 +427,13 @@
         d.porSala.forEach(s => { if (s.mvp1) L.push({ id: 'pgImgCara' + s.sala, nombre: `Cara_a_cara_Sala_${s.sala}.png`, titulo: 'Cara a cara S' + s.sala, html: imgCara(d, s, o) }); });
         L.push({ id: 'pgImgEquipos', nombre: 'Duelo_de_escuadras.png', titulo: 'Duelo de escuadras', html: imgEquipos(d, o) },
             { id: 'pgImgArmas', nombre: 'Armas_y_Booyahs.png', titulo: 'Armas y booyahs', html: imgArmas(d, o) });
+        // Analítica de mapa: solo las salas con zonas del .bin y un mapa conocido
+        d.porSala.forEach(s => { if (PLANOS[s.mapaId] && fasesValidas(s).length) L.push({ id: 'pgImgMapa' + s.sala, nombre: `Analitica_de_mapa_Sala_${s.sala}.png`, titulo: 'Mapa S' + s.sala, opcional: true, html: imgMapa(d, s, o, 'zonas') }); });
+        // Zonas finales: el zoom de las últimas zonas de todas las salas en una sola imagen (opcional)
+        const finales = imgFinales(d, o);
+        if (finales) L.push({ id: 'pgImgFinales', nombre: 'Zonas_finales.png', titulo: 'Zonas finales', opcional: true, html: finales });
+        // Zonas de caída: opcionales (vienen desmarcadas en "Descargar seleccionadas")
+        d.porSala.forEach(s => { if (PLANOS[s.mapaId] && fasesValidas(s).length) L.push({ id: 'pgImgCaida' + s.sala, nombre: `Zonas_de_caida_Sala_${s.sala}.png`, titulo: 'Caída S' + s.sala, opcional: true, html: imgMapa(d, s, o, 'caida') }); });
         return L;
     }
 
@@ -247,6 +454,31 @@
         return a.href;
     }
 
+    /* Qué imágenes entran en "Descargar seleccionadas": todas marcadas menos las opcionales (mapa, zonas finales, caída); se recuerda mientras la página esté abierta */
+    const marcadas = new Map();
+    const incluida = im => marcadas.has(im.id) ? marcadas.get(im.id) : !im.opcional;
+    const paraDescargar = imagenes => imagenes.map((im, i) => incluida(im) ? i : -1).filter(i => i >= 0);
+    function selectorDescargaHTML(imagenes) {
+        const chip = im => `<label style="display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid rgba(255,255,255,.18);border-radius:6px;font-size:.78rem;color:#ddd;cursor:pointer;user-select:none"><input type="checkbox" data-pg-inc="${esc(im.id)}"${incluida(im) ? ' checked' : ''} style="accent-color:${TEMAS[estilo].acento};width:15px;height:15px;margin:0">${esc(im.titulo)}</label>`;
+        return `<details open class="pg-sel-descarga" style="width:100%;max-width:760px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 14px">
+            <summary style="cursor:pointer;font-size:.85rem;color:#ccc">Elige qué bajar con “Descargar seleccionadas” · <b data-pg-cuenta>${paraDescargar(imagenes).length}</b> de ${imagenes.length} marcadas</summary>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${imagenes.map(chip).join('')}</div>
+            <div style="display:flex;gap:12px;margin-top:8px;font-size:.78rem"><a href="#" data-pg-todas="1" style="color:#aaa">Marcar todas</a><a href="#" data-pg-todas="0" style="color:#aaa">Quitar todas</a></div>
+        </details>`;
+    }
+    function enlazarDescarga(raiz, imagenes) {
+        if (!raiz) return;
+        const contar = () => raiz.querySelectorAll('[data-pg-cuenta]').forEach(e => { e.textContent = paraDescargar(imagenes).length; });
+        raiz.querySelectorAll('[data-pg-inc]').forEach(c => c.onchange = () => { marcadas.set(c.dataset.pgInc, c.checked); contar(); });
+        raiz.querySelectorAll('[data-pg-todas]').forEach(a => a.onclick = e => {
+            e.preventDefault();
+            const si = a.dataset.pgTodas === '1';
+            raiz.querySelectorAll('[data-pg-inc]').forEach(c => { c.checked = si; marcadas.set(c.dataset.pgInc, si); });
+            contar();
+        });
+        contar();
+    }
+
     /* Selector de estilo (Crazy Pumas / Pumas) para poner encima de las imágenes */
     function selectorHTML() {
         const b = (k, t) => `<button type="button" data-pg-estilo="${k}" aria-pressed="${estilo === k}" style="padding:9px 18px;border-radius:6px;cursor:pointer;font-weight:700;font-size:.85rem;letter-spacing:.5px;border:1px solid ${t.acento};background:${estilo === k ? t.acento : 'transparent'};color:${estilo === k ? t.sobre : t.acento}">${esc(t.nombre.toUpperCase())}</button>`;
@@ -265,6 +497,6 @@
         estilo = k;
     }
 
-    window.PumasImagenes = { generar, descargar, datos, horarios, W, H, plantilla:lienzo, tabla, fuentes, TEMAS, selectorHTML, enlazarSelector, setEstilo,
+    window.PumasImagenes = { generar, descargar, datos, horarios, W, H, plantilla:lienzo, tabla, fuentes, TEMAS, selectorHTML, enlazarSelector, setEstilo, selectorDescargaHTML, enlazarDescarga, paraDescargar,
         get estilo() { return estilo; } };
 })();

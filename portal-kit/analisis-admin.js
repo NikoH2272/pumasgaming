@@ -70,6 +70,7 @@
             <div class="an-acciones" data-an="acciones" hidden>
                 <button class="btn-access" data-an="guardar"><i class="fa-solid fa-cloud-arrow-up"></i> Guardar análisis</button>
                 <button class="btn-access btn-outline" data-an="descargar"><i class="fa-solid fa-download"></i> Descargar todas las imágenes</button>
+                <button class="btn-access btn-outline" data-an="seleccion"><i class="fa-solid fa-list-check"></i> Descargar seleccionadas (<span data-pg-cuenta>0</span>)</button>
             </div>
             <div class="an-bloque">
                 <h3><i class="fa-solid fa-clock-rotate-left"></i> ANÁLISIS GUARDADOS</h3>
@@ -157,7 +158,8 @@
             vista = Math.min(vista, imagenes.length - 1);
             $('imgs').innerHTML = `${PumasImagenes.selectorHTML ? '<div style="margin-bottom:12px">' + PumasImagenes.selectorHTML() + '</div>' : ''}<div class="an-tabs">${imagenes.map((im, i) => `<button type="button" class="an-tab${i === vista ? ' activa' : ''}" data-img="${i}">${esc(im.titulo)}</button>`).join('')}</div>
                 ${imagenes.map((im, i) => `<div class="an-prev"${i === vista ? '' : ' hidden'} data-prev="${i}"><div class="an-esc">${im.html}</div></div>`).join('')}
-                <button class="btn-access btn-outline" data-an="una"><i class="fa-solid fa-image"></i> Descargar esta imagen</button>`;
+                <button class="btn-access btn-outline" data-an="una"><i class="fa-solid fa-image"></i> Descargar esta imagen</button>
+                ${PumasImagenes.selectorDescargaHTML ? '<div style="margin-top:12px">' + PumasImagenes.selectorDescargaHTML(imagenes) + '</div>' : ''}`;
             $('imgs').querySelectorAll('[data-img]').forEach(b => b.onclick = () => {
                 vista = +b.dataset.img;
                 $('imgs').querySelectorAll('[data-img]').forEach(x => x.classList.toggle('activa', x === b));
@@ -165,6 +167,7 @@
             });
             $('una').onclick = () => descargarImagen(vista);
             if (PumasImagenes.enlazarSelector) PumasImagenes.enlazarSelector($('imgs'), pintarImagenes);
+            if (PumasImagenes.enlazarDescarga) PumasImagenes.enlazarDescarga(cont, imagenes);
         }
         async function descargarImagen(i) {
             const im = imagenes[i];
@@ -197,9 +200,10 @@
             } finally { btn.disabled = false; }
         }
 
-        async function descargar() {
+        async function descargar(soloMarcadas) {
             if (imagenes.length) {
-                for (let i = 0; i < imagenes.length; i++) { await descargarImagen(i); await new Promise(r => setTimeout(r, 400)); }
+                const elegidas = soloMarcadas === true && PumasImagenes.paraDescargar ? PumasImagenes.paraDescargar(imagenes) : imagenes.map((_, i) => i);
+                for (const i of elegidas) { await descargarImagen(i); await new Promise(r => setTimeout(r, 400)); }
                 return;
             }
             for (const [id, nombre] of [['capturaAvanzada', 'Analisis_Destacados.png'], ['capturaPorSala', 'Analisis_Por_Sala.png']]) {
@@ -236,7 +240,8 @@
         ['json', 'bin', 'log', 'csv'].forEach(k => $(k).addEventListener('change', revisar));
         ['fecha', 'titulo', 'mod'].forEach(k => $(k).addEventListener('change', pintarImagenes));
         $('guardar').addEventListener('click', guardar);
-        $('descargar').addEventListener('click', descargar);
+        $('descargar').addEventListener('click', () => descargar(false));
+        $('seleccion').addEventListener('click', () => descargar(true));
         C().habilitado(o.portal).then(ok => { if (!ok) msg(`⚠ Este evento no tiene habilitado el análisis (Admin → Resultados completos): puedes generar las imágenes, pero no guardar.`, '#FFD54A'); });
         listar();
     }

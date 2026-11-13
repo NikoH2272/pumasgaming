@@ -6,8 +6,9 @@
   function datosDemo() {
     const nombres = equipos.slice(0, Number($('equipos').value)).map((n,i)=>$('largos').checked?n+' ACADEMY INTERNACIONAL '+(i+1):n);
     return Array.from({length:Number($('salas').value)},(_,s)=>({
-      sala:s+1,etiqueta:'S'+(s+1),mapa:s%3+1,duracion:1190+s*17,fuente:$('sinDano').checked?'replay':'bin',
-      eliminados:nombres.slice().reverse().map(equipo=>({equipo})),
+      ...(()=>{const id=[1,3,22,4,29,1][s],z=(window.ZONAS_DEMO||{})[id];return z?{mapa:id,duracion:z.dur,zonas:z.zonas,bajasPos:z.bajas.map(([t,x,zz,ax,az])=>({t,x,z:zz,ax,az}))}:{mapa:s%3+1,duracion:1190+s*17};})(),
+      sala:s+1,etiqueta:'S'+(s+1),fuente:$('sinDano').checked?'replay':'bin',
+      eliminados:nombres.slice().reverse().map((equipo,i,l)=>({equipo,tiempo:Math.round(110+i*(880/l.length))})),
       primeraSangre:{jugador:['AX.Smoking','M19.Gomez','WAT.Willy','PG.Anyer','TRI.Diego','KRA.Nova'][s],victima:'Rival de prueba',arma:['M1887','SCAR','MP40','UMP','AWM','M4A1'][s],tiempo:43+s*11},
       jugadores:nombres.flatMap((equipo,t)=>Array.from({length:4},(_,p)=>{
         const kills=t<6?Math.max(0,4-Math.floor(t/2)-p+s%2):0;
@@ -38,26 +39,26 @@
       const b=document.createElement('button');b.type='button';b.id='imagen-tab-'+i;b.setAttribute('role','tab');b.setAttribute('aria-controls','stage');b.textContent=im.titulo;b.onclick=()=>mostrar(i);
       b.onkeydown=e=>{let next=i;if(e.key==='ArrowRight')next=(i+1)%imagenes.length;else if(e.key==='ArrowLeft')next=(i+imagenes.length-1)%imagenes.length;else if(e.key==='Home')next=0;else if(e.key==='End')next=imagenes.length-1;else return;e.preventDefault();mostrar(next);$('tabs').children[next].focus();};return b;
     }));
-    $('descargarTodas').textContent=`Descargar todas (${imagenes.length})`;
+    $('descargarTodas').textContent=`Descargar todas (${imagenes.length})`;$('descargarSel').innerHTML=`Descargar seleccionadas (<span data-pg-cuenta>${imagenes.length}</span>)`;
     $('estado').textContent='';mostrar(seleccion);
-    const sel=$('estiloImg');if(sel){sel.innerHTML=PumasImagenes.selectorHTML();PumasImagenes.enlazarSelector(sel,generar);}
+    const sel=$('estiloImg');if(sel){sel.innerHTML=PumasImagenes.selectorHTML()+'<div style="margin-top:10px">'+PumasImagenes.selectorDescargaHTML(imagenes)+'</div>';PumasImagenes.enlazarSelector(sel,generar);PumasImagenes.enlazarDescarga(document.body,imagenes);}
   }
   function bloquear(on) {
     ocupado=on;
     document.querySelectorAll('button,input,select').forEach(e=>e.disabled=on);
   }
-  async function descargar(todas) {
+  async function descargar(todas,soloMarcadas) {
     if(ocupado)return;
     const anterior=seleccion;bloquear(true);
     try {
-      const indices=todas?imagenes.map((_,i)=>i):[seleccion];
+      const indices=soloMarcadas?PumasImagenes.paraDescargar(imagenes):todas?imagenes.map((_,i)=>i):[seleccion];
       for(const i of indices){mostrar(i);$('estado').textContent=`Exportando ${imagenes[i].titulo}…`;await PumasImagenes.descargar(imagenes[i].id,imagenes[i].nombre);}
       $('estado').textContent=todas?'Imágenes generadas. Si el navegador lo solicita, permite las descargas múltiples.':'Imagen generada en PNG.';
     } catch(e){$('estado').textContent='No se pudo descargar: '+e.message;}
     finally{mostrar(anterior);bloquear(false);}
   }
   ['salas','equipos','fecha','moderador','instagram','largos','sinDano'].forEach(id=>$(id).addEventListener('change',generar));
-  $('descargar').onclick=()=>descargar(false);$('descargarTodas').onclick=()=>descargar(true);$('recargar').onclick=()=>location.reload();
+  $('descargar').onclick=()=>descargar(false);$('descargarTodas').onclick=()=>descargar(true);$('descargarSel').onclick=()=>descargar(true,true);$('recargar').onclick=()=>location.reload();
   new ResizeObserver(ajustar).observe($('stage'));
   generar();
 })();

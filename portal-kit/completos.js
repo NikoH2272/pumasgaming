@@ -17,7 +17,7 @@
     const esc = P.escaparHtml;
 
     // Nombres de mapa y modo según el número que trae el exportado (ajusta aquí si alguno sale distinto)
-    const MAPAS = { 1: 'BERMUDA', 3: 'NEXTERRA', 4: 'KALAHARI', 22: 'PURGATORIO', 29: 'SOLARA' };
+    const MAPAS = { 1: 'BERMUDA', 3: 'PURGATORIO', 4: 'KALAHARI', 22: 'NEXTERRA', 29: 'SOLARA' };   // comprobado con el centro de la zona inicial de los replays
     const GRUPOS = { 1: 'SOLO', 2: 'DÚO', 3: 'ESCUADRA' };
     const MIN_HITS_HS = 15;        // para el % de headshots: mínimo de impactos
     const MIN_DISPAROS = 50;       // para la precisión: mínimo de disparos
@@ -250,6 +250,15 @@
             j.extra.vs = j.extra.vs || {};
             j.extra.vs[rival] = (j.extra.vs[rival] || 0) + 1;
         });
+        // Enfrentamientos (analítica de mapa: zonas calientes): dónde cayó cada derribo / baja y desde dónde le dispararon
+        // (cada derribo/baja sale repetido en los highlights de varios jugadores: se deja uno por quien dispara + instante)
+        const vistos = new Set(), bajasPos = [];
+        killEvents.forEach(k => {
+            const v = k.beKilledPlayerPos, p = k.position, key = k.PlayerID + '|' + num(k.TriggerPoint).toFixed(1);
+            if (!v || vistos.has(key)) return;
+            vistos.add(key);
+            bajasPos.push({ t: Math.round(num(k.TriggerPoint)), x: Math.round(num(v.x)), z: Math.round(num(v.z)), ax: p ? Math.round(num(p.x)) : null, az: p ? Math.round(num(p.z)) : null });
+        });
         const eliminados = ev.filter(e => e.Event === 1).map(e => {
             const s = escuadra(e.PlayerID);
             const p = parejas.filter(x => escuadra(x.victima) === s && Math.abs(x.t - e.Time) < 0.5 && escuadra(x.killer) !== s)
@@ -281,7 +290,7 @@
             // El MatchID tiene 19 dígitos: leído como número pierde precisión, se toma del texto
             match_id: (/"MatchID"\s*:\s*(\d+)/.exec(String(texto || '')) || [])[1] || String(d.MatchID || ''), mapa: ent(d.MapID) || null, modo: ent(d.GroupMode) || null, fuente: 'replay', duracion: Math.round(dur),
             jugadores, primeraSangre: primera, killLejana: lejana,
-            eliminados
+            eliminados, bajasPos
         };
     }
 
@@ -298,7 +307,7 @@
             if (dist) j.extra.distancia = dist;
             if (!j.vivo) j.vivo = r.vivo;
         });
-        return Object.assign(csv, { duracion: rep.duracion, primeraSangre: rep.primeraSangre, killLejana: rep.killLejana, eliminados: rep.eliminados });
+        return Object.assign(csv, { duracion: rep.duracion, primeraSangre: rep.primeraSangre, killLejana: rep.killLejana, eliminados: rep.eliminados, bajasPos: rep.bajasPos });
     }
 
     /* ---------------- Estadísticas del .bin (portal-kit/replay-bin.js) en una sala ---------------- */
@@ -308,6 +317,7 @@
         if (!s || !b) return s;
         equiposDelBin(s, b);
         aplicarStatsBin(s, b);
+        if (b.zonas) s.zonas = b.zonas;   // cierres de zona (analítica de mapa)
         return s;
     }
     // Equipos sin nombre en el .json (ESCUADRA n: los que nadie eliminó) → nombre real del .bin

@@ -149,8 +149,10 @@
                 ${imagenes.map((im, i) => `<div class="cpl-prev"${i === vista ? '' : ' hidden'} data-prev="${i}"><div class="cpl-esc">${im.html}</div></div>`).join('')}
                 <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:22px">
                     <button type="button" class="btn-generar" data-una style="max-width:320px;padding:12px 25px;font-size:1rem">DESCARGAR ESTA IMAGEN</button>
-                    <button type="button" onclick="descargarAvanzadas()" class="btn-generar" style="max-width:420px;padding:12px 25px;font-size:1rem">DESCARGAR TODAS (${imagenes.length})</button>
+                    <button type="button" onclick="descargarAvanzadas()" class="btn-generar" style="max-width:320px;padding:12px 25px;font-size:1rem">DESCARGAR TODAS (${imagenes.length})</button>
+                    <button type="button" onclick="descargarAvanzadas(true)" class="btn-generar" style="max-width:360px;padding:12px 25px;font-size:1rem">DESCARGAR SELECCIONADAS (<span data-pg-cuenta>${imagenes.length}</span>)</button>
                 </div>
+                ${PumasImagenes.selectorDescargaHTML ? PumasImagenes.selectorDescargaHTML(imagenes) : ''}
             </div>`;
         out.querySelectorAll('[data-img]').forEach(b => b.onclick = () => {
             vista = +b.dataset.img;
@@ -159,6 +161,7 @@
         });
         out.querySelector('[data-una]').onclick = () => descargarImagen(vista);
         if (PumasImagenes.enlazarSelector) PumasImagenes.enlazarSelector(out, () => pintarImagenes(out, r, meta, salas));
+        if (PumasImagenes.enlazarDescarga) PumasImagenes.enlazarDescarga(out, imagenes);
     }
     async function descargarImagen(i) {
         const im = imagenes[i], caja = document.querySelector(`[data-prev="${i}"]`);
@@ -225,9 +228,11 @@
             </div>`;
     }
 
-    window.descargarAvanzadas = async () => {
+    window.descargarAvanzadas = async (soloMarcadas) => {
         if (imagenes.length && window.PumasImagenes) {
-            for (let i = 0; i < imagenes.length; i++) { await descargarImagen(i); await new Promise(r => setTimeout(r, 400)); }
+            const elegidas = soloMarcadas && PumasImagenes.paraDescargar ? PumasImagenes.paraDescargar(imagenes) : imagenes.map((_, i) => i);
+            if (!elegidas.length) { alert('No hay imágenes marcadas para descargar.'); return; }
+            for (const i of elegidas) { await descargarImagen(i); await new Promise(r => setTimeout(r, 400)); }
             return;
         }
         const piezas = [['capturaAvanzada', 'Estadisticas_Avanzadas_Pumas.png'], ['capturaPorSala', 'Analisis_Por_Sala_Pumas.png']];
