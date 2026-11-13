@@ -228,10 +228,11 @@
         const habs = {};
         d.salas.forEach(s => s.jugadores.forEach(j => {
             const h = habDe(j); if (!h || !h.activa) return;
-            const y = habs[h.activa] = habs[h.activa] || { id: h.activa, veces: 0, usos: 0, kills: 0 };
+            const k = habNombre(h.activa), y = habs[k] = habs[k] || { id: h.activa, veces: 0, usos: 0, kills: 0 };   // por nombre: un personaje puede tener 2 ids (Chrono 3806/7306)
             y.veces++; y.usos += h.usos || 0; y.kills += j.kills || 0;
         }));
-        const lh = Object.values(habs).sort((a, b) => b.veces - a.veces || b.usos - a.usos).slice(0, 6);
+        const sinNombre = y => /^HABILIDAD #/.test(habNombre(y.id));
+        const lh = Object.values(habs).sort((a, b) => sinNombre(a) - sinNombre(b) || b.veces - a.veces || b.usos - a.usos).slice(0, 6);   // las que aún no tienen nombre, al final
         const totalGloo = d.jugadores.reduce((a, p) => a + (p.gloo || 0), 0);
         const topGloo = d.jugadores.filter(p => p.gloo).sort((a, b) => b.gloo - a.gloo).slice(0, 5);
         const eqGloo = d.equipos.slice().sort((a, b) => b.gloo - a.gloo)[0];
