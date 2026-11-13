@@ -155,7 +155,7 @@
             if (!window.PumasImagenes) { imagenes = []; $('imgs').innerHTML = C().imagenHTML(actual.r, meta) + C().imagenSalasHTML(actual.r, meta); return; }
             imagenes = PumasImagenes.generar({ salas: actual.salas, r: actual.r, puntosLog: actual.puntosLog, meta, base: o.base || '../' });
             vista = Math.min(vista, imagenes.length - 1);
-            $('imgs').innerHTML = `<div class="an-tabs">${imagenes.map((im, i) => `<button type="button" class="an-tab${i === vista ? ' activa' : ''}" data-img="${i}">${esc(im.titulo)}</button>`).join('')}</div>
+            $('imgs').innerHTML = `${PumasImagenes.selectorHTML ? '<div style="margin-bottom:12px">' + PumasImagenes.selectorHTML() + '</div>' : ''}<div class="an-tabs">${imagenes.map((im, i) => `<button type="button" class="an-tab${i === vista ? ' activa' : ''}" data-img="${i}">${esc(im.titulo)}</button>`).join('')}</div>
                 ${imagenes.map((im, i) => `<div class="an-prev"${i === vista ? '' : ' hidden'} data-prev="${i}"><div class="an-esc">${im.html}</div></div>`).join('')}
                 <button class="btn-access btn-outline" data-an="una"><i class="fa-solid fa-image"></i> Descargar esta imagen</button>`;
             $('imgs').querySelectorAll('[data-img]').forEach(b => b.onclick = () => {
@@ -164,6 +164,7 @@
                 $('imgs').querySelectorAll('[data-prev]').forEach(x => { x.hidden = +x.dataset.prev !== vista; });
             });
             $('una').onclick = () => descargarImagen(vista);
+            if (PumasImagenes.enlazarSelector) PumasImagenes.enlazarSelector($('imgs'), pintarImagenes);
         }
         async function descargarImagen(i) {
             const im = imagenes[i];

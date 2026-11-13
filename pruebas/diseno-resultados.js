@@ -40,6 +40,7 @@
     }));
     $('descargarTodas').textContent=`Descargar todas (${imagenes.length})`;
     $('estado').textContent='';mostrar(seleccion);
+    const sel=$('estiloImg');if(sel){sel.innerHTML=PumasImagenes.selectorHTML();PumasImagenes.enlazarSelector(sel,generar);}
   }
   function bloquear(on) {
     ocupado=on;

@@ -7,7 +7,7 @@
      4) DUELO DE ESCUADRAS · top 5 de equipos que más eliminaron + líderes por equipo
      5) ARMAS Y BOOYAHS    · armas con más kills y la escuadra del booyah de cada sala
    Personajes por defecto: imagenes/personajes/mvp1.png y mvp2.png (se cambian en opts.personajes).
-   Uso: PumasImagenes.generar({ salas, r, meta, puntosLog, base: '../' }) → [{ id, nombre, titulo, html }]
+   Uso: PumasImagenes.generar({ salas, r, meta, puntosLog, base: '../', estilo: 'crazy'|'pumas' }) → [{ id, nombre, titulo, html }]
         PumasImagenes.descargar(id, nombreArchivo)   (necesita html2canvas)
    ===================================================================== */
 (function () {
@@ -98,8 +98,20 @@
         return { equipos, jugadores, armas: listaArmas, porSala, conDano: salas.some(s => s.fuente !== 'replay') };
     }
 
-    /* Composición editorial para exportar: medidas fijas, datos legibles y marca común. */
-    const PIEL = '#F2F2F2', ORO_P = '#DCCC9C';
+    /* Composición editorial para exportar: medidas fijas, datos legibles y marca común.
+       Dos estilos (PumasImagenes.estilo): 'crazy' (Crazy Pumas, por defecto) y 'pumas' (el clásico negro y oro). */
+    const TEMAS = {
+        pumas: { nombre: 'Pumas', marca: 'PUMAS GAMING', instagram: 'pumas.gaming.oficial', logo: 'imagenes/personajes/logo-blanco.png', tamLogo: 83,
+            logoAgua: 'imagenes/personajes/logo-blanco.png', opAgua: .035,
+            fondo: '#141414', franja: '#1A1A1A', fila1: '#1D1D1D', fila2: '#242424', linea: '#363636', gris: '#959595',
+            acento: '#DCCC9C', sobre: '#141414', piel: '#F2F2F2' },
+        crazy: { nombre: 'Crazy Pumas', marca: 'CRAZY PUMAS', instagram: 'pumas.gaming.oficial', logo: 'imagenes/crazy-pumas.png', tamLogo: 96,
+            logoAgua: 'imagenes/crazy-pumas.png', opAgua: .06,
+            fondo: '#0B0B0C', franja: '#1C0A0C', fila1: '#161617', fila2: '#1F1F21', linea: '#3A1A1D', gris: '#9C9C9F',
+            acento: '#E3121B', sobre: '#FFFFFF', piel: '#F5F5F5' }
+    };
+    let estilo = 'crazy';   // siempre arranca en Crazy Pumas; el botón cambia solo mientras la página esté abierta
+    let T = TEMAS.pumas;   // tema activo mientras se arma el HTML (plantilla() suelta usa el clásico)
     function horarios(fecha) {
         if (!fecha) return [];
         let valor = String(fecha).replace(' ', 'T');
@@ -112,33 +124,33 @@
     function lienzo(id, o, cuerpo) {
         const m = o.meta || {}, base = esc(o.base || '../');
         const horas = horarios(m.fechaISO || m.fecha);
-        return `<div id="${id}" class="pg-poster" style="position:relative;width:1080px;height:1350px;overflow:hidden;box-sizing:border-box;background:#141414;color:${PIEL};font-family:${F_TXT};line-height:1.3;text-align:left;letter-spacing:normal">
+        return `<div id="${id}" class="pg-poster" style="position:relative;width:1080px;height:1350px;overflow:hidden;box-sizing:border-box;background:${T.fondo};color:${T.piel};font-family:${F_TXT};line-height:1.3;text-align:left;letter-spacing:normal">
             <style>
             #${id} *{font-family:inherit}
             #${id}>header,#${id}>main,#${id}>footer{width:auto;max-width:none;min-width:0;margin:0;padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none;z-index:auto}
             #${id} section{width:auto;max-width:none;margin:0;padding:0}
-            #${id} *{box-sizing:border-box}#${id} .pg-title{font-family:${F_TIT};font-weight:800;font-size:88px;line-height:.96;margin:0;letter-spacing:-1px;color:${ORO_P}}
-            #${id} .pg-section{font-family:${F_TIT};font-weight:700;font-size:31px;line-height:1.1;margin:0 0 15px;color:${PIEL}}
+            #${id} *{box-sizing:border-box}#${id} .pg-title{font-family:${F_TIT};font-weight:800;font-size:88px;line-height:.96;margin:0;letter-spacing:-1px;color:${T.acento}}
+            #${id} .pg-section{font-family:${F_TIT};font-weight:700;font-size:31px;line-height:1.1;margin:0 0 15px;color:${T.piel}}
             #${id} .pg-grid{display:grid;align-items:center;gap:0}#${id} .pg-cell{min-width:0;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-            #${id} .pg-th{height:44px;font-size:16px;font-weight:700;color:#959595}
-            #${id} .pg-row{line-height:1.05;font-family:${F_TIT};font-size:29px;font-weight:600;font-variant-numeric:tabular-nums;background:#1D1D1D;color:${PIEL};margin-bottom:3px}
-            #${id} .pg-row:nth-child(2n){background:#242424}#${id} .pg-row.leader{background:${ORO_P};color:#141414;font-weight:800}
+            #${id} .pg-th{height:44px;font-size:16px;font-weight:700;color:${T.gris}}
+            #${id} .pg-row{line-height:1.05;font-family:${F_TIT};font-size:29px;font-weight:600;font-variant-numeric:tabular-nums;background:${T.fila1};color:${T.piel};margin-bottom:3px}
+            #${id} .pg-row:nth-child(2n){background:${T.fila2}}#${id} .pg-row.leader{background:${T.acento};color:${T.sobre};font-weight:800}
             #${id} .pg-sub{display:block;font-family:${F_TXT};font-size:13px;font-weight:500;line-height:1.4;margin-top:3px;opacity:.68;letter-spacing:0}
             #${id} .pg-summary{display:flex;gap:42px;margin-bottom:26px}#${id} .pg-summary strong{font-family:${F_TIT};font-size:44px;font-weight:700;line-height:1;display:block}
-            #${id} .pg-summary span{font-size:13px;font-weight:600;color:#959595;display:block;margin-top:7px}
-            #${id} .pg-small{font-size:15px;line-height:1.5;color:#959595}#${id} .pg-number{font-family:${F_TIT};font-weight:800;font-variant-numeric:tabular-nums}
+            #${id} .pg-summary span{font-size:13px;font-weight:600;color:${T.gris};display:block;margin-top:7px}
+            #${id} .pg-small{font-size:15px;line-height:1.5;color:${T.gris}}#${id} .pg-number{font-family:${F_TIT};font-weight:800;font-variant-numeric:tabular-nums}
             </style>
-            <div style="position:absolute;right:-260px;top:55px;width:760px;height:1000px;background:#1A1A1A;transform:rotate(19deg)"></div>
-            <img src="${base}imagenes/personajes/logo-blanco.png" alt="" style="position:absolute;right:-85px;top:200px;width:670px;height:670px;object-fit:contain;opacity:.035">
-            <div style="position:absolute;top:0;right:0;width:240px;height:12px;background:${ORO_P}"></div>
+            <div style="position:absolute;right:-260px;top:55px;width:760px;height:1000px;background:${T.franja};transform:rotate(19deg)"></div>
+            <img src="${base}${T.logoAgua}" alt="" style="position:absolute;right:-85px;top:200px;width:670px;height:670px;object-fit:contain;opacity:${T.opAgua}">
+            <div style="position:absolute;top:0;right:0;width:240px;height:12px;background:${T.acento}"></div>
             <header style="position:absolute;left:52px;right:52px;top:42px;height:100px;display:flex;align-items:center;justify-content:space-between;gap:28px">
-                <div style="display:flex;align-items:center;gap:18px"><img src="${base}imagenes/personajes/logo-blanco.png" alt="Pumas" style="width:83px;height:83px;object-fit:contain"><div><div style="font-family:${F_TIT};font-weight:800;font-size:39px;line-height:1">PUMAS GAMING</div><div style="font-size:12px;font-weight:600;letter-spacing:3px;color:${ORO_P};margin-top:10px">ENTRENAMIENTOS OFICIALES</div></div></div>
-                <div style="text-align:right;font-size:15px;line-height:1.3;color:#959595;flex-shrink:0"><div style="display:flex;justify-content:flex-end;gap:18px;align-items:baseline"><strong style="font-size:20px;color:${PIEL}">${esc(m.fechaCorta || '')}</strong><span>${esc(m.moderador || 'FREE FIRE')}</span></div>${horas.length?`<div style="display:flex;justify-content:flex-end;gap:22px;margin-top:12px">${horas.map(h=>`<div style="text-align:right"><span style="font-size:12px;font-weight:700;color:#959595">${h.pais}</span> <b style="font-size:21px;color:${ORO_P};font-variant-numeric:tabular-nums">${h.hora}</b></div>`).join('')}</div>`:''}</div>
+                <div style="display:flex;align-items:center;gap:18px"><img src="${base}${T.logo}" alt="${esc(T.marca)}" style="width:${T.tamLogo}px;height:${T.tamLogo}px;object-fit:contain"><div><div style="font-family:${F_TIT};font-weight:800;font-size:39px;line-height:1">${esc(T.marca)}</div><div style="font-size:12px;font-weight:600;letter-spacing:3px;color:${T.acento};margin-top:10px">ENTRENAMIENTOS OFICIALES</div></div></div>
+                <div style="text-align:right;font-size:15px;line-height:1.3;color:${T.gris};flex-shrink:0"><div style="display:flex;justify-content:flex-end;gap:18px;align-items:baseline"><strong style="font-size:20px;color:${T.piel}">${esc(m.fechaCorta || '')}</strong><span>${esc(m.moderador || 'FREE FIRE')}</span></div>${horas.length?`<div style="display:flex;justify-content:flex-end;gap:22px;margin-top:12px">${horas.map(h=>`<div style="text-align:right"><span style="font-size:12px;font-weight:700;color:${T.gris}">${h.pais}</span> <b style="font-size:21px;color:${T.acento};font-variant-numeric:tabular-nums">${h.hora}</b></div>`).join('')}</div>`:''}</div>
             </header>
-            <div style="position:absolute;left:52px;right:52px;top:171px"><h1 class="pg-title" style="font-size:${o.tamTitulo || 88}px">${esc(o.titulo)}</h1><div style="margin-top:17px;font-size:17px;font-weight:500;color:#959595">${esc(o.subtitulo || m.encabezado || 'Free Fire · Entrenos Pumas')}</div></div>
+            <div style="position:absolute;left:52px;right:52px;top:171px"><h1 class="pg-title" style="font-size:${o.tamTitulo || 88}px">${esc(o.titulo)}</h1><div style="margin-top:17px;font-size:17px;font-weight:500;color:${T.gris}">${esc(o.subtitulo || m.encabezado || 'Free Fire · Entrenos Pumas')}</div></div>
             <main style="position:absolute;left:52px;right:52px;top:320px;bottom:120px">${cuerpo}</main>
-            <footer style="position:absolute;left:52px;right:52px;bottom:35px;border-top:2px solid #363636;padding-top:18px;display:flex;align-items:center;justify-content:space-between;font-size:15px;color:#959595">
-                <span style="color:${PIEL};font-weight:600">@${esc(m.instagram || 'pumas.gaming.oficial')}</span><span>${esc(m.demo ? 'DATOS DE PRUEBA' : m.pagina || 'FREE FIRE / PUMAS')}</span><span style="display:flex;align-items:center;gap:9px">${m.logoDev?`<img src="${base}imagenes/personajes/proyectn.png" alt="" style="width:30px;height:30px;object-fit:contain">`:''}Dev por <b style="color:${PIEL}">proyectn.com</b></span>
+            <footer style="position:absolute;left:52px;right:52px;bottom:35px;border-top:2px solid ${T.linea};padding-top:18px;display:flex;align-items:center;justify-content:space-between;font-size:15px;color:${T.gris}">
+                <span style="color:${T.piel};font-weight:600">@${esc(m.instagram || T.instagram)}</span><span>${esc(m.demo ? 'DATOS DE PRUEBA' : m.pagina || 'FREE FIRE / PUMAS')}</span><span style="display:flex;align-items:center;gap:9px">${m.logoDev?`<img src="${base}imagenes/personajes/proyectn.png" alt="" style="width:30px;height:30px;object-fit:contain">`:''}Dev por <b style="color:${T.piel}">proyectn.com</b></span>
             </footer>
         </div>`;
     }
@@ -166,17 +178,17 @@
         const filas=lista.map((p,i)=>[String(i+1).padStart(2,'0'),sub(p.jugador,p.equipo),p.kills,...(d.conDano?[fmt(p.dano)]:[]),p.primeras||'—',p.rematados||'—',p.rival?sub(p.rival[0],p.rival[1]+' bajas'):'—']);
         const sangre=d.porSala.filter(s=>s.primeraSangre).slice(0,6);
         return lienzo('pgImgMvp',{...o,titulo:'MVP DETALLADO',subtitulo:'Top jugadores · Kills, daño y primeras sangres'},`
-            <div style="display:grid;grid-template-columns:1fr 140px 180px;align-items:center;gap:20px;height:105px;margin-bottom:16px"><div style="min-width:0"><div style="font-size:12px;letter-spacing:2px;color:${ORO_P};font-weight:700;margin-bottom:6px">MVP DEL ENTRENO</div><div class="pg-number" style="font-size:51px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(primero?primero.jugador:'—')}</div><div class="pg-small" style="margin-top:5px">${esc(primero?primero.equipo:'')}</div></div><div style="text-align:center"><div class="pg-number" style="font-size:72px;line-height:.95;color:${ORO_P}">${primero?primero.kills:0}</div><div style="font-size:12px;color:#959595;margin-top:5px">KILLS</div></div><div style="background:${ORO_P};padding:16px 15px;text-align:center;color:#141414"><div class="pg-number" style="font-size:43px;line-height:1">${d.conDano&&primero?fmt(primero.dano):d.porSala.length}</div><div style="font-size:12px;font-weight:700;margin-top:5px">${d.conDano?'DAÑO TOTAL':'SALAS'}</div></div></div>
+            <div style="display:grid;grid-template-columns:1fr 140px 180px;align-items:center;gap:20px;height:105px;margin-bottom:16px"><div style="min-width:0"><div style="font-size:12px;letter-spacing:2px;color:${T.acento};font-weight:700;margin-bottom:6px">MVP DEL ENTRENO</div><div class="pg-number" style="font-size:51px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(primero?primero.jugador:'—')}</div><div class="pg-small" style="margin-top:5px">${esc(primero?primero.equipo:'')}</div></div><div style="text-align:center"><div class="pg-number" style="font-size:72px;line-height:.95;color:${T.acento}">${primero?primero.kills:0}</div><div style="font-size:12px;color:${T.gris};margin-top:5px">KILLS</div></div><div style="background:${T.acento};padding:16px 15px;text-align:center;color:${T.sobre}"><div class="pg-number" style="font-size:43px;line-height:1">${d.conDano&&primero?fmt(primero.dano):d.porSala.length}</div><div style="font-size:12px;font-weight:700;margin-top:5px">${d.conDano?'DAÑO TOTAL':'SALAS'}</div></div></div>
             ${tabla(cols,filas,{fila:52,fs:27,destacar:true})}
-            ${sangre.length?`<section style="margin-top:26px">${etiquetaSec('PRIMERA SANGRE POR SALA')}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">${sangre.map(s=>`<div style="background:#242424;padding:12px 15px;min-width:0"><div style="font-size:20px;color:${ORO_P};font-weight:700;margin-bottom:6px">${esc(s.etiqueta)} · ${mmss(s.primeraSangre.tiempo)}</div><div style="font-family:${F_TIT};font-size:32px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.primeraSangre.jugador)}</div><div class="pg-small" style="font-size:18px">${esc(s.primeraSangre.arma||'Primera eliminación')}</div></div>`).join('')}</div></section>`:''}`);
+            ${sangre.length?`<section style="margin-top:26px">${etiquetaSec('PRIMERA SANGRE POR SALA')}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">${sangre.map(s=>`<div style="background:${T.fila2};padding:12px 15px;min-width:0"><div style="font-size:20px;color:${T.acento};font-weight:700;margin-bottom:6px">${esc(s.etiqueta)} · ${mmss(s.primeraSangre.tiempo)}</div><div style="font-family:${F_TIT};font-size:32px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.primeraSangre.jugador)}</div><div class="pg-small" style="font-size:18px">${esc(s.primeraSangre.arma||'Primera eliminación')}</div></div>`).join('')}</div></section>`:''}`);
     }
     function imgCara(d,s,o) {
         const a=s.mvp1,b=s.mvp2,p=o.personajes||[o.base+'imagenes/personajes/mvp1.png',o.base+'imagenes/personajes/mvp2.png'];
-        const card=(j,i)=>`<div style="position:relative;height:365px;overflow:hidden;background:${i===0?ORO_P:PIEL}"><img src="${esc(o.base)}imagenes/personajes/logo-negro.png" alt="" style="position:absolute;right:-24px;top:5px;width:260px;height:260px;opacity:.08"><img src="${esc(p[i])}" alt="" style="position:absolute;width:100%;height:310px;object-fit:contain;object-position:center bottom;top:-20px"><div style="position:absolute;left:0;right:0;bottom:0;background:#242424;padding:18px 22px"><div style="font-size:12px;color:${ORO_P};font-weight:700;margin-bottom:7px">MVP ${i+1}</div><div style="font-family:${F_TIT};font-size:39px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j?j.jugador:'Sin segundo jugador')}</div><div class="pg-small" style="margin-top:8px">${esc(j?j.equipo:'—')}</div></div></div>`;
+        const card=(j,i)=>`<div style="position:relative;height:365px;overflow:hidden;background:${i===0?T.acento:T.piel}"><img src="${esc(o.base)}imagenes/personajes/logo-negro.png" alt="" style="position:absolute;right:-24px;top:5px;width:260px;height:260px;opacity:.08"><img src="${esc(p[i])}" alt="" style="position:absolute;width:100%;height:310px;object-fit:contain;object-position:center bottom;top:-20px"><div style="position:absolute;left:0;right:0;bottom:0;background:${T.fila2};padding:18px 22px"><div style="font-size:12px;color:${T.acento};font-weight:700;margin-bottom:7px">MVP ${i+1}</div><div style="font-family:${F_TIT};font-size:39px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j?j.jugador:'Sin segundo jugador')}</div><div class="pg-small" style="margin-top:8px">${esc(j?j.equipo:'—')}</div></div></div>`;
         const metricas=[['KILLS',x=>x.kills||0,fmt],...(s.conDano?[['DAÑO',x=>x.dano||0,fmt],['HEADSHOTS',x=>x.headshots||0,fmt]]:[]),['DERRIBOS',x=>((x.extra||{}).bin||{}).derribos||x.derribos||0,fmt],['TIEMPO VIVO',x=>x.vivo||0,mmss],...(s.conDano?[['PAREDES GLOO',x=>x.gloo||0,fmt]]:[])];
         return lienzo('pgImgCara'+s.sala,{...o,titulo:'CARA A CARA',subtitulo:`Sala ${s.sala} · ${s.mapa||'Free Fire'}${s.duracion?' · '+mmss(s.duracion):''}`},`
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">${card(a,0)}${card(b,1)}</div>
-            <div style="margin-top:24px">${metricas.map(([t,f,show],i)=>{const av=a?f(a):0,bv=b?f(b):0;return `<div style="display:grid;grid-template-columns:1fr 230px 1fr;align-items:center;min-height:72px;background:${i%2?'#242424':'#1D1D1D'};padding:8px 24px"><strong class="pg-number" style="font-size:41px;text-align:center;color:${av>=bv?ORO_P:PIEL}">${show(av)}</strong><span style="text-align:center;font-size:15px;font-weight:600;color:#959595">${t}</span><strong class="pg-number" style="font-size:41px;text-align:center;color:${bv>av?ORO_P:PIEL}">${show(bv)}</strong></div>`}).join('')}</div>`);
+            <div style="margin-top:24px">${metricas.map(([t,f,show],i)=>{const av=a?f(a):0,bv=b?f(b):0;return `<div style="display:grid;grid-template-columns:1fr 230px 1fr;align-items:center;min-height:72px;background:${i%2?T.fila2:T.fila1};padding:8px 24px"><strong class="pg-number" style="font-size:41px;text-align:center;color:${av>=bv?T.acento:T.piel}">${show(av)}</strong><span style="text-align:center;font-size:15px;font-weight:600;color:${T.gris}">${t}</span><strong class="pg-number" style="font-size:41px;text-align:center;color:${bv>av?T.acento:T.piel}">${show(bv)}</strong></div>`}).join('')}</div>`);
     }
     function imgEquipos(d,o) {
         const top=d.equipos.slice().sort((a,b)=>b.rematados-a.rematados||b.kills-a.kills).slice(0,5),max=Math.max(1,...top.map(e=>e.rematados));
@@ -187,20 +199,25 @@
         return lienzo('pgImgEquipos',{...o,titulo:'DUELO DE ESCUADRAS',tamTitulo:78,subtitulo:'Eliminaciones, rivales y líderes del entrenamiento'},`
             ${etiquetaSec('LAS CINCO ESCUADRAS MÁS LETALES')}${tabla(cols,filas,{fila:62,destacar:true})}
             <section style="margin-top:26px">${etiquetaSec('CARA A CARA · LAS DOS PRIMERAS')}${tabla([{t:'ESCUADRA',w:'2fr',al:'left'},{t:'KILLS',w:'80px'},{t:'BOOYAH',w:'95px'},...(d.conDano?[{t:'DAÑO',w:'125px'}]:[]),{t:'VIVO PROM.',w:'125px'}],top.slice(0,2).map(e=>[esc(e.equipo),e.kills,e.booyahs,...(d.conDano?[fmt(e.dano)]:[]),mmss(e.vivoProm)]),{fila:53,fs:27})}</section>
-            <section style="margin-top:30px">${etiquetaSec('LÍDERES DEL ENTRENAMIENTO')}<div style="display:grid;grid-template-columns:repeat(${Math.max(1,lideres.length)},1fr);gap:12px">${lideres.map(x=>`<div style="padding:19px 17px;background:#242424;min-width:0"><div style="font-size:12px;font-weight:700;color:#959595">${x.t}</div><div class="pg-number" style="font-size:40px;line-height:1.3;color:${ORO_P}">${x.v}</div><div style="font-family:${F_TIT};font-size:23px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.e.equipo)}</div></div>`).join('')}</div></section>`);
+            <section style="margin-top:30px">${etiquetaSec('LÍDERES DEL ENTRENAMIENTO')}<div style="display:grid;grid-template-columns:repeat(${Math.max(1,lideres.length)},1fr);gap:12px">${lideres.map(x=>`<div style="padding:19px 17px;background:${T.fila2};min-width:0"><div style="font-size:12px;font-weight:700;color:${T.gris}">${x.t}</div><div class="pg-number" style="font-size:40px;line-height:1.3;color:${T.acento}">${x.v}</div><div style="font-family:${F_TIT};font-size:23px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.e.equipo)}</div></div>`).join('')}</div></section>`);
     }
     function imgArmas(d,o) {
         const armas=d.armas.slice(0,5),max=Math.max(1,...armas.map(a=>a.kills));
         const cols=[{t:'SALA',w:'60px'},{t:'BOOYAH / MAPA',w:'2fr',al:'left'},{t:'KILLS',w:'72px'},...(d.conDano?[{t:'DAÑO',w:'95px'},{t:'HS',w:'50px'},{t:'GLOO',w:'65px'}]:[]),{t:'MVP DE LA ESCUADRA',w:'1.7fr',al:'left'}];
         const filas=d.porSala.map(s=>{const b=s.booyah;return [esc(s.etiqueta),b?sub(b.equipo,s.mapa):'—',b?b.kills:'—',...(d.conDano?[b?fmt(b.dano):'—',b?b.hs:'—',b?b.gloo:'—']:[]),b?sub(b.mvp,b.mvpKills+' kills'):'—']});
         return lienzo('pgImgArmas',{...o,titulo:'ARMAS Y BOOYAHS',subtitulo:'Armas utilizadas y resultados por sala'},`
-            ${etiquetaSec('EL ARSENAL DEL ENTRENAMIENTO')}<div style="display:grid;grid-template-columns:1fr 95px 135px;gap:12px;color:#959595;font-size:13px;font-weight:600;padding-bottom:12px"><span>ARMA</span><span style="text-align:right">KILLS</span><span style="text-align:right">${d.conDano?'DAÑO':'USOS'}</span></div>
-            ${armas.map((a,i)=>`<div style="display:grid;grid-template-columns:40px 165px 1fr 80px 135px;gap:12px;align-items:center;height:64px;background:${i%2?'#242424':'#1D1D1D'};padding:0 16px"><span class="pg-number" style="font-size:25px;color:${ORO_P}">${i+1}</span><strong style="font-family:${F_TIT};font-size:31px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.arma)}</strong><div style="height:10px;background:#363636"><div style="height:100%;width:${a.kills/max*100}%;background:${ORO_P}"></div></div><span class="pg-number" style="font-size:35px;text-align:right">${a.kills}</span><span class="pg-number" style="font-size:30px;text-align:right;color:#959595">${d.conDano?fmt(a.dano):a.usos}</span></div>`).join('')||'<p class="pg-small">Sin datos de armas disponibles.</p>'}
+            ${etiquetaSec('EL ARSENAL DEL ENTRENAMIENTO')}<div style="display:grid;grid-template-columns:1fr 95px 135px;gap:12px;color:${T.gris};font-size:13px;font-weight:600;padding-bottom:12px"><span>ARMA</span><span style="text-align:right">KILLS</span><span style="text-align:right">${d.conDano?'DAÑO':'USOS'}</span></div>
+            ${armas.map((a,i)=>`<div style="display:grid;grid-template-columns:40px 165px 1fr 80px 135px;gap:12px;align-items:center;height:64px;background:${i%2?T.fila2:T.fila1};padding:0 16px"><span class="pg-number" style="font-size:25px;color:${T.acento}">${i+1}</span><strong style="font-family:${F_TIT};font-size:31px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.arma)}</strong><div style="height:10px;background:${T.linea}"><div style="height:100%;width:${a.kills/max*100}%;background:${T.acento}"></div></div><span class="pg-number" style="font-size:35px;text-align:right">${a.kills}</span><span class="pg-number" style="font-size:30px;text-align:right;color:${T.gris}">${d.conDano?fmt(a.dano):a.usos}</span></div>`).join('')||'<p class="pg-small">Sin datos de armas disponibles.</p>'}
             <section style="margin-top:37px">${etiquetaSec('BOOYAH POR SALA')}${tabla(cols,filas,{fila:64,fs:25})}</section>`);
     }
     /* ---------------- API ---------------- */
     function generar(x) {
         fuentes();
+        const prev = T;
+        T = TEMAS[x.estilo] || TEMAS[estilo];
+        try { return armar(x); } finally { T = prev; }
+    }
+    function armar(x) {
         const d = datos(x.salas, x.r, x.puntosLog);
         const m = Object.assign({}, x.meta || {});
         if (m.fecha && !m.fechaCorta) { const f = new Date(m.fecha.replace(' ', 'T')); m.fechaCorta = isNaN(f) ? m.fecha : f.toLocaleDateString('es', { day: '2-digit', month: 'short' }).toUpperCase(); }
@@ -220,7 +237,7 @@
         if (typeof html2canvas !== 'function') throw new Error('No se cargó el exportador de imágenes. Recarga el panel.');
         if (document.fonts && document.fonts.ready) await document.fonts.ready;
         await Promise.all(Array.from(el.querySelectorAll('img')).map(im => im.decode ? im.decode().catch(() => {}) : Promise.resolve()));
-        const c = await html2canvas(el, { scale: 1, width: W, height: H, useCORS: true, allowTaint: false, backgroundColor: TINTA,
+        const c = await html2canvas(el, { scale: 1, width: W, height: H, useCORS: true, allowTaint: false, backgroundColor: getComputedStyle(el).backgroundColor || TINTA,
             onclone: doc => {
                 const e = doc.getElementById(id);
                 for (let p = e && e.parentElement, k = 0; p && k < 2; p = p.parentElement, k++) { p.style.transform = 'none'; p.style.width = W + 'px'; p.style.height = H + 'px'; p.style.overflow = 'visible'; }
@@ -230,5 +247,24 @@
         return a.href;
     }
 
-    window.PumasImagenes = { generar, descargar, datos, horarios, W, H, plantilla:lienzo, tabla, fuentes };
+    /* Selector de estilo (Crazy Pumas / Pumas) para poner encima de las imágenes */
+    function selectorHTML() {
+        const b = (k, t) => `<button type="button" data-pg-estilo="${k}" aria-pressed="${estilo === k}" style="padding:9px 18px;border-radius:6px;cursor:pointer;font-weight:700;font-size:.85rem;letter-spacing:.5px;border:1px solid ${t.acento};background:${estilo === k ? t.acento : 'transparent'};color:${estilo === k ? t.sobre : t.acento}">${esc(t.nombre.toUpperCase())}</button>`;
+        return `<div class="pg-selector-estilo" role="group" aria-label="Estilo de las imágenes" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px"><span style="font-size:.8rem;color:#9a9a9a;margin-right:4px">Estilo:</span>${b('crazy', TEMAS.crazy)}${b('pumas', TEMAS.pumas)}</div>`;
+    }
+    function enlazarSelector(raiz, alCambiar) {
+        if (!raiz) return;
+        raiz.querySelectorAll('[data-pg-estilo]').forEach(b => b.onclick = () => {
+            if (b.dataset.pgEstilo === estilo) return;
+            setEstilo(b.dataset.pgEstilo);
+            if (alCambiar) alCambiar(estilo);
+        });
+    }
+    function setEstilo(k) {
+        if (!TEMAS[k]) return;
+        estilo = k;
+    }
+
+    window.PumasImagenes = { generar, descargar, datos, horarios, W, H, plantilla:lienzo, tabla, fuentes, TEMAS, selectorHTML, enlazarSelector, setEstilo,
+        get estilo() { return estilo; } };
 })();

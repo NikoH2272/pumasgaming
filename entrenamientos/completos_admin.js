@@ -144,6 +144,7 @@
         out.innerHTML = `
             <div style="display:flex;flex-direction:column;align-items:center;gap:16px;width:100%;margin-top:30px">
                 <h3 style="color:#D8C395;font-family:'Michroma';font-size:.95rem;margin:0"><i class="fa-solid fa-chart-simple"></i> IMÁGENES DE RESULTADOS 4:5</h3>
+                ${PumasImagenes.selectorHTML ? PumasImagenes.selectorHTML() : ''}
                 <div class="cpl-tabs">${imagenes.map((im, i) => `<button type="button" class="cpl-tab${i === vista ? ' activa' : ''}" data-img="${i}">${esc(im.titulo)}</button>`).join('')}</div>
                 ${imagenes.map((im, i) => `<div class="cpl-prev"${i === vista ? '' : ' hidden'} data-prev="${i}"><div class="cpl-esc">${im.html}</div></div>`).join('')}
                 <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:22px">
@@ -157,6 +158,7 @@
             out.querySelectorAll('[data-prev]').forEach(x => { x.hidden = +x.dataset.prev !== vista; });
         });
         out.querySelector('[data-una]').onclick = () => descargarImagen(vista);
+        if (PumasImagenes.enlazarSelector) PumasImagenes.enlazarSelector(out, () => pintarImagenes(out, r, meta, salas));
     }
     async function descargarImagen(i) {
         const im = imagenes[i], caja = document.querySelector(`[data-prev="${i}"]`);
