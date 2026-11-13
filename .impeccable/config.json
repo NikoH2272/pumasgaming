@@ -71,6 +71,69 @@
         ],
         "createdAt": "2026-11-13T15:12:08.751Z",
         "reason": "Claude: lime haze rising from the bottom reproduces the ProyectN brand poster the user supplied; the bottom copy is set on it"
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "files": [
+          "pruebas/real-local.html"
+        ],
+        "createdAt": "2026-11-13T17:18:37.490Z",
+        "reason": "Claude: local-only test harness (git-excluded), same Arial chrome as pruebas/diseno-resultados.html; the result images keep their own fonts"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "pruebas/presentacion-actualizacion.html"
+        ],
+        "createdAt": "2026-11-13T17:46:34.444Z",
+        "reason": "Claude: same ProyectN brand system the user supplied as reference (chrome title, wide mono copy, lime haze with dark copy on it), as in presentacion-proyectn.html"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "pruebas/presentacion-actualizacion.html"
+        ],
+        "createdAt": "2026-11-13T17:46:34.721Z",
+        "reason": "Claude: same ProyectN brand system the user supplied as reference (chrome title, wide mono copy, lime haze with dark copy on it), as in presentacion-proyectn.html"
+      },
+      {
+        "rule": "wide-tracking",
+        "value": "*",
+        "files": [
+          "pruebas/presentacion-actualizacion.html"
+        ],
+        "createdAt": "2026-11-13T17:46:34.985Z",
+        "reason": "Claude: same ProyectN brand system the user supplied as reference (chrome title, wide mono copy, lime haze with dark copy on it), as in presentacion-proyectn.html"
+      },
+      {
+        "rule": "radial-spotlight-glow",
+        "value": "*",
+        "files": [
+          "pruebas/presentacion-actualizacion.html"
+        ],
+        "createdAt": "2026-11-13T17:46:35.249Z",
+        "reason": "Claude: same ProyectN brand system the user supplied as reference (chrome title, wide mono copy, lime haze with dark copy on it), as in presentacion-proyectn.html"
+      },
+      {
+        "rule": "buried-raster",
+        "value": "*",
+        "files": [
+          "pruebas/banner-actualizacion-pumas.html"
+        ],
+        "createdAt": "2026-11-13T17:49:35.373Z",
+        "reason": "Claude: faint Pumas logo watermark, same .035-.04 opacity the results images use; visible in the exported PNG"
+      },
+      {
+        "rule": "tight-leading",
+        "value": "*",
+        "files": [
+          "pruebas/banner-actualizacion-pumas.html"
+        ],
+        "createdAt": "2026-11-13T17:49:35.652Z",
+        "reason": "Claude: tight leading only on the 128px two-line display title and one-line condensed labels; body copy is 1.4-1.45"
       }
     ]
   }

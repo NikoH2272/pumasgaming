@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<title>Banner ProyectN · Actualización</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  /* ProyectN: lima sobre gris azulado oscuro, tipografía mono con "//" y título ancho cromado (mismo sistema que presentacion-proyectn.html) */
+  :root{--lima:#B8FF00;--fondo:#12161C;--tinta:#0E1116;--plata:#C9CED8;--gris:#9AA3AD;
+        --mono:'Space Mono',ui-monospace,monospace;--ancha:'Archivo','Arial Black',sans-serif}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--fondo)}
+  #poster{position:relative;width:1080px;height:1350px;overflow:hidden;background:var(--fondo);color:var(--plata);font-family:var(--mono)}
+  .luz{position:absolute;border-radius:50%;filter:blur(90px)}
+  .l1{left:-300px;bottom:-330px;width:1680px;height:900px;background:radial-gradient(closest-side,rgba(184,255,0,.66),rgba(184,255,0,0))}
+  .l2{left:-220px;top:420px;width:560px;height:560px;background:radial-gradient(closest-side,rgba(184,255,0,.16),rgba(184,255,0,0))}
+  .l3{right:-180px;top:330px;width:600px;height:600px;background:radial-gradient(closest-side,rgba(184,255,0,.2),rgba(184,255,0,0))}
+  .trama{position:absolute;inset:0;background:repeating-linear-gradient(135deg,rgba(255,255,255,.018) 0 2px,transparent 2px 6px)}
+  .linea{position:absolute;border:1px solid rgba(201,206,216,.09)}
+  .vidrio{position:absolute;mix-blend-mode:screen;-webkit-mask-image:radial-gradient(closest-side,#000 62%,transparent 98%);mask-image:radial-gradient(closest-side,#000 62%,transparent 98%)}
+  .v1{right:-270px;top:150px;width:520px;transform:rotate(14deg)}
+  .v2{left:-260px;bottom:-160px;width:470px;transform:rotate(-16deg);filter:blur(5px);opacity:.85}
+  .barra{position:absolute;left:76px;right:76px;top:0;height:46px;display:grid;grid-template-columns:240px 1fr 240px;gap:3px}
+  .barra div{background:var(--lima);color:var(--tinta);font:italic 700 21px/46px var(--mono);text-align:center;letter-spacing:1px}
+  .kicker{position:absolute;left:0;right:0;top:112px;display:flex;align-items:center;justify-content:center;gap:30px}
+  .kicker span{font:400 32px var(--mono);letter-spacing:11px;color:var(--plata);margin-right:-11px}
+  .escudos{display:flex;gap:24px}
+  .titulo{position:absolute;left:50%;top:182px;transform:translateX(-50%);margin:0;white-space:nowrap;
+          font-family:var(--ancha);font-weight:900;font-stretch:125%;font-size:146px;line-height:1;letter-spacing:-7px;
+          background:linear-gradient(180deg,#F7F8FC 0%,#D5D9E3 38%,#A5ACBC 62%,#E8EBF2 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{position:absolute;top:360px;font:400 23px var(--mono);letter-spacing:7px;color:var(--plata)}
+  .sub.izq{left:150px}.sub.der{right:130px}
+  /* las 3 imágenes nuevas, en abanico */
+  .carta{position:absolute;overflow:hidden;background:var(--fondo);box-shadow:0 26px 50px rgba(0,0,0,.6),0 0 0 1px rgba(201,206,216,.18)}
+  .carta>.esc{width:1080px;height:1350px;transform-origin:0 0}
+  .c-izq{left:40px;top:520px;width:356px;height:445px;transform:rotate(-6deg)}.c-izq>.esc{transform:scale(.3296)}
+  .c-der{left:684px;top:520px;width:356px;height:445px;transform:rotate(6deg)}.c-der>.esc{transform:scale(.3296)}
+  .c-cen{left:301px;top:452px;width:478px;height:598px;box-shadow:0 30px 60px rgba(0,0,0,.65),0 0 0 3px var(--lima)}.c-cen>.esc{transform:scale(.4426)}
+  .etq{position:absolute;font:italic 700 16px var(--mono);letter-spacing:1px;color:var(--tinta);background:var(--lima);padding:5px 10px;white-space:nowrap}
+  /* cajas "//" como en la referencia */
+  .caja{position:absolute;width:300px;background:rgba(14,17,22,.86);border:1px solid rgba(201,206,216,.22);border-top:6px solid #6F7684;padding:16px 20px;font:italic 400 19px/1.55 var(--mono);letter-spacing:2.5px;color:var(--plata)}
+  .caja b{color:var(--lima);font-weight:700}
+  .texto{position:absolute;left:80px;right:80px;top:1112px;margin:0;text-align:center;font-family:var(--ancha);font-weight:600;font-stretch:125%;font-size:27px;line-height:1.25;letter-spacing:3px;color:var(--tinta)}
+  .pie{position:absolute;left:56px;right:56px;bottom:40px;display:flex;align-items:center;gap:16px;color:var(--tinta)}
+  .pie b{font-family:var(--ancha);font-weight:900;font-stretch:125%;font-size:34px;letter-spacing:-.5px}
+  .pie .raya{flex:1;height:3px;background:linear-gradient(90deg,var(--tinta) 0 14px,transparent 14px 22px,var(--tinta) 22px 36px,transparent 36px 46px,var(--tinta) 46px calc(100% - 46px),transparent calc(100% - 46px) calc(100% - 36px),var(--tinta) calc(100% - 36px) calc(100% - 22px),transparent calc(100% - 22px) calc(100% - 14px),var(--tinta) calc(100% - 14px))}
+  .pie span{font:italic 700 20px var(--mono);letter-spacing:1px}
+</style>
+</head>
+<body>
+<div id="poster">
+  <div class="trama"></div>
+  <div class="luz l1"></div><div class="luz l2"></div><div class="luz l3"></div>
+  <div class="linea" style="left:60px;top:70px;width:380px;height:440px;border-right:0;border-bottom:0"></div>
+  <div class="linea" style="left:300px;top:70px;width:1px;height:330px;border-width:0 0 0 1px"></div>
+  <div class="linea" style="right:60px;top:860px;width:150px;height:490px;border-right:0;border-bottom:0"></div>
+  <img class="vidrio v1" src="proyectn-logo-3d.webp" alt="">
+
+  <div class="barra"><div>// Free fire</div><div></div><div>// v.7.1</div></div>
+  <div class="kicker"><div class="escudos" id="escIzq"></div><span>Actualización:</span><div class="escudos" id="escDer"></div></div>
+  <h1 class="titulo">NOVEDADES</h1>
+  <div class="sub izq">*Resultados</div><div class="sub der">Más completos.</div>
+
+  <div class="carta c-izq"><div class="esc" id="cIzq"></div></div>
+  <div class="carta c-der"><div class="esc" id="cDer"></div></div>
+  <div class="carta c-cen"><div class="esc" id="cCen"></div></div>
+  <div class="etq" style="left:301px;top:418px">// Booyah por sala</div>
+  <div class="etq" style="left:56px;top:978px;transform:rotate(-6deg)">// Habilidades, gloo y armas</div>
+  <div class="etq" style="right:56px;top:978px;transform:rotate(6deg)">// Caídas en una imagen</div>
+
+  <div class="caja" style="right:40px;top:420px;width:250px;padding:12px 16px;font-size:17px">// <b>Booyah</b>.<br>// MVP.<br>// Escuadras.</div>
+
+  <p class="texto">*El campeón de cada sala con sus jugadores, las habilidades activas más elegidas y todas las caídas juntas.</p>
+  <img class="vidrio v2" src="proyectn-logo-3d.webp" alt="">
+  <div class="pie"><b>PROYECTN</b><div class="raya"></div><span>[ proyectn.com ]</span></div>
+</div>
+
+<script>(()=>{const H={2606:'Steffie',3806:'Chrono',4006:'Skyler',4406:'Xayne',5606:'Iris',5806:'Tatsuya',7206:'Koda',7406:'Oscar',7706:'Morse'};
+  window.PumasCompletos={MAPAS:{1:'Bermuda',3:'Purgatorio',4:'Kalahari',22:'Nexterra',29:'Solara'},nombreHabilidad:id=>H[id]||('HABILIDAD #'+id),
+  fotoHabilidad:id=>H[id]?'../imagenes/personajes/'+H[id]+'.png':'',habilidadDe:j=>{const b=((j||{}).extra||{}).bin||{};return b.activa?{activa:b.activa,usos:b.usos||0}:null;}};})();</script>
+<script src="zonas-demo.js"></script>
+<script src="../portal-kit/imagenes-resultados.js"></script>
+<script>
+  const escudo = '<svg width="24" height="28" viewBox="0 0 24 28" fill="none" stroke="#B8FF00" stroke-width="2"><path d="M12 1.5 22 6.5v13L12 26.5 2 19.5v-13z"/><path d="M8 18V11M12 20V8M16 18V11"/></svg>';
+  document.getElementById('escIzq').innerHTML = escudo.repeat(3);
+  document.getElementById('escDer').innerHTML = escudo.repeat(3);
+
+  // Tema ProyectN solo para estas miniaturas
+  PumasImagenes.TEMAS.proyectn = { nombre: 'ProyectN', marca: 'PROYECTN', instagram: 'proyectn', logo: 'imagenes/proyectn.png', tamLogo: 78,
+    logoAgua: 'imagenes/proyectn.png', opAgua: .035, fondo: '#12161C', franja: '#172014', fila1: '#181D24', fila2: '#1F252D', linea: '#2E3A24', gris: '#9AA3AD',
+    acento: '#B8FF00', sobre: '#0E1116', piel: '#F2F5F7' };
+
+  // Datos de prueba: equipos y jugadores ficticios (los del laboratorio) + zonas y enfrentamientos de un replay por mapa
+  const Z = window.ZONAS_DEMO;
+  const equipos = ['AXE GAMING','M-19 ESPORTS','WASTED FFLA','PUMAS SPARRING','TRIOLOGY','KRAKEN ESPORT','LUKAS GAMER','INTI ESPORTS','NVO ESPORT','RAGNAR FURY','AVIGAL ACDM','VITALITYX'];
+  const salas = [1, 3, 22, 4, 29].map((id, s) => ({
+    sala: s + 1, etiqueta: 'S' + (s + 1), mapa: id, duracion: Z[id].dur, fuente: 'bin',
+    zonas: Z[id].zonas, bajasPos: Z[id].bajas.map(([t, x, z, ax, az]) => ({ t, x, z, ax, az })),
+    eliminados: equipos.filter(n => n !== equipos[s % 5]).reverse().map((equipo, i, l) => ({ equipo, tiempo: Z[id].elim[i] || Math.round(110 + i * (880 / l.length)), por: i % 3 === 1 ? equipos[s % 5] : equipos[(i + 2) % equipos.length] })),
+    primeraSangre: { jugador: ['AX.Smoking','M19.Gomez','WAT.Willy','PG.Anyer','TRI.Diego'][s], victima: 'Rival', arma: ['M1887','SCAR','MP40','UMP','AWM'][s], tiempo: 43 + s * 11 },
+    jugadores: equipos.flatMap((equipo, t) => Array.from({ length: 4 }, (_, p) => {
+      const kills = t < 6 ? Math.max(0, 4 - Math.floor(t / 2) - p + s % 2) : 0, dano = Math.max(200, 2600 - t * 105 - p * 210 + s * 91);
+      return { account_id: t * 4 + p + 1, jugador: (t === 0 ? ['AX.Smoking','AX.Papoi','AX.Renzo','AX.Mateo'][p] : equipo.split(' ')[0] + '.' + ['Gomez','Sosa7','Kairi','Zeus'][p]), equipo, kills, dano,
+        headshots: Math.max(0, 12 - t - p), gloo: 12 + t % 4 + p, hits: 85 - t - p, derribos: Math.max(0, 9 - t - p), revividos: p % 2, vivo: Math.max(80, 1170 - t * 45 - p * 8), booyah: t === s % 5,
+        extra: { primeraSangre: t === s && p === 0, fin: t < 5 && p === 0 && kills >= 3 ? 1 : 0, vs: { [equipos[(t + 3) % equipos.length]]: kills },
+          bin: { activa: [2606,3806,4006,4406,5606,5806,7206,7406,7706][(t + p * 2 + s) % 9], usos: 2 + ((t + p + s) % 5), derribos: Math.max(0, 9 - t - p) } },
+        armas: [{ n: ['M1887','SCAR','MP40','UMP'][p], k: kills, d: dano }] };
+    }))
+  }));
+  const imgs = PumasImagenes.generar({ salas, r: {}, meta: { fecha: '2026-11-13 19:00', moderador: 'PROYECTN', pagina: 'PROYECTN.COM', instagram: 'proyectn' }, base: '../', estilo: 'proyectn' });
+  const html = id => (imgs.find(x => x.id === id) || {}).html || '';
+  document.getElementById('cCen').innerHTML = html('pgImgBooyah1');
+  document.getElementById('cIzq').innerHTML = html('pgImgArmas');
+  document.getElementById('cDer').innerHTML = html('pgImgCaidas');
+</script>
+</body>
+</html>

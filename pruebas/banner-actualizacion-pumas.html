@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<title>Banner Pumas · Actualización</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Pumas clásico: negro y oro, Barlow Condensed para títulos (mismo sistema que las imágenes de resultados) */
+  :root{--oro:#DCCC9C;--fondo:#141414;--panel:#1D1D1D;--piel:#F2F2F2;--gris:#A5A5A5;--t:'Barlow Condensed','Arial Narrow',sans-serif;--x:'Inter',Arial,sans-serif}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--fondo)}
+  #poster{position:relative;width:1080px;height:1350px;overflow:hidden;background:var(--fondo);color:var(--piel);font-family:var(--x)}
+  .franja{position:absolute;right:-300px;top:-60px;width:780px;height:1500px;background:#1A1A1A;transform:rotate(19deg)}
+  .agua{position:absolute;right:-120px;top:150px;width:640px;opacity:.04}
+  .barra{position:absolute;top:0;right:0;width:300px;height:12px;background:var(--oro)}
+  #poster>header{position:absolute;left:56px;right:56px;top:44px;display:flex;align-items:center;justify-content:space-between}
+  .marca{display:flex;align-items:center;gap:18px}.marca img{width:84px;height:84px;object-fit:contain}
+  .marca b{display:block;font:800 40px/1 var(--t)}.marca span{display:block;margin-top:9px;font:600 12px var(--x);letter-spacing:3px;color:var(--oro)}
+  .nuevo{display:flex;align-items:center;gap:12px}.nuevo b{background:var(--oro);color:#141414;font:800 22px/1 var(--t);letter-spacing:2px;padding:9px 16px}.nuevo span{font:700 19px var(--t);color:var(--gris);letter-spacing:1px}
+  .kicker{position:absolute;left:56px;top:178px;font:700 15px var(--x);letter-spacing:5px;color:var(--oro)}
+  #poster>h1{position:absolute;left:52px;top:204px;margin:0;font:800 128px/.86 var(--t);letter-spacing:-2px;text-transform:uppercase}
+  #poster>h1 em{font-style:normal;color:var(--oro)}
+  .bajada{position:absolute;left:56px;top:438px;width:560px;margin:0;font:500 19px/1.45 var(--x);color:#d6d6d6}
+  .bajada b{color:#fff}
+  .lista{position:absolute;right:56px;top:226px;width:300px;display:flex;flex-direction:column;gap:9px}
+  .lista div{border-left:4px solid var(--oro);background:rgba(255,255,255,.035);padding:9px 14px;font:700 21px/1.1 var(--t);letter-spacing:.4px}
+  .lista span{display:block;margin-top:3px;font:500 12.5px/1.35 var(--x);color:var(--gris);letter-spacing:0}
+  /* las 3 imágenes nuevas */
+  .carta{position:absolute;overflow:hidden;background:var(--fondo);box-shadow:0 26px 50px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.12)}
+  .carta>.esc{width:1080px;height:1350px;transform-origin:0 0}
+  .c-izq{left:44px;top:610px;width:336px;height:420px;transform:rotate(-6deg)}.c-izq>.esc{transform:scale(.3111)}
+  .c-der{left:700px;top:610px;width:336px;height:420px;transform:rotate(6deg)}.c-der>.esc{transform:scale(.3111)}
+  .c-cen{left:312px;top:540px;width:456px;height:570px;box-shadow:0 30px 60px rgba(0,0,0,.75),0 0 0 3px var(--oro)}.c-cen>.esc{transform:scale(.4222)}
+  .chip{position:absolute;background:var(--oro);color:#141414;font:800 17px/1 var(--t);letter-spacing:1.2px;padding:7px 11px;white-space:nowrap}
+  .puntos{position:absolute;left:56px;right:56px;top:1150px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .puntos div{border-top:3px solid var(--oro);padding-top:11px}
+  .puntos b{display:block;font:800 24px/1 var(--t);letter-spacing:.4px}
+  .puntos i{font-style:normal;color:var(--oro);margin-right:6px}
+  .puntos span{display:block;margin-top:6px;font:500 13.5px/1.4 var(--x);color:var(--gris)}
+  #poster>footer{position:absolute;left:56px;right:56px;bottom:30px;display:flex;justify-content:space-between;align-items:center;border-top:2px solid #333;padding-top:14px;font:500 15px var(--x);color:var(--gris)}
+  #poster>footer b{color:var(--piel)}
+</style>
+</head>
+<body>
+<div id="poster">
+  <div class="franja"></div>
+  <img class="agua" src="../imagenes/personajes/logo-blanco.png" alt="">
+  <div class="barra"></div>
+  <header>
+    <div class="marca"><img src="../imagenes/personajes/logo-blanco.png" alt="Pumas"><div><b>PUMAS GAMING</b><span>ENTRENAMIENTOS OFICIALES</span></div></div>
+    <div class="nuevo"><b>NUEVO</b><span>RESULTADOS v.7.1</span></div>
+  </header>
+  <div class="kicker">ACTUALIZACIÓN DE RESULTADOS</div>
+  <h1>Nuevas<br><em>imágenes</em></h1>
+  <p class="bajada">Cada entreno ahora trae <b>más resultados listos para publicar</b>, leídos directo del replay de cada sala.</p>
+  <div class="lista">
+    <div>BOOYAH POR SALA<span>Equipo campeón, jugadores, MVP y escuadras eliminadas.</span></div>
+    <div>HABILIDADES, GLOO Y ARMAS<span>Las habilidades activas más elegidas, con su personaje.</span></div>
+    <div>CAÍDAS EN UNA IMAGEN<span>Las peleas al aterrizar de todas las salas juntas.</span></div>
+  </div>
+
+  <div class="carta c-izq"><div class="esc" id="cIzq"></div></div>
+  <div class="carta c-der"><div class="esc" id="cDer"></div></div>
+  <div class="carta c-cen"><div class="esc" id="cCen"></div></div>
+  <div class="chip" style="left:312px;top:508px">BOOYAH POR SALA</div>
+
+  <div class="puntos">
+    <div><b><i>01</i>BOOYAH</b><span>El campeón de cada sala con sus 4 jugadores y estadísticas.</span></div>
+    <div><b><i>02</i>HABILIDADES</b><span>Personajes más usados, paredes gloo y el arsenal del entreno.</span></div>
+    <div><b><i>03</i>CAÍDAS</b><span>Dónde se pelearon al aterrizar en las 5 salas, en una sola imagen.</span></div>
+  </div>
+  <footer><b>@pumas.gaming.oficial</b><span>Free Fire · Entrenos Pumas</span><span>Dev por <b>proyectn.com</b></span></footer>
+</div>
+
+<script>(()=>{const H={2606:'Steffie',3806:'Chrono',4006:'Skyler',4406:'Xayne',5606:'Iris',5806:'Tatsuya',7206:'Koda',7406:'Oscar',7706:'Morse'};
+  window.PumasCompletos={MAPAS:{1:'Bermuda',3:'Purgatorio',4:'Kalahari',22:'Nexterra',29:'Solara'},nombreHabilidad:id=>H[id]||('HABILIDAD #'+id),
+  fotoHabilidad:id=>H[id]?'../imagenes/personajes/'+H[id]+'.png':'',habilidadDe:j=>{const b=((j||{}).extra||{}).bin||{};return b.activa?{activa:b.activa,usos:b.usos||0}:null;}};})();</script>
+<script src="zonas-demo.js"></script>
+<script src="../portal-kit/imagenes-resultados.js"></script>
+<script>
+  // Datos de prueba: equipos y jugadores ficticios (los del laboratorio) + zonas y enfrentamientos de un replay por mapa
+  const Z = window.ZONAS_DEMO;
+  const equipos = ['AXE GAMING','M-19 ESPORTS','WASTED FFLA','PUMAS SPARRING','TRIOLOGY','KRAKEN ESPORT','LUKAS GAMER','INTI ESPORTS','NVO ESPORT','RAGNAR FURY','AVIGAL ACDM','VITALITYX'];
+  const salas = [1, 3, 22, 4, 29].map((id, s) => ({
+    sala: s + 1, etiqueta: 'S' + (s + 1), mapa: id, duracion: Z[id].dur, fuente: 'bin',
+    zonas: Z[id].zonas, bajasPos: Z[id].bajas.map(([t, x, z, ax, az]) => ({ t, x, z, ax, az })),
+    eliminados: equipos.filter(n => n !== equipos[s % 5]).reverse().map((equipo, i, l) => ({ equipo, tiempo: Z[id].elim[i] || Math.round(110 + i * (880 / l.length)), por: i % 3 === 1 ? equipos[s % 5] : equipos[(i + 2) % equipos.length] })),
+    primeraSangre: { jugador: ['AX.Smoking','M19.Gomez','WAT.Willy','PG.Anyer','TRI.Diego'][s], victima: 'Rival', arma: ['M1887','SCAR','MP40','UMP','AWM'][s], tiempo: 43 + s * 11 },
+    jugadores: equipos.flatMap((equipo, t) => Array.from({ length: 4 }, (_, p) => {
+      const kills = t < 6 ? Math.max(0, 4 - Math.floor(t / 2) - p + s % 2) : 0, dano = Math.max(200, 2600 - t * 105 - p * 210 + s * 91);
+      return { account_id: t * 4 + p + 1, jugador: (t === 0 ? ['AX.Smoking','AX.Papoi','AX.Renzo','AX.Mateo'][p] : equipo.split(' ')[0] + '.' + ['Gomez','Sosa7','Kairi','Zeus'][p]), equipo, kills, dano,
+        headshots: Math.max(0, 12 - t - p), gloo: 12 + t % 4 + p, hits: 85 - t - p, derribos: Math.max(0, 9 - t - p), revividos: p % 2, vivo: Math.max(80, 1170 - t * 45 - p * 8), booyah: t === s % 5,
+        extra: { primeraSangre: t === s && p === 0, fin: t < 5 && p === 0 && kills >= 3 ? 1 : 0, vs: { [equipos[(t + 3) % equipos.length]]: kills },
+          bin: { activa: [2606,3806,4006,4406,5606,5806,7206,7406,7706][(t + p * 2 + s) % 9], usos: 2 + ((t + p + s) % 5), derribos: Math.max(0, 9 - t - p) } },
+        armas: [{ n: ['M1887','SCAR','MP40','UMP'][p], k: kills, d: dano }] };
+    }))
+  }));
+  const imgs = PumasImagenes.generar({ salas, r: {}, meta: { fecha: '2026-11-13 19:00', moderador: 'COACH NIKO', pagina: 'FREE FIRE / PUMAS' }, base: '../', estilo: 'pumas' });
+  const html = id => (imgs.find(x => x.id === id) || {}).html || '';
+  document.getElementById('cCen').innerHTML = html('pgImgBooyah1');
+  document.getElementById('cIzq').innerHTML = html('pgImgArmas');
+  document.getElementById('cDer').innerHTML = html('pgImgCaidas');
+</script>
+</body>
+</html>
