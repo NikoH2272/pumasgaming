@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de CSV · Free Fire</title>
+<!--
+  Generador de CSV suelto: no necesita portal.js, Supabase ni base de datos.
+  Para llevarlo a otro proyecto copia estos 4 archivos a una misma carpeta:
+    generador-csv.html (esta página) · completos.js · replay-bin.js · generador-csv.js
+  Todo se lee en el navegador; no se sube ni se guarda nada.
+-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    body { margin: 0; background: #141414; color: #F2F2F2; font-family: system-ui, sans-serif; }
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 16px 60px; }
+    h1 { margin: 0 0 8px; color: #DCCC9C; font-size: clamp(1.4rem, 4vw, 2rem); }
+</style>
+</head>
+<body>
+<main>
+    <h1>Generador de CSV</h1>
+    <div id="generadorCsv"></div>
+</main>
+
+<script src="completos.js?v=20261113d"></script>
+<script src="replay-bin.js?v=20261113c"></script>
+<script src="generador-csv.js?v=20261113b"></script>
+<script>PumasGenerador.montar('generadorCsv');</script>
+</body>
+</html>

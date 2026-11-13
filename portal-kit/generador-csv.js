@@ -3,7 +3,9 @@
    Base: los replays de cada sala (.json + .bin, cruzados por el número de la partida).
    El .log (kills y puntos oficiales) y el .csv de resultados completos son opcionales.
    Descarga: equipos · jugadores (todo el entreno) · detalle por sala con todas las métricas.
-   Uso: PumasGenerador.montar('idDelContenedor')   (necesita portal-kit/completos.js)
+   Uso: PumasGenerador.montar('idDelContenedor')
+   Necesita portal-kit/completos.js y portal-kit/replay-bin.js. portal.js/Supabase son opcionales
+   (solo para "usar el nombre oficial" de equipos_registrados). Ejemplo suelto: portal-kit/generador-csv.html
    ===================================================================== */
 (function () {
     const C = () => window.PumasCompletos;
@@ -217,10 +219,15 @@
                     primera: r ? (xr.primeraSangre ? 1 : 0) : '', distancia: Math.max(xr.distancia || 0, xc.distancia || 0) || '',
                     rematados: r ? (xr.fin || 0) : '', vs, armasKills, bin: x.bin ? 'SI' : 'NO', c, b: f.bin || null
                 };
+                // Habilidad activa (y cuántas veces la usó): del .bin; si no, del .csv. Equipadas: .bin o skill_ids del .csv
+                const eqCsv = (() => { try { return c ? JSON.parse(c.crudo.skill_ids || '[]') : []; } catch (e) { return []; } })();
+                d.hab = d.b && d.b.activa ? { activa: d.b.activa, usos: d.b.usos || 0, equipadas: d.b.habilidades || [] }
+                    : xc.activa ? { activa: xc.activa, usos: xc.usos || 0, equipadas: eqCsv } : null;
                 detalle.push(d);
                 const k = d.id ? 'id' + d.id : 'n' + norm(d.jugador);
                 const a = jugadores.get(k) || { jugador: d.jugador, id: d.id, equipo: d.equipo, salas: 0, kills: 0, porSala: {}, vivo: 0, booyahs: 0, bajas: 0, caidas: 0, levantado: 0,
-                    primeras: 0, distancia: 0, rematados: 0, vs: {}, armasKills: {}, salasRep: 0, salasCsv: 0, csv: {}, armasCsv: {}, salasBin: 0, bin: {}, armasBin: {} };
+                    primeras: 0, distancia: 0, rematados: 0, vs: {}, armasKills: {}, salasRep: 0, salasCsv: 0, csv: {}, armasCsv: {}, salasBin: 0, bin: {}, armasBin: {}, habs: {}, usosHab: 0, salasHab: 0 };
+                if (d.hab) { const n2 = C().nombreHabilidad(d.hab.activa); a.habs[n2] = (a.habs[n2] || 0) + 1; a.usosHab += d.hab.usos; a.salasHab++; }
                 if (d.b) {
                     a.salasBin++;
                     BIN_CAMPOS.forEach(([cmp]) => { a.bin[cmp] = (a.bin[cmp] || 0) + (d.b[cmp] || 0); });
@@ -259,7 +266,8 @@
         });
         const colsCsvSumables = colsCsv.filter(c => !CSV_NO_SUMAR.test(c) && detalle.some(d => d.c && (esNum(d.c.crudo[c]) || esBool(d.c.crudo[c]))));
 
-        gen = {
+        const conHab = detalle.some(d => d.hab);
+        gen = { conHab,
             numSalas: lista.length, salas: lista, conLog, conReplay, conCsv, conBin, colsCsv, colsCsvSumables, detalle,
             equipos: [...equipos.values()].sort((a, b) => b.total - a.total || b.booyahs - a.booyahs || b.kills - a.kills),
             jugadores: [...jugadores.values()].sort((a, b) => b.kills - a.kills || a.jugador.localeCompare(b.jugador))
@@ -283,12 +291,13 @@
     // Vista previa: las 3 tablas que se descargan, con las columnas del .bin resaltadas
     let vistaTipo = 'equipos', vistaSoloBin = false;
     const CAB_BIN_EXTRA = ['% HEADSHOT', 'DAÑO PROMEDIO POR SALA', 'ARMA CON MÁS DAÑO', 'DAÑO POR ARMA'];
+    const CAB_HAB = ['HABILIDAD ACTIVA', 'USOS DE LA HABILIDAD', 'USOS POR SALA', 'HABILIDADES EQUIPADAS'];
     const CAB_BASE = /^(POS|EQUIPO|JUGADOR|ID|SALAS?|PARTIDA|MAPA)$/;
     function pintarVista() {
         const cont = $('genVista');
         if (!gen) { cont.innerHTML = ''; return; }
         const { cab, filas } = vistaTipo === 'equipos' ? filasEquipos() : vistaTipo === 'jugadores' ? filasJugadores() : filasDetalle();
-        const deBin = new Set(gen.conBin ? [...BIN_CAMPOS.map(c => c[1]), ...CAB_BIN_EXTRA].map(n => cabBin(n, gen.conCsv)) : []);
+        const deBin = new Set(gen.conBin ? [...[...BIN_CAMPOS.map(c => c[1]), ...CAB_BIN_EXTRA].map(n => cabBin(n, gen.conCsv)), ...CAB_HAB] : []);
         const idx = cab.map((h, i) => i).filter(i => !vistaSoloBin || deBin.has(cab[i]) || CAB_BASE.test(cab[i]));
         const tab = (t, n) => `<button type="button" class="gen-tab${vistaTipo === t ? ' activa' : ''}" data-vista="${t}">${n}</button>`;
         cont.innerHTML = `<div class="gen-tabs">${tab('equipos', 'EQUIPOS')}${tab('jugadores', 'JUGADORES')}${tab('detalle', 'DETALLE POR SALA')}
@@ -330,6 +339,7 @@
         const cab = ['POS', 'JUGADOR', 'ID', 'EQUIPO', 'SALAS', ...s.map(i => 'K S' + (i + 1)), 'KILLS', 'BOOYAHS', 'TIEMPO VIVO PROMEDIO'];
         if (gen.conReplay) cab.push('BAJAS (REPLAY)', 'CAÍDAS', 'VECES LEVANTADO', 'PRIMERAS SANGRES', 'EQUIPOS REMATADOS', 'RIVAL CON MÁS BAJAS', 'BAJAS A ESE RIVAL', 'ARMAS DE LAS KILLS');
         cab.push('KILL MÁS LEJANA (m)');
+        if (gen.conHab) cab.push('HABILIDAD ACTIVA', 'USOS DE LA HABILIDAD', 'USOS POR SALA');
         if (gen.conBin) cab.push(...BIN_CAMPOS.map(c => cabBin(c[1], gen.conCsv)), cabBin('% HEADSHOT', gen.conCsv), cabBin('DAÑO PROMEDIO POR SALA', gen.conCsv),
             cabBin('ARMA CON MÁS DAÑO', gen.conCsv), cabBin('DAÑO POR ARMA', gen.conCsv));
         const csvBase = [['dano', 'DAÑO'], ['hs', 'HEADSHOTS'], ['hits', 'IMPACTOS'], ['disparos', 'DISPAROS'], ['revividas', 'REVIVIDAS'], ['gloo', 'PAREDES GLOO'], ['asistencias', 'ASISTENCIAS'], ['derribos', 'DERRIBOS']];
@@ -340,6 +350,7 @@
             if (gen.conReplay) f.push(rep ? j.bajas : '', rep ? j.caidas : '', rep ? j.levantado : '', rep ? j.primeras : '', rep ? j.rematados : '',
                 rep && t ? t[0] : '', rep && t ? t[1] : '', rep ? listaArmas(j.armasKills) : '');
             f.push(j.distancia || '');
+            if (gen.conHab) f.push(j.salasHab ? (top(j.habs) || [''])[0] : '', j.salasHab ? j.usosHab : '', j.salasHab ? (j.usosHab / j.salasHab).toFixed(1) : '');
             if (gen.conBin) {
                 const bn = j.salasBin > 0, ab = armasBinDe(j.armasBin);
                 f.push(...BIN_CAMPOS.map(c => bn ? j.bin[c[0]] || 0 : ''), bn ? pctHs(j.bin) : '', bn ? Math.round((j.bin.dano || 0) / j.salasBin) : '',
@@ -362,12 +373,15 @@
     function filasDetalle() {
         const cab = ['SALA', 'PARTIDA', 'FECHA', 'MAPA', 'MODO', '.BIN', 'EQUIPO', 'JUGADOR', 'ID', 'KILLS', 'FUENTE KILLS', 'BOOYAH', 'TIEMPO VIVO', 'KILL MÁS LEJANA (m)'];
         if (gen.conReplay) cab.push('BAJAS (REPLAY)', 'CAÍDAS', 'VECES LEVANTADO', 'PRIMERA SANGRE', 'EQUIPOS REMATADOS', 'BAJAS POR RIVAL', 'ARMAS DE LAS KILLS');
+        if (gen.conHab) cab.push('HABILIDAD ACTIVA', 'USOS DE LA HABILIDAD', 'HABILIDADES EQUIPADAS');
         if (gen.conBin) cab.push(...BIN_CAMPOS.map(c => cabBin(c[1], gen.conCsv)), cabBin('% HEADSHOT', gen.conCsv), cabBin('DAÑO POR ARMA', gen.conCsv));
         if (gen.conCsv) cab.push('DAÑO', 'HEADSHOTS', 'IMPACTOS', 'DISPAROS', '% HEADSHOT', 'PRECISIÓN %', 'REVIVIDAS', 'PAREDES GLOO', 'ASISTENCIAS', 'DERRIBOS', 'DAÑO POR ARMA',
             ...gen.colsCsv.map(c => 'CSV · ' + etiqueta(c)));
         const filas = gen.detalle.map(d => {
             const f = [d.sala, d.partida, d.fecha, d.mapa, d.modo, d.bin, d.equipo, d.jugador, d.id, d.kills, d.fuenteKills, d.booyah ? 'SI' : 'NO', mmss(d.vivo), d.distancia];
             if (gen.conReplay) f.push(d.bajas, d.caidas, d.levantado, d.primera, d.rematados, listaArmas(d.vs), listaArmas(d.armasKills));
+            if (gen.conHab) f.push(d.hab ? C().nombreHabilidad(d.hab.activa) : '', d.hab ? d.hab.usos : '',
+                d.hab ? d.hab.equipadas.map(h => h === d.hab.activa ? C().nombreHabilidad(h) : h).join(' | ') : '');
             if (gen.conBin) f.push(...BIN_CAMPOS.map(c => d.b ? d.b[c[0]] || 0 : ''), d.b ? pctHs(d.b) : '',
                 d.b ? armasBinDe(d.b.armas).map(([id, dn]) => `${C().nombreArma(+id)}: ${dn}`).join(' | ') : '');
             if (gen.conCsv) {
@@ -417,7 +431,15 @@
 .gen-marca { color: #7cc4ff; }
 .gen-tabla th.bin { color: #7cc4ff; }
 .gen-tabla td.bin { background: rgba(124,196,255,.07); }
-.gen-scroll { max-height: 420px; overflow: auto; margin-top: 12px; border: 1px solid rgba(216,195,149,.2); border-radius: 6px; }`;
+.gen-scroll { max-height: 420px; overflow: auto; margin-top: 12px; border: 1px solid rgba(216,195,149,.2); border-radius: 6px; }
+/* Base para usarlo suelto en otra página: con :where() no pesan nada, así que el CSS de la página manda */
+:where(.pg-gen .tool-desc) { color: #bbb; line-height: 1.7; }
+:where(.pg-gen .form-grid) { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 14px; }
+:where(.pg-gen .form-group label) { display: block; margin-bottom: 6px; color: #D8C395; font-size: .72rem; font-weight: 700; letter-spacing: .08em; }
+:where(.pg-gen .form-group select, .pg-gen .form-group input[type=file]) { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid rgba(216,195,149,.3); border-radius: 4px; background: #111; color: #eee; font: inherit; }
+:where(.pg-gen .form-hint) { color: #999; font-size: .85rem; }
+:where(.pg-gen .btn-generar) { min-height: 46px; padding: 12px 18px; border: 1px solid #D8C395; border-radius: 4px; background: #D8C395; color: #121317; font-weight: 800; cursor: pointer; }
+:where(.pg-gen .btn-generar:disabled) { opacity: .45; cursor: not-allowed; }`;
 
     function montar(contId) {
         const cont = $(contId);
@@ -428,6 +450,7 @@
             st.textContent = CSS;
             document.head.appendChild(st);
         }
+        cont.classList.add('pg-gen');
         cont.innerHTML = `
             <p class="tool-desc">
                 Sube los <b>replays</b> de cada sala: el <code>.json</code> y su <code>.bin</code> (se cruzan por el número de la partida).

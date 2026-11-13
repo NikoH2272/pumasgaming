@@ -6,16 +6,19 @@
      101 → ficha del jugador (account_id, PlayerID, nick)
      106 → cada impacto: atacante, víctima, daño, daño extra, arma×2, parte del cuerpo (1 cabeza · 2 torso · 3 piernas)
      139 → derribo (víctima, atacante) · 221 → pared gloo colocada · 393 → reanimación (quien levanta, a quien)
+     250 → habilidad activa: [PlayerID, habilidad, estado (2 lista · 1 la usa · 4 recarga)…]
+           la ficha 101 lleva las 4 habilidades equipadas ([8, h1, h2, h3, h4], terminan en 06)
      117 → zona segura: fase, círculo actual (zz x·1000, zz z·1000, radio), círculo siguiente, estado
            (1 anunciada · 2 cerrando · 6/7 la última, que se mueve) y duración (zz fin − zz inicio) / 500
    Comprobado contra los .csv de resultados completos (6 salas, 241 jugadores):
      paredes gloo, veces revivido, veces derribado, impactos a las piernas: exactos; headshots 240/241;
-     daño por arma 1181/1202 (el total puede variar unos puntos del oficial).
+     daño por arma 1181/1202 (el total puede variar unos puntos del oficial);
+     habilidades equipadas y habilidad activa 241/241; veces que usó la activa 237/241.
    Uso: PumasBin.leer(arrayBuffer) → { jugadores: Map(PlayerID → stats), cuentas: Map(account_id → PlayerID) }
    ===================================================================== */
 (function (raiz) {
-    const T_JUGADOR = 101, T_IMPACTO = 106, T_KILL = 107, T_ZONA = 117, T_DERRIBO = 139, T_GLOO = 221, T_EQUIPOS = 306, T_REANIMA = 393;
-    const QUIERO = new Set([T_JUGADOR, T_IMPACTO, T_KILL, T_ZONA, T_DERRIBO, T_GLOO, T_EQUIPOS, T_REANIMA]);
+    const T_JUGADOR = 101, T_IMPACTO = 106, T_KILL = 107, T_ZONA = 117, T_DERRIBO = 139, T_GLOO = 221, T_EQUIPOS = 306, T_REANIMA = 393, T_HABILIDAD = 250;
+    const QUIERO = new Set([T_JUGADOR, T_IMPACTO, T_KILL, T_ZONA, T_DERRIBO, T_GLOO, T_EQUIPOS, T_REANIMA, T_HABILIDAD]);
     const zz = n => n % 2 ? -(n + 1) / 2 : n / 2;
 
     // Mensajes 117 → { inicial: {x, z, r}, fases: [{ fase, anuncia, inicio, fin, x, z, r, movil }] } (coordenadas del mundo, metros)
@@ -52,7 +55,8 @@
 
     function nuevo(pid) {
         return { pid, account_id: '', nick: '', equipo: '', tag: '', kills: 0, dano: 0, danoJug: 0, impactos: 0, hs: 0, torso: 0, piernas: 0,
-            gloo: 0, reanimo: 0, revivido: 0, derribos: 0, derribado: 0, armas: {} };
+            gloo: 0, reanimo: 0, revivido: 0, derribos: 0, derribado: 0, armas: {},
+            activa: 0, usos: 0, usosPor: {}, habilidades: [] };
     }
 
     function leer(buffer) {
@@ -109,6 +113,14 @@
                 } else if (tipo === T_GLOO) {
                     const v = varints(u8, ini, fin, 16);
                     if (v.length === 16 && v[15] >= 16777216) J(v[15]).gloo++;
+                } else if (tipo === T_HABILIDAD) {
+                    // [PlayerID, habilidad, estado]: estado 1 = la activó
+                    const v = varints(u8, ini, fin, 3);
+                    if (v.length === 3 && v[0] >= 16777216 && v[1] % 100 === 6) {
+                        const j = J(v[0]);
+                        if (!j.activa) j.activa = v[1];
+                        if (v[2] === 1) { j.usos++; j.usosPor[v[1]] = (j.usosPor[v[1]] || 0) + 1; }
+                    }
                 } else if (tipo === T_REANIMA) {
                     const v = varints(u8, ini, fin, 2);
                     if (v.length === 2) { J(v[0]).reanimo++; J(v[1]).revivido++; }
@@ -142,6 +154,18 @@
                 break;
             }
         });
+        // Habilidades equipadas: en la ficha va [8 (=4×2), h1, h2, h3, h4]; todas terminan en 06 (7406 Oscar, 506…)
+        fichas.forEach(([pid, datos]) => {
+            const j = jug.get(pid);
+            if (j.habilidades.length) return;
+            const v = varints(datos, 0, datos.length, 600);
+            for (let i = 0; i + 4 < v.length; i++) {
+                const h = v.slice(i + 1, i + 5);
+                if (v[i] === 8 && h.every(x => x > 100 && x < 20000 && x % 100 === 6)) { j.habilidades = h; break; }
+            }
+        });
+        // La activa que más usó (si cambió de personaje en la partida)
+        jug.forEach(j => { const top = Object.entries(j.usosPor).sort((a, b) => b[1] - a[1])[0]; if (top) j.activa = +top[0]; });
         const equipos = new Map([...votos].map(([s, v]) => [s, [...v].sort((a, b) => b[1] - a[1])[0][0]]));
         return { jugadores: jug, cuentas, equipos, paquetes, duracion: Math.round(ultimo), zonas: zonasDe(zonaMsgs) };
     }

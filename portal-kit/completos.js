@@ -13,8 +13,10 @@
    Por defecto solo en Entrenos Pumas; el superadmin lo habilita para más eventos.
    ===================================================================== */
 (function () {
-    const P = window.PumasPortal;
-    const esc = P.escaparHtml;
+    // Sin portal.js (p. ej. el generador de CSV suelto en otro proyecto) funciona todo lo que
+    // no usa la base: leer replays/.bin/.csv, tablas y CSV. Lo que consulta la base sí lo necesita.
+    const P = window.PumasPortal || {};
+    const esc = P.escaparHtml || (s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
 
     // Nombres de mapa y modo según el número que trae el exportado (ajusta aquí si alguno sale distinto)
     const MAPAS = { 1: 'BERMUDA', 3: 'PURGATORIO', 4: 'KALAHARI', 22: 'NEXTERRA', 29: 'SOLARA' };   // comprobado con el centro de la zona inicial de los replays
@@ -57,6 +59,7 @@
         47: 'PARAFAL', 48: 'WOODPECKER', 50: 'MAG7', 51: 'SICKLE', 54: 'KORD', 55: 'M1917', 58: 'UZI', 74: 'G36', 75: 'M24', 86: 'CHARGE BUSTER', 89: 'AC80',
         93: 'TREATMENT PISTOL', 123: 'M60-III', 150: 'BIZON', 193: 'AUG-I', 196: 'FGL24', 197: 'VSK94', 228: 'MAC10-I', 601: 'GRENADE', 608: 'FLASH FREEZE',
         629: 'GROZA', 632: 'GOLDM249-X', 633: 'SVD', 635: 'AWM', 637: 'THOMPSON-GOLD', 638: 'THOMPSON-X', 805: 'M24-I', 806: 'M24-II',
+        812: 'HAWK', 814: 'SKORP', 815: 'RPK',   // confirmadas con la lista de IDs del juego
         21002: 'M590', 21006: 'WINCHESTER', 21007: 'WINCHESTER-I', 21008: 'WINCHESTER-II',
         // Sacadas de 192 .csv de resultados completos (weapon_id → weapon_name)
         2: 'M4A1', 5: 'M1014', 6: 'AK', 7: 'UMP', 9: 'EAGLE', 20: 'M1873', 24: 'FAMAS', 29: 'SPAS12', 33: 'AN94', 36: 'RGS50', 38: 'HOOK GUN',
@@ -83,6 +86,49 @@
     // Ids negativos (el .json los trae a veces en kills por zona, caída...) no son armas
     const nombreArma = id => (+id < 0 ? '' : aprendidas()[id] || ARMAS_FF[id] || ('ARMA #' + id));
 
+    /* ---------------- Habilidades activas (personajes) ----------------
+       El id termina en 06 (7406 = Oscar). Los nombres salen del skill_info del .csv oficial y se recuerdan;
+       el .bin trae la activa de cada jugador y cuántas veces la usó (tipo 250), y las 4 equipadas.
+       Imagen: imagenes/personajes/<Nombre>.png (la carpeta queda junto a portal-kit). */
+    const HABILIDADES = { 2606: 'Steffie', 3806: 'Chrono', 4006: 'Skyler', 4406: 'Xayne', 5606: 'Iris', 5806: 'Tatsuya',
+        7206: 'Koda', 7306: 'Chrono', 7406: 'Oscar', 7706: 'Morse' };
+    const LS_HAB = 'pg_habilidades_ff';
+    let habAprendidas = null;
+    const habGuardadas = () => { if (!habAprendidas) { try { habAprendidas = JSON.parse(localStorage.getItem(LS_HAB)) || {}; } catch (e) { habAprendidas = {}; } } return habAprendidas; };
+    const nombreHabilidad = id => (id ? habGuardadas()[id] || HABILIDADES[id] || ('HABILIDAD #' + id) : '');
+    const RUTA_PERSONAJES = (() => {
+        try { return new URL('../imagenes/personajes/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../imagenes/personajes/'; }
+    })();
+    const fotoHabilidad = id => { const n = habGuardadas()[id] || HABILIDADES[id]; return n ? RUTA_PERSONAJES + encodeURIComponent(n) + '.png' : ''; };
+    // Celda de tabla con la foto del personaje (en texto/CSV sale solo el nombre)
+    const celdaHabilidad = (id, extra) => {
+        const n = nombreHabilidad(id), f = fotoHabilidad(id), txt = n + (extra ? ' ' + extra : '');
+        return { html: `<span class="cpl-hab">${f ? `<img src="${f}" alt="" loading="lazy" onerror="this.remove()">` : ''}${esc(txt)}</span>`, toString: () => txt };
+    };
+    // skill_info del .csv → { activa, usos, usosPor } (y aprende los nombres)
+    function habilidadCSV(txt) {
+        let l = [];
+        try { l = JSON.parse(txt || '[]'); } catch (e) { try { l = JSON.parse(String(txt).replace(/'/g, '"').replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false')); } catch (e2) { l = []; } }
+        if (!Array.isArray(l) || !l.length) return null;
+        const m = habGuardadas(); let cambio = false;
+        const usosPor = {};
+        l.forEach(s => {
+            if (!s || !s.skill_id) return;
+            if (s.skill_name && m[s.skill_id] !== s.skill_name && HABILIDADES[s.skill_id] !== s.skill_name) { m[s.skill_id] = s.skill_name; cambio = true; }
+            usosPor[s.skill_id] = (usosPor[s.skill_id] || 0) + (+s.active_count || 0);
+        });
+        if (cambio) { try { localStorage.setItem(LS_HAB, JSON.stringify(m)); } catch (e) { /* solo esta vez */ } }
+        const top = Object.entries(usosPor).sort((a, b) => b[1] - a[1])[0];
+        return top ? { activa: +top[0], usos: Object.values(usosPor).reduce((a, b) => a + b, 0), usosPor } : null;
+    }
+    // Habilidad de un jugador en una sala: del .bin si lo hay, si no del .csv
+    function habilidadDe(j) {
+        const x = (j && j.extra) || {}, b = x.bin || {};
+        if (b.activa) return { activa: b.activa, usos: b.usos || 0 };
+        if (x.activa) return { activa: x.activa, usos: x.usos || 0 };
+        return null;
+    }
+
     // weapon_usages: JSON con comillas dobles; a veces viene con comillas simples (estilo Python)
     function leerArmas(txt) {
         if (!txt) return [];
@@ -104,6 +150,8 @@
         Object.entries(EXTRAS_CSV).forEach(([k, col]) => { const v = ent(r[col]); if (v > 0) x[k] = v; });
         const dist = String(r.kill_distance || '').match(/\d+(\.\d+)?/g);
         if (dist) x.distancia = Math.round(Math.max(...dist.map(Number)));
+        const h = habilidadCSV(r.skill_info);
+        if (h) { x.activa = h.activa; x.usos = h.usos; }
         return x;
     }
 
@@ -346,7 +394,8 @@
                 || porNick.get(norm(j.jugador));
             if (!x) return;
             j.extra = Object.assign({}, j.extra, { bin: { kills: x.kills, dano: x.dano, impactos: x.impactos, hs: x.hs, torso: x.torso, piernas: x.piernas,
-                gloo: x.gloo, reanimo: x.reanimo, revivido: x.revivido, derribos: x.derribos, derribado: x.derribado } });
+                gloo: x.gloo, reanimo: x.reanimo, revivido: x.revivido, derribos: x.derribos, derribado: x.derribado,
+                activa: x.activa || 0, usos: x.usos || 0, habilidades: x.habilidades || [] } });
             if (!j.account_id && x.account_id) j.account_id = x.account_id;
             if (!soloReplay) return;
             if (!j.killsLog) j.kills = x.kills;
@@ -467,7 +516,11 @@
             });
         });
         const listaEq = Object.values(eqs);
+        const habs = {};
+        todos.forEach(j => { const h = habilidadDe(j); if (!h) return;
+            const kh = nombreHabilidad(h.activa), y = habs[kh] = habs[kh] || { id: h.activa, nombre: kh, jugadores: 0, usos: 0 }; y.jugadores++; y.usos += h.usos; });
         const destacados = {
+            habilidadMasUsada: Object.values(habs).sort((a, b) => b.jugadores - a.jugadores || b.usos - a.usos)[0] || null,
             rivalidad: Object.values(rivales).sort((a, b) => b.veces - a.veces)[0] || null,
             masEliminoEquipos: Object.values(rematados).sort((a, b) => b.equipos - a.equipos)[0] || null,
             masDano: conDano ? mayor(jugadores, r => r.dano) : null,
@@ -613,6 +666,8 @@
         add(d.primeraSangre, 'jug', 'fa-droplet', 'Primera sangre', d.primeraSangre && d.primeraSangre.jugador, d.primeraSangre && (d.primeraSangre.veces > 1 ? `en ${d.primeraSangre.veces} salas` : `a ${esc(d.primeraSangre.victima || '')}`));
         add(d.armaMasUsada, 'jug', 'fa-gun', 'Arma más usada', d.armaMasUsada && d.armaMasUsada.arma, d.armaMasUsada && `${pl(d.armaMasUsada.usos, 'uso', 'usos')} · ${pl(d.armaMasUsada.kills, 'kill', 'kills')}`);
         add(d.armaMasLetal && d.armaMasLetal.kills > 0, 'jug', 'fa-skull', 'Arma con más kills', d.armaMasLetal && d.armaMasLetal.arma, d.armaMasLetal && pl(d.armaMasLetal.kills, 'kill', 'kills'));
+        add(d.habilidadMasUsada, 'jug', 'fa-wand-magic-sparkles', 'Habilidad activa más usada', d.habilidadMasUsada && d.habilidadMasUsada.nombre,
+            d.habilidadMasUsada && `${pl(d.habilidadMasUsada.jugadores, 'vez elegida', 'veces elegida')} · ${pl(d.habilidadMasUsada.usos, 'uso', 'usos')}`);
         add(d.equipoMasKills, 'eq', 'fa-fire', 'Equipo con más kills', d.equipoMasKills && d.equipoMasKills.equipo, d.equipoMasKills && pl(d.equipoMasKills.kills, 'kill', 'kills'));
         add(d.equipoMasDano, 'eq', 'fa-explosion', 'Equipo con más daño', d.equipoMasDano && d.equipoMasDano.equipo, d.equipoMasDano && `${fmt(d.equipoMasDano.dano)} de daño`);
         add(d.equipoMasBooyahs, 'eq', 'fa-trophy', 'Más booyahs', d.equipoMasBooyahs && d.equipoMasBooyahs.equipo, d.equipoMasBooyahs && pl(d.equipoMasBooyahs.booyahs, 'booyah', 'booyahs'));
@@ -653,12 +708,18 @@
         const dano = salas.some(s => s.fuente !== 'replay');
         const top = o => Object.entries(o || {}).sort((a, b) => b[1] - a[1])[0] || null;
         const rival = t => t ? `${t[0]} (${t[1]})` : '—';
-        const jug = new Map(), eqs = new Map(), armas = {};
+        const jug = new Map(), eqs = new Map(), armas = {}, habs = {};
         salas.forEach(s => {
             const enSala = new Set();
             s.jugadores.forEach(j => {
                 const x = j.extra || {}, b = x.bin || {};
                 const derribos = b.derribos !== undefined ? b.derribos : (j.derribos || 0);
+                const h = habilidadDe(j);
+                if (h) {
+                    const kh = nombreHabilidad(h.activa), y = habs[kh] = habs[kh] || { id: h.activa, veces: 0, usos: 0, kills: 0, booyahs: 0, porJug: {} };
+                    y.veces++; y.usos += h.usos; y.kills += j.kills || 0; y.booyahs += j.booyah ? 1 : 0;
+                    y.porJug[j.jugador] = (y.porJug[j.jugador] || 0) + h.usos;
+                }
                 const k = norm(j.account_id || j.jugador);
                 const p = jug.get(k) || { jugador: j.jugador, equipo: j.equipo, salas: 0, kills: 0, dano: 0, hs: 0, hits: 0, derribos: 0, gloo: 0, revivio: 0, revivido: 0, primeras: 0, rematados: 0, vs: {} };
                 p.salas++; p.kills += j.kills || 0; p.dano += j.dano || 0; p.hs += j.headshots || 0; p.hits += j.hits || 0; p.derribos += derribos;
@@ -684,6 +745,7 @@
         const lj = [...jug.values()].sort((a, b) => b.kills - a.kills || b.dano - a.dano).slice(0, 15);
         const le = [...eqs.values()].sort((a, b) => b.rematados - a.rematados || b.kills - a.kills);
         const la = Object.values(armas).filter(a => a.kills || a.dano).sort((a, b) => b.kills - a.kills || b.dano - a.dano).slice(0, 10);
+        const lh = Object.values(habs).sort((a, b) => b.veces - a.veces || b.usos - a.usos);
         const booyah = salas.map(s => {
             const g = s.jugadores.find(j => j.booyah);
             if (!g) return [s.etiqueta || 'S' + s.sala, MAPAS[s.mapa] || '—', '—', '', ...(dano ? ['', '', ''] : []), ''];
@@ -705,6 +767,10 @@
             { titulo: 'ARMAS MÁS USADAS', icono: 'fa-gun',
                 cab: ['#', 'ARMA', 'KILLS', ...(dano ? ['DAÑO'] : []), 'JUGADORES QUE LA USARON'],
                 filas: la.map((a, i) => [i + 1, a.arma, a.kills, ...(dano ? [fmt(a.dano)] : []), a.usos]) },
+            { titulo: 'HABILIDADES ACTIVAS', icono: 'fa-wand-magic-sparkles',
+                cab: ['#', 'PERSONAJE', 'VECES ELEGIDA', 'USOS', 'USOS POR SALA', 'KILLS DE QUIEN LA LLEVA', 'BOOYAHS', 'QUIEN MÁS LA USÓ'],
+                filas: lh.map((y, i) => [i + 1, celdaHabilidad(y.id), y.veces, y.usos, (y.usos / y.veces).toFixed(1), y.kills, y.booyahs,
+                    rival(top(y.porJug))]) },
             { titulo: 'BOOYAH POR SALA · CÓMO JUGÓ LA ESCUADRA', icono: 'fa-trophy',
                 cab: ['SALA', 'MAPA', 'EQUIPO', 'KILLS', ...(dano ? ['DAÑO', 'HS', 'GLOO'] : []), 'MVP DE LA ESCUADRA'], filas: booyah }
         ].filter(t => t.filas.length);
@@ -747,12 +813,14 @@
                 // Jugador
                 const k = norm(j.account_id || j.jugador);
                 const p = jug.get(k) || { jugador: j.jugador, equipo: j.equipo, salas: 0, kills: 0, dano: 0, hs: 0, hits: 0, torso: 0, piernas: 0, gloo: 0, revivio: 0,
-                    revivido: 0, derribos: 0, derribado: 0, booyahs: 0, primeras: 0, rematados: 0, vivo: 0, porMapa: {} };
+                    revivido: 0, derribos: 0, derribado: 0, booyahs: 0, primeras: 0, rematados: 0, vivo: 0, porMapa: {}, habs: {}, usosHab: 0 };
                 p.salas++; p.kills += j.kills || 0; p.dano += j.dano || 0; p.hs += j.headshots || 0; p.hits += j.hits || 0;
                 p.torso += b.torso !== undefined ? b.torso : (x.torso || 0); p.piernas += b.piernas !== undefined ? b.piernas : (x.piernas || 0);
                 p.gloo += j.gloo || 0; p.revivio += j.revividos || 0; p.revivido += revivido; p.derribos += derribos; p.derribado += derribado;
                 p.booyahs += j.booyah ? 1 : 0; p.primeras += x.primeraSangre ? 1 : 0; p.rematados += x.fin || 0; p.vivo += j.vivo || 0; p.equipo = j.equipo;
                 p.porMapa[mapa] = (p.porMapa[mapa] || 0) + (j.kills || 0);
+                const h = habilidadDe(j);
+                if (h) { p.habs[h.activa] = (p.habs[h.activa] || 0) + 1; p.usosHab += h.usos; }
                 jug.set(k, p);
                 // Equipo
                 const ke = norm(j.equipo);
@@ -772,10 +840,11 @@
         return [
             { titulo: `ACUMULADO POR JUGADOR · ${lj.length}`, icono: 'fa-user',
                 cab: ['#', 'JUGADOR', 'EQUIPO', 'SALAS', 'KILLS', 'K/SALA', ...(dano ? ['DAÑO', 'DAÑO/SALA', 'HS', '% HS', 'TORSO', 'PIERNAS', 'GLOO', 'REVIVIÓ'] : []),
-                    'VECES REVIVIDO', 'DERRIBOS', 'VECES DERRIBADO', 'BOOYAHS', '1ª SANGRE', 'REMATÓ', 'VIVO PROM.', 'MEJOR MAPA'],
+                    'VECES REVIVIDO', 'DERRIBOS', 'VECES DERRIBADO', 'BOOYAHS', '1ª SANGRE', 'REMATÓ', 'VIVO PROM.', 'MEJOR MAPA', 'HABILIDAD ACTIVA', 'USOS'],
                 filas: lj.map((p, i) => [i + 1, p.jugador, p.equipo, p.salas, p.kills, prom(p.kills, p.salas),
                     ...(dano ? [fmt(p.dano), prom(p.dano, p.salas, fmt), p.hs, pct(p.hs, p.hits), p.torso, p.piernas, p.gloo, p.revivio] : []),
-                    p.revivido, p.derribos, p.derribado, p.booyahs, p.primeras, p.rematados, prom(p.vivo, p.salas, mmss), conN(top(p.porMapa))]) },
+                    p.revivido, p.derribos, p.derribado, p.booyahs, p.primeras, p.rematados, prom(p.vivo, p.salas, mmss), conN(top(p.porMapa)),
+                    top(p.habs) ? celdaHabilidad(+top(p.habs)[0]) : '—', top(p.habs) ? p.usosHab : '—']) },
             { titulo: `ACUMULADO POR EQUIPO · ${le.length}`, icono: 'fa-people-group',
                 cab: ['#', 'EQUIPO', 'SALAS', 'BOOYAHS', 'KILLS', 'K/SALA', ...(dano ? ['DAÑO', 'DAÑO/SALA', 'HS', 'GLOO'] : []), 'DERRIBOS', 'VECES DERRIBADO',
                     'EQUIPOS ELIMINADOS', 'VIVO PROM.', 'MEJOR MAPA', 'MÁS BAJAS A'],
@@ -833,14 +902,14 @@
         return tablas.map(t => `<div class="cpl-tabla${clase ? ' ' + clase : ''}">
             <h4><i class="fa-solid ${t.icono}"></i> ${t.titulo}</h4>
             <div class="cpl-tabla-scroll"><table><thead><tr>${t.cab.map(c => `<th>${c}</th>`).join('')}</tr></thead>
-            <tbody>${t.filas.map(f => `<tr>${f.map((c, i) => `<td${i === 0 ? ' class="cpl-s"' : ''}>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`).join('');
+            <tbody>${t.filas.map(f => `<tr>${f.map((c, i) => `<td${i === 0 ? ' class="cpl-s"' : ''}>${c && c.html !== undefined ? c.html : esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`).join('');
     }
 
     function salasHTML(r, extra) {
         return tablasSalas(r).concat(extra || []).map(t => `<div class="cpl-tabla">
             <h4><i class="fa-solid ${t.icono}"></i> ${t.titulo}</h4>
             <div class="cpl-tabla-scroll"><table><thead><tr>${t.cab.map(c => `<th>${c}</th>`).join('')}</tr></thead>
-            <tbody>${t.filas.map(f => `<tr>${f.map((c, i) => `<td${i === 0 ? ' class="cpl-s"' : ''}>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`).join('');
+            <tbody>${t.filas.map(f => `<tr>${f.map((c, i) => `<td${i === 0 ? ' class="cpl-s"' : ''}>${c && c.html !== undefined ? c.html : esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`).join('');
     }
 
     function estilos() {
@@ -869,6 +938,7 @@
 .cpl-tabla tbody tr:hover{background:rgba(216,195,149,.06)}
 .cpl-tabla ::selection,.cpl-dest ::selection{background:#D8C395;color:#0a0b10}
 .cpl-tabla td.cpl-s{color:#D8C395;font-weight:bold}
+.cpl-hab{display:inline-flex;align-items:center;gap:8px}.cpl-hab img{width:30px;height:30px;object-fit:cover;object-position:top;border-radius:50%;background:#1D1D1D;border:1px solid rgba(216,195,149,.35)}
 .cpl-sel{min-height:38px;padding:6px 10px;border:1px solid rgba(216,195,149,.3);border-radius:4px;background:#0a0b10;color:#fff}
 .cpl-filtros{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
 .cpl-chip{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:6px 14px;border:1px solid rgba(216,195,149,.35);border-radius:20px;background:transparent;color:#D8C395;font-size:.82rem;cursor:pointer;transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .12s ease}
@@ -1110,6 +1180,7 @@
 
     window.PumasCompletos = {
         leerCSV, partidaDesdeCSV, partidaDesdeReplay, jugadoresDeLog, nombreArma, combinar, aplicarBin, equiposDelBin, aCSV, emparejar, calcular, filasBD, salasDesdeBD, idDeArchivo,
+        nombreHabilidad, fotoHabilidad, habilidadDe, HABILIDADES,
         habilitados, habilitado, destacadosHTML, escuadraHTML, salasHTML, tablasDetalle, tablasAcumulados, tablasHTML, montarSesion, imagenHTML, imagenSalasHTML, listaDestacados, tablasSalas, traerTodo, estilos, montarPublico, MAPAS, GRUPOS,
         guardar: (portal, sesion, filas) => P.stats.guardar(portal, sesion, filas),
         olvidarConfig: () => { cfgCache = null; }

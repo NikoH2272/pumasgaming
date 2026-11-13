@@ -3,6 +3,7 @@
 Cómo sacar estadísticas completas de cada jugador **solo con los replays de la sala**
 (`ReplayInfo_<partida>_<fecha>.json` + `.bin`), sin necesitar el `.csv` de resultados completos,
 guardarlas en Supabase y mostrarlas. Sirve para este proyecto y para llevarlo a otro.
+**Solo el generador de CSV, sin base de datos: ver la sección 7.**
 
 ---
 
@@ -48,6 +49,7 @@ Es una secuencia de paquetes, uno detrás de otro, hasta el final del archivo:
 | **221** | Pared gloo colocada | 16 varints; el **16º** es el PlayerID | 241/241 |
 | **306** | Equipos de la sala | `n×2`, y por equipo `[orden, puntos, ?, nombre, tag, id del clan]` | — |
 | **393** | Reanimación | `quien levanta, a quien levanta, …` | veces revivido 241/241 · reanimó 200/241 |
+| **250** | Habilidad activa | `PlayerID, habilidad, estado` (2 lista · **1 la usa** · 4 recarga) | activa 241/241 · veces que la usó 237/241 |
 
 **Impactos (106):**
 - daño real = `daño + daño extra`
@@ -61,6 +63,12 @@ Es una secuencia de paquetes, uno detrás de otro, hasta el final del archivo:
 **Nombre de cada escuadra (306 + 101):** la ficha 101 de cada jugador contiene los bytes del varint del
 `id del clan` de su equipo. Se vota por escuadra → nombre. 241/241. Esto arregla los equipos que el
 `.json` deja como `ESCUADRA 5` (los que nadie eliminó, normalmente el del booyah).
+
+**Habilidades (250 + 101):** la habilidad activa es la del mensaje 250 y cada `estado = 1` es un uso.
+La ficha 101 trae las **4 habilidades equipadas** como `[8, h1, h2, h3, h4]` (todas terminan en 06; 241/241 contra
+`skill_ids` del `.csv`). Nombres conocidos (tabla `HABILIDADES` en completos.js; el `.csv` enseña los nuevos con `skill_info`):
+`2606 Steffie · 3806 y 7306 Chrono · 4006 Skyler · 4406 Xayne · 5606 Iris · 5806 Tatsuya · 7206 Koda · 7406 Oscar · 7706 Morse`.
+Las pasivas no traen nombre en ningún archivo: salen como número. Foto del personaje: `imagenes/personajes/<Nombre>.png`.
 
 **Lo que NO se sacó del `.bin`** (está en paquetes de estado empaquetados por bits, tipos 2002/2054):
 daño recibido, curación, distancia recorrida. El daño recibido sumando los 106 solo cuadra 68/241.
@@ -150,10 +158,44 @@ la base: reutiliza el último cálculo del mismo filtro).
 | Pestaña | Qué muestra | Función |
 |---|---|---|
 | **TOP** | Destacados en tarjetas (MVP, más daño, mejor % HS, más derribos, primera sangre, arma más usada, equipos con más kills / daño / booyahs, más equipos eliminados…) y la escuadra más constante | `destacadosHTML`, `escuadraHTML` |
-| **ESTADÍSTICAS** | Por sala (tipo de partida, primera sangre y kill más lejana, MVP) + detalle: jugadores (top 15), equipos (quién eliminó a quién), armas más usadas, booyah por sala con los números de la escuadra | `tablasSalas`, `tablasDetalle` |
-| **ACUMULADOS** | Totales de todas las salas del filtro, con buscador: **por jugador** (todos: kills, K/sala, daño, daño/sala, HS, % HS, torso, piernas, gloo, revivió, veces revivido, derribos, veces derribado, booyahs, 1ª sangre, rematados, vivo promedio, mejor mapa) · **por equipo** (salas, booyahs, kills, K/sala, daño, daño/sala, HS, gloo, derribos, veces derribado, equipos eliminados, vivo promedio, mejor mapa, rival con más bajas) · **por mapa** (salas, kills, K/sala, daño, HS, gloo, duración promedio, equipo con más booyahs, jugador con más kills, arma con más kills) | `tablasAcumulados` |
+| **ESTADÍSTICAS** | Por sala (tipo de partida, primera sangre y kill más lejana, MVP) + detalle: jugadores (top 15), equipos (quién eliminó a quién), armas más usadas, **habilidades activas** (con la foto del personaje: veces elegida, usos, kills, booyahs, quién más la usó), booyah por sala con los números de la escuadra | `tablasSalas`, `tablasDetalle` |
+| **ACUMULADOS** | Totales de todas las salas del filtro, con buscador: **por jugador** (todos: kills, K/sala, daño, daño/sala, HS, % HS, torso, piernas, gloo, revivió, veces revivido, derribos, veces derribado, booyahs, 1ª sangre, rematados, vivo promedio, mejor mapa, habilidad activa y usos) · **por equipo** (salas, booyahs, kills, K/sala, daño, daño/sala, HS, gloo, derribos, veces derribado, equipos eliminados, vivo promedio, mejor mapa, rival con más bajas) · **por mapa** (salas, kills, K/sala, daño, HS, gloo, duración promedio, equipo con más booyahs, jugador con más kills, arma con más kills) | `tablasAcumulados` |
 
 Para llevarlo a otro portal: cargar `portal-kit/completos.js` y llamar
 `PumasCompletos.montarPublico('idDelContenedor', 'portal')` (lista general) o
 `PumasCompletos.montarSesion(elemento, 'portal', sesionId)` (un solo entreno). Cada tabla es
 `{ titulo, icono, cab, filas }` y se pinta con `tablasHTML(tablas, clase)`.
+
+---
+
+## 7. Generador de CSV suelto (copiar y usar)
+
+No necesita `portal.js`, Supabase ni base de datos: todo se lee en el navegador y no se guarda nada.
+Página lista: **`portal-kit/generador-csv.html`**.
+
+**Para llevarlo a otro proyecto** copia estos 4 archivos a una misma carpeta y abre la página:
+
+| Archivo | Qué es |
+|---|---|
+| `generador-csv.html` | La página (cámbiale título y colores si quieres) |
+| `completos.js` | Lectura de `.json` / `.log` / `.csv`, armas, mapas y armado del CSV |
+| `replay-bin.js` | Lector del `.bin` |
+| `generador-csv.js` | La herramienta: subida de archivos, vista previa en pestañas y descargas |
+
+**Para meterlo en una página que ya existe**, basta con:
+```html
+<div id="generadorCsv"></div>
+<script src="completos.js"></script>
+<script src="replay-bin.js"></script>
+<script src="generador-csv.js"></script>
+<script>PumasGenerador.montar('generadorCsv');</script>
+```
+Trae estilos base propios con peso cero (`:where`), así que si la página ya tiene estilos para
+`.form-group`, `.btn-generar`, etc., mandan los de la página.
+
+Qué sube el usuario: `.json` + `.bin` de cada sala (obligatorios), `.log` y `.csv` completos (opcionales).
+Descarga: CSV de **equipos**, de **jugadores** (todo el entreno) y **detalle por sala**.
+
+Opcional — nombres oficiales: si en la página existe `window.supabaseClient` (o `portal.js`) y una tabla
+`equipos_registrados(nombre)`, la opción "Usar el nombre oficial" corrige los nombres de los equipos.
+Sin eso, deja el nombre tal cual sale en la sala.

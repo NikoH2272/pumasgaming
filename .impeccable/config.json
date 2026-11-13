@@ -20,6 +20,57 @@
         ],
         "createdAt": "2026-11-11T22:39:03.182Z",
         "reason": "Claude: falso positivo del detector estático (no aplica inicio.css con .c-home); medido en el navegador: todos los contenedores tienen 14-76px de margen interior"
+      },
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-13T15:06:52.878Z",
+        "reason": "Claude: Inter is the body font of every existing results image (portal-kit/imagenes-resultados.js F_TXT); the poster has to match them"
+      },
+      {
+        "rule": "buried-raster",
+        "value": "*",
+        "files": [
+          "pruebas/presentacion-mapa.html"
+        ],
+        "createdAt": "2026-11-13T15:06:53.131Z",
+        "reason": "Claude: deliberate faint logo watermark (opacity .07), same treatment as the results images; visible in the exported PNG"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "pruebas/presentacion-proyectn.html"
+        ],
+        "createdAt": "2026-11-13T15:11:47.349Z",
+        "reason": "Claude: chrome title copies the ProyectN brand poster the user supplied as the style reference"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "pruebas/presentacion-proyectn.html"
+        ],
+        "createdAt": "2026-11-13T15:11:47.582Z",
+        "reason": "Claude: dark text sits on the lime glow (checked in the exported PNG), detector measures it against the base navy"
+      },
+      {
+        "rule": "wide-tracking",
+        "value": "*",
+        "files": [
+          "pruebas/presentacion-proyectn.html"
+        ],
+        "createdAt": "2026-11-13T15:12:08.503Z",
+        "reason": "Claude: wide-tracked mono copy reproduces the ProyectN brand poster the user supplied as the style reference"
+      },
+      {
+        "rule": "radial-spotlight-glow",
+        "value": "*",
+        "files": [
+          "pruebas/presentacion-proyectn.html"
+        ],
+        "createdAt": "2026-11-13T15:12:08.751Z",
+        "reason": "Claude: lime haze rising from the bottom reproduces the ProyectN brand poster the user supplied; the bottom copy is set on it"
       }
     ]
   }

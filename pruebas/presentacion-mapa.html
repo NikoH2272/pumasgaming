@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1080">
+<title>Presentación · Resultados completos</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Rojo de marca para fondos; para texto sobre negro, un rojo más claro (5.3:1) */
+  :root{--rojo:#E3121B;--rojo-texto:#FF2A33;--fondo:#0B0B0C;--piel:#F5F5F5;--gris:#A3A3A6;--t:'Barlow Condensed','Arial Narrow',sans-serif;--x:'Inter',Arial,sans-serif}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--fondo)}
+  #poster{position:relative;width:1080px;height:1350px;overflow:hidden;background:var(--fondo);color:var(--piel);font-family:var(--x)}
+  .franja{position:absolute;right:-320px;top:-120px;width:800px;height:1000px;background:linear-gradient(180deg,#2a0b0e,#110809);transform:rotate(19deg)}
+  .agua{position:absolute;right:-90px;top:120px;width:520px;opacity:.07}
+  .barra{position:absolute;top:0;left:0;width:300px;height:12px;background:var(--rojo)}
+  #poster>header{position:absolute;left:56px;right:56px;top:44px;display:flex;align-items:center;justify-content:space-between}
+  .marca{display:flex;align-items:center;gap:18px}.marca img{width:88px;height:88px;object-fit:contain}
+  .marca b{display:block;font:800 40px/1 var(--t)}.marca span{display:block;margin-top:9px;font:600 12px var(--x);letter-spacing:3px;color:var(--rojo-texto)}
+  .nuevo{display:flex;align-items:center;gap:12px}.nuevo b{background:var(--rojo);color:#fff;font:800 22px/1 var(--t);letter-spacing:2px;padding:9px 16px}.nuevo span{font:700 19px var(--t);color:var(--gris);letter-spacing:1px}
+  .kicker{position:absolute;left:56px;top:178px;font:700 15px var(--x);letter-spacing:5px;color:var(--rojo-texto)}
+  #poster>h1{position:absolute;left:52px;top:204px;margin:0;font:800 132px/.86 var(--t);letter-spacing:-2px;text-transform:uppercase}
+  #poster>h1 em{font-style:normal;color:var(--rojo-texto)}
+  .bajada{position:absolute;left:56px;top:438px;width:600px;margin:0;font:500 19px/1.45 var(--x);color:#d4d4d7}
+  .bajada b{color:#fff}
+  .chips{position:absolute;left:690px;top:300px;width:334px;display:flex;flex-direction:column;gap:10px}
+  .chips div{background:rgba(255,255,255,.04);border-left:4px solid var(--rojo);padding:10px 14px}
+  .chips b{display:block;font:800 21px/1.05 var(--t);letter-spacing:.4px}.chips span{display:block;margin-top:3px;font:500 13px/1.35 var(--x);color:var(--gris)}
+  .grid{position:absolute;left:56px;top:552px;display:grid;grid-template-columns:repeat(4,232px);gap:34px 16px}
+  .carta{position:relative;width:232px}
+  .vista{width:232px;height:290px;overflow:hidden;box-shadow:0 14px 30px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.1)}
+  .vista>.esc{width:1080px;height:1350px;transform:scale(.21482);transform-origin:0 0}
+  .carta.op .vista{box-shadow:0 14px 30px rgba(0,0,0,.6),0 0 0 2px var(--rojo)}
+  .rotulo{display:flex;align-items:center;justify-content:space-between;gap:6px;height:36px;font:800 19px/1 var(--t);letter-spacing:.5px}
+  .rotulo i{font-style:normal;font:700 11px var(--x);letter-spacing:1px;color:#fff;background:var(--rojo);padding:4px 6px}
+  #poster>footer{position:absolute;left:56px;right:56px;bottom:30px;display:flex;justify-content:space-between;align-items:center;border-top:2px solid #2c2c2e;padding-top:14px;font:500 15px var(--x);color:var(--gris)}
+  #poster>footer b{color:var(--piel)}
+</style>
+</head>
+<body>
+<div id="poster">
+  <div class="franja"></div>
+  <img class="agua" src="../imagenes/crazy-pumas.png" alt="">
+  <div class="barra"></div>
+  <header>
+    <div class="marca"><img src="../imagenes/crazy-pumas.png" alt="Crazy Pumas"><div><b>CRAZY PUMAS</b><span>ENTRENAMIENTOS OFICIALES</span></div></div>
+    <div class="nuevo"><b>NUEVO</b><span>RESULTADOS v.7.1</span></div>
+  </header>
+  <div class="kicker">AHORA EN CADA ENTRENO</div>
+  <h1>Resultados<br><em>completos</em></h1>
+  <p class="bajada">Del log y el replay de cada sala salen <b>todas estas imágenes</b>, listas para publicar en 4:5.</p>
+  <div class="chips">
+    <div><b>ESTILO CRAZY PUMAS O PUMAS</b><span>Rojo y negro por defecto, o el clásico negro y oro.</span></div>
+    <div><b>NUEVO: ANALÍTICA DE MAPA</b><span>Cierres de zona, zonas calientes, caídas y zonas finales.</span></div>
+    <div><b>DESCARGA A TU MEDIDA</b><span>Esta imagen, todas, o solo las que marques.</span></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <footer><b>@pumas.gaming.oficial</b><span>Crazy Pumas · Pumas Gaming</span><span>Dev por <b>proyectn.com</b></span></footer>
+</div>
+<script>window.PumasCompletos={MAPAS:{1:'Bermuda',3:'Purgatorio',4:'Kalahari',22:'Nexterra',29:'Solara'}};</script>
+<script src="zonas-demo.js"></script>
+<script src="../portal-kit/imagenes-resultados.js"></script>
+<script>
+  // Datos de prueba (los mismos equipos ficticios del laboratorio) + zonas y enfrentamientos reales de un replay por mapa
+  const Z = window.ZONAS_DEMO;
+  const equipos = ['AXE GAMING','M-19 ESPORTS','WASTED FFLA','PUMAS SPARRING','TRIOLOGY','KRAKEN ESPORT','LUKAS GAMER','INTI ESPORTS','NVO ESPORT','RAGNAR FURY','AVIGAL ACDM','VITALITYX'];
+  const salas = [1, 3, 22, 4, 29].map((id, s) => ({
+    sala: s + 1, etiqueta: 'S' + (s + 1), mapa: id, duracion: Z[id].dur, fuente: 'bin',
+    zonas: Z[id].zonas, bajasPos: Z[id].bajas.map(([t, x, z, ax, az]) => ({ t, x, z, ax, az })),
+    eliminados: equipos.slice().reverse().map((equipo, i, l) => ({ equipo, tiempo: Z[id].elim[i] || Math.round(110 + i * (880 / l.length)) })),
+    primeraSangre: { jugador: ['AX.Smoking','M19.Gomez','WAT.Willy','PG.Anyer','TRI.Diego'][s], victima: 'Rival', arma: ['M1887','SCAR','MP40','UMP','AWM'][s], tiempo: 43 + s * 11 },
+    jugadores: equipos.flatMap((equipo, t) => Array.from({ length: 4 }, (_, p) => {
+      const kills = t < 6 ? Math.max(0, 4 - Math.floor(t / 2) - p + s % 2) : 0, dano = Math.max(200, 2600 - t * 105 - p * 210 + s * 91);
+      return { account_id: t * 4 + p + 1, jugador: (t === 0 ? ['AX.Smoking','AX.Papoi','AX.Renzo','AX.Mateo'][p] : equipo.split(' ')[0] + '.' + ['Gomez','Sosa7','Kairi','Zeus'][p]), equipo, kills, dano,
+        headshots: Math.max(0, 12 - t - p), gloo: 12 + t % 4 + p, hits: 85 - t - p, derribos: Math.max(0, 9 - t - p), revividos: p % 2, vivo: Math.max(80, 1170 - t * 45 - p * 8), booyah: t === s % 5,
+        extra: { primeraSangre: t === s && p === 0, fin: t < 5 && p === 0 && kills >= 3 ? 1 : 0, vs: { [equipos[(t + 3) % equipos.length]]: kills }, bin: { derribos: Math.max(0, 9 - t - p) } },
+        armas: [{ n: ['M1887','SCAR','MP40','UMP'][p], k: kills, d: dano }] };
+    }))
+  }));
+  const imgs = PumasImagenes.generar({ salas, r: {}, meta: { fecha: '2026-11-13 19:00', moderador: 'CRAZY PUMAS', pagina: 'RESULTADOS COMPLETOS' }, base: '../', estilo: 'crazy' });
+  const elegir = [['pgImgTabla','TABLA GENERAL'],['pgImgMvp','MVP DETALLADO'],['pgImgCara1','CARA A CARA'],['pgImgEquipos','DUELO DE ESCUADRAS'],
+                  ['pgImgArmas','ARMAS Y BOOYAHS'],['pgImgMapa1','MAPA Y ZONAS',1],['pgImgFinales','ZONAS FINALES',1],['pgImgCaida2','ZONAS DE CAÍDA',1]];
+  document.getElementById('grid').innerHTML = elegir.map(([id, t, nuevo]) => {
+    const im = imgs.find(x => x.id === id);
+    return im ? `<div class="carta${nuevo ? ' op' : ''}"><div class="rotulo">${t}${nuevo ? '<i>NUEVO</i>' : ''}</div><div class="vista"><div class="esc">${im.html}</div></div></div>` : '';
+  }).join('');
+</script>
+</body>
+</html>

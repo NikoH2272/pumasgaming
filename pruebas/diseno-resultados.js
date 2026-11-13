@@ -8,13 +8,13 @@
     return Array.from({length:Number($('salas').value)},(_,s)=>({
       ...(()=>{const id=[1,3,22,4,29,1][s],z=(window.ZONAS_DEMO||{})[id];return z?{mapa:id,duracion:z.dur,zonas:z.zonas,bajasPos:z.bajas.map(([t,x,zz,ax,az])=>({t,x,z:zz,ax,az}))}:{mapa:s%3+1,duracion:1190+s*17};})(),
       sala:s+1,etiqueta:'S'+(s+1),fuente:$('sinDano').checked?'replay':'bin',
-      eliminados:nombres.slice().reverse().map((equipo,i,l)=>({equipo,tiempo:Math.round(110+i*(880/l.length))})),
+      eliminados:nombres.slice().reverse().filter(n=>n!==nombres[s%5]).map((equipo,i,l)=>({equipo,tiempo:Math.round(110+i*(880/l.length)),por:i%3===1?nombres[s%5]:nombres[(i+2)%nombres.length]})),
       primeraSangre:{jugador:['AX.Smoking','M19.Gomez','WAT.Willy','PG.Anyer','TRI.Diego','KRA.Nova'][s],victima:'Rival de prueba',arma:['M1887','SCAR','MP40','UMP','AWM','M4A1'][s],tiempo:43+s*11},
       jugadores:nombres.flatMap((equipo,t)=>Array.from({length:4},(_,p)=>{
         const kills=t<6?Math.max(0,4-Math.floor(t/2)-p+s%2):0;
         const dano=Math.max(200,2600-t*105-p*210+s*91);
         return {account_id:t*4+p+1,jugador:(t===0?['AX.Smoking','AX.Papoi','AX.Renzo','AX.Mateo'][p]:equipo.split(' ')[0]+'.'+['Gomez','Sosa7','Kairi','Zeus'][p])+($('largos').checked?'_NombreLargoDePrueba':''),equipo,kills,dano,headshots:Math.max(0,12-t-p),gloo:12+t%4+p,hits:85-t-p,derribos:Math.max(0,9-t-p),revividos:p%2,vivo:Math.max(80,1170-t*45-p*8),booyah:t===s%5,
-          extra:{primeraSangre:t===s&&p===0,fin:t<5&&p===0&&kills>=3?1:0,vs:{[nombres[(t+3)%nombres.length]]:kills},bin:{derribos:Math.max(0,9-t-p)}},armas:[{n:['M1887','SCAR','MP40','UMP'][p],k:kills,d:dano}]};
+          extra:{primeraSangre:t===s&&p===0,fin:t<5&&p===0&&kills>=3?1:0,vs:{[nombres[(t+3)%nombres.length]]:kills},bin:{activa:[2606,3806,4006,4406,5606,5806,7206,7406,7706][(t+p*2+s)%9],usos:2+((t+p+s)%5),derribos:Math.max(0,9-t-p)}},armas:[{n:['M1887','SCAR','MP40','UMP'][p],k:kills,d:dano}]};
       }))
     }));
   }

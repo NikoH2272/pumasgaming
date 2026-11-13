@@ -5,7 +5,8 @@
      2) MVP DETALLADO      · top jugadores: bajas, daño, primeras sangres, equipos rematados y rival con más bajas
      3) CARA A CARA (×sala)· MVP 1 vs MVP 2 de cada sala, con la imagen del personaje
      4) DUELO DE ESCUADRAS · top 5 de equipos que más eliminaron + líderes por equipo
-     5) ARMAS Y BOOYAHS    · armas con más kills y la escuadra del booyah de cada sala
+     5) HABILIDADES, GLOO Y ARMAS · habilidades activas más elegidas, paredes gloo y el arsenal
+     5b) BOOYAH (×sala)    · equipo campeón, sus jugadores, el MVP y las escuadras que eliminó
      6) ANALÍTICA DE MAPA (×sala) · cierres de zona (del .bin) y zonas calientes de enfrentamientos (del .json)
    Personajes por defecto: imagenes/personajes/mvp1.png y mvp2.png (se cambian en opts.personajes).
    Uso: PumasImagenes.generar({ salas, r, meta, puntosLog, base: '../', estilo: 'crazy'|'pumas' }) → [{ id, nombre, titulo, html }]
@@ -59,8 +60,8 @@
                 e.rematados += x.fin || 0;
                 Object.entries(x.vs || {}).forEach(([rv, n]) => { e.vs[rv] = (e.vs[rv] || 0) + n; });
                 const k = norm(j.account_id || j.jugador);
-                const p = jug.get(k) || { jugador: j.jugador, equipo: j.equipo, salas: 0, kills: 0, dano: 0, hs: 0, impactos: 0, derribos: 0, primeras: 0, rematados: 0, vs: {}, vivo: 0, armas: {} };
-                p.salas++; p.kills += j.kills || 0; p.dano += j.dano || 0; p.hs += j.headshots || 0; p.impactos += j.hits || 0; p.vivo += j.vivo || 0;
+                const p = jug.get(k) || { jugador: j.jugador, equipo: j.equipo, salas: 0, kills: 0, dano: 0, hs: 0, impactos: 0, derribos: 0, primeras: 0, rematados: 0, vs: {}, vivo: 0, gloo: 0, armas: {} };
+                p.salas++; p.gloo += j.gloo || 0; p.kills += j.kills || 0; p.dano += j.dano || 0; p.hs += j.headshots || 0; p.impactos += j.hits || 0; p.vivo += j.vivo || 0;
                 p.derribos += b.derribos !== undefined ? b.derribos : (j.derribos || 0);
                 p.primeras += x.primeraSangre ? 1 : 0; p.rematados += x.fin || 0; p.equipo = j.equipo;
                 Object.entries(x.vs || {}).forEach(([rv, n]) => { p.vs[rv] = (p.vs[rv] || 0) + n; });
@@ -94,10 +95,11 @@
             return { sala: i + 1, etiqueta: s.etiqueta || 'S' + (i + 1), mapa: (C().MAPAS || {})[s.mapa] || (s.mapa ? 'MAPA ' + s.mapa : ''), duracion: s.duracion || 0,
                 mvp1: orden[0] || null, mvp2: orden[1] || null, conDano: s.fuente !== 'replay', primeraSangre: s.primeraSangre || null,
                 mapaId: +s.mapa || 0, zonas: s.zonas || null, combates: s.bajasPos || [], eliminados: s.eliminados || [],
+                ganadores: esc_, rematadas: ganador ? (s.eliminados || []).filter(e => e.por && norm(e.por) === norm(ganador)) : [],
                 booyah: ganador ? { equipo: ganador, kills: sum(j => j.kills), dano: sum(j => j.dano), hs: sum(j => j.headshots), gloo: sum(j => j.gloo),
                     revividas: sum(j => j.revividos), mvp: mvpEsc ? mvpEsc.jugador : '', mvpKills: mvpEsc ? mvpEsc.kills : 0 } : null };
         });
-        return { equipos, jugadores, armas: listaArmas, porSala, conDano: salas.some(s => s.fuente !== 'replay') };
+        return { equipos, jugadores, armas: listaArmas, porSala, salas, conDano: salas.some(s => s.fuente !== 'replay') };
     }
 
     /* Composición editorial para exportar: medidas fijas, datos legibles y marca común.
@@ -110,8 +112,16 @@
         crazy: { nombre: 'Crazy Pumas', marca: 'CRAZY PUMAS', instagram: 'pumas.gaming.oficial', logo: 'imagenes/crazy-pumas.png', tamLogo: 96,
             logoAgua: 'imagenes/crazy-pumas.png', opAgua: .06,
             fondo: '#0B0B0C', franja: '#1C0A0C', fila1: '#161617', fila2: '#1F1F21', linea: '#3A1A1D', gris: '#9C9C9F',
-            acento: '#E3121B', sobre: '#FFFFFF', piel: '#F5F5F5' }
+            acento: '#E3121B', sobre: '#FFFFFF', piel: '#F5F5F5' },
+        // Oculto: solo lo ve el superadmin en el selector (soloSuper)
+        rowmaya: { nombre: 'ROW × MAYA', marca: 'ROW × MAYA', lema: 'SCRIMS · SALAS DE LIGA PARA COMUNIDAD', soloSuper: true, instagram: '', pie: 'FREE FIRE / SCRIMS', encabezado: 'Free Fire · Scrims ROW × MAYA', logoCarta: 'imagenes/maya.png',
+            logo: 'imagenes/row.png', logo2: 'imagenes/maya.png', tamLogo: 78, logoAgua: 'imagenes/maya.png', opAgua: .06,
+            fondoCss: 'linear-gradient(165deg,#2335C9 0%,#141C8E 30%,#0C1056 62%,#080A2E 100%)',
+            fondo: '#0C1056', franja: 'rgba(143,216,255,.07)', fila1: '#0B0F4A', fila2: '#151D7A', linea: '#3442A8', gris: '#AEB8EC',
+            acento: '#9EE3FF', sobre: '#080A2E', piel: '#F4F6FF' }
     };
+    // ¿El usuario de la sesión es superadmin? (solo cambia qué botones de estilo se ven)
+    const esSuper = () => { try { const x = window.PumasPortal && PumasPortal.sesion && PumasPortal.sesion(); return !!(x && x.rol === 'superadmin'); } catch (e) { return false; } };
     let estilo = 'crazy';   // siempre arranca en Crazy Pumas; el botón cambia solo mientras la página esté abierta
     let T = TEMAS.pumas;   // tema activo mientras se arma el HTML (plantilla() suelta usa el clásico)
     function horarios(fecha) {
@@ -126,7 +136,7 @@
     function lienzo(id, o, cuerpo) {
         const m = o.meta || {}, base = esc(o.base || '../');
         const horas = horarios(m.fechaISO || m.fecha);
-        return `<div id="${id}" class="pg-poster" style="position:relative;width:1080px;height:1350px;overflow:hidden;box-sizing:border-box;background:${T.fondo};color:${T.piel};font-family:${F_TXT};line-height:1.3;text-align:left;letter-spacing:normal">
+        return `<div id="${id}" class="pg-poster" style="position:relative;width:1080px;height:1350px;overflow:hidden;box-sizing:border-box;background:${T.fondoCss || T.fondo};color:${T.piel};font-family:${F_TXT};line-height:1.3;text-align:left;letter-spacing:normal">
             <style>
             #${id} *{font-family:inherit}
             #${id}>header,#${id}>main,#${id}>footer{width:auto;max-width:none;min-width:0;margin:0;padding:0;background:none;border:0;box-shadow:none;backdrop-filter:none;z-index:auto}
@@ -143,16 +153,16 @@
             #${id} .pg-small{font-size:15px;line-height:1.5;color:${T.gris}}#${id} .pg-number{font-family:${F_TIT};font-weight:800;font-variant-numeric:tabular-nums}
             </style>
             <div style="position:absolute;right:-260px;top:55px;width:760px;height:1000px;background:${T.franja};transform:rotate(19deg)"></div>
-            <img src="${base}${T.logoAgua}" alt="" style="position:absolute;right:-85px;top:200px;width:670px;height:670px;object-fit:contain;opacity:${T.opAgua}">
+            <img src="${base}${T.logoAgua}" alt="" onerror="this.remove()" style="position:absolute;right:-85px;top:200px;width:670px;height:670px;object-fit:contain;opacity:${T.opAgua}">
             <div style="position:absolute;top:0;right:0;width:240px;height:12px;background:${T.acento}"></div>
             <header style="position:absolute;left:52px;right:52px;top:42px;height:100px;display:flex;align-items:center;justify-content:space-between;gap:28px">
-                <div style="display:flex;align-items:center;gap:18px"><img src="${base}${T.logo}" alt="${esc(T.marca)}" style="width:${T.tamLogo}px;height:${T.tamLogo}px;object-fit:contain"><div><div style="font-family:${F_TIT};font-weight:800;font-size:39px;line-height:1">${esc(T.marca)}</div><div style="font-size:12px;font-weight:600;letter-spacing:3px;color:${T.acento};margin-top:10px">ENTRENAMIENTOS OFICIALES</div></div></div>
+                <div style="display:flex;align-items:center;gap:18px"><img src="${base}${T.logo}" alt="" onerror="this.remove()" style="width:${T.tamLogo}px;height:${T.tamLogo}px;object-fit:contain">${T.logo2 ? `<span style="font-family:${F_TIT};font-weight:800;font-size:34px;color:${T.acento}">×</span><img src="${base}${T.logo2}" alt="" onerror="this.remove()" style="width:${T.tamLogo}px;height:${T.tamLogo}px;object-fit:contain">` : ''}<div><div style="font-family:${F_TIT};font-weight:800;font-size:39px;line-height:1">${esc(T.marca)}</div><div style="font-size:12px;font-weight:600;letter-spacing:3px;color:${T.acento};margin-top:10px">${esc(T.lema || 'ENTRENAMIENTOS OFICIALES')}</div></div></div>
                 <div style="text-align:right;font-size:15px;line-height:1.3;color:${T.gris};flex-shrink:0"><div style="display:flex;justify-content:flex-end;gap:18px;align-items:baseline"><strong style="font-size:20px;color:${T.piel}">${esc(m.fechaCorta || '')}</strong><span>${esc(m.moderador || 'FREE FIRE')}</span></div>${horas.length?`<div style="display:flex;justify-content:flex-end;gap:22px;margin-top:12px">${horas.map(h=>`<div style="text-align:right"><span style="font-size:12px;font-weight:700;color:${T.gris}">${h.pais}</span> <b style="font-size:21px;color:${T.acento};font-variant-numeric:tabular-nums">${h.hora}</b></div>`).join('')}</div>`:''}</div>
             </header>
-            <div style="position:absolute;left:52px;right:52px;top:171px"><h1 class="pg-title" style="font-size:${o.tamTitulo || 88}px">${esc(o.titulo)}</h1><div style="margin-top:17px;font-size:17px;font-weight:500;color:${T.gris}">${esc(o.subtitulo || m.encabezado || 'Free Fire · Entrenos Pumas')}</div></div>
+            <div style="position:absolute;left:52px;right:52px;top:171px"><h1 class="pg-title" style="font-size:${o.tamTitulo || 88}px">${esc(o.titulo)}</h1><div style="margin-top:17px;font-size:17px;font-weight:500;color:${T.gris}">${esc(o.subtitulo || m.encabezado || T.encabezado || 'Free Fire · Entrenos Pumas')}</div></div>
             <main style="position:absolute;left:52px;right:52px;top:320px;bottom:120px">${cuerpo}</main>
             <footer style="position:absolute;left:52px;right:52px;bottom:35px;border-top:2px solid ${T.linea};padding-top:18px;display:flex;align-items:center;justify-content:space-between;font-size:15px;color:${T.gris}">
-                <span style="color:${T.piel};font-weight:600">@${esc(m.instagram || T.instagram)}</span><span>${esc(m.demo ? 'DATOS DE PRUEBA' : m.pagina || 'FREE FIRE / PUMAS')}</span><span style="display:flex;align-items:center;gap:9px">${m.logoDev?`<img src="${base}imagenes/personajes/proyectn.png" alt="" style="width:30px;height:30px;object-fit:contain">`:''}Dev por <b style="color:${T.piel}">proyectn.com</b></span>
+                <span style="color:${T.piel};font-weight:600">${T.instagram === '' ? esc(T.marca) : '@' + esc(m.instagram || T.instagram)}</span><span>${esc(m.demo ? 'DATOS DE PRUEBA' : m.pagina || T.pie || 'FREE FIRE / PUMAS')}</span><span style="display:flex;align-items:center;gap:9px">${m.logoDev?`<img src="${base}imagenes/personajes/proyectn.png" alt="" style="width:30px;height:30px;object-fit:contain">`:''}Dev por <b style="color:${T.piel}">proyectn.com</b></span>
             </footer>
         </div>`;
     }
@@ -186,7 +196,7 @@
     }
     function imgCara(d,s,o) {
         const a=s.mvp1,b=s.mvp2,p=o.personajes||[o.base+'imagenes/personajes/mvp1.png',o.base+'imagenes/personajes/mvp2.png'];
-        const card=(j,i)=>`<div style="position:relative;height:365px;overflow:hidden;background:${i===0?T.acento:T.piel}"><img src="${esc(o.base)}imagenes/personajes/logo-negro.png" alt="" style="position:absolute;right:-24px;top:5px;width:260px;height:260px;opacity:.08"><img src="${esc(p[i])}" alt="" style="position:absolute;width:100%;height:310px;object-fit:contain;object-position:center bottom;top:-20px"><div style="position:absolute;left:0;right:0;bottom:0;background:${T.fila2};padding:18px 22px"><div style="font-size:12px;color:${T.acento};font-weight:700;margin-bottom:7px">MVP ${i+1}</div><div style="font-family:${F_TIT};font-size:39px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j?j.jugador:'Sin segundo jugador')}</div><div class="pg-small" style="margin-top:8px">${esc(j?j.equipo:'—')}</div></div></div>`;
+        const card=(j,i)=>`<div style="position:relative;height:365px;overflow:hidden;background:${i===0?T.acento:T.piel}"><img src="${esc(o.base)}${T.logoCarta || 'imagenes/personajes/logo-negro.png'}" alt="" onerror="this.remove()" style="position:absolute;right:-24px;top:5px;width:260px;height:260px;object-fit:contain;opacity:.08"><img src="${esc(p[i])}" alt="" style="position:absolute;width:100%;height:310px;object-fit:contain;object-position:center bottom;top:-20px"><div style="position:absolute;left:0;right:0;bottom:0;background:${T.fila2};padding:18px 22px"><div style="font-size:12px;color:${T.acento};font-weight:700;margin-bottom:7px">MVP ${i+1}</div><div style="font-family:${F_TIT};font-size:39px;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j?j.jugador:'Sin segundo jugador')}</div><div class="pg-small" style="margin-top:8px">${esc(j?j.equipo:'—')}</div></div></div>`;
         const metricas=[['KILLS',x=>x.kills||0,fmt],...(s.conDano?[['DAÑO',x=>x.dano||0,fmt],['HEADSHOTS',x=>x.headshots||0,fmt]]:[]),['DERRIBOS',x=>((x.extra||{}).bin||{}).derribos||x.derribos||0,fmt],['TIEMPO VIVO',x=>x.vivo||0,mmss],...(s.conDano?[['PAREDES GLOO',x=>x.gloo||0,fmt]]:[])];
         return lienzo('pgImgCara'+s.sala,{...o,titulo:'CARA A CARA',subtitulo:`Sala ${s.sala} · ${s.mapa||'Free Fire'}${s.duracion?' · '+mmss(s.duracion):''}`},`
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">${card(a,0)}${card(b,1)}</div>
@@ -203,14 +213,103 @@
             <section style="margin-top:26px">${etiquetaSec('CARA A CARA · LAS DOS PRIMERAS')}${tabla([{t:'ESCUADRA',w:'2fr',al:'left'},{t:'KILLS',w:'80px'},{t:'BOOYAH',w:'95px'},...(d.conDano?[{t:'DAÑO',w:'125px'}]:[]),{t:'VIVO PROM.',w:'125px'}],top.slice(0,2).map(e=>[esc(e.equipo),e.kills,e.booyahs,...(d.conDano?[fmt(e.dano)]:[]),mmss(e.vivoProm)]),{fila:53,fs:27})}</section>
             <section style="margin-top:30px">${etiquetaSec('LÍDERES DEL ENTRENAMIENTO')}<div style="display:grid;grid-template-columns:repeat(${Math.max(1,lideres.length)},1fr);gap:12px">${lideres.map(x=>`<div style="padding:19px 17px;background:${T.fila2};min-width:0"><div style="font-size:12px;font-weight:700;color:${T.gris}">${x.t}</div><div class="pg-number" style="font-size:40px;line-height:1.3;color:${T.acento}">${x.v}</div><div style="font-family:${F_TIT};font-size:23px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x.e.equipo)}</div></div>`).join('')}</div></section>`);
     }
-    function imgArmas(d,o) {
-        const armas=d.armas.slice(0,5),max=Math.max(1,...armas.map(a=>a.kills));
-        const cols=[{t:'SALA',w:'60px'},{t:'BOOYAH / MAPA',w:'2fr',al:'left'},{t:'KILLS',w:'72px'},...(d.conDano?[{t:'DAÑO',w:'95px'},{t:'HS',w:'50px'},{t:'GLOO',w:'65px'}]:[]),{t:'MVP DE LA ESCUADRA',w:'1.7fr',al:'left'}];
-        const filas=d.porSala.map(s=>{const b=s.booyah;return [esc(s.etiqueta),b?sub(b.equipo,s.mapa):'—',b?b.kills:'—',...(d.conDano?[b?fmt(b.dano):'—',b?b.hs:'—',b?b.gloo:'—']:[]),b?sub(b.mvp,b.mvpKills+' kills'):'—']});
-        return lienzo('pgImgArmas',{...o,titulo:'ARMAS Y BOOYAHS',subtitulo:'Armas utilizadas y resultados por sala'},`
-            ${etiquetaSec('EL ARSENAL DEL ENTRENAMIENTO')}<div style="display:grid;grid-template-columns:1fr 95px 135px;gap:12px;color:${T.gris};font-size:13px;font-weight:600;padding-bottom:12px"><span>ARMA</span><span style="text-align:right">KILLS</span><span style="text-align:right">${d.conDano?'DAÑO':'USOS'}</span></div>
-            ${armas.map((a,i)=>`<div style="display:grid;grid-template-columns:40px 165px 1fr 80px 135px;gap:12px;align-items:center;height:64px;background:${i%2?T.fila2:T.fila1};padding:0 16px"><span class="pg-number" style="font-size:25px;color:${T.acento}">${i+1}</span><strong style="font-family:${F_TIT};font-size:31px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.arma)}</strong><div style="height:10px;background:${T.linea}"><div style="height:100%;width:${a.kills/max*100}%;background:${T.acento}"></div></div><span class="pg-number" style="font-size:35px;text-align:right">${a.kills}</span><span class="pg-number" style="font-size:30px;text-align:right;color:${T.gris}">${d.conDano?fmt(a.dano):a.usos}</span></div>`).join('')||'<p class="pg-small">Sin datos de armas disponibles.</p>'}
-            <section style="margin-top:37px">${etiquetaSec('BOOYAH POR SALA')}${tabla(cols,filas,{fila:64,fs:25})}</section>`);
+    /* ---------------- Habilidad activa de cada jugador (del .bin o del .csv, vía PumasCompletos) ---------------- */
+    const habDe = j => {
+        const c = C() || {};
+        if (c.habilidadDe) return c.habilidadDe(j);
+        const x = (j && j.extra) || {}, b = x.bin || {};
+        return b.activa ? { activa: b.activa, usos: b.usos || 0 } : x.activa ? { activa: x.activa, usos: x.usos || 0 } : null;
+    };
+    const habNombre = id => { const c = C() || {}; return c.nombreHabilidad ? c.nombreHabilidad(id) : 'HABILIDAD #' + id; };
+    const habFoto = id => { const c = C() || {}; return c.fotoHabilidad ? c.fotoHabilidad(id) : ''; };
+
+    // HABILIDADES, GLOO Y ARMAS: habilidades activas más elegidas, paredes gloo y el arsenal
+    function imgArmas(d, o) {
+        const habs = {};
+        d.salas.forEach(s => s.jugadores.forEach(j => {
+            const h = habDe(j); if (!h || !h.activa) return;
+            const y = habs[h.activa] = habs[h.activa] || { id: h.activa, veces: 0, usos: 0, kills: 0 };
+            y.veces++; y.usos += h.usos || 0; y.kills += j.kills || 0;
+        }));
+        const lh = Object.values(habs).sort((a, b) => b.veces - a.veces || b.usos - a.usos).slice(0, 6);
+        const totalGloo = d.jugadores.reduce((a, p) => a + (p.gloo || 0), 0);
+        const topGloo = d.jugadores.filter(p => p.gloo).sort((a, b) => b.gloo - a.gloo).slice(0, 5);
+        const eqGloo = d.equipos.slice().sort((a, b) => b.gloo - a.gloo)[0];
+        const armas = d.armas.slice(0, 5), max = Math.max(1, ...armas.map(a => a.kills));
+        const cartaHab = y => { const f = habFoto(y.id); return `<div style="position:relative;height:196px;background:${T.fila1};overflow:hidden;min-width:0">
+            ${f ? `<img src="${esc(f)}" alt="" onerror="this.remove()" style="position:absolute;left:0;right:0;top:4px;margin:auto;height:128px;width:100%;object-fit:contain;object-position:center bottom">` : ''}
+            <div style="position:absolute;left:0;right:0;bottom:0;background:${T.fila2};padding:8px 10px;line-height:1.1">
+                <div style="font-family:${F_TIT};font-size:22px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(habNombre(y.id))}</div>
+                <div style="font-size:11px;color:${T.gris};margin-top:3px"><b style="color:${T.acento}">${y.veces}</b> elegida · ${y.usos} usos</div></div></div>`; };
+        return lienzo('pgImgArmas', { ...o, titulo: 'HABILIDADES, GLOO Y ARMAS', tamTitulo: 66, subtitulo: 'Habilidades activas, paredes gloo y armas del entrenamiento' }, `
+            ${etiquetaSec('HABILIDADES ACTIVAS MÁS ELEGIDAS')}
+            ${lh.length ? `<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:9px">${lh.map(cartaHab).join('')}</div>` : '<p class="pg-small" style="height:196px">Sin datos de habilidades (vienen del .bin o del .csv de resultados completos).</p>'}
+            <section style="margin-top:24px">${etiquetaSec('PAREDES GLOO')}
+                <div style="display:grid;grid-template-columns:250px 1fr;gap:16px">
+                    <div style="background:${T.acento};color:${T.sobre};padding:20px 22px;display:flex;flex-direction:column;justify-content:center">
+                        <div class="pg-number" style="font-size:70px;line-height:.95">${fmt(totalGloo)}</div><div style="font-size:13px;font-weight:700;margin-top:6px">PAREDES PUESTAS</div>
+                        ${eqGloo && eqGloo.gloo ? `<div style="font-size:12px;font-weight:600;margin-top:14px;opacity:.8">Equipo que más puso</div><div style="font-family:${F_TIT};font-size:24px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(eqGloo.equipo)} · ${eqGloo.gloo}</div>` : ''}
+                    </div>
+                    ${tabla([{ t: '#', w: '44px' }, { t: 'JUGADOR / EQUIPO', w: '1fr', al: 'left' }, { t: 'GLOO', w: '90px', total: true }],
+                        topGloo.map((p, i) => [String(i + 1).padStart(2, '0'), sub(p.jugador, p.equipo), p.gloo]), { fila: 40, fs: 23, destacar: true })}
+                </div></section>
+            <section style="margin-top:24px">${etiquetaSec('EL ARSENAL DEL ENTRENAMIENTO')}
+                ${armas.map((a, i) => `<div style="display:grid;grid-template-columns:40px 165px 1fr 80px 135px;gap:12px;align-items:center;height:48px;background:${i % 2 ? T.fila2 : T.fila1};padding:0 16px;margin-bottom:3px"><span class="pg-number" style="font-size:23px;color:${T.acento}">${i + 1}</span><strong style="font-family:${F_TIT};font-size:27px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.arma)}</strong><div style="height:9px;background:${T.linea}"><div style="height:100%;width:${a.kills / max * 100}%;background:${T.acento}"></div></div><span class="pg-number" style="font-size:30px;text-align:right">${a.kills}<span style="font-size:13px;color:${T.gris}"> K</span></span><span class="pg-number" style="font-size:24px;text-align:right;color:${T.gris}">${d.conDano ? fmt(a.dano) : a.usos + ' usos'}</span></div>`).join('') || '<p class="pg-small">Sin datos de armas disponibles.</p>'}
+            </section>`);
+    }
+
+    // BOOYAH (×sala): el equipo campeón, sus jugadores con estadísticas, el MVP y las escuadras que eliminó
+    function imgBooyah(d, s, o) {
+        const b = s.booyah, jug = s.ganadores.slice().sort((a, c) => (c.kills || 0) - (a.kills || 0) || (c.dano || 0) - (a.dano || 0));
+        const mvp = jug[0], hm = mvp ? habDe(mvp) : null, foto = hm && hm.activa ? habFoto(hm.activa) : '';
+        const derr = j => ((j.extra || {}).bin || {}).derribos !== undefined ? j.extra.bin.derribos : (j.derribos || 0);
+        const rem = s.rematadas;
+        const resumenB = [[b.kills, 'KILLS'], [rem.length, 'ESCUADRAS ELIMINADAS'], ...(s.conDano ? [[fmt(b.dano), 'DAÑO'], [b.hs, 'HEADSHOTS']] : []), [b.gloo || 0, 'PAREDES GLOO'], [b.revividas || 0, 'REVIVIDAS']];
+        const cols = [{ t: 'JUGADOR', w: '1.6fr', al: 'left' }, { t: 'KILLS', w: '70px' }, ...(s.conDano ? [{ t: 'DAÑO', w: '92px' }, { t: 'HS', w: '56px' }] : []), { t: 'DERR.', w: '64px' }, { t: 'GLOO', w: '62px' }, { t: 'REV.', w: '56px' }, { t: 'HABILIDAD', w: '1.1fr', al: 'left' }];
+        const filas = jug.map(j => { const h = habDe(j); return [esc(j.jugador), j.kills || 0, ...(s.conDano ? [fmt(j.dano), j.headshots || 0] : []), derr(j), j.gloo || 0, j.revividos || 0, h && h.activa ? sub(habNombre(h.activa), (h.usos || 0) + ' usos') : '—']; });
+        return lienzo('pgImgBooyah' + s.sala, { ...o, titulo: 'BOOYAH', subtitulo: `Sala ${s.sala} · ${s.mapa || 'Free Fire'}${s.duracion ? ' · ' + mmss(s.duracion) : ''} · El equipo campeón de la sala` }, `
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:18px">
+                <div style="min-width:0"><div style="font-size:12px;letter-spacing:2px;color:${T.acento};font-weight:700;margin-bottom:6px">CAMPEÓN DE LA SALA ${s.sala}</div>
+                <div class="pg-number" style="font-size:74px;line-height:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(b.equipo)}</div></div>
+                <div style="flex-shrink:0;background:${T.acento};color:${T.sobre};padding:10px 18px;font-family:${F_TIT};font-size:30px;font-weight:800;letter-spacing:1px">#1 BOOYAH</div>
+            </div>
+            ${resumen(resumenB)}
+            <div style="display:grid;grid-template-columns:250px 1fr;height:250px;background:${T.fila1};margin-bottom:22px;overflow:hidden">
+                <div style="position:relative;background:${T.acento};overflow:hidden">
+                    <img src="${esc(foto || (o.base + 'imagenes/personajes/mvp1.png'))}" alt="" onerror="this.remove()" style="position:absolute;left:0;right:0;bottom:0;margin:auto;width:100%;height:240px;object-fit:contain;object-position:center bottom">
+                </div>
+                <div style="padding:22px 26px;min-width:0">
+                    <div style="font-size:12px;letter-spacing:2px;color:${T.acento};font-weight:700">MVP DEL BOOYAH</div>
+                    <div class="pg-number" style="font-size:54px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(mvp ? mvp.jugador : '—')}</div>
+                    <div class="pg-small" style="margin-bottom:14px">${hm && hm.activa ? 'Habilidad activa: ' + esc(habNombre(hm.activa)) + ' · ' + (hm.usos || 0) + ' usos' : esc(b.equipo)}</div>
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">${[['KILLS', mvp ? mvp.kills || 0 : 0], ...(s.conDano ? [['DAÑO', fmt(mvp ? mvp.dano : 0)], ['HEADSHOTS', mvp ? mvp.headshots || 0 : 0]] : [['GLOO', mvp ? mvp.gloo || 0 : 0], ['REVIVIDAS', mvp ? mvp.revividos || 0 : 0]]), ['DERRIBOS', mvp ? derr(mvp) : 0]]
+                        .map(([t, v]) => `<div style="background:${T.fila2};padding:10px 12px"><div class="pg-number" style="font-size:34px;line-height:1;color:${T.acento}">${v}</div><div style="font-size:11px;font-weight:700;color:${T.gris};margin-top:5px">${t}</div></div>`).join('')}</div>
+                </div>
+            </div>
+            ${etiquetaSec('LOS JUGADORES DEL BOOYAH')}${tabla(cols, filas, { fila: 52, fs: 25 })}
+            <section style="margin-top:22px">${etiquetaSec(`ESCUADRAS QUE ELIMINARON · ${rem.length}`)}
+                <div style="display:flex;flex-wrap:wrap;gap:8px">${rem.map(e => `<span style="background:${T.fila2};border-left:4px solid ${T.acento};padding:7px 12px;font-family:${F_TIT};font-size:21px;font-weight:700">${esc(e.equipo)} <span style="font-family:${F_TXT};font-size:12px;color:${T.gris};font-weight:600">${mmss(e.tiempo)}</span></span>`).join('') || '<p class="pg-small">No remataron escuadras en esta sala.</p>'}</div>
+            </section>`);
+    }
+
+    // ZONAS DE CAÍDA (todas las salas en una imagen): dónde se pelearon al aterrizar, hasta que cierra la Z1
+    function imgCaidas(d, o) {
+        const paneles = d.porSala.filter(s => PLANOS[s.mapaId] && fasesValidas(s).length).slice(0, 6)
+            .map(s => ({ s, z: imgMapa(d, s, o, 'caidaPanel') })).filter(x => x.z);
+        if (!paneles.length) return '';
+        const cols = paneles.length <= 4 && paneles.length !== 3 ? 2 : 3, gap = 18, ANCHO = 976, px = Math.floor((ANCHO - gap * (cols - 1)) / cols);
+        const tam = cols === 2 ? Math.min(px, 340) : px;
+        const panel = ({ s, z }) => `<div style="min-width:0;background:${T.fila1}">
+            <div style="display:flex;justify-content:space-between;align-items:center;height:34px;padding:0 12px;background:${T.acento};color:${T.sobre}">
+                <b style="font:800 20px ${F_TIT}">SALA ${s.sala}</b><span style="font:700 15px ${F_TIT};letter-spacing:.5px">${esc(String(s.mapa || '').toUpperCase())}</span></div>
+            <div style="position:relative;width:${tam}px;height:${tam}px;overflow:hidden;margin:0 auto;background:#0d1a22">${z.html(tam)}</div>
+            <div style="padding:10px 12px 12px;line-height:1.25">
+                <div style="font-family:${F_TIT};font-size:21px;font-weight:700">${z.enfr} enfrentamientos <span style="color:${T.gris};font-size:15px">· hasta ${mmss(z.corte)}</span></div>
+                <div style="font-size:12px;color:${T.gris};margin-top:3px">${z.elim} eq. eliminados en la caída${z.top[0] ? ' · punto 1: ' + z.top[0].n + ' enfr.' : ''}</div>
+            </div></div>`;
+        return lienzo('pgImgCaidas', { ...o, titulo: 'ZONAS DE CAÍDA', tamTitulo: 80, subtitulo: `${paneles.length} salas · Las peleas al aterrizar, hasta que cierra la Z1` }, `
+            <div style="display:grid;grid-template-columns:repeat(${cols},${px}px);gap:${gap}px">${paneles.map(panel).join('')}</div>
+            <p class="pg-small" style="margin-top:14px">El círculo blanco es dónde cae la Z1 · los números son los puntos más calientes de cada caída.</p>`);
     }
 
     /* ---------------- Analítica de mapa ---------------- */
@@ -274,7 +373,7 @@
     }
 
     function imgMapa(d, s, o, modo) {
-        const P = PLANOS[s.mapaId], fases = fasesValidas(s), base = esc(o.base || '../'), caida = modo === 'caida';
+        const P = PLANOS[s.mapaId], fases = fasesValidas(s), base = esc(o.base || '../'), caida = modo === 'caida' || modo === 'caidaPanel';
         const aU = x => (x - P.x0) / P.lado * 1000, aV = z => (P.z0 + P.lado - z) / P.lado * 1000, aR = r => r / P.lado * 1000;
         // Corte: cuando empieza a cerrar la Z1. Antes son las peleas de la caída (van en su propia imagen, opcional)
         const corte = fases[0] ? fases[0].inicio : 0;
@@ -311,6 +410,7 @@
                 html: px => vista(zx, zy, ladoZ, px, Math.max(4, ladoZ * .03), false, tarde) };
         }
         const zoom = '';
+        if (modo === 'caidaPanel') return { corte, top, enfr: pts.length, elim: s.eliminados.filter(e => e.tiempo < corte).length, html: px => vista(0, 0, 1000, px, 62, true) };
 
         const mapa = `<div style="position:relative;width:${PX}px;height:${PX}px;overflow:hidden;background:#0d1a22;border:1px solid ${T.linea}">
             ${vista(0, 0, 1000, PX, caida ? 40 : 28, true)}${zoom}
@@ -426,14 +526,17 @@
             { id: 'pgImgMvp', nombre: 'MVP_Detallado.png', titulo: 'MVP detallado', html: imgMvp(d, o) }];
         d.porSala.forEach(s => { if (s.mvp1) L.push({ id: 'pgImgCara' + s.sala, nombre: `Cara_a_cara_Sala_${s.sala}.png`, titulo: 'Cara a cara S' + s.sala, html: imgCara(d, s, o) }); });
         L.push({ id: 'pgImgEquipos', nombre: 'Duelo_de_escuadras.png', titulo: 'Duelo de escuadras', html: imgEquipos(d, o) },
-            { id: 'pgImgArmas', nombre: 'Armas_y_Booyahs.png', titulo: 'Armas y booyahs', html: imgArmas(d, o) });
+            { id: 'pgImgArmas', nombre: 'Habilidades_gloo_y_armas.png', titulo: 'Habilidades y armas', html: imgArmas(d, o) });
+        // Booyah de cada sala: equipo campeón, jugadores, MVP y escuadras que eliminó
+        d.porSala.forEach(s => { if (s.booyah && s.ganadores.length) L.push({ id: 'pgImgBooyah' + s.sala, nombre: `Booyah_Sala_${s.sala}.png`, titulo: 'Booyah S' + s.sala, html: imgBooyah(d, s, o) }); });
         // Analítica de mapa: solo las salas con zonas del .bin y un mapa conocido
         d.porSala.forEach(s => { if (PLANOS[s.mapaId] && fasesValidas(s).length) L.push({ id: 'pgImgMapa' + s.sala, nombre: `Analitica_de_mapa_Sala_${s.sala}.png`, titulo: 'Mapa S' + s.sala, opcional: true, html: imgMapa(d, s, o, 'zonas') }); });
         // Zonas finales: el zoom de las últimas zonas de todas las salas en una sola imagen (opcional)
         const finales = imgFinales(d, o);
         if (finales) L.push({ id: 'pgImgFinales', nombre: 'Zonas_finales.png', titulo: 'Zonas finales', opcional: true, html: finales });
-        // Zonas de caída: opcionales (vienen desmarcadas en "Descargar seleccionadas")
-        d.porSala.forEach(s => { if (PLANOS[s.mapaId] && fasesValidas(s).length) L.push({ id: 'pgImgCaida' + s.sala, nombre: `Zonas_de_caida_Sala_${s.sala}.png`, titulo: 'Caída S' + s.sala, opcional: true, html: imgMapa(d, s, o, 'caida') }); });
+        // Zonas de caída: todas las salas en una imagen (opcional)
+        const caidas = imgCaidas(d, o);
+        if (caidas) L.push({ id: 'pgImgCaidas', nombre: 'Zonas_de_caida.png', titulo: 'Caídas', opcional: true, html: caidas });
         return L;
     }
 
@@ -482,7 +585,7 @@
     /* Selector de estilo (Crazy Pumas / Pumas) para poner encima de las imágenes */
     function selectorHTML() {
         const b = (k, t) => `<button type="button" data-pg-estilo="${k}" aria-pressed="${estilo === k}" style="padding:9px 18px;border-radius:6px;cursor:pointer;font-weight:700;font-size:.85rem;letter-spacing:.5px;border:1px solid ${t.acento};background:${estilo === k ? t.acento : 'transparent'};color:${estilo === k ? t.sobre : t.acento}">${esc(t.nombre.toUpperCase())}</button>`;
-        return `<div class="pg-selector-estilo" role="group" aria-label="Estilo de las imágenes" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px"><span style="font-size:.8rem;color:#9a9a9a;margin-right:4px">Estilo:</span>${b('crazy', TEMAS.crazy)}${b('pumas', TEMAS.pumas)}</div>`;
+        return `<div class="pg-selector-estilo" role="group" aria-label="Estilo de las imágenes" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px"><span style="font-size:.8rem;color:#9a9a9a;margin-right:4px">Estilo:</span>${b('crazy', TEMAS.crazy)}${b('pumas', TEMAS.pumas)}${esSuper() ? b('rowmaya', TEMAS.rowmaya) : ''}</div>`;
     }
     function enlazarSelector(raiz, alCambiar) {
         if (!raiz) return;
@@ -493,7 +596,7 @@
         });
     }
     function setEstilo(k) {
-        if (!TEMAS[k]) return;
+        if (!TEMAS[k] || (TEMAS[k].soloSuper && !esSuper())) return;
         estilo = k;
     }
 
