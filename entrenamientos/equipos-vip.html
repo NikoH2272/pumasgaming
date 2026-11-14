@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-C79JND219Y');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Equipos VIP · Entrenamientos Pumas Gaming</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;1,700;1,800&family=Barlow:wght@400;500;600;700&family=Michroma&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="style.css?v=20261111a">
+<link rel="stylesheet" href="../portal-kit/tema-c.css?v=20261111l">
+<link rel="icon" href="imagenes/LOGO PUMAS WEB.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../portal-kit/portal.js?v=20261111c" data-portal="entrenamientos" data-modo="publico" data-sin-sorteo></script>
+
+<style>
+/* ── Variables ── */
+:root {
+    --vip-oro:    #DCCC9C;
+    --vip-oro2:   #b8a97a;
+    --vip-bg:     #0d0d0d;
+    --vip-s1:     #141414;
+    --vip-s2:     #1a1a1a;
+    --vip-s3:     #212121;
+    --vip-line:   rgba(220,204,156,.14);
+    --vip-line2:  rgba(220,204,156,.30);
+    --vip-gray:   #888;
+    --vip-gray2:  #bbb;
+}
+
+/* ── Layout ── */
+#evMain { min-height: 60vh; }
+
+/* ── Estado cargando / vacío ── */
+.ev-estado {
+    text-align: center;
+    color: var(--vip-gray);
+    padding: 60px 20px;
+}
+.ev-estado i { font-size: 2rem; color: var(--vip-oro); display: block; margin-bottom: 12px; }
+
+/* ════════════════════════════════════════
+   VISTA GRID: lista de equipos
+   ════════════════════════════════════════ */
+#vistaGrid { display: block; }
+#vistaGrid.oculto { display: none; }
+
+.ev-grid-wrap {
+    max-width: 1100px;
+    margin: 0 auto 60px;
+    padding: 0 20px;
+}
+
+/* Tabla de equipos estilo ranking */
+.ev-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--vip-line);
+}
+
+.ev-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0;
+    background: var(--vip-s1);
+    border-bottom: 1px solid var(--vip-line);
+    cursor: pointer;
+    transition: background .15s;
+    text-decoration: none;
+    color: inherit;
+}
+.ev-row:last-child { border-bottom: none; }
+.ev-row:hover { background: var(--vip-s2); }
+.ev-row:hover .ev-row-arrow { color: var(--vip-oro); }
+
+/* Número de ranking */
+.ev-row-num {
+    width: 44px;
+    flex-shrink: 0;
+    text-align: center;
+    font: 800 italic 1.1rem 'Barlow Condensed', sans-serif;
+    color: var(--vip-oro2);
+    padding: 0 8px;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--vip-line);
+    background: rgba(0,0,0,.2);
+}
+.ev-row-num.top1 { color: #ffd700; }
+.ev-row-num.top2 { color: #c0c0c0; }
+.ev-row-num.top3 { color: #cd7f32; }
+
+/* Logo */
+.ev-row-logo {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    padding: 8px;
+    flex-shrink: 0;
+    background: transparent;
+}
+
+/* Info: nombre + tag + ig */
+.ev-row-info {
+    flex: 1;
+    padding: 12px 14px;
+    min-width: 0;
+}
+.ev-row-nombre {
+    font: 800 italic 1.05rem 'Barlow Condensed', sans-serif;
+    color: var(--vip-oro);
+    letter-spacing: .03em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ev-row-sub {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 2px;
+    flex-wrap: wrap;
+}
+.ev-row-tag {
+    font-size: .72rem;
+    color: var(--vip-gray);
+    font-family: 'Michroma', sans-serif;
+    letter-spacing: .05em;
+}
+.ev-row-ig {
+    font-size: .72rem;
+    color: var(--vip-gray);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+}
+
+/* Stats en fila */
+.ev-row-stats {
+    display: flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    border-left: 1px solid var(--vip-line);
+}
+.ev-row-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border-right: 1px solid var(--vip-line);
+    min-width: 68px;
+}
+.ev-row-stat:last-child { border-right: none; }
+.ev-row-stat-n {
+    font: 800 italic 1.1rem 'Barlow Condensed', sans-serif;
+    color: var(--vip-oro);
+}
+.ev-row-stat-l {
+    font-size: .56rem;
+    color: var(--vip-gray);
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-top: 1px;
+}
+
+/* Flecha */
+.ev-row-arrow {
+    width: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vip-gray);
+    font-size: .8rem;
+    border-left: 1px solid var(--vip-line);
+    align-self: stretch;
+    transition: color .15s;
+}
+
+@media (max-width: 600px) {
+    .ev-row-stat { padding: 8px 10px; min-width: 50px; }
+    .ev-row-stat-n { font-size: .95rem; }
+    .ev-row-logo { width: 42px; height: 42px; padding: 6px; }
+    .ev-row-num { width: 34px; font-size: .95rem; }
+}
+@media (max-width: 420px) {
+    .ev-row-stats { display: none; }
+}
+
+/* ════════════════════════════════════════
+   VISTA EQUIPO: sub-página de detalle
+   ════════════════════════════════════════ */
+#vistaEquipo { display: none; }
+#vistaEquipo.abierto { display: block; }
+
+/* Volver */
+.ev-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid var(--vip-line);
+    color: var(--vip-gray2);
+    font: 700 italic .82rem 'Barlow Condensed', sans-serif;
+    letter-spacing: .07em;
+    padding: 9px 18px;
+    cursor: pointer;
+    margin: 20px 20px 0;
+    transition: color .15s, border-color .15s;
+}
+.ev-volver:hover { color: var(--vip-oro); border-color: var(--vip-oro); }
+
+/* Banner del equipo */
+.ev-banner {
+    max-width: 1100px;
+    margin: 16px auto 0;
+    padding: 0 20px;
+}
+.ev-banner-inner {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 28px 28px 24px;
+    background: var(--vip-s1);
+    border: 1px solid var(--vip-line2);
+    flex-wrap: wrap;
+}
+.ev-banner-logo {
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+    background: rgba(0,0,0,.3);
+    padding: 8px;
+    border: 1px solid var(--vip-line);
+    flex-shrink: 0;
+}
+.ev-banner-info { flex: 1; min-width: 180px; }
+.ev-banner-nombre {
+    font: 800 italic 2rem 'Barlow Condensed', sans-serif;
+    color: var(--vip-oro);
+    letter-spacing: .05em;
+    line-height: 1;
+    margin: 0 0 6px;
+}
+.ev-banner-sub {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.ev-banner-tag {
+    font: 700 italic .85rem 'Barlow Condensed', sans-serif;
+    color: var(--vip-gray);
+    letter-spacing: .08em;
+}
+.ev-banner-ig {
+    font-size: .8rem;
+    color: var(--vip-gray);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.ev-banner-ig:hover { color: var(--vip-oro); }
+.ev-banner-stats {
+    display: flex;
+    border: 1px solid var(--vip-line);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+.ev-ban-stat {
+    padding: 14px 24px;
+    text-align: center;
+    border-right: 1px solid var(--vip-line);
+    background: rgba(0,0,0,.2);
+}
+.ev-ban-stat:last-child { border-right: none; }
+.ev-ban-stat-n {
+    font: 800 italic 1.6rem 'Barlow Condensed', sans-serif;
+    color: var(--vip-oro);
+    display: block;
+}
+.ev-ban-stat-l {
+    font-size: .58rem;
+    color: var(--vip-gray);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    display: block;
+    margin-top: 2px;
+}
+@media (max-width: 600px) {
+    .ev-ban-stat { padding: 10px 14px; }
+    .ev-ban-stat-n { font-size: 1.2rem; }
+    .ev-banner-logo { width: 68px; height: 68px; }
+    .ev-banner-nombre { font-size: 1.5rem; }
+}
+
+/* Sección de jugadores */
+.ev-jugadores-sec {
+    max-width: 1100px;
+    margin: 2px auto 60px;
+    padding: 0 20px;
+}
+
+.ev-jugadores-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 20px 0 10px;
+    border-bottom: 2px solid var(--vip-oro);
+    margin-bottom: 0;
+}
+.ev-jugadores-tit {
+    font: 800 italic 1.3rem 'Barlow Condensed', sans-serif;
+    color: var(--vip-oro);
+    letter-spacing: .07em;
+    margin: 0;
+}
+.ev-jugadores-sub {
+    font-size: .72rem;
+    color: var(--vip-gray);
+}
+
+/* Tabla de jugadores */
+.ev-tabla-jugadores {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .82rem;
+}
+.ev-tabla-jugadores thead th {
+    font: 700 italic .68rem 'Barlow Condensed', sans-serif;
+    color: var(--vip-gray);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--vip-line);
+    background: var(--vip-s1);
+    white-space: nowrap;
+}
+.ev-tabla-jugadores thead th.r { text-align: right; }
+.ev-tabla-jugadores tbody tr {
+    border-bottom: 1px solid var(--vip-line);
+    transition: background .12s;
+}
+.ev-tabla-jugadores tbody tr:last-child { border-bottom: none; }
+.ev-tabla-jugadores tbody tr:hover { background: var(--vip-s2); }
+.ev-tabla-jugadores tbody tr:nth-child(odd) { background: rgba(0,0,0,.12); }
+.ev-tabla-jugadores tbody tr:nth-child(odd):hover { background: var(--vip-s2); }
+.ev-tabla-jugadores td {
+    padding: 11px 12px;
+    color: var(--vip-gray2);
+}
+.ev-tabla-jugadores td.r { text-align: right; }
+.ev-tabla-jugadores td.nick {
+    font: 700 italic 1rem 'Barlow Condensed', sans-serif;
+    color: var(--vip-oro);
+    letter-spacing: .03em;
+    white-space: nowrap;
+}
+.ev-tabla-jugadores td.num {
+    font: 800 italic 1rem 'Barlow Condensed', sans-serif;
+    color: #ddd;
+    text-align: right;
+}
+.ev-tabla-jugadores td.arma {
+    font-size: .72rem;
+    color: var(--vip-gray);
+    white-space: nowrap;
+}
+.ev-tabla-jugadores td .hs-pct {
+    font-size: .7rem;
+    color: var(--vip-gray);
+    margin-left: 4px;
+}
+/* rank indicator */
+.ev-tabla-jugadores td.rnk {
+    font: 800 italic .9rem 'Barlow Condensed', sans-serif;
+    color: var(--vip-gray2);
+    text-align: center;
+    width: 36px;
+}
+.ev-tabla-jugadores td.rnk.top1 { color: #ffd700; }
+.ev-tabla-jugadores td.rnk.top2 { color: #c0c0c0; }
+.ev-tabla-jugadores td.rnk.top3 { color: #cd7f32; }
+
+@media (max-width: 540px) {
+    .ev-tabla-jugadores thead th.hide-sm,
+    .ev-tabla-jugadores td.hide-sm { display: none; }
+}
+</style>
+</head>
+<body class="c-tema">
+
+<header class="site-header">
+    <div class="logo-container">
+        <img src="imagenes/LOGO PUMAS WEB.png" alt="Logo Pumas Gaming" class="logo-img">
+        <div class="logo">PUMAS GAMING</div>
+    </div>
+    <button class="menu-toggle" aria-label="Abrir menú" aria-controls="mainNav"
+            onclick="document.getElementById('mainNav').classList.toggle('is-active')">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+    <nav class="main-nav" id="mainNav">
+        <ul>
+            <li><a href="../"><i class="fa-solid fa-house"></i> Portal</a></li>
+            <li><a href="./"><i class="fa-solid fa-globe"></i> Resultados</a></li>
+            <li><a href="cupos-vip.html"><i class="fa-solid fa-ticket"></i> Cupos VIP</a></li>
+            <li><a href="estadisticas.html"><i class="fa-solid fa-chart-simple"></i> Estadísticas</a></li>
+            <li><a href="equipos-vip.html" aria-current="page" style="color:var(--primary)"><i class="fa-solid fa-crown"></i> Equipos VIP</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section class="c-cab" style="padding: 44px 20px 36px;">
+    <div class="c-rayo" aria-hidden="true"></div>
+    <div class="c-rayo fino" aria-hidden="true"></div>
+    <h1>Equipos <em>VIP</em></h1>
+    <p>Equipos registrados en los entrenamientos oficiales de Pumas Gaming.</p>
+</section>
+
+<main id="evMain">
+    <!-- Vista: lista de equipos -->
+    <div id="vistaGrid">
+        <div class="ev-estado">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Cargando equipos...
+        </div>
+    </div>
+
+    <!-- Vista: detalle de un equipo (sub-página) -->
+    <div id="vistaEquipo">
+        <button class="ev-volver" onclick="volverGrid()">
+            <i class="fa-solid fa-arrow-left"></i> TODOS LOS EQUIPOS
+        </button>
+        <div class="ev-banner">
+            <div class="ev-banner-inner" id="evBannerInner"></div>
+        </div>
+        <div class="ev-jugadores-sec">
+            <div class="ev-jugadores-header">
+                <h2 class="ev-jugadores-tit"><i class="fa-solid fa-users" style="margin-right:8px"></i>JUGADORES</h2>
+                <span class="ev-jugadores-sub" id="evJugadoresSub"></span>
+            </div>
+            <div id="evJugadoresContenido"></div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <p>&copy; 2026 PUMAS GAMING. Todos los derechos reservados.</p>
+    <p class="footer-sub">BY PROYECTO N &nbsp;·&nbsp; <a href="https://www.instagram.com/pumasgaming.oficial/" target="_blank" rel="noopener">@pumasgaming.oficial</a></p>
+</footer>
+
+<script>
+(function () {
+
+/* ── Helpers ── */
+const fmtNum = n => n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n ?? 0);
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function logoSrc(url) {
+    if (!url) return 'imagenes/LOGO PUMAS WEB.png';
+    if (url.startsWith('http') || url.startsWith('imagenes/LOGO')) return url;
+    return '../' + url;
+}
+
+function igUrl(ig) {
+    if (!ig) return null;
+    const h = ig.replace(/^@/, '').trim();
+    return h ? 'https://www.instagram.com/' + h + '/' : null;
+}
+
+/* ── Estado ── */
+let equiposData = [];
+const jugsCache = {};
+
+/* ── Render fila de equipo (vista grid) ── */
+function htmlEquipoRow(eq, idx) {
+    const logo  = logoSrc(eq.logo_url || eq.logo);
+    const ig    = eq.instagram || eq.ig || '';
+    const igHref = igUrl(ig);
+    const ses   = eq.sesiones  ?? 0;
+    const kil   = eq.kills     ?? 0;
+    const boo   = eq.booyahs   ?? 0;
+    const rk    = idx + 1;
+    const rkCls = rk === 1 ? 'top1' : rk === 2 ? 'top2' : rk === 3 ? 'top3' : '';
+    return `
+    <div class="ev-row" role="button" tabindex="0"
+         onclick="abrirEquipo(${idx})"
+         onkeydown="if(event.key==='Enter'||event.key===' ')abrirEquipo(${idx})">
+        <div class="ev-row-num ${rkCls}">${rk}</div>
+        <img class="ev-row-logo" src="${esc(logo)}" alt="Logo ${esc(eq.nombre)}"
+             onerror="this.src='imagenes/LOGO PUMAS WEB.png'">
+        <div class="ev-row-info">
+            <div class="ev-row-nombre">${esc(eq.nombre)}</div>
+            <div class="ev-row-sub">
+                <span class="ev-row-tag">[${esc(eq.tag)}]</span>
+                ${ig ? `<span class="ev-row-ig"><i class="fa-brands fa-instagram" style="font-size:.65rem"></i>${esc(ig.replace(/^@/,''))}</span>` : ''}
+            </div>
+        </div>
+        <div class="ev-row-stats">
+            <div class="ev-row-stat">
+                <span class="ev-row-stat-n">${ses}</span>
+                <span class="ev-row-stat-l">Ses</span>
+            </div>
+            <div class="ev-row-stat">
+                <span class="ev-row-stat-n">${fmtNum(kil)}</span>
+                <span class="ev-row-stat-l">Kills</span>
+            </div>
+            <div class="ev-row-stat">
+                <span class="ev-row-stat-n">${boo}</span>
+                <span class="ev-row-stat-l">Booyahs</span>
+            </div>
+        </div>
+        <div class="ev-row-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+    </div>`;
+}
+
+/* ── Render tabla de jugadores ── */
+function htmlTablajugadores(jugs) {
+    if (!jugs.length) {
+        return '<p style="color:var(--vip-gray);text-align:center;padding:28px 0">Sin datos de jugadores todavía.</p>';
+    }
+    const filas = jugs.map((j, i) => {
+        const rk  = i + 1;
+        const rkCls = rk === 1 ? 'top1' : rk === 2 ? 'top2' : rk === 3 ? 'top3' : '';
+        const hsPct = j.kills > 0 ? Math.round((j.headshots / j.kills) * 100) : 0;
+        return `
+        <tr>
+            <td class="rnk ${rkCls}">${rk}</td>
+            <td class="nick">${esc(j.jugador || '—')}</td>
+            <td class="num">${j.sesiones ?? 0}</td>
+            <td class="num">${fmtNum(j.kills)}</td>
+            <td class="num hide-sm">${j.headshots ?? 0}<span class="hs-pct">${hsPct ? hsPct + '%' : ''}</span></td>
+            <td class="num hide-sm">${fmtNum(j.dano)}</td>
+            <td class="arma hide-sm">${j.arma ? esc(j.arma) : '—'}</td>
+        </tr>`;
+    }).join('');
+
+    return `
+    <table class="ev-tabla-jugadores">
+        <thead>
+            <tr>
+                <th style="width:36px">#</th>
+                <th>Jugador</th>
+                <th class="r">Ses</th>
+                <th class="r">Kills</th>
+                <th class="r hide-sm">HS</th>
+                <th class="r hide-sm">Daño</th>
+                <th class="hide-sm">Arma</th>
+            </tr>
+        </thead>
+        <tbody>${filas}</tbody>
+    </table>`;
+}
+
+/* ── Abrir sub-página de equipo ── */
+async function abrirEquipo(idx) {
+    const eq  = equiposData[idx];
+    if (!eq) return;
+
+    const logo  = logoSrc(eq.logo_url || eq.logo);
+    const ig    = eq.instagram || eq.ig || '';
+    const igHref = igUrl(ig);
+    const ses   = eq.sesiones  ?? 0;
+    const kil   = eq.kills     ?? 0;
+    const boo   = eq.booyahs   ?? 0;
+    const pts   = eq.puntos    ?? 0;
+
+    /* Banner */
+    document.getElementById('evBannerInner').innerHTML = `
+        <img class="ev-banner-logo" src="${esc(logo)}"
+             alt="Logo ${esc(eq.nombre)}"
+             onerror="this.src='imagenes/LOGO PUMAS WEB.png'">
+        <div class="ev-banner-info">
+            <h2 class="ev-banner-nombre">${esc(eq.nombre)}</h2>
+            <div class="ev-banner-sub">
+                <span class="ev-banner-tag">[${esc(eq.tag)}]</span>
+                ${ig ? `<a class="ev-banner-ig" href="${esc(igHref||'#')}" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i>${esc(ig.replace(/^@/,''))}</a>` : ''}
+            </div>
+        </div>
+        <div class="ev-banner-stats">
+            <div class="ev-ban-stat">
+                <span class="ev-ban-stat-n">${ses}</span>
+                <span class="ev-ban-stat-l">Sesiones</span>
+            </div>
+            <div class="ev-ban-stat">
+                <span class="ev-ban-stat-n">${fmtNum(kil)}</span>
+                <span class="ev-ban-stat-l">Kills</span>
+            </div>
+            <div class="ev-ban-stat">
+                <span class="ev-ban-stat-n">${boo}</span>
+                <span class="ev-ban-stat-l">Booyahs</span>
+            </div>
+            <div class="ev-ban-stat">
+                <span class="ev-ban-stat-n">${pts}</span>
+                <span class="ev-ban-stat-l">Puntos</span>
+            </div>
+        </div>`;
+
+    /* Spinner de jugadores */
+    document.getElementById('evJugadoresSub').textContent = '';
+    document.getElementById('evJugadoresContenido').innerHTML =
+        '<div class="ev-estado" style="padding:30px 0"><i class="fa-solid fa-spinner fa-spin"></i></div>';
+
+    /* Cambiar vista */
+    document.getElementById('vistaGrid').classList.add('oculto');
+    document.getElementById('vistaEquipo').classList.add('abierto');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    /* Cargar jugadores */
+    if (jugsCache[idx]) {
+        document.getElementById('evJugadoresSub').textContent = jugsCache[idx].sub;
+        document.getElementById('evJugadoresContenido').innerHTML = jugsCache[idx].html;
+        return;
+    }
+    try {
+        const c = PumasPortal.db();
+        if (!c) throw new Error('sin conexión');
+        const { data, error } = await c.rpc('vip_jugadores_equipo', { p_nombre: eq.nombre });
+        if (error) throw new Error(error.message);
+        const jugs = Array.isArray(data) ? data : [];
+        const sub = jugs.length ? `${jugs.length} jugador${jugs.length !== 1 ? 'es' : ''}` : '';
+        const html = htmlTablajugadores(jugs);
+        jugsCache[idx] = { html, sub };
+        document.getElementById('evJugadoresSub').textContent = sub;
+        document.getElementById('evJugadoresContenido').innerHTML = html;
+    } catch (e) {
+        document.getElementById('evJugadoresContenido').innerHTML =
+            '<p style="color:var(--vip-gray);text-align:center;padding:28px 0">No se pudieron cargar los jugadores.</p>';
+        console.warn('vip_jugadores_equipo:', e.message);
+    }
+}
+window.abrirEquipo = abrirEquipo;
+
+/* ── Volver al grid ── */
+function volverGrid() {
+    document.getElementById('vistaEquipo').classList.remove('abierto');
+    document.getElementById('vistaGrid').classList.remove('oculto');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+window.volverGrid = volverGrid;
+
+/* ── Montar grid con datos reales ── */
+async function montar() {
+    const grid = document.getElementById('vistaGrid');
+    try {
+        const c = PumasPortal.db();
+        if (!c) throw new Error('sin conexión');
+        const { data, error } = await c.rpc('vip_equipos_publico');
+        if (error) throw new Error(error.message);
+        equiposData = Array.isArray(data) ? data : [];
+    } catch (e) {
+        grid.innerHTML = `<div class="ev-estado">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            No se pudieron cargar los equipos VIP.
+        </div>`;
+        return;
+    }
+
+    if (!equiposData.length) {
+        grid.innerHTML = `<div class="ev-estado">
+            <i class="fa-solid fa-users-slash"></i>
+            No hay equipos VIP aprobados todavía.
+        </div>`;
+        return;
+    }
+
+    const filas = equiposData.map((eq, i) => htmlEquipoRow(eq, i)).join('');
+    grid.innerHTML = `
+        <div class="ev-grid-wrap">
+            <div class="ev-lista">${filas}</div>
+        </div>`;
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', montar);
+} else {
+    montar();
+}
+})();
+</script>
+</body>
+</html>

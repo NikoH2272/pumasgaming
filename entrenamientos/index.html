@@ -42,7 +42,7 @@
             <li id="navJuegos" hidden><a href="juegos.html"><i class="fa-solid fa-gamepad"></i> Juegos</a></li>
             <li><a href="#" onclick="cambiarPestanaPublica('global')" id="navGlobal" style="color: var(--primary);"><i class="fa-solid fa-globe"></i> General</a></li>
             <li><a href="estadisticas.html" id="navAnalisis" style="color: var(--secondary);"><i class="fa-solid fa-chart-simple"></i> Estadísticas</a></li>
-            <li><a href="#" onclick="cambiarPestanaPublica('vip')" id="navVip" style="color: var(--secondary);"><i class="fa-solid fa-shield-halved"></i> Resultados Equipos VIP</a></li>
+            <li><a href="equipos-vip.html" id="navVip" style="color: var(--secondary);"><i class="fa-solid fa-shield-halved"></i> Equipos VIP</a></li>
             <li><a href="login.html" class="btn-access" style="padding: 8px 18px; font-size: 0.9rem;"><i class="fa-solid fa-user-lock"></i> Iniciar Sesión</a></li>
         </ul>
     </nav>
@@ -260,7 +260,7 @@
                 top100: () => ocultar(document.getElementById('modulo-top100')),
                 destacados: () => ocultar(document.getElementById('modulo-destacados')),
                 analisis: () => { ocultar(li('#navAnalisis')); ocultar(document.getElementById('vistaAnalisis')); },
-                vip: () => { ocultar(li('#navVip')); ocultar(document.getElementById('vistaVip')); }
+                vip: () => { ocultar(document.getElementById('vistaVip')); }
             };
             ocultos.forEach(id => mapa[id] && mapa[id]());
         })();

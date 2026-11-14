@@ -293,6 +293,86 @@
             </section>`);
     }
 
+    /* ---------------- Todas las salas en una sola imagen ---------------- */
+    // Alto de cada fila según cuántas salas hay (caben hasta 6 en los 910 px del cuerpo)
+    const altoFila = (n, max) => Math.min(max, Math.floor((900 - 10 * (n - 1)) / Math.max(1, n)));
+    const etiquetaSala = s => `<div style="display:flex;flex-direction:column;justify-content:center;gap:4px;background:${T.acento};color:${T.sobre};padding:0 14px;min-width:0">
+        <b style="font:800 30px/1 ${F_TIT}">SALA ${s.sala}</b><span style="font:700 13px ${F_TXT};letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(String(s.mapa || '').toUpperCase())}</span>
+        ${s.duracion ? `<span style="font:600 12px ${F_TXT};opacity:.75">${mmss(s.duracion)}</span>` : ''}</div>`;
+
+    // CARA A CARA: MVP 1 contra MVP 2 de cada sala
+    function imgCaras(d, o) {
+        const salas = d.porSala.filter(s => s.mvp1).slice(0, 6);
+        if (!salas.length) return '';
+        const h = altoFila(salas.length, 160);
+        const derr = j => (((j || {}).extra || {}).bin || {}).derribos !== undefined ? j.extra.bin.derribos : ((j || {}).derribos || 0);
+        const datosJ = (s, j) => [['K', j ? j.kills || 0 : 0, fmt], ...(s.conDano ? [['DAÑO', j ? j.dano || 0 : 0, fmt], ['HS', j ? j.headshots || 0 : 0, fmt]] : [['DERR.', derr(j), fmt]]), ['VIVO', j ? j.vivo || 0 : 0, mmss]];
+        const jugador = (s, j, rival, lado) => {
+            const a = datosJ(s, j), b = datosJ(s, rival);
+            return `<div style="min-width:0;padding:14px 18px;display:flex;flex-direction:column;justify-content:center;text-align:${lado}">
+                <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:${T.acento}">MVP ${lado === 'left' ? 1 : 2}</div>
+                <div class="pg-number" style="font-size:${h > 130 ? 34 : 28}px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j ? j.jugador : '—')}</div>
+                <div class="pg-small" style="font-size:13px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(j ? j.equipo : 'Sin segundo jugador')}</div>
+                <div style="display:flex;gap:16px;margin-top:8px;justify-content:${lado === 'left' ? 'flex-start' : 'flex-end'}">${a.map(([t, v, f], k) => `<div><div class="pg-number" style="font-size:24px;line-height:1;color:${v >= b[k][1] && j ? T.acento : T.piel}">${f(v)}</div><div style="font-size:10px;font-weight:700;color:${T.gris};margin-top:3px">${t}</div></div>`).join('')}</div>
+            </div>`;
+        };
+        return lienzo('pgImgCaras', { ...o, titulo: 'CARA A CARA', subtitulo: `${salas.length} salas · El MVP 1 contra el MVP 2 de cada sala` }, `
+            <div style="display:flex;flex-direction:column;gap:10px">${salas.map((s, i) => `<div style="display:grid;grid-template-columns:150px 1fr 54px 1fr;height:${h}px;background:${i % 2 ? T.fila2 : T.fila1}">
+                ${etiquetaSala(s)}${jugador(s, s.mvp1, s.mvp2, 'left')}
+                <div style="display:flex;align-items:center;justify-content:center;font:800 26px ${F_TIT};color:${T.gris}">VS</div>
+                ${jugador(s, s.mvp2, s.mvp1, 'right')}</div>`).join('')}</div>`);
+    }
+
+    // BOOYAH: el campeón de cada sala con sus números, el MVP y sus jugadores
+    function imgBooyahs(d, o) {
+        const salas = d.porSala.filter(s => s.booyah && s.ganadores.length).slice(0, 6);
+        if (!salas.length) return '';
+        const h = altoFila(salas.length, 168);
+        const fila = (s, i) => {
+            const b = s.booyah, jug = s.ganadores.slice().sort((a, c) => (c.kills || 0) - (a.kills || 0) || (c.dano || 0) - (a.dano || 0));
+            const mvp = jug[0], hm = mvp ? habDe(mvp) : null, foto = hm && hm.activa ? habFoto(hm.activa) : '';
+            const nums = [[b.kills, 'KILLS'], [s.rematadas.length, 'ESC. ELIMINADAS'], ...(s.conDano ? [[fmt(b.dano), 'DAÑO']] : [[b.gloo || 0, 'GLOO']])];
+            return `<div style="display:grid;grid-template-columns:150px 1fr 290px;height:${h}px;background:${i % 2 ? T.fila2 : T.fila1};overflow:hidden">
+                ${etiquetaSala(s)}
+                <div style="min-width:0;padding:12px 18px;display:flex;flex-direction:column;justify-content:center">
+                    <div class="pg-number" style="font-size:${h > 140 ? 38 : 30}px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(b.equipo)}</div>
+                    <div style="display:flex;gap:22px;margin-top:8px">${nums.map(([v, t]) => `<div><div class="pg-number" style="font-size:26px;line-height:1;color:${T.acento}">${v}</div><div style="font-size:10px;font-weight:700;color:${T.gris};margin-top:3px">${t}</div></div>`).join('')}</div>
+                    <div style="font-size:12px;color:${T.gris};margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${jug.map(j => esc(j.jugador) + ' <b style="color:' + T.piel + '">' + (j.kills || 0) + '</b>').join(' · ')}</div>
+                </div>
+                <div style="position:relative;display:grid;grid-template-columns:${Math.round(h * .62)}px 1fr;background:${T.fondo}">
+                    <div style="position:relative;overflow:hidden;background:${T.acento}">${foto ? `<img src="${esc(foto)}" alt="" onerror="this.remove()" style="position:absolute;left:0;top:0;width:100%;height:auto">` : ''}</div>
+                    <div style="padding:12px 14px;min-width:0;display:flex;flex-direction:column;justify-content:center">
+                        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:${T.acento}">MVP</div>
+                        <div class="pg-number" style="font-size:24px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(mvp ? mvp.jugador : '—')}</div>
+                        <div style="font-size:12px;color:${T.gris};margin-top:4px">${mvp ? (mvp.kills || 0) + ' kills' + (s.conDano ? ' · ' + fmt(mvp.dano) + ' daño' : '') : ''}</div>
+                        ${hm && hm.activa ? `<div style="font-size:12px;color:${T.gris}">${esc(habNombre(hm.activa))}</div>` : ''}
+                    </div>
+                </div></div>`;
+        };
+        return lienzo('pgImgBooyahs', { ...o, titulo: 'BOOYAH', subtitulo: `${salas.length} salas · El equipo campeón de cada sala` }, `
+            <div style="display:flex;flex-direction:column;gap:10px">${salas.map(fila).join('')}</div>`);
+    }
+
+    // ANALÍTICA DE MAPA: los cierres y zonas calientes de cada sala (sin la caída)
+    function imgMapas(d, o) {
+        const paneles = d.porSala.filter(s => PLANOS[s.mapaId] && fasesValidas(s).length).slice(0, 6)
+            .map(s => ({ s, z: imgMapa(d, s, o, 'zonasPanel') })).filter(x => x.z);
+        if (!paneles.length) return '';
+        const cols = paneles.length <= 4 && paneles.length !== 3 ? 2 : 3, gap = 18, ANCHO = 976, px = Math.floor((ANCHO - gap * (cols - 1)) / cols);
+        const tam = cols === 2 ? Math.min(px, 340) : px;
+        const panel = ({ s, z }) => `<div style="min-width:0;background:${T.fila1}">
+            <div style="display:flex;justify-content:space-between;align-items:center;height:34px;padding:0 12px;background:${T.acento};color:${T.sobre}">
+                <b style="font:800 20px ${F_TIT}">SALA ${s.sala}</b><span style="font:700 15px ${F_TIT};letter-spacing:.5px">${esc(String(s.mapa || '').toUpperCase())}</span></div>
+            <div style="position:relative;width:${tam}px;height:${tam}px;overflow:hidden;margin:0 auto;background:#0d1a22">${z.html(tam)}</div>
+            <div style="padding:10px 12px 12px;line-height:1.25">
+                <div style="font-family:${F_TIT};font-size:21px;font-weight:700">Z${z.fin.fase} · ${z.fin.r} m <span style="color:${T.gris};font-size:15px">· cerró ${mmss(z.fin.fin)}</span></div>
+                <div style="font-size:12px;color:${T.gris};margin-top:3px">${z.enfr} enfrentamientos · ${z.pct}% mientras cerraba${z.top[0] ? ' · punto 1: ' + z.top[0].n : ''}</div>
+            </div></div>`;
+        return lienzo('pgImgMapas', { ...o, titulo: 'ANALÍTICA DE MAPA', tamTitulo: 80, subtitulo: `${paneles.length} salas · Cierres de zona y zonas calientes (sin la caída)` }, `
+            <div style="display:grid;grid-template-columns:repeat(${cols},${px}px);gap:${gap}px">${paneles.map(panel).join('')}</div>
+            <p class="pg-small" style="margin-top:14px">Círculos: cada cierre de zona (la final en color) · calor: enfrentamientos desde que cierra la Z1 · números: puntos más calientes.</p>`);
+    }
+
     // ZONAS DE CAÍDA (todas las salas en una imagen): dónde se pelearon al aterrizar, hasta que cierra la Z1
     function imgCaidas(d, o) {
         const paneles = d.porSala.filter(s => PLANOS[s.mapaId] && fasesValidas(s).length).slice(0, 6)
@@ -411,6 +491,11 @@
                 html: px => vista(zx, zy, ladoZ, px, Math.max(4, ladoZ * .03), false, tarde) };
         }
         const zoom = '';
+        if (modo === 'zonasPanel') {
+            const fin = fases.filter(f => !f.movil).slice(-1)[0] || fases[ultimo];
+            const cierre = pts.filter(p => fases.some(f => p.t >= f.inicio && p.t < f.fin)).length;
+            return { fin, top, enfr: pts.length, pct: pts.length ? Math.round(cierre / pts.length * 100) : 0, html: px => vista(0, 0, 1000, px, 45, true) };
+        }
         if (modo === 'caidaPanel') return { corte, top, enfr: pts.length, elim: s.eliminados.filter(e => e.tiempo < corte).length, html: px => vista(0, 0, 1000, px, 62, true) };
 
         const mapa = `<div style="position:relative;width:${PX}px;height:${PX}px;overflow:hidden;background:#0d1a22;border:1px solid ${T.linea}">
@@ -525,13 +610,17 @@
         const o = { meta: m, base: x.base || '../', personajes: x.personajes };
         const L = [{ id: 'pgImgTabla', nombre: 'Tabla_General.png', titulo: 'Tabla general', html: imgTabla(d, o) },
             { id: 'pgImgMvp', nombre: 'MVP_Detallado.png', titulo: 'MVP detallado', html: imgMvp(d, o) }];
-        d.porSala.forEach(s => { if (s.mvp1) L.push({ id: 'pgImgCara' + s.sala, nombre: `Cara_a_cara_Sala_${s.sala}.png`, titulo: 'Cara a cara S' + s.sala, html: imgCara(d, s, o) }); });
+        // Cara a cara: todas las salas en una imagen
+        const caras = imgCaras(d, o);
+        if (caras) L.push({ id: 'pgImgCaras', nombre: 'Cara_a_cara.png', titulo: 'Cara a cara', html: caras });
         L.push({ id: 'pgImgEquipos', nombre: 'Duelo_de_escuadras.png', titulo: 'Duelo de escuadras', html: imgEquipos(d, o) },
             { id: 'pgImgArmas', nombre: 'Habilidades_gloo_y_armas.png', titulo: 'Habilidades y armas', html: imgArmas(d, o) });
-        // Booyah de cada sala: equipo campeón, jugadores, MVP y escuadras que eliminó
-        d.porSala.forEach(s => { if (s.booyah && s.ganadores.length) L.push({ id: 'pgImgBooyah' + s.sala, nombre: `Booyah_Sala_${s.sala}.png`, titulo: 'Booyah S' + s.sala, html: imgBooyah(d, s, o) }); });
-        // Analítica de mapa: solo las salas con zonas del .bin y un mapa conocido
-        d.porSala.forEach(s => { if (PLANOS[s.mapaId] && fasesValidas(s).length) L.push({ id: 'pgImgMapa' + s.sala, nombre: `Analitica_de_mapa_Sala_${s.sala}.png`, titulo: 'Mapa S' + s.sala, opcional: true, html: imgMapa(d, s, o, 'zonas') }); });
+        // Booyah: el campeón de cada sala, todas las salas en una imagen
+        const booyahs = imgBooyahs(d, o);
+        if (booyahs) L.push({ id: 'pgImgBooyahs', nombre: 'Booyah.png', titulo: 'Booyah', html: booyahs });
+        // Analítica de mapa: las salas con zonas del .bin y un mapa conocido, todas en una imagen (opcional)
+        const mapas = imgMapas(d, o);
+        if (mapas) L.push({ id: 'pgImgMapas', nombre: 'Analitica_de_mapa.png', titulo: 'Mapa', opcional: true, html: mapas });
         // Zonas finales: el zoom de las últimas zonas de todas las salas en una sola imagen (opcional)
         const finales = imgFinales(d, o);
         if (finales) L.push({ id: 'pgImgFinales', nombre: 'Zonas_finales.png', titulo: 'Zonas finales', opcional: true, html: finales });

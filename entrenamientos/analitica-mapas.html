@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-C79JND219Y');</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Analítica de Mapas · Entrenos Pumas</title>
+<meta name="description" content="Zonas calientes, zonas de pelea y cierres acumulados en todos los entrenos de Pumas Gaming.">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;1,700;1,800&family=Barlow:wght@400;500;600;700&family=Michroma&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="style.css?v=20261113a">
+<link rel="stylesheet" href="../portal-kit/tema-c.css?v=20261113a">
+<link rel="icon" href="imagenes/LOGO PUMAS WEB.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../portal-kit/portal.js?v=20261113a" data-portal="entrenamientos" data-modo="publico"></script>
+
+<style>
+/* ── Analítica de Mapas ── */
+.an-cuerpo{max-width:1160px;margin:0 auto;padding:28px var(--pad,clamp(16px,4vw,56px)) 72px;}
+
+/* resumen rapido */
+.an-resumen{
+  display:flex;border:1px solid var(--linea);
+  background:var(--tinta);margin-bottom:0;
+}
+.an-res-s{flex:1;padding:14px 20px;border-right:1px solid var(--linea);text-align:center;}
+.an-res-s:last-child{border-right:none;}
+.an-res-n{display:block;font:italic 800 1.5rem/1 var(--f-disp);color:var(--oro);font-variant-numeric:tabular-nums;}
+.an-res-l{display:block;font:600 .75rem var(--f-txt);color:var(--gris-c,#959595);letter-spacing:.1em;text-transform:uppercase;margin-top:4px;}
+
+/* selector de mapa */
+.an-mapas{
+  display:flex;border:1px solid var(--linea);border-top:none;
+  background:var(--s1);flex-wrap:wrap;
+}
+.an-mapa-btn{
+  padding:10px 22px;border:none;border-right:1px solid var(--linea);
+  background:transparent;color:var(--gris-c,#959595);
+  font:700 .75rem var(--f-txt);letter-spacing:.08em;text-transform:uppercase;
+  cursor:pointer;transition:.12s;
+}
+.an-mapa-btn:last-child{border-right:none;}
+.an-mapa-btn:hover{background:var(--s2);color:var(--piel);}
+.an-mapa-btn.act{background:var(--s2);color:var(--piel);box-shadow:inset 0 -2px 0 var(--oro);}
+
+/* selector de vista */
+.an-vistas{
+  display:flex;border:1px solid var(--linea);border-top:none;
+  margin-bottom:28px;background:var(--tinta);flex-wrap:wrap;
+}
+.an-vista-btn{
+  display:flex;align-items:center;gap:8px;
+  flex:1;padding:11px 18px;border:none;border-right:1px solid var(--linea);
+  background:transparent;cursor:pointer;transition:.12s;
+  font:700 .78rem var(--f-txt);letter-spacing:.08em;text-transform:uppercase;color:var(--gris-c,#959595);
+}
+.an-vista-btn:last-child{border-right:none;}
+.an-vista-btn .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.an-vista-btn.act,.an-vista-btn:hover{background:var(--s2);}
+.an-vista-btn.act{color:var(--piel);}
+.v-caliente .dot{background:#ff4d4d;}
+.v-pelea .dot{background:#ff8c00;}
+.v-cierre .dot{background:#4da6ff;}
+
+/* TOP 3 featured */
+.an-top3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--linea);border:1px solid var(--linea);margin-bottom:1px;}
+.an-zone-feat{
+  position:relative;overflow:hidden;
+  background:var(--s1);padding:20px;
+}
+.an-zone-feat::after{content:"";position:absolute;right:0;top:0;width:14px;height:14px;background:var(--oro);clip-path:polygon(0 0,100% 0,100% 100%);}
+.an-feat-rank{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border:1px solid var(--linea);
+  font:italic 800 .9rem/1 var(--f-disp);
+  margin-bottom:10px;
+}
+.an-feat-rank.r1{border-color:#FFD700;color:#FFD700;background:rgba(255,215,0,.08);}
+.an-feat-rank.r2{border-color:#C0C0C0;color:#C0C0C0;background:rgba(192,192,192,.06);}
+.an-feat-rank.r3{border-color:#CD7F32;color:#CD7F32;background:rgba(205,127,50,.06);}
+.an-feat-zona{font:italic 800 1.3rem/1 var(--f-disp);text-transform:uppercase;color:var(--piel);margin-bottom:14px;}
+.an-feat-stat{margin-bottom:8px;}
+.an-feat-stat-lbl{display:block;font:600 .75rem var(--f-txt);color:var(--gris-c,#959595);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+.an-feat-stat-val{display:flex;align-items:center;gap:10px;}
+.an-feat-stat-num{font:italic 800 1.1rem/1 var(--f-disp);font-variant-numeric:tabular-nums;min-width:44px;}
+.an-feat-stat-num.caliente{color:#ff6b6b;}
+.an-feat-stat-num.pelea{color:#ffaa55;}
+.an-feat-stat-num.cierre{color:#66aaff;}
+.heat-bar{flex:1;height:4px;background:var(--linea);}
+.heat-fill{height:100%;transition:width .3s;}
+.heat-fill.caliente{background:#ff4d4d;}
+.heat-fill.pelea{background:#ff8c00;}
+.heat-fill.cierre{background:#4da6ff;}
+
+/* ranking completo */
+.an-ranking{border:1px solid var(--linea);background:var(--s1);}
+.an-rank-hdr{
+  display:grid;grid-template-columns:40px 1fr 90px 90px 90px;
+  border-bottom:1px solid var(--linea);background:var(--tinta);
+}
+.an-rh-c{padding:9px 14px;font:700 .75rem var(--f-txt);color:var(--gris-c,#959595);letter-spacing:.08em;text-transform:uppercase;border-right:1px solid var(--linea);}
+.an-rh-c:last-child{border-right:none;}
+.an-rh-c.al-r{text-align:right;}
+.an-row{display:grid;grid-template-columns:40px 1fr 90px 90px 90px;border-top:1px solid var(--linea);transition:background .1s;}
+.an-row:first-child{border-top:none;}
+.an-row:hover{background:var(--s2);}
+.an-row-pos{display:flex;align-items:center;justify-content:center;border-right:1px solid var(--linea);font:italic 800 .85rem/1 var(--f-disp);color:var(--gris-c,#959595);}
+.an-row-zona{display:flex;align-items:center;gap:10px;padding:10px 14px;border-right:1px solid var(--linea);}
+.an-zona-nombre{font:italic 800 .9rem/1 var(--f-disp);text-transform:uppercase;color:var(--piel);}
+.heat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.an-row-num{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:10px 14px;border-right:1px solid var(--linea);}
+.an-row-num:last-child{border-right:none;}
+.an-num{font:italic 800 .9rem/1 var(--f-disp);font-variant-numeric:tabular-nums;color:var(--piel);}
+.an-num.hl{color:var(--oro);}
+.an-minibar{width:36px;height:3px;background:var(--linea);}
+.an-minibar-fill{height:100%;}
+
+/* nota de datos */
+.an-nota{
+  margin-top:16px;padding:12px 16px;
+  border:1px solid var(--linea);background:var(--s1);
+  font:600 .8rem var(--f-txt);color:var(--gris-c,#959595);
+  display:flex;align-items:center;gap:10px;
+}
+.an-nota i{color:var(--oro);font-size:.85rem;}
+
+@media(max-width:680px){
+  .an-top3{grid-template-columns:1fr;}
+  .an-rank-hdr,.an-row{grid-template-columns:36px 1fr 70px 70px;}
+  .col-cierres{display:none;}
+  .an-resumen{flex-wrap:wrap;}
+  .an-res-s{flex:1 1 33%;}
+  .an-vista-btn{font-size:.75rem;padding:10px 10px;}
+}
+</style>
+</head>
+<body class="c-tema">
+
+<header class="site-header">
+  <div class="logo-container">
+    <img src="imagenes/LOGO PUMAS WEB.png" alt="Logo Pumas Gaming" class="logo-img">
+    <div class="logo">PUMAS GAMING</div>
+  </div>
+  <button class="menu-toggle" aria-label="Abrir menú" aria-controls="mainNav"
+    onclick="document.getElementById('mainNav').classList.toggle('is-active')">
+    <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+  </button>
+  <nav class="main-nav" id="mainNav">
+    <ul>
+      <li><a href="../"><i class="fa-solid fa-house"></i> Portal</a></li>
+      <li><a href="./"><i class="fa-solid fa-globe"></i> Resultados</a></li>
+      <li><a href="cupos.html"><i class="fa-solid fa-ticket"></i> Apartar Cupo</a></li>
+      <li><a href="estadisticas.html"><i class="fa-solid fa-chart-simple"></i> Estadísticas</a></li>
+      <li><a href="analitica-mapas.html" aria-current="page" style="color:var(--primary)"><i class="fa-solid fa-map"></i> Analítica</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section class="c-cab" aria-labelledby="tit-analitica">
+    <div class="c-rayo" aria-hidden="true"></div>
+    <div class="c-rayo fino" aria-hidden="true"></div>
+    <h1 id="tit-analitica">Analítica de <em>Mapas</em></h1>
+  </section>
+
+  <div class="an-cuerpo">
+    <!-- Resumen general -->
+    <div class="an-resumen" id="anResumen">
+      <div class="an-res-s"><span class="an-res-n" id="rKills">—</span><span class="an-res-l">Kills totales</span></div>
+      <div class="an-res-s"><span class="an-res-n" id="rFights">—</span><span class="an-res-l">Zonas activas</span></div>
+      <div class="an-res-s"><span class="an-res-n" id="rCierres">—</span><span class="an-res-l">Cierres registrados</span></div>
+      <div class="an-res-s"><span class="an-res-n" id="rSes">—</span><span class="an-res-l">Sesiones analizadas</span></div>
+    </div>
+
+    <!-- Selector de mapa -->
+    <div class="an-mapas" id="anMapas"></div>
+
+    <!-- Selector de vista -->
+    <div class="an-vistas">
+      <button class="an-vista-btn v-caliente act" onclick="setVista('kills',this)">
+        <span class="dot"></span> Zonas Calientes
+      </button>
+      <button class="an-vista-btn v-pelea" onclick="setVista('fights',this)">
+        <span class="dot"></span> Zonas de Pelea
+      </button>
+      <button class="an-vista-btn v-cierre" onclick="setVista('cierres',this)">
+        <span class="dot"></span> Cierres
+      </button>
+    </div>
+
+    <!-- TOP 3 -->
+    <div class="an-top3" id="anTop3"></div>
+
+    <!-- Ranking completo -->
+    <div class="an-ranking" id="anRanking"></div>
+
+    <!-- Nota -->
+    <div class="an-nota">
+      <i class="fa-solid fa-circle-info"></i>
+      Datos acumulados de todos los entrenos · La carga de zonas por coordenadas se activa cuando se suban replays con datos de posición.
+    </div>
+  </div>
+</main>
+
+<footer>
+  <p>&copy; 2026 PUMAS GAMING. Todos los derechos reservados.</p>
+</footer>
+
+<script>
+(function(){
+
+/* ── MOCK DATA (se reemplaza con queries Supabase) ── */
+const MAPAS = {
+  bermuda: {
+    nombre:'Bermuda', ses:28,
+    zonas:[
+      {z:'Pochinok',      kills:312, fights:138, cierres:22},
+      {z:'Peak',          kills:287, fights:112, cierres:14},
+      {z:'Clock Tower',   kills:245, fights:98,  cierres:19},
+      {z:'Factory',       kills:198, fights:84,  cierres:8},
+      {z:'Rim Nam Village',kills:176,fights:67,  cierres:11},
+      {z:'Mars Electric', kills:154, fights:61,  cierres:7},
+      {z:'Shipyard',      kills:143, fights:58,  cierres:5},
+      {z:'Bimasakti',     kills:132, fights:52,  cierres:3},
+      {z:'Cape Town',     kills:121, fights:47,  cierres:16},
+      {z:'Forge',         kills:98,  fights:39,  cierres:9},
+      {z:'Riverside',     kills:87,  fights:35,  cierres:12},
+      {z:'Hangar',        kills:76,  fights:30,  cierres:4},
+      {z:'Graveyard',     kills:65,  fights:26,  cierres:6},
+      {z:'Sentosa',       kills:54,  fights:22,  cierres:18},
+      {z:'Training Ground',kills:43, fights:18,  cierres:1},
+    ]
+  },
+  kalahari: {
+    nombre:'Kalahari', ses:14,
+    zonas:[
+      {z:'Erisa',         kills:224, fights:96,  cierres:17},
+      {z:'Kokle',         kills:198, fights:81,  cierres:11},
+      {z:'Pele Town',     kills:178, fights:74,  cierres:14},
+      {z:'Stonehole',     kills:156, fights:63,  cierres:9},
+      {z:'Chabaa',        kills:134, fights:54,  cierres:6},
+      {z:'Falcone',       kills:112, fights:46,  cierres:8},
+      {z:'Roca',          kills:98,  fights:40,  cierres:12},
+      {z:'Warhill',       kills:87,  fights:35,  cierres:5},
+      {z:'Command Post',  kills:76,  fights:30,  cierres:7},
+      {z:'Sunrise Beach', kills:65,  fights:26,  cierres:4},
+      {z:'Trident',       kills:54,  fights:22,  cierres:3},
+      {z:'Obaltus',       kills:43,  fights:17,  cierres:2},
+    ]
+  },
+  purgatorio: {
+    nombre:'Purgatorio', ses:10,
+    zonas:[
+      {z:'Prison',        kills:198, fights:88,  cierres:15},
+      {z:'Quarry',        kills:176, fights:74,  cierres:10},
+      {z:'Crossroads',    kills:154, fights:65,  cierres:13},
+      {z:'Warrior Path',  kills:132, fights:56,  cierres:8},
+      {z:'Narrows',       kills:112, fights:47,  cierres:11},
+      {z:'Ice Cream Factory',kills:98,fights:41, cierres:6},
+      {z:'Tunnel Road',   kills:87,  fights:36,  cierres:5},
+      {z:'Highland',      kills:76,  fights:31,  cierres:9},
+      {z:'Villa',         kills:65,  fights:27,  cierres:7},
+      {z:'Central',       kills:54,  fights:22,  cierres:4},
+    ]
+  },
+  nexterra: {
+    nombre:'Nexterra', ses:6,
+    zonas:[
+      {z:'Terminal',      kills:187, fights:82,  cierres:14},
+      {z:'Centro Cívico', kills:165, fights:71,  cierres:11},
+      {z:'Puerto Libre',  kills:148, fights:63,  cierres:9},
+      {z:'Almacén',       kills:132, fights:55,  cierres:12},
+      {z:'Laboratorio',   kills:118, fights:49,  cierres:7},
+      {z:'Torre Norte',   kills:104, fights:43,  cierres:8},
+      {z:'Campamento',    kills:91,  fights:38,  cierres:6},
+      {z:'Puente Rojo',   kills:78,  fights:32,  cierres:10},
+      {z:'Fábrica Sur',   kills:65,  fights:27,  cierres:5},
+      {z:'Refugio',       kills:52,  fights:21,  cierres:3},
+    ]
+  },
+  solara: {
+    nombre:'Solara', ses:5,
+    zonas:[
+      {z:'El Centro',     kills:172, fights:76,  cierres:13},
+      {z:'Acuario',       kills:154, fights:67,  cierres:10},
+      {z:'Molino',        kills:138, fights:59,  cierres:8},
+      {z:'Isla Delta',    kills:124, fights:52,  cierres:11},
+      {z:'Cascada',       kills:112, fights:47,  cierres:7},
+      {z:'Planta Ecológica',kills:98,fights:41,  cierres:9},
+      {z:'Feria',         kills:86,  fights:36,  cierres:5},
+      {z:'Floristería',   kills:74,  fights:30,  cierres:12},
+      {z:'Centro Hípico', kills:63,  fights:26,  cierres:4},
+      {z:'Arcos',         kills:54,  fights:22,  cierres:6},
+      {z:'Torre de TV',   kills:46,  fights:18,  cierres:8},
+      {z:'Bahía',         kills:38,  fights:15,  cierres:3},
+      {z:'Estudio',       kills:31,  fights:12,  cierres:5},
+      {z:'Casa Vista',    kills:24,  fights:9,   cierres:2},
+    ]
+  }
+};
+
+const MAPA_KEYS=Object.keys(MAPAS);
+let mapaActual='bermuda';
+let vistaActual='kills';
+
+const fmt=n=>n>=1000?(n/1000).toFixed(1).replace(/\.0$/,'')+'K':String(n);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function heatColor(v){
+  if(v>=0.8)return{bar:'caliente',dot:'#ff4d4d'};
+  if(v>=0.6)return{bar:'caliente',dot:'#ff7a7a'};
+  if(v>=0.4)return{bar:'pelea',dot:'#ff8c00'};
+  if(v>=0.2)return{bar:'pelea',dot:'#ffaa55'};
+  return{bar:'cierre',dot:'#4da6ff'};
+}
+
+function render(){
+  const mapa=MAPAS[mapaActual];
+  const field=vistaActual;
+  const sorted=[...mapa.zonas].sort((a,b)=>b[field]-a[field]);
+  const maxVal=sorted[0][field];
+
+  /* resumen */
+  const totalKills=mapa.zonas.reduce((s,z)=>s+z.kills,0);
+  const totalFights=mapa.zonas.reduce((s,z)=>s+z.fights,0);
+  const totalCierres=mapa.zonas.reduce((s,z)=>s+z.cierres,0);
+  document.getElementById('rKills').textContent=fmt(totalKills);
+  document.getElementById('rFights').textContent=fmt(totalFights);
+  document.getElementById('rCierres').textContent=totalCierres;
+  document.getElementById('rSes').textContent=mapa.ses;
+
+  /* TOP 3 */
+  const top3=sorted.slice(0,3);
+  document.getElementById('anTop3').innerHTML=top3.map((z,i)=>{
+    const pct=z[field]/maxVal;
+    const rkCls=['r1','r2','r3'][i];
+    const rkLbl=['#1','#2','#3'][i];
+    return `<div class="an-zone-feat">
+      <div class="an-feat-rank ${rkCls}">${rkLbl}</div>
+      <div class="an-feat-zona">${esc(z.z)}</div>
+      <div class="an-feat-stat">
+        <span class="an-feat-stat-lbl">Kills</span>
+        <div class="an-feat-stat-val">
+          <span class="an-feat-stat-num caliente">${z.kills}</span>
+          <div class="heat-bar"><div class="heat-fill caliente" style="width:${Math.round(z.kills/maxVal*100)}%"></div></div>
+        </div>
+      </div>
+      <div class="an-feat-stat">
+        <span class="an-feat-stat-lbl">Zonas de pelea</span>
+        <div class="an-feat-stat-val">
+          <span class="an-feat-stat-num pelea">${z.fights}</span>
+          <div class="heat-bar"><div class="heat-fill pelea" style="width:${Math.round(z.fights/(mapa.zonas.reduce((s,x)=>Math.max(s,x.fights),0))*100)}%"></div></div>
+        </div>
+      </div>
+      <div class="an-feat-stat">
+        <span class="an-feat-stat-lbl">Cierres</span>
+        <div class="an-feat-stat-val">
+          <span class="an-feat-stat-num cierre">${z.cierres}</span>
+          <div class="heat-bar"><div class="heat-fill cierre" style="width:${Math.round(z.cierres/(mapa.zonas.reduce((s,x)=>Math.max(s,x.cierres),0))*100)}%"></div></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  /* Ranking completo */
+  const hl=field==='kills'?'caliente':field==='fights'?'pelea':'cierre';
+  const colLbl=field==='kills'?'Kills':field==='fights'?'Pelea':'Cierres';
+  const hdr=`<div class="an-rank-hdr">
+    <div class="an-rh-c">#</div>
+    <div class="an-rh-c">Zona</div>
+    <div class="an-rh-c al-r">Kills</div>
+    <div class="an-rh-c al-r">Pelea</div>
+    <div class="an-rh-c al-r col-cierres">Cierres</div>
+  </div>`;
+  const rows=sorted.map((z,i)=>{
+    const pct=z[field]/maxVal;
+    const col=heatColor(pct);
+    const kMax=mapa.zonas.reduce((s,x)=>Math.max(s,x.kills),0);
+    const fMax=mapa.zonas.reduce((s,x)=>Math.max(s,x.fights),0);
+    const cMax=mapa.zonas.reduce((s,x)=>Math.max(s,x.cierres),0);
+    return `<div class="an-row">
+      <div class="an-row-pos">${i+1}</div>
+      <div class="an-row-zona">
+        <span class="heat-dot" style="background:${col.dot}"></span>
+        <span class="an-zona-nombre">${esc(z.z)}</span>
+      </div>
+      <div class="an-row-num">
+        <span class="an-num${field==='kills'?' hl':''}">${z.kills}</span>
+        <div class="an-minibar"><div class="an-minibar-fill" style="background:#ff4d4d;width:${Math.round(z.kills/kMax*100)}%"></div></div>
+      </div>
+      <div class="an-row-num">
+        <span class="an-num${field==='fights'?' hl':''}">${z.fights}</span>
+        <div class="an-minibar"><div class="an-minibar-fill" style="background:#ff8c00;width:${Math.round(z.fights/fMax*100)}%"></div></div>
+      </div>
+      <div class="an-row-num col-cierres">
+        <span class="an-num${field==='cierres'?' hl':''}">${z.cierres}</span>
+        <div class="an-minibar"><div class="an-minibar-fill" style="background:#4da6ff;width:${Math.round(z.cierres/cMax*100)}%"></div></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('anRanking').innerHTML=hdr+rows;
+}
+
+/* ── Render map tabs ── */
+document.getElementById('anMapas').innerHTML=MAPA_KEYS.map(k=>
+  `<button class="an-mapa-btn${k===mapaActual?' act':''}" onclick="setMapa('${k}',this)">${MAPAS[k].nombre}</button>`
+).join('');
+
+window.setMapa=function(k,btn){
+  mapaActual=k;
+  document.querySelectorAll('.an-mapa-btn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  render();
+};
+
+window.setVista=function(v,btn){
+  vistaActual=v;
+  document.querySelectorAll('.an-vista-btn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  render();
+};
+
+render();
+})();
+</script>
+</body>
+</html>
