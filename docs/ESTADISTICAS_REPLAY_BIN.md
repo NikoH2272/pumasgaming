@@ -16,6 +16,11 @@ guardarlas en Supabase y mostrarlas. Sirve para este proyecto y para llevarlo a 
 | `ReplayInfo_<id>.bin` | La grabación de red de la sala: **daño, impactos, headshots, torso, piernas, daño por arma, paredes gloo, reanimaciones, derribos, kills y el nombre de cada escuadra** | `PumasBin.leer` (portal-kit/replay-bin.js) |
 | `<id>.csv` (opcional) | Resultados completos oficiales (106 columnas por jugador) | `partidaDesdeCSV` (completos.js) |
 
+> ⚠ **Las kills del `.log` se cruzan por ID de cuenta, no por nick.** El `.log` trae `NAME / ID / KILL` y el `.bin`
+> el `account_id` de cada PlayerID (`cuentasDelBin`). Por nick fallaba: los nicks de letras especiales
+> (`ᴅɢ.ʟᴏᴘᴇᴢᴢᴅ`) quedan vacíos al normalizar y dos jugadores pueden llevar el mismo nick, así que uno se
+> quedaba con las kills de otro y cambiaba el MVP. El cruce por nick solo se usa si hay una única coincidencia.
+
 El número largo `<id>` (19 dígitos) es el mismo en los 4 archivos de una sala: así se emparejan.
 
 > ⚠ **El número de partida no se puede leer como número.** `JSON.parse` lo redondea

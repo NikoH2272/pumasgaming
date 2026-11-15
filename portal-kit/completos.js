@@ -236,9 +236,18 @@
         });
 
         // Escuadra → equipo (los eliminados por el evento 1; el resto por los nombres del .log)
+        // Nick → jugador del .log. Solo se acepta si hay UNA coincidencia: los nicks con letras especiales
+        // (ᴅɢ.ʟᴏᴘᴇᴢ…) quedan vacíos con norm() y dos jugadores pueden llevar el mismo nick.
+        // Lo definitivo es el ID de cuenta, que pone aplicarBin con el .bin.
+        const clave = s => String(s || '').normalize('NFKC').toLowerCase().replace(/[\s\u3164]/g, '');
+        const unico = l => (l.length === 1 ? l[0] : null);
         const enLog = n => {
-            const k = norm(n);
-            return log.find(j => norm(j.jugador) === k) || log.find(j => { const m = norm(j.jugador); return m.length >= 4 && k.length >= 4 && (k.startsWith(m) || m.startsWith(k)); });
+            const c = clave(n), k = norm(n);
+            const exactos = log.filter(j => clave(j.jugador) === c);
+            if (exactos.length) return unico(exactos);
+            if (k.length < 3) return null;
+            return unico(log.filter(j => norm(j.jugador) === k))
+                || (k.length >= 4 ? unico(log.filter(j => { const m = norm(j.jugador); return m.length >= 4 && (k.startsWith(m) || m.startsWith(k)); })) : null);
         };
         const equipoDe = new Map();
         ev.forEach(e => { if (e.Event === 1 && e.SParam) equipoDe.set(escuadra(e.PlayerID), String(e.SParam).trim()); });
@@ -350,7 +359,7 @@
         return {
             // El MatchID tiene 19 dígitos: leído como número pierde precisión, se toma del texto
             match_id: (/"MatchID"\s*:\s*(\d+)/.exec(String(texto || '')) || [])[1] || String(d.MatchID || ''), mapa: ent(d.MapID) || null, modo: ent(d.GroupMode) || null, fuente: 'replay', duracion: Math.round(dur),
-            jugadores, primeraSangre: primera, killLejana: lejana,
+            jugadores, primeraSangre: primera, killLejana: lejana, logJug: log,
             eliminados, bajasPos
         };
     }
@@ -398,9 +407,29 @@
         }
         return s;
     }
+    // El .bin trae el ID de cuenta de cada PlayerID: reemplaza el que se adivinó por nick y vuelve a
+    // tomar las kills del .log por ID de cuenta (el .log trae NAME + ID + KILL de cada jugador).
+    // Un jugador que no aparece en el .log por su cuenta se queda con las kills del replay.
+    function cuentasDelBin(s, b) {
+        const log = s.logJug || [];
+        const porCuenta = new Map(log.map(l => [String(l.account_id), l]));
+        const usadas = new Set();
+        s.jugadores.forEach(j => {
+            const x = j.pid !== undefined ? b.jugadores.get(j.pid) : null;
+            if (x && x.account_id) j.account_id = String(x.account_id);
+            if (!log.length || s.fuente !== 'replay') return;
+            const lg = j.account_id ? porCuenta.get(String(j.account_id)) : null;
+            if (lg && !usadas.has(lg.account_id)) { usadas.add(lg.account_id); j.kills = lg.kills; j.killsLog = true; }
+            else if (x) { j.kills = x.kills; j.killsLog = false; }
+            else if (j.killsLog) { j.kills = j.derribos || 0; j.killsLog = false; }
+        });
+        return s;
+    }
+
     function aplicarStatsBin(s, b) {
-        const porNick = new Map([...b.jugadores.values()].filter(x => x.nick).map(x => [norm(x.nick), x]));
+        const porNick = new Map([...b.jugadores.values()].filter(x => x.nick && norm(x.nick).length >= 3).map(x => [norm(x.nick), x]));
         const soloReplay = s.fuente === 'replay';
+        cuentasDelBin(s, b);
         s.jugadores.forEach(j => {
             const x = (j.pid !== undefined && b.jugadores.get(j.pid))
                 || (j.account_id && b.cuentas.has(String(j.account_id)) && b.jugadores.get(b.cuentas.get(String(j.account_id))))
@@ -409,7 +438,6 @@
             j.extra = Object.assign({}, j.extra, { bin: { kills: x.kills, dano: x.dano, impactos: x.impactos, hs: x.hs, torso: x.torso, piernas: x.piernas,
                 gloo: x.gloo, reanimo: x.reanimo, revivido: x.revivido, derribos: x.derribos, derribado: x.derribado,
                 activa: x.activa || 0, usos: x.usos || 0, habilidades: x.habilidades || [] } });
-            if (!j.account_id && x.account_id) j.account_id = x.account_id;
             if (!soloReplay) return;
             if (!j.killsLog) j.kills = x.kills;
             j.dano = x.dano; j.headshots = x.hs; j.hits = x.impactos; j.gloo = x.gloo; j.revividos = x.reanimo; j.derribos = x.derribos;
@@ -1192,7 +1220,7 @@
     }
 
     window.PumasCompletos = {
-        leerCSV, partidaDesdeCSV, partidaDesdeReplay, jugadoresDeLog, nombreArma, combinar, aplicarBin, equiposDelBin, aCSV, emparejar, calcular, filasBD, salasDesdeBD, idDeArchivo,
+        leerCSV, partidaDesdeCSV, partidaDesdeReplay, jugadoresDeLog, nombreArma, combinar, aplicarBin, equiposDelBin, cuentasDelBin, aCSV, emparejar, calcular, filasBD, salasDesdeBD, idDeArchivo,
         nombreHabilidad, fotoHabilidad, habilidadDe, HABILIDADES,
         habilitados, habilitado, destacadosHTML, escuadraHTML, salasHTML, tablasDetalle, tablasAcumulados, tablasHTML, montarSesion, imagenHTML, imagenSalasHTML, listaDestacados, tablasSalas, traerTodo, estilos, montarPublico, MAPAS, GRUPOS,
         guardar: (portal, sesion, filas) => P.stats.guardar(portal, sesion, filas),

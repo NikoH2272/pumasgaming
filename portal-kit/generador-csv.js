@@ -139,6 +139,8 @@
             const logJug = x.log ? C().jugadoresDeLog(x.log.texto) : [];
             let rep = null;
             if (x.json) { try { rep = C().partidaDesdeReplay(x.json.texto, logJug, {}); } catch (e) { avisos.push(`${x.json.nombre}: ${e.message}`); } }
+            // ID de cuenta de cada jugador desde el .bin: así el .log se cruza por cuenta y no por nick
+            if (rep && x.binDatos) C().cuentasDelBin(rep, x.binDatos);
             if (rep && x.binDatos) C().equiposDelBin(rep, x.binDatos);   // nombre real de los equipos que nadie eliminó
             conLog = conLog || !!x.log; conReplay = conReplay || !!rep; conCsv = conCsv || !!x.csv;
             x.mapa = (rep && rep.mapa) || (x.csv && x.csv.mapa) || null;

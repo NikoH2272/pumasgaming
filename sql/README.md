@@ -38,6 +38,7 @@ Se ejecutan **en orden** en Supabase → SQL Editor. Cada archivo se puede volve
 | 32 | `32_secciones_por_usuario.sql` | Usuarios del portal: a cada usuario del staff se le eligen las secciones del panel que ve (herramienta, cupos, baneados…), además de su rol | ☐ |
 | 52 | `52_stats_bin.sql` | Estadísticas del replay .bin en `stats_jugadores`: columnas `torso`, `piernas`, `revivido`, `derribado`, `rematados`, `primera_sangre`, `kill_lejana` y `fuente`, y `guardar_stats` que las guarda (requiere 23). Ver `docs/ESTADISTICAS_REPLAY_BIN.md` | ☐ |
 | 53 | `53_stats_bin_rellenar.sql` | Rellena las columnas del 52 en los entrenos ya guardados (copia desde `extra`). Solo toca filas con `fuente` vacía | ☐ |
+| 57 | `57_stats_kills_nick_especial.sql` | Corrige las kills de jugadores con nick de letras especiales que recibieron las kills de otro jugador del .log (movía el MVP). Usa las del .bin; deja fuera la sala 5 de 2f789903 (replay de otra partida) | ☑ |
 
 Cuando ejecutes uno, cambia ☐ por ☑ y súbelo a git, para que los dos sepamos en qué estado está la base.
 
