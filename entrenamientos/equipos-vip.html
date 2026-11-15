@@ -15,6 +15,7 @@
 <link rel="icon" href="imagenes/LOGO PUMAS WEB.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../portal-kit/portal.js?v=20261111c" data-portal="entrenamientos" data-modo="publico" data-sin-sorteo></script>
+<script src="../portal-kit/completos.js?v=20261115a"></script>
 
 <style>
 /* ── Variables ── */
@@ -373,6 +374,17 @@
     color: #ddd;
     text-align: right;
 }
+.ev-tabla-jugadores td.arma .arma-con-img {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.ev-tabla-jugadores td.arma .arma-con-img img {
+    width: 54px;
+    height: 16px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
 .ev-tabla-jugadores td.arma {
     font-size: .72rem;
     color: var(--vip-gray);
@@ -467,6 +479,11 @@
 /* ── Helpers ── */
 const fmtNum = n => n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : String(n ?? 0);
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+// Arma con su imagen (imagenes/armas, vía completos.js)
+const armaHTML = n => {
+    const f = window.PumasCompletos && PumasCompletos.fotoArma ? PumasCompletos.fotoArma(n) : '';
+    return f ? `<span class="arma-con-img"><img src="${esc(f)}" alt="" loading="lazy" onerror="this.remove()">${esc(n)}</span>` : esc(n);
+};
 
 function logoSrc(url) {
     if (!url) return 'imagenes/LOGO PUMAS WEB.png';
@@ -543,7 +560,7 @@ function htmlTablajugadores(jugs) {
             <td class="num">${fmtNum(j.kills)}</td>
             <td class="num hide-sm">${j.headshots ?? 0}<span class="hs-pct">${hsPct ? hsPct + '%' : ''}</span></td>
             <td class="num hide-sm">${fmtNum(j.dano)}</td>
-            <td class="arma hide-sm">${j.arma ? esc(j.arma) : '—'}</td>
+            <td class="arma hide-sm">${j.arma ? armaHTML(j.arma) : '—'}</td>
         </tr>`;
     }).join('');
 

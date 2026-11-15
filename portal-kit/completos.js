@@ -54,7 +54,7 @@
     }
 
     /* ---------------- Armas por id (el .json de la repetición solo trae el número) ---------------- */
-    const ARMAS_FF = { 0: 'WOODPECKER-SUM', 1: 'FIST', 8: 'MP5', 11: 'M14', 12: 'SCAR', 13: 'VSS', 15: 'MP40', 16: 'PAN', 17: 'MACHETE', 18: 'SKS',
+    const ARMAS_FF = { '-40': 'WINCHESTER', '-31': 'HABILIDAD', 1: 'FIST', 8: 'MP5', 11: 'M14', 12: 'SCAR', 13: 'VSS', 15: 'MP40', 16: 'PAN', 17: 'MACHETE', 18: 'SKS',
         21: 'KAR98K', 23: 'M79', 27: 'BASEBALLPOLE', 28: 'XM8', 30: 'M60', 32: 'P90', 34: 'KATANA', 39: 'PLASMA', 41: 'M1887', 45: 'M82B', 46: 'AUG',
         47: 'PARAFAL', 48: 'WOODPECKER', 50: 'MAG7', 51: 'SICKLE', 54: 'KORD', 55: 'M1917', 58: 'UZI', 74: 'G36', 75: 'M24', 86: 'CHARGE BUSTER', 89: 'AC80',
         93: 'TREATMENT PISTOL', 123: 'M60-III', 150: 'BIZON', 193: 'AUG-I', 196: 'FGL24', 197: 'VSK94', 228: 'MAC10-I', 601: 'GRENADE', 608: 'FLASH FREEZE',
@@ -65,7 +65,7 @@
         2: 'M4A1', 5: 'M1014', 6: 'AK', 7: 'UMP', 9: 'EAGLE', 20: 'M1873', 24: 'FAMAS', 29: 'SPAS12', 33: 'AN94', 36: 'RGS50', 38: 'HOOK GUN',
         49: 'VECTOR', 53: 'FF KNIFE', 57: 'KINGFISHER', 60: 'MP5-I', 61: 'M60-I', 63: 'M14-I', 73: 'G36', 80: 'M4A1-I', 81: 'M4A1-II', 82: 'M4A1-III',
         88: 'MAC10', 120: 'MP5-II', 121: 'MP5-III', 122: 'M60-II', 126: 'M14-II', 127: 'M14-III', 178: 'SCAR-I', 179: 'SCAR-II',
-        181: 'TROGON (ESCOPETA)', 182: 'TROGON (GRANADA)', 184: 'M1014-I', 185: 'M1014-II', 186: 'M1014-III', 194: 'AUG-II', 195: 'AUG-III',
+        181: 'TROGON(SHOTGUN)', 182: 'TROGON(GRENADE)', 184: 'M1014-I', 185: 'M1014-II', 186: 'M1014-III', 194: 'AUG-II', 195: 'AUG-III',
         229: 'MAC10-II', 630: 'GOLDGROZA-X', 631: 'M249', 634: 'GOLDSVD-Y', 636: 'GOLDAWM-Y', 807: 'M24-III', 21001: 'HEALING PISTOL-Y', 21009: 'WINCHESTER-III' };
     const LS_ARMAS = 'pg_armas_ff';   // los .csv enseñan nombres nuevos (id → nombre) y se recuerdan en este navegador
     let armasAprendidas = null;
@@ -83,8 +83,38 @@
         });
         if (cambio) { try { localStorage.setItem(LS_ARMAS, JSON.stringify(m)); } catch (e) { /* sin almacenamiento: solo esta vez */ } }
     }
-    // Ids negativos (el .json los trae a veces en kills por zona, caída...) no son armas
-    const nombreArma = id => (+id < 0 ? '' : aprendidas()[id] || ARMAS_FF[id] || ('ARMA #' + id));
+    // -40 (Winchester) y -31 (Habilidad) sí son del juego; el 0 y otros negativos (zona, caída...) no son armas
+    const nombreArma = id => (ARMAS_FF[id] && +id < 0 ? ARMAS_FF[id] : +id <= 0 ? '' : aprendidas()[id] || ARMAS_FF[id] || ('ARMA #' + id));
+
+    /* ---------------- Imagen de cada arma: imagenes/armas/<Archivo>.png ----------------
+       El nombre del juego se reduce a su arma base (M1014-III → M1014, GoldAWM-Y → AWM, TROGON(SHOTGUN) → Trogon).
+       Si se agrega una imagen nueva, súmala a ARCHIVOS_ARMAS (y a ALIAS_ARMA si el nombre no coincide). */
+    const ARCHIVOS_ARMAS = [
+        'AC80', 'AK47', 'AN94', 'AUG', 'AWM', 'Bat', 'Bizon', 'CG15', 'Charge_Buster', 'Crossbow', 'Desert_Eagle', 'FAMAS', 'FF_Knife', 'FGL-24',
+        'Flame_Grenade', 'Flamethrower', 'Flash_Freeze', 'G18', 'Gatling', 'Gloo_Melter', 'Gloo_Wall', 'Grenade', 'Groza', 'Hand-Cannon', 'Hawk',
+        'Healing_Pistol', 'Healing_Sniper', 'Kar98k', 'Katana', 'Kord', 'M1014', 'M14', 'M1873', 'M1887', 'M1917', 'M24', 'M249', 'M4A1', 'M500', 'M590',
+        'M60', 'M7', 'M79', 'M82B', 'MAC10', 'MAG-7', 'MGL140', 'MP40', 'MP5', 'P90', 'Pan', 'Parang', 'Plasma', 'RGS50', 'RPK', 'SCAR', 'SKS', 'SPAS12',
+        'SVD', 'Scythe', 'Shield_Gun', 'Skorp', 'Smoke_Grenade', 'Sonar_Grenade', 'Thompson', 'Treatment_Laser_Gun', 'Trogon', 'UMP', 'USP', 'USP-2', 'UZI',
+        'VSK94', 'VSS', 'Vector', 'Winchester', 'Woodpecker', 'XM8'
+    ];
+    const claveArma = s => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const ARCHIVO_ARMA = Object.fromEntries(ARCHIVOS_ARMAS.map(f => [claveArma(f), f]));
+    const ALIAS_ARMA = { AK: 'AK47', EAGLE: 'DESERTEAGLE', BASEBALLPOLE: 'BAT', MACHETE: 'PARANG', SICKLE: 'SCYTHE', TREATMENTPISTOL: 'TREATMENTLASERGUN',
+        ESCOPETA: 'TROGON', GRANADA: 'GRENADE' };
+    const RUTA_ARMAS = (() => {
+        try { return new URL('../imagenes/armas/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../imagenes/armas/'; }
+    })();
+    const fotoArma = nombre => {
+        const b = claveArma(String(nombre || '').toUpperCase().replace(/\(.*\)/, '').trim().replace(/^GOLD/, '').replace(/-(I{1,3}|X|Y|GOLD)$/, ''));
+        const f = ARCHIVO_ARMA[ALIAS_ARMA[b] || b];
+        return f ? RUTA_ARMAS + encodeURIComponent(f) + '.png' : '';
+    };
+    // Celda de tabla con la imagen del arma (en texto/CSV sale solo el nombre)
+    const celdaArma = (nombre, extra) => {
+        if (!nombre || nombre === '—') return '—';
+        const f = fotoArma(nombre), txt = String(nombre) + (extra ? ' ' + extra : '');
+        return { html: `<span class="cpl-arma">${f ? `<img src="${f}" alt="" loading="lazy" onerror="this.remove()">` : ''}${esc(txt)}</span>`, toString: () => txt };
+    };
 
     /* ---------------- Habilidades activas (personajes) ----------------
        El id termina en 06 (7406 = Oscar). Los nombres salen del skill_info del .csv oficial y se recuerdan;
@@ -443,7 +473,9 @@
             j.dano = x.dano; j.headshots = x.hs; j.hits = x.impactos; j.gloo = x.gloo; j.revividos = x.reanimo; j.derribos = x.derribos;
             const armas = new Map(j.armas.map(a => [a.n, a]));
             Object.entries(x.armas).forEach(([id, d]) => {
-                const n = nombreArma(+id), a = armas.get(n) || { n, d: 0, k: 0, hs: 0, s: 0 };
+                const n = nombreArma(+id);
+                if (!n) return;
+                const a = armas.get(n) || { n, d: 0, k: 0, hs: 0, s: 0 };
                 a.d += d; armas.set(n, a);
             });
             j.armas = [...armas.values()].sort((a, b2) => b2.k - a.k || b2.d - a.d);
@@ -689,11 +721,11 @@
     // Todos los destacados del entreno, en orden. grupo: jug (jugadores y armas) · eq (equipos) · total (números del entreno)
     function listaDestacados(r) {
         const d = r.destacados, L = [];
-        const add = (x, grupo, i, t, v, s) => { if (x) L.push({ grupo, i, t, v: esc(v), s: s || '' }); };
+        const add = (x, grupo, i, t, v, s, arma) => { if (x) L.push({ grupo, i, t, v: esc(v), s: s || '', img: arma ? fotoArma(arma) : '' }); };
         const arma = a => a ? ' · ' + esc(a) : '';
-        add(d.mvp, 'jug', 'fa-crown', 'MVP del entreno', d.mvp && d.mvp.jugador, d.mvp && `${pl(d.mvp.kills, 'kill', 'kills')}${d.mvp.dano ? ' · ' + fmt(d.mvp.dano) + ' daño' : ''}${arma(d.mvp.arma)}`);
-        add(d.masDano, 'jug', 'fa-burst', 'Más daño', d.masDano && d.masDano.jugador, d.masDano && `${fmt(d.masDano.dano)} de daño${arma(d.masDano.arma)}`);
-        add(d.mejorHs, 'jug', 'fa-crosshairs', 'Mejor % a la cabeza', d.mejorHs && d.mejorHs.jugador, d.mejorHs && `${d.mejorHs.pctHs.toFixed(1)}% (${d.mejorHs.headshots}/${d.mejorHs.hits})${arma(d.mejorHs.arma)}`);
+        add(d.mvp, 'jug', 'fa-crown', 'MVP del entreno', d.mvp && d.mvp.jugador, d.mvp && `${pl(d.mvp.kills, 'kill', 'kills')}${d.mvp.dano ? ' · ' + fmt(d.mvp.dano) + ' daño' : ''}${arma(d.mvp.arma)}`, d.mvp && d.mvp.arma);
+        add(d.masDano, 'jug', 'fa-burst', 'Más daño', d.masDano && d.masDano.jugador, d.masDano && `${fmt(d.masDano.dano)} de daño${arma(d.masDano.arma)}`, d.masDano && d.masDano.arma);
+        add(d.mejorHs, 'jug', 'fa-crosshairs', 'Mejor % a la cabeza', d.mejorHs && d.mejorHs.jugador, d.mejorHs && `${d.mejorHs.pctHs.toFixed(1)}% (${d.mejorHs.headshots}/${d.mejorHs.hits})${arma(d.mejorHs.arma)}`, d.mejorHs && d.mejorHs.arma);
         add(d.masDerribos, 'jug', 'fa-person-falling', 'Más derribos', d.masDerribos && d.masDerribos.jugador, d.masDerribos && `${pl(d.masDerribos.derribos, 'derribo', 'derribos')} · ${esc(d.masDerribos.equipo)}`);
         add(d.masAsistencias, 'jug', 'fa-handshake-angle', 'Más asistencias', d.masAsistencias && d.masAsistencias.jugador, d.masAsistencias && `${pl(d.masAsistencias.asistencias, 'asistencia', 'asistencias')} · ${esc(d.masAsistencias.equipo)}`);
         add(d.mejorPrecision, 'jug', 'fa-bullseye', 'Mejor puntería', d.mejorPrecision && d.mejorPrecision.jugador, d.mejorPrecision && `${d.mejorPrecision.precision.toFixed(1)}% de impactos (${fmt(d.mejorPrecision.hits)}/${fmt(d.mejorPrecision.disparos)})`);
@@ -703,10 +735,10 @@
         add(d.masRecibido, 'jug', 'fa-shield-heart', 'Más daño aguantado', d.masRecibido && d.masRecibido.jugador, d.masRecibido && `${fmt(d.masRecibido.recibido)} de daño recibido`);
         add(d.masLevantado, 'jug', 'fa-hand-holding-medical', 'Más veces levantado', d.masLevantado && d.masLevantado.jugador, d.masLevantado && `${pl(d.masLevantado.levantado, 'vez', 'veces')} · ${esc(d.masLevantado.equipo)}`);
         add(d.masRecorrido, 'jug', 'fa-person-running', 'Más recorrió', d.masRecorrido && d.masRecorrido.jugador, d.masRecorrido && `${fmt(d.masRecorrido.recorrido)} m`);
-        add(d.killLejana, 'jug', 'fa-ruler-horizontal', 'Kill más lejana', d.killLejana && d.killLejana.jugador, d.killLejana && `${d.killLejana.metros} m${arma(d.killLejana.arma)}`);
+        add(d.killLejana, 'jug', 'fa-ruler-horizontal', 'Kill más lejana', d.killLejana && d.killLejana.jugador, d.killLejana && `${d.killLejana.metros} m${arma(d.killLejana.arma)}`, d.killLejana && d.killLejana.arma);
         add(d.primeraSangre, 'jug', 'fa-droplet', 'Primera sangre', d.primeraSangre && d.primeraSangre.jugador, d.primeraSangre && (d.primeraSangre.veces > 1 ? `en ${d.primeraSangre.veces} salas` : `a ${esc(d.primeraSangre.victima || '')}`));
-        add(d.armaMasUsada, 'jug', 'fa-gun', 'Arma más usada', d.armaMasUsada && d.armaMasUsada.arma, d.armaMasUsada && `${pl(d.armaMasUsada.usos, 'uso', 'usos')} · ${pl(d.armaMasUsada.kills, 'kill', 'kills')}`);
-        add(d.armaMasLetal && d.armaMasLetal.kills > 0, 'jug', 'fa-skull', 'Arma con más kills', d.armaMasLetal && d.armaMasLetal.arma, d.armaMasLetal && pl(d.armaMasLetal.kills, 'kill', 'kills'));
+        add(d.armaMasUsada, 'jug', 'fa-gun', 'Arma más usada', d.armaMasUsada && d.armaMasUsada.arma, d.armaMasUsada && `${pl(d.armaMasUsada.usos, 'uso', 'usos')} · ${pl(d.armaMasUsada.kills, 'kill', 'kills')}`, d.armaMasUsada && d.armaMasUsada.arma);
+        add(d.armaMasLetal && d.armaMasLetal.kills > 0, 'jug', 'fa-skull', 'Arma con más kills', d.armaMasLetal && d.armaMasLetal.arma, d.armaMasLetal && pl(d.armaMasLetal.kills, 'kill', 'kills'), d.armaMasLetal && d.armaMasLetal.arma);
         add(d.habilidadMasUsada, 'jug', 'fa-wand-magic-sparkles', 'Habilidad activa más usada', d.habilidadMasUsada && d.habilidadMasUsada.nombre,
             d.habilidadMasUsada && `${pl(d.habilidadMasUsada.jugadores, 'vez elegida', 'veces elegida')} · ${pl(d.habilidadMasUsada.usos, 'uso', 'usos')}`);
         add(d.equipoMasKills, 'eq', 'fa-fire', 'Equipo con más kills', d.equipoMasKills && d.equipoMasKills.equipo, d.equipoMasKills && pl(d.equipoMasKills.kills, 'kill', 'kills'));
@@ -733,12 +765,12 @@
             { titulo: 'PRIMERA SANGRE Y KILL MÁS LEJANA', icono: 'fa-droplet',
                 cab: ['SALA', 'PRIMERA SANGRE', 'EQUIPO', 'VÍCTIMA', 'MIN', 'ARMA', 'KILL MÁS LEJANA', 'METROS'],
                 filas: s.map(x => { const p = x.primeraSangre, k = x.killLejana;
-                    return [x.etiqueta, p ? p.jugador : '—', p ? p.equipo : '', p ? p.victima || '' : '', p && p.tiempo ? mmss(p.tiempo) : '', p ? p.arma || '—' : '',
+                    return [x.etiqueta, p ? p.jugador : '—', p ? p.equipo : '', p ? p.victima || '' : '', p && p.tiempo ? mmss(p.tiempo) : '', p ? celdaArma(p.arma) : '',
                         k ? k.jugador : '—', k ? k.metros + ' m' : '']; }) },
             { titulo: 'MVP POR SALA', icono: 'fa-crown',
                 cab: ['SALA', 'MVP', 'EQUIPO', 'KILLS', ...(dano ? ['DAÑO', 'HS'] : []), 'ARMA', 'VIVO'],
                 filas: s.map(x => { const m = x.mvp;
-                    return m ? [x.etiqueta, m.jugador, m.equipo, m.kills, ...(dano ? [x.conDano ? fmt(m.dano) : '—', x.conDano ? m.headshots : '—'] : []), m.arma || '—', mmss(m.vivo)]
+                    return m ? [x.etiqueta, m.jugador, m.equipo, m.kills, ...(dano ? [x.conDano ? fmt(m.dano) : '—', x.conDano ? m.headshots : '—'] : []), celdaArma(m.arma), mmss(m.vivo)]
                         : [x.etiqueta, '—', '', '', ...(dano ? ['', ''] : []), '', '']; }) }
         ].filter(t => t.titulo !== 'PRIMERA SANGRE Y KILL MÁS LEJANA' || s.some(x => x.primeraSangre || x.killLejana));
     }
@@ -807,7 +839,7 @@
                     e.n ? mmss(e.vivo / e.n) : '—', rival(top(e.vs))]) },
             { titulo: 'ARMAS MÁS USADAS', icono: 'fa-gun',
                 cab: ['#', 'ARMA', 'KILLS', ...(dano ? ['DAÑO'] : []), 'JUGADORES QUE LA USARON'],
-                filas: la.map((a, i) => [i + 1, a.arma, a.kills, ...(dano ? [fmt(a.dano)] : []), a.usos]) },
+                filas: la.map((a, i) => [i + 1, celdaArma(a.arma), a.kills, ...(dano ? [fmt(a.dano)] : []), a.usos]) },
             { titulo: 'HABILIDADES ACTIVAS', icono: 'fa-wand-magic-sparkles',
                 cab: ['#', 'PERSONAJE', 'VECES ELEGIDA', 'USOS', 'USOS POR SALA', 'KILLS DE QUIEN LA LLEVA', 'BOOYAHS', 'QUIEN MÁS LA USÓ'],
                 filas: lh.map((y, i) => [i + 1, celdaHabilidad(y.id), y.veces, y.usos, (y.usos / y.veces).toFixed(1), y.kills, y.booyahs,
@@ -818,9 +850,9 @@
     }
 
     /* ---------------- HTML: tarjetas y tablas (página pública) ---------------- */
-    const D = (icono, titulo, valor, detalle) => `<div class="cpl-dest"><i class="fa-solid ${icono}"></i><div><small>${titulo}</small><b>${valor}</b>${detalle ? `<span>${detalle}</span>` : ''}</div></div>`;
+    const D = (icono, titulo, valor, detalle, img) => `<div class="cpl-dest${img ? ' cpl-dest-con-arma' : ''}"><i class="fa-solid ${icono}"></i><div><small>${titulo}</small><b>${valor}</b>${detalle ? `<span>${detalle}</span>` : ''}</div>${img ? `<img class="cpl-dest-arma" src="${img}" alt="" loading="lazy" onerror="this.remove()">` : ''}</div>`;
     function destacadosHTML(r) {
-        return listaDestacados(r).map(x => D(x.i, x.t, x.v, x.s)).join('');
+        return listaDestacados(r).map(x => D(x.i, x.t, x.v, x.s, x.img)).join('');
     }
     function escuadraHTML(e) {
         if (!e) return '';
@@ -894,7 +926,7 @@
             { titulo: `ACUMULADO POR MAPA · ${lm.length}`, icono: 'fa-map-location-dot',
                 cab: ['MAPA', 'SALAS', 'KILLS', 'K/SALA', ...(dano ? ['DAÑO', 'HS', 'GLOO'] : []), 'DURACIÓN PROM.', 'MÁS BOOYAHS', 'MÁS KILLS', 'ARMA CON MÁS KILLS'],
                 filas: lm.map(m => [m.mapa, m.salas, m.kills, prom(m.kills, m.salas), ...(dano ? [fmt(m.dano), m.hs, m.gloo] : []), prom(m.duracion, m.salas, mmss),
-                    conN(top(m.booyahs)), conN(top(m.killers)), conN(top(m.armas))]) }
+                    conN(top(m.booyahs)), conN(top(m.killers)), top(m.armas) ? celdaArma(top(m.armas)[0], `(${top(m.armas)[1]})`) : '—']) }
         ].filter(t => t.filas.length);
     }
 
@@ -979,6 +1011,9 @@
 .cpl-tabla tbody tr:hover{background:rgba(216,195,149,.06)}
 .cpl-tabla ::selection,.cpl-dest ::selection{background:#D8C395;color:#0a0b10}
 .cpl-tabla td.cpl-s{color:#D8C395;font-weight:bold}
+.cpl-arma{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}.cpl-arma img{width:64px;height:19px;object-fit:contain;flex-shrink:0}
+.cpl-dest-con-arma{position:relative;overflow:hidden}.cpl-dest-con-arma>div{position:relative;z-index:1}
+.cpl-dest-arma{position:absolute;right:-6px;bottom:4px;width:118px;height:auto;opacity:.5;pointer-events:none}
 .cpl-hab{display:inline-flex;align-items:center;gap:8px}.cpl-hab img{width:30px;height:30px;object-fit:cover;object-position:top;border-radius:50%;background:#1D1D1D;border:1px solid rgba(216,195,149,.35)}
 .cpl-sel{min-height:38px;padding:6px 10px;border:1px solid rgba(216,195,149,.3);border-radius:4px;background:#0a0b10;color:#fff}
 .cpl-filtros{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
@@ -1221,7 +1256,7 @@
 
     window.PumasCompletos = {
         leerCSV, partidaDesdeCSV, partidaDesdeReplay, jugadoresDeLog, nombreArma, combinar, aplicarBin, equiposDelBin, cuentasDelBin, aCSV, emparejar, calcular, filasBD, salasDesdeBD, idDeArchivo,
-        nombreHabilidad, fotoHabilidad, habilidadDe, HABILIDADES,
+        nombreHabilidad, fotoHabilidad, habilidadDe, HABILIDADES, fotoArma, celdaArma,
         habilitados, habilitado, destacadosHTML, escuadraHTML, salasHTML, tablasDetalle, tablasAcumulados, tablasHTML, montarSesion, imagenHTML, imagenSalasHTML, listaDestacados, tablasSalas, traerTodo, estilos, montarPublico, MAPAS, GRUPOS,
         guardar: (portal, sesion, filas) => P.stats.guardar(portal, sesion, filas),
         olvidarConfig: () => { cfgCache = null; }
