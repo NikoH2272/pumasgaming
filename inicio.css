@@ -159,7 +159,9 @@
 .c-jer p { margin: 8px 0 0; color: var(--gris); font-size: 15px; }
 
 /* ---------- Comunidad ---------- */
-.c-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.c-cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+.c-cards > .c-card { grid-column: span 2; }
+.c-cards > .c-card:nth-child(n+4) { grid-column: span 3; }
 .c-card { position: relative; display: flex; flex-direction: column; padding: 24px 22px; border: 1px solid var(--linea); background: var(--s1); }
 .c-card::after, .c-corte::after { content: ""; position: absolute; right: 0; top: 0; width: 24px; height: 24px; background: var(--oro); clip-path: polygon(0 0, 100% 0, 100% 100%); }
 .c-card > i { font-size: 28px; color: var(--oro); }
@@ -208,6 +210,8 @@
   .c-claro { grid-template-columns: 1fr; }
   .c-claro .b { clip-path: none; padding: 44px var(--pad); }
   .c-cards { grid-template-columns: 1fr 1fr; }
+  .c-cards > .c-card, .c-cards > .c-card:nth-child(n+4) { grid-column: auto; }
+  .c-cards > .c-card:last-child:nth-child(odd) { grid-column: 1 / -1; }
   .c-home .main-nav ul { gap: 16px; }
 }
 @media (max-width: 1024px) {

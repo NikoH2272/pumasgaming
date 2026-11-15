@@ -58,7 +58,7 @@
         zmf:            'https://chat.whatsapp.com/KSCHFXzg3XJGNIU6dt6UAl'
     };
     // Grupos extra (botón adicional en la tarjeta)
-    const LINKS_EXTRA = { entrenamientos: [{ texto: 'Unirse Ligas', url: 'https://chat.whatsapp.com/CVnTo8XyLTv0PRRYRFYUr9' }] };
+    const LINKS_EXTRA = { entrenamientos: [{ texto: 'Unirse Ligas', url: 'https://chat.whatsapp.com/KSlbKXeU0RZKz4ihnnpJaO' }] };
     // Instagram de cada entreno (por ahora solo Pumas)
     const INSTAGRAM = { entrenamientos: 'https://www.instagram.com/entrenos.pumas.gg/' };
 
