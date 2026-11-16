@@ -15,7 +15,7 @@
 <link rel="icon" href="imagenes/LOGO PUMAS WEB.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../portal-kit/portal.js?v=20261111c" data-portal="entrenamientos" data-modo="publico" data-sin-sorteo></script>
-<script src="../portal-kit/completos.js?v=20261115a"></script>
+<script src="../portal-kit/completos.js?v=20261115b"></script>
 
 <style>
 /* ── Variables ── */
@@ -481,6 +481,7 @@ const fmtNum = n => n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : 
 const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 // Arma con su imagen (imagenes/armas, vía completos.js)
 const armaHTML = n => {
+    if (window.PumasCompletos && PumasCompletos.arreglarArma) n = PumasCompletos.arreglarArma(n);
     const f = window.PumasCompletos && PumasCompletos.fotoArma ? PumasCompletos.fotoArma(n) : '';
     return f ? `<span class="arma-con-img"><img src="${esc(f)}" alt="" loading="lazy" onerror="this.remove()">${esc(n)}</span>` : esc(n);
 };

@@ -85,6 +85,8 @@
     }
     // -40 (Winchester) y -31 (Habilidad) sí son del juego; el 0 y otros negativos (zona, caída...) no son armas
     const nombreArma = id => (ARMAS_FF[id] && +id < 0 ? ARMAS_FF[id] : +id <= 0 ? '' : aprendidas()[id] || ARMAS_FF[id] || ('ARMA #' + id));
+    // Entrenos guardados antes de conocer un id quedaron con "ARMA #814": se traduce al leerlos con la tabla de hoy
+    const arreglarArma = n => { const m = /^ARMA #?(-?\d+)$/i.exec(String(n || '').trim()); return m ? (nombreArma(+m[1]) || n) : n; };
 
     /* ---------------- Imagen de cada arma: imagenes/armas/<Archivo>.png ----------------
        El nombre del juego se reduce a su arma base (M1014-III → M1014, GoldAWM-Y → AWM, TROGON(SHOTGUN) → Trogon).
@@ -105,13 +107,14 @@
         try { return new URL('../imagenes/armas/', (document.currentScript && document.currentScript.src) || location.href).href; } catch (e) { return '../imagenes/armas/'; }
     })();
     const fotoArma = nombre => {
-        const b = claveArma(String(nombre || '').toUpperCase().replace(/\(.*\)/, '').trim().replace(/^GOLD/, '').replace(/-(I{1,3}|X|Y|GOLD)$/, ''));
+        const b = claveArma(String(arreglarArma(nombre) || '').toUpperCase().replace(/\(.*\)/, '').trim().replace(/^GOLD/, '').replace(/-(I{1,3}|X|Y|GOLD)$/, ''));
         const f = ARCHIVO_ARMA[ALIAS_ARMA[b] || b];
         return f ? RUTA_ARMAS + encodeURIComponent(f) + '.png' : '';
     };
     // Celda de tabla con la imagen del arma (en texto/CSV sale solo el nombre)
     const celdaArma = (nombre, extra) => {
         if (!nombre || nombre === '—') return '—';
+        nombre = arreglarArma(nombre);
         const f = fotoArma(nombre), txt = String(nombre) + (extra ? ' ' + extra : '');
         return { html: `<span class="cpl-arma">${f ? `<img src="${f}" alt="" loading="lazy" onerror="this.remove()">` : ''}${esc(txt)}</span>`, toString: () => txt };
     };
@@ -180,7 +183,7 @@
             try { l = JSON.parse(txt.replace(/'/g, '"').replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false').replace(/\bNone\b/g, 'null')); } catch (e2) { l = []; }
         }
         if (Array.isArray(l)) aprenderArmas(l);
-        return (Array.isArray(l) ? l : []).map(a => ({ n: String(a.weapon_name || ('ARMA ' + a.weapon_id)).toUpperCase(), d: ent(a.damage), k: ent(a.kills), hs: ent(a.headshots), s: ent(a.shoots) }))
+        return (Array.isArray(l) ? l : []).map(a => ({ n: String(a.weapon_name || nombreArma(a.weapon_id) || ('ARMA #' + a.weapon_id)).toUpperCase(), d: ent(a.damage), k: ent(a.kills), hs: ent(a.headshots), s: ent(a.shoots) }))
             .filter(a => (a.s > 0 || a.d > 0 || a.k > 0) && !/-SUM$/.test(a.n));   // "-SUM" repite el total de la misma arma
     }
 
@@ -692,7 +695,9 @@
                 match_id: f.match_id, mapa: f.mapa, modo: f.modo, jugadores: [], fuente: (f.fuente || x.fuente) === 'replay' ? 'replay' : (f.fuente || 'csv') };
             const j = { equipo: f.equipo, jugador: f.jugador, account_id: f.account_id, kills: f.kills, dano: f.dano, headshots: f.headshots,
                 hits: f.hits, disparos: f.disparos, revividos: f.revividos, gloo: f.gloo, vivo: f.vivo, asistencias: f.asistencias,
-                derribos: f.derribos, booyah: f.booyah, arma: f.arma, armas: f.armas || [], extra: x };
+                derribos: f.derribos, booyah: f.booyah, arma: arreglarArma(f.arma), armas: (f.armas || []).map(a => a && a.n ? Object.assign({}, a, { n: arreglarArma(a.n) }) : a), extra: x };
+            if (x.armaPS) x.armaPS = arreglarArma(x.armaPS);
+            if (x.armaL) x.armaL = arreglarArma(x.armaL);
             s.jugadores.push(j);
             if (x.primeraSangre) s.primeraSangre = { jugador: j.jugador, equipo: j.equipo, victima: x.victima || '', arma: x.armaPS || '', tiempo: x.tiempoPS || 0 };
             if (x.lejana && x.distancia) s.killLejana = { jugador: j.jugador, equipo: j.equipo, victima: x.victimaL || '', metros: x.distancia, arma: x.armaL || '' };
@@ -1256,7 +1261,7 @@
 
     window.PumasCompletos = {
         leerCSV, partidaDesdeCSV, partidaDesdeReplay, jugadoresDeLog, nombreArma, combinar, aplicarBin, equiposDelBin, cuentasDelBin, aCSV, emparejar, calcular, filasBD, salasDesdeBD, idDeArchivo,
-        nombreHabilidad, fotoHabilidad, habilidadDe, HABILIDADES, fotoArma, celdaArma,
+        nombreHabilidad, fotoHabilidad, habilidadDe, HABILIDADES, fotoArma, celdaArma, arreglarArma,
         habilitados, habilitado, destacadosHTML, escuadraHTML, salasHTML, tablasDetalle, tablasAcumulados, tablasHTML, montarSesion, imagenHTML, imagenSalasHTML, listaDestacados, tablasSalas, traerTodo, estilos, montarPublico, MAPAS, GRUPOS,
         guardar: (portal, sesion, filas) => P.stats.guardar(portal, sesion, filas),
         olvidarConfig: () => { cfgCache = null; }
