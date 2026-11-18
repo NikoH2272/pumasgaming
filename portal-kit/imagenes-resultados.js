@@ -156,7 +156,7 @@
             <img src="${base}${T.logoAgua}" alt="" onerror="this.remove()" style="position:absolute;right:-85px;top:200px;height:670px;width:auto;max-width:none;opacity:${T.opAgua}">
             <div style="position:absolute;top:0;right:0;width:240px;height:12px;background:${T.acento}"></div>
             <header style="position:absolute;left:52px;right:52px;top:42px;height:100px;display:flex;align-items:center;justify-content:space-between;gap:28px">
-                <div style="display:flex;align-items:center;gap:18px"><img src="${base}${T.logo}" alt="" onerror="this.remove()" style="height:${T.tamLogo}px;width:auto;max-width:none">${T.logo2 ? `<span style="font-family:${F_TIT};font-weight:800;font-size:34px;color:${T.acento}">×</span><img src="${base}${T.logo2}" alt="" onerror="this.remove()" style="height:${T.tamLogo}px;width:auto;max-width:none">` : ''}<div><div style="font-family:${F_TIT};font-weight:800;font-size:39px;line-height:1">${esc(T.marca)}</div><div style="font-size:12px;font-weight:600;letter-spacing:3px;color:${T.acento};margin-top:10px">${esc(T.lema || 'ENTRENAMIENTOS OFICIALES')}</div></div></div>
+                <div style="display:flex;align-items:center;gap:18px"><img src="${esc(o.logo || ((o.base || '../') + T.logo))}" alt="" onerror="this.remove()" style="height:${T.tamLogo}px;width:auto;max-width:none">${T.logo2 ? `<span style="font-family:${F_TIT};font-weight:800;font-size:34px;color:${T.acento}">×</span><img src="${base}${T.logo2}" alt="" onerror="this.remove()" style="height:${T.tamLogo}px;width:auto;max-width:none">` : ''}<div><div style="font-family:${F_TIT};font-weight:800;font-size:39px;line-height:1">${esc(T.marca)}</div><div style="font-size:12px;font-weight:600;letter-spacing:3px;color:${T.acento};margin-top:10px">${esc(T.lema || 'ENTRENAMIENTOS OFICIALES')}</div></div></div>
                 <div style="text-align:right;font-size:15px;line-height:1.3;color:${T.gris};flex-shrink:0"><div style="display:flex;justify-content:flex-end;gap:18px;align-items:baseline"><strong style="font-size:20px;color:${T.piel}">${esc(m.fechaCorta || '')}</strong><span>${esc(m.moderador || 'FREE FIRE')}</span></div>${horas.length?`<div style="display:flex;justify-content:flex-end;gap:22px;margin-top:12px">${horas.map(h=>`<div style="text-align:right"><span style="font-size:12px;font-weight:700;color:${T.gris}">${h.pais}</span> <b style="font-size:21px;color:${T.acento}">${h.hora}</b></div>`).join('')}</div>`:''}</div>
             </header>
             <div style="position:absolute;left:52px;right:52px;top:171px"><h1 class="pg-title" style="font-size:${o.tamTitulo || 88}px">${esc(o.titulo)}</h1><div style="margin-top:17px;font-size:17px;font-weight:500;color:${T.gris}">${esc(o.subtitulo || m.encabezado || T.encabezado || 'Free Fire · Entrenos Pumas')}</div></div>
@@ -379,19 +379,20 @@
         const paneles = d.porSala.filter(s => PLANOS[s.mapaId] && fasesValidas(s).length).slice(0, 6)
             .map(s => ({ s, z: imgMapa(d, s, o, 'caidaPanel') })).filter(x => x.z);
         if (!paneles.length) return '';
-        const cols = paneles.length <= 4 && paneles.length !== 3 ? 2 : 3, gap = 18, ANCHO = 976, px = Math.floor((ANCHO - gap * (cols - 1)) / cols);
-        const tam = cols === 2 ? Math.min(px, 340) : px;
+        const cols = paneles.length === 1 ? 1 : paneles.length <= 4 ? 2 : 3, gap = 18, ANCHO = 976, px = Math.floor((ANCHO - gap * (cols - 1)) / cols);
+        const tam = cols === 1 ? 650 : 292;
         const panel = ({ s, z }) => `<div style="min-width:0;background:${T.fila1}">
             <div style="display:flex;justify-content:space-between;align-items:center;height:34px;padding:0 12px;background:${T.acento};color:${T.sobre}">
                 <b style="font:800 20px ${F_TIT}">SALA ${s.sala}</b><span style="font:700 15px ${F_TIT};letter-spacing:.5px">${esc(String(s.mapa || '').toUpperCase())}</span></div>
             <div style="position:relative;width:${tam}px;height:${tam}px;overflow:hidden;margin:0 auto;background:#0d1a22">${z.html(tam)}</div>
-            <div style="padding:10px 12px 12px;line-height:1.25">
+            <div style="padding:8px 12px 9px;line-height:1.2">
                 <div style="font-family:${F_TIT};font-size:21px;font-weight:700">${z.enfr} enfrentamientos <span style="color:${T.gris};font-size:15px">· hasta ${mmss(z.corte)}</span></div>
-                <div style="font-size:12px;color:${T.gris};margin-top:3px">${z.elim} eq. eliminados en la caída${z.top[0] ? ' · punto 1: ' + z.top[0].n + ' enfr.' : ''}</div>
+                <div style="font-size:14px;color:${T.gris};margin-top:3px">${z.elim} eq. eliminados${z.top[0] ? ' · punto 1: ' + z.top[0].n + ' enfr.' : ''}</div>
             </div></div>`;
         return lienzo('pgImgCaidas', { ...o, titulo: 'ZONAS DE CAÍDA', tamTitulo: 80, subtitulo: `${paneles.length} salas · Las peleas al aterrizar, hasta que cierra la Z1` }, `
+            <div style="display:flex;gap:32px;align-items:center;min-height:52px;padding:10px 16px;margin-bottom:16px;background:${T.fila2};font-size:17px"><span><b style="color:${T.acento}">${paneles.reduce((n,p)=>n+p.z.enfr,0)}</b> enfrentamientos</span><span><b style="color:${T.acento}">${paneles.reduce((n,p)=>n+p.z.elim,0)}</b> equipos eliminados entre todas las salas</span></div>
             <div style="display:grid;grid-template-columns:repeat(${cols},${px}px);gap:${gap}px">${paneles.map(panel).join('')}</div>
-            <p class="pg-small" style="margin-top:14px">El círculo blanco es dónde cae la Z1 · los números son los puntos más calientes de cada caída.</p>`);
+            <p class="pg-small" style="margin-top:14px">Círculo: ubicación de la Z1 · números: puntos con más enfrentamientos · calor: concentración de peleas.</p>`);
     }
 
     /* ---------------- Analítica de mapa ---------------- */
@@ -691,6 +692,12 @@
         estilo = k;
     }
 
-    window.PumasImagenes = { generar, descargar, datos, horarios, W, H, plantilla:lienzo, tabla, fuentes, TEMAS, selectorHTML, enlazarSelector, setEstilo, selectorDescargaHTML, enlazarDescarga, paraDescargar,
+    function plantilla(id, o, cuerpo) {
+        fuentes();
+        const prev = T;
+        T = TEMAS[o.estilo] || T;
+        try { return lienzo(id, o, cuerpo); } finally { T = prev; }
+    }
+    window.PumasImagenes = { generar, descargar, datos, horarios, W, H, plantilla, tabla, fuentes, TEMAS, selectorHTML, enlazarSelector, setEstilo, selectorDescargaHTML, enlazarDescarga, paraDescargar,
         get estilo() { return estilo; } };
 })();

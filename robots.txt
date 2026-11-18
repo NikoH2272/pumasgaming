@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /pruebas/
+Disallow: /respaldo/
+Disallow: /exportar/
+
+Sitemap: https://pumasgaming.com/sitemap.xml

@@ -249,7 +249,16 @@
 .cd-acciones .btn-generar{flex:1 1 210px}
 .cd-msg{min-height:1.2em;margin:10px 0 0;font-size:.9rem}
 .cd-leyenda{display:flex;flex-wrap:wrap;gap:16px;margin:8px 0 0;color:#9a9a9a;font-size:.8rem}
-.cd-previa{margin-top:22px;overflow-x:auto}
+.cd-exportar{margin-top:28px;padding-top:24px;border-top:1px solid rgba(216,195,149,.25)}
+.cd-exportar h4{margin:0 0 12px;font:700 .85rem 'Michroma',sans-serif;color:var(--primary,#D8C395)}
+.cd-exportar .pg-selector-estilo{justify-content:flex-start!important;margin:16px 0}
+.cd-vista-label{display:inline-flex;align-items:center;gap:10px;margin:0 12px 14px 0;color:var(--secondary,#B9B2A4)}
+.cd-vista-label select{min-width:210px;max-width:100%;padding:12px 15px;border:1px solid rgba(216,195,149,.2);border-radius:2px;background:#0a0b10;color:var(--light,#F4EEDC);font-size:1rem;color-scheme:dark}
+.cd-barra input:not([type=file]),.cd-reglas input{padding:12px 15px;border:1px solid rgba(216,195,149,.2);background:#0a0b10;color:var(--light,#F4EEDC);border-radius:2px;font-size:1rem}
+.cd-previa{margin-top:18px;width:540px;max-width:100%;overflow:hidden;background:#141414;border-radius:6px}
+.cd-lienzo{width:1080px;height:1350px;transform-origin:0 0}
+.cd-exportar button:focus-visible,.cd-exportar select:focus-visible,.cd-tabla input:focus-visible{outline:2px solid var(--primary,#D8C395);outline-offset:3px}
+.cd-exportar button:disabled{opacity:.55;cursor:wait}
 .cd-reglas{margin-top:20px;padding:14px 18px;background:#0d0e14;border:1px solid rgba(216,195,149,.2);border-radius:6px}
 .cd-reglas h4{margin:0 0 12px;font-family:'Michroma',sans-serif;font-size:.75rem;letter-spacing:.08em;color:#D8C395}
 .cd-reglas-grid{display:flex;flex-wrap:wrap;gap:14px}
@@ -271,23 +280,26 @@
 .cd-logo-eq-btn{flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:rgba(216,195,149,.07);border:1px solid rgba(216,195,149,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:border-color .15s}
 .cd-logo-eq-btn:hover{border-color:#D8C395}
 .cd-logo-eq-mini{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
-@media(max-width:640px){.cd-tabla{min-width:760px}.cd-tabla input{min-width:104px;font-size:13px}.cd-mapa-item{max-width:calc(50% - 4px)}}`;
+@media(max-width:640px){.cd-tabla{min-width:760px}.cd-tabla input{min-width:104px;font-size:13px}.cd-mapa-item{min-width:0;flex-basis:calc(50% - 4px);max-width:calc(50% - 4px)}.cd-barra>.form-group{width:100%;min-width:0}.cd-barra input{min-width:0!important;width:100%}.cd-vista-label{display:flex;flex-wrap:wrap}.cd-vista-label select{width:100%;min-width:0}.cd-reglas{padding:14px}.cd-reglas-grid .form-group{min-width:0!important;flex-basis:100%!important}}`;
 
-    function montar(contId) {
+    function montar(contId, opciones = {}) {
         const cont = document.getElementById(contId);
         if (!cont || cont.dataset.listo) return;
         cont.dataset.listo = '1';
         if (!document.getElementById('pgCaidasCss')) {
             const st = document.createElement('style'); st.id = 'pgCaidasCss'; st.textContent = CSS; document.head.appendChild(st);
         }
-        let n = 12, filas = leer(12);
-        let reglas = leerReglas();
+        const guardarDemo = new Map();
+        const leerFilas = cantidad => opciones.demo ? (guardarDemo.get(cantidad) || PLANTILLAS[cantidad].map(r => ({ equipo:r[0], caidas:r.slice(1) }))) : leer(cantidad);
+        const guardarFilas = (cantidad, datos) => opciones.demo ? guardarDemo.set(cantidad, datos) : guardar(cantidad, datos);
+        let n = 12, filas = leerFilas(12);
+        let reglas = opciones.demo ? {pelea:'NO', zonas:'2'} : leerReglas();
 
         cont.innerHTML = `
             <p class="tool-desc">Asigna a cada equipo su caída en cada mapa. Los equipos con la misma caída se marcan con 💀 del mismo color. El mapa visual se actualiza en tiempo real.</p>
             <div class="cd-barra">
-                <div class="form-group"><label>Equipos</label><select data-c="n"><option value="12">12 equipos</option><option value="15">15 equipos</option></select></div>
-                <div class="form-group"><label>Título de la imagen</label><input data-c="titulo" maxlength="60" placeholder="Ej: SCRIM 8PM · 13/10" style="min-width:240px"></div>
+                <div class="form-group"><label for="cdEquipos">Equipos</label><select id="cdEquipos" data-c="n"><option value="12">12 equipos</option><option value="15">15 equipos</option></select></div>
+                <div class="form-group"><label for="cdTitulo">Título de la imagen</label><input id="cdTitulo" data-c="titulo" maxlength="60" placeholder="Ej: SCRIM 8PM · 17/11" style="min-width:240px"></div>
                 <div class="form-group" style="flex:0 0 auto">
                     <label>Logo (opcional)</label>
                     <div style="display:flex;align-items:center;gap:6px">
@@ -352,6 +364,7 @@
             <div class="cd-acciones">
                 <button class="btn-generar" type="button" data-c="azarNormal"><i class="fa-solid fa-shuffle"></i> Generar normal</button>
                 <button class="btn-generar" type="button" data-c="azarPelada" style="border-color:#ff6b6b;color:#ff6b6b"><i class="fa-solid fa-skull-crossbones"></i> Generar pelada</button>
+                <button class="btn-generar" type="button" data-c="ver"><i class="fa-solid fa-eye"></i> Ver imágenes</button>
                 <button class="btn-generar" type="button" data-c="imagen"><i class="fa-solid fa-image"></i> Descargar tabla</button>
                 <button class="btn-generar" type="button" data-c="descargarMapas"><i class="fa-solid fa-map"></i> Descargar 5 mapas</button>
                 <button class="btn-generar" type="button" data-c="copiar"><i class="fa-brands fa-whatsapp"></i> Copiar texto</button>
@@ -363,7 +376,14 @@
                 <button class="btn-mini peligro" type="button" data-c="limpiar"><i class="fa-solid fa-trash"></i> Limpiar todo</button>
             </div>
             <p class="cd-msg" data-c="msg" role="status"></p>
-            <div class="cd-previa" data-c="previa"></div>`;
+            <div class="cd-exportar">
+                <h4>Imágenes de caídas · 4:5</h4>
+                <p class="tool-desc">Tabla general y un mapa por sala. Vista previa y PNG de 1080 × 1350 px.</p>
+                <div data-c="estilos"></div>
+                <label class="cd-vista-label">Imagen <select data-c="vista" aria-label="Imagen de caídas"></select></label>
+                <button class="btn-mini" type="button" data-c="descargarActual">Descargar esta imagen</button>
+                <div class="cd-previa" data-c="previa"><div class="cd-lienzo" data-c="lienzo"></div></div>
+            </div>`;
 
         const $ = k => cont.querySelector(`[data-c="${k}"]`);
         const msg = (t, c) => { $('msg').textContent = t; $('msg').style.color = c || ''; };
@@ -376,8 +396,8 @@
             return { pelea: $('regla_pelea').value, zonas: $('regla_zonas').value, extra: $('regla_extra').value.trim() };
         }
         ['regla_pelea','regla_zonas','regla_extra'].forEach(k => {
-            cont.querySelector(`[data-c="${k}"]`).addEventListener('change', () => guardarReglas(getReglas()));
-            cont.querySelector(`[data-c="${k}"]`).addEventListener('input',  () => guardarReglas(getReglas()));
+            cont.querySelector(`[data-c="${k}"]`).addEventListener('change', () => { if (!opciones.demo) guardarReglas(getReglas()); actualizarMapas(); refrescarImagenes(); });
+            cont.querySelector(`[data-c="${k}"]`).addEventListener('input',  () => { if (!opciones.demo) guardarReglas(getReglas()); });
         });
 
         function pintarTabla() {
@@ -405,6 +425,7 @@
             });
             marcarRepetidas();
             actualizarMapas();
+            refrescarImagenes();
         }
 
         function marcarRepetidas() {
@@ -477,12 +498,13 @@
         }
 
         $('cuerpo').addEventListener('input', e => {
+            if (!e.target.matches('[data-eq],[data-m]')) return;
             const tr = e.target.closest('[data-i]');
             if (!tr) return;
             const f = filas[Number(tr.dataset.i)];
             if (e.target.matches('[data-eq]')) f.equipo = e.target.value.toUpperCase();
             else f.caidas[Number(e.target.dataset.m)] = e.target.value.toUpperCase();
-            guardar(n, filas); marcarRepetidas(); actualizarMapas();
+            guardarFilas(n, filas); marcarRepetidas(); actualizarMapas(); refrescarImagenes();
         });
         $('cuerpo').addEventListener('change', e => {
             if (!e.target.matches('[data-logo-eq]')) return;
@@ -496,16 +518,16 @@
                 const icon = $('cuerpo').querySelector(`[data-lp-icon="${idx}"]`);
                 if (img)  { img.src = equipoLogos[idx]; img.style.display = 'block'; }
                 if (icon) icon.style.display = 'none';
-                actualizarMapas();
+                actualizarMapas(); refrescarImagenes();
             };
             reader.readAsDataURL(file);
         });
-        $('n').addEventListener('change', () => { n = Number($('n').value); filas = leer(n); pintarTabla(); $('previa').innerHTML = ''; msg(''); });
+        $('n').addEventListener('change', () => { n = Number($('n').value); filas = leerFilas(n); equipoLogos = []; pintarTabla(); msg(''); });
         $('usarLista').onclick = () => {
             const l = $('lista').value.split(/\r?\n/).map(x => x.replace(/^\s*\d+\s*[.)\-:]\s*/, '').trim()).filter(Boolean);
             if (!l.length) { msg('Pega los equipos, uno por línea.', '#ff8a8d'); return; }
             l.slice(0, n).forEach((eq, i) => { filas[i].equipo = eq.toUpperCase(); });
-            guardar(n, filas); pintarTabla();
+            guardarFilas(n, filas); pintarTabla();
             msg(`✔ ${Math.min(l.length, n)} equipo(s) puestos${l.length > n ? ` (sobraron ${l.length - n})` : ''}.`, '#6ee7a8');
         };
         function mezclar(arr) {
@@ -526,7 +548,7 @@
                     f.caidas[j] = libres.shift(); puestas++;
                 });
             });
-            guardar(n, filas); pintarTabla();
+            guardarFilas(n, filas); pintarTabla();
             msg(puestas ? `✔ ${puestas} caída(s) rellenadas (sin pelea).` : 'No había casillas vacías.', '#6ee7a8');
         };
         $('azarNormal').onclick = () => {
@@ -534,7 +556,7 @@
                 const lista = mezclar(CATALOGO[m].slice());
                 filas.forEach((f, i) => { f.caidas[j] = lista[i % lista.length]; });
             });
-            guardar(n, filas); pintarTabla();
+            guardarFilas(n, filas); pintarTabla();
             msg('✔ Caídas generadas al azar (sin pelea).', '#6ee7a8');
         };
         $('azarPelada').onclick = () => {
@@ -547,17 +569,17 @@
                 mezclar(asigs);
                 filas.forEach((f, i) => { f.caidas[j] = asigs[i] || lista[i % lista.length]; });
             });
-            if (!$('regla_pelea').value) { $('regla_pelea').value = 'SI'; guardarReglas(getReglas()); }
-            guardar(n, filas); pintarTabla();
+            if (!$('regla_pelea').value) { $('regla_pelea').value = 'SI'; if (!opciones.demo) guardarReglas(getReglas()); }
+            guardarFilas(n, filas); pintarTabla();
             msg(`⚔️ Pelada generada — ${nPeleas} zona(s) de choque por mapa.`, '#ff8a8d');
         };
         $('plantilla').onclick = () => {
             if (!confirm(`¿Cargar la plantilla de ${n} equipos del Excel? Reemplaza lo que hay en la tabla.`)) return;
             filas = PLANTILLAS[n].map(r => ({ equipo: r[0], caidas: r.slice(1) }));
-            guardar(n, filas); pintarTabla(); msg('✔ Plantilla cargada.', '#6ee7a8');
+            guardarFilas(n, filas); pintarTabla(); msg('✔ Plantilla cargada.', '#6ee7a8');
         };
-        $('soloCaidas').onclick = () => { filas.forEach(f => { f.caidas = MAPAS.map(() => ''); }); guardar(n, filas); pintarTabla(); msg('Caídas vaciadas; los equipos se mantienen.'); };
-        $('limpiar').onclick = () => { if (!confirm('¿Limpiar equipos y caídas?')) return; filas = vacio(n); guardar(n, filas); pintarTabla(); $('previa').innerHTML = ''; msg(''); };
+        $('soloCaidas').onclick = () => { filas.forEach(f => { f.caidas = MAPAS.map(() => ''); }); guardarFilas(n, filas); pintarTabla(); msg('Caídas vaciadas; los equipos se mantienen.'); };
+        $('limpiar').onclick = () => { if (!confirm('¿Limpiar equipos y caídas?')) return; filas = vacio(n); guardarFilas(n, filas); pintarTabla(); msg(''); };
         $('copiar').onclick = async () => {
             const r = getReglas();
             const lineas = filas.filter(f => f.equipo.trim()).map((f, i) => `${i + 1}. *${f.equipo.trim()}*\n` + MAPAS.map((m, j) => `   ${m[0] + m.slice(1).toLowerCase()}: ${f.caidas[j].trim() || 'sin asignar'}`).join('\n'));
@@ -576,7 +598,7 @@
                 logoData = e.target.result;
                 $('logoPrevia').src = logoData;
                 $('logoPrevia').style.display = 'inline';
-                $('logoQuitar').style.display = 'inline-block';
+                $('logoQuitar').style.display = 'inline-block'; refrescarImagenes();
             };
             reader.readAsDataURL(this.files[0]);
         });
@@ -585,211 +607,62 @@
             $('logoPrevia').src = '';
             $('logoPrevia').style.display = 'none';
             $('logoQuitar').style.display = 'none';
-            $('logoInput').value = '';
+            $('logoInput').value = ''; refrescarImagenes();
         };
 
-        $('descargarMapas').onclick = async () => {
-            if (!filas.some(f => f.equipo.trim())) { msg('Pon al menos un equipo.', '#ff8a8d'); return; }
-            msg('Generando mapas...', '#FFD54A');
-            const clashMaps = calcClashColors(filas);
-            const titulo = $('titulo').value.trim();
-
-            const CELL_W = 533, LABEL_H = 30, MAP_W = CELL_W - 20, MAP_H = MAP_W;
-            const CELL_H = LABEL_H + MAP_H + 10;
-            const HEADER_H = 72, CANVAS_W = CELL_W * 3;
-            const CANVAS_H = HEADER_H + CELL_H * 2 + 30;
-
-            const imgs = {};
-            await Promise.all(MAPAS.map(m => new Promise(res => {
-                const im = new Image(); im.crossOrigin = 'anonymous';
-                im.onload = () => { imgs[m] = im; res(); };
-                im.onerror = () => res();
-                im.src = MAPAS_IMG[m];
-            })));
-            // Load per-team logos for canvas drawing
-            const logoImgs = {};
-            await Promise.all(equipoLogos.map((data, i) => {
-                if (!data) return Promise.resolve();
-                return new Promise(res => {
-                    const im = new Image(); im.onload = () => { logoImgs[i] = im; res(); }; im.onerror = () => res(); im.src = data;
-                });
-            }));
-            let logoImg = null;
-            if (logoData) await new Promise(res => {
-                const im = new Image(); im.onload = () => { logoImg = im; res(); }; im.onerror = () => res(); im.src = logoData;
-            });
-
-            const canvas = document.createElement('canvas');
-            canvas.width = CANVAS_W; canvas.height = CANVAS_H;
-            const ctx = canvas.getContext('2d');
-
-            ctx.fillStyle = '#0b0b10'; ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
-            ctx.fillStyle = '#15161b'; ctx.fillRect(0, 0, CANVAS_W, HEADER_H);
-            ctx.strokeStyle = 'rgba(216,195,149,0.4)'; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(0, HEADER_H); ctx.lineTo(CANVAS_W, HEADER_H); ctx.stroke();
-
-            if (logoImg) {
-                const lh = HEADER_H - 14, lw = (logoImg.width / logoImg.height) * lh;
-                ctx.drawImage(logoImg, 10, 7, lw, lh);
-            }
-            ctx.fillStyle = '#D8C395';
-            ctx.font = 'bold 20px Michroma, sans-serif';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText((titulo || 'CAÍDAS PUMAS GAMING').toUpperCase(), CANVAS_W / 2, HEADER_H / 2);
-            ctx.textBaseline = 'alphabetic';
-
-            MAPAS.forEach((mapa, j) => {
-                const row = j < 3 ? 0 : 1;
-                const col = row === 0 ? j : (j - 3);
-                const xBase = row === 1 ? CELL_W / 2 + col * CELL_W : col * CELL_W;
-                const yBase = HEADER_H + row * CELL_H;
-                const mapX = xBase + 10, mapY = yBase + LABEL_H + 5;
-
-                ctx.fillStyle = '#15161b'; ctx.fillRect(xBase, yBase, CELL_W, LABEL_H);
-                ctx.fillStyle = '#D8C395'; ctx.font = 'bold 12px Michroma, sans-serif';
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(mapa, xBase + CELL_W / 2, yBase + LABEL_H / 2);
-                ctx.textBaseline = 'alphabetic';
-
-                if (imgs[mapa]) ctx.drawImage(imgs[mapa], mapX, mapY, MAP_W, MAP_H);
-                else { ctx.fillStyle = '#1a1b22'; ctx.fillRect(mapX, mapY, MAP_W, MAP_H); }
-
-                const porCaida = {};
-                filas.forEach((f, i) => {
-                    const caida = norm(f.caidas[j]);
-                    if (!caida || !f.equipo.trim()) return;
-                    const coords = buscarCoords(mapa, f.caidas[j]);
-                    if (!coords) return;
-                    if (!porCaida[caida]) porCaida[caida] = [];
-                    porCaida[caida].push({ idx: i, equipo: f.equipo, caida: f.caidas[j], coords });
-                });
-                const mostrarArsenalesC = $('regla_pelea').value === 'NO';
-                const arsenMapaC = ARSENALES[mapa] || {};
-                const arsenNormsC = mostrarArsenalesC ? new Set(Object.keys(arsenMapaC).map(k => norm(k))) : new Set();
-                Object.entries(porCaida).forEach(([caida, grupo]) => {
-                    const isClash = grupo.length > 1;
-                    const hasArsenalC = arsenNormsC.has(caida);
-                    const color = hasArsenalC ? ARSENAL_COLOR : (isClash ? (clashMaps[j][caida] || CLASH_COLORS[0]) : '#D8C395');
-                    grupo.forEach((item, gi) => {
-                        let [bx, by] = item.coords;
-                        if (isClash) {
-                            const angle = (gi / grupo.length) * 2 * Math.PI - Math.PI / 2;
-                            bx += Math.cos(angle) * 3.5; by += Math.sin(angle) * 3.5;
-                        }
-                        const px = mapX + (bx / 100) * MAP_W, py = mapY + (by / 100) * MAP_H;
-                        const logo = !isClash && logoImgs[item.idx];
-                        if (logo) {
-                            ctx.save();
-                            ctx.beginPath(); ctx.arc(px, py, 13, 0, 2 * Math.PI); ctx.clip();
-                            ctx.drawImage(logo, px - 13, py - 13, 26, 26);
-                            ctx.restore();
-                            ctx.beginPath(); ctx.arc(px, py, 13, 0, 2 * Math.PI);
-                            ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
-                        } else {
-                            ctx.beginPath(); ctx.arc(px, py, 13, 0, 2 * Math.PI);
-                            ctx.fillStyle = color; ctx.fill();
-                            ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
-                            ctx.fillStyle = '#000'; ctx.font = 'bold 11px sans-serif';
-                            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                            ctx.fillText(String(item.idx + 1), px, py);
-                            ctx.textBaseline = 'alphabetic';
-                        }
-                    });
-                });
-                // Canvas castle helper — always green
-                const drawCastle = (px, py) => {
-                    ctx.save();
-                    ctx.fillStyle = ARSENAL_COLOR;
-                    ctx.shadowColor = 'rgba(0,0,0,.85)'; ctx.shadowBlur = 4;
-                    const w = 13, h = 15;
-                    const bx = Math.round(px - w / 2), by = Math.round(py - h / 2);
-                    const mH = 5, mW = 4, bodyY = by + mH;
-                    ctx.fillRect(bx, bodyY, w, h - mH);
-                    ctx.fillRect(bx, by, mW, mH);
-                    ctx.fillRect(bx + Math.round((w - mW) / 2), by, mW, mH);
-                    ctx.fillRect(bx + w - mW, by, mW, mH);
-                    ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 0;
-                    ctx.fillRect(bx + Math.round((w - mW) / 2), bodyY + (h - mH) - mH, mW, mH);
-                    ctx.restore();
-                };
-                // Arsenal markers — only when pelea=NO, only for drops with a team assigned
-                if (mostrarArsenalesC) {
-                    Object.entries(arsenMapaC).forEach(([caida, [ax, ay]]) => {
-                        const cn = norm(caida);
-                        const teams = filas.filter(f => f.equipo.trim() && norm(f.caidas[j]) === cn);
-                        if (!teams.length) return;
-                        const px = mapX + (ax / 100) * MAP_W, py = mapY + (ay / 100) * MAP_H;
-                        drawCastle(px, py);
-                    });
+        let imagenes = [], seleccion = 0, exportando = false;
+        function ajustarPrevia() {
+            const ancho = Math.min(540, $('previa').clientWidth), escala = ancho / 1080;
+            $('lienzo').style.transform = `scale(${escala})`;
+            $('previa').style.height = (imagenes.length ? 1350 * escala : 0) + 'px';
+        }
+        function mostrarImagen() {
+            const imagen = imagenes[seleccion];
+            $('lienzo').innerHTML = imagen ? imagen.html : '';
+            $('vista').value = String(seleccion);
+            ajustarPrevia();
+        }
+        function refrescarImagenes() {
+            if (!window.PumasCaidasImagenes || exportando) return;
+            const anterior = imagenes[seleccion]?.id;
+            imagenes = PumasCaidasImagenes.generar(filas, {titulo:$('titulo').value.trim(), reglas:getReglas(), logos:equipoLogos, logo:logoData, demo:opciones.demo});
+            seleccion = Math.max(0, imagenes.findIndex(im => im.id === anterior));
+            $('vista').innerHTML = imagenes.length ? imagenes.map((im,i)=>`<option value="${i}">${esc(im.titulo)}</option>`).join('') : '<option>Agrega equipos para ver las imágenes</option>';
+            $('vista').disabled = !imagenes.length;
+            $('descargarActual').disabled = !imagenes.length;
+            $('estilos').innerHTML = PumasImagenes.selectorHTML();
+            PumasImagenes.enlazarSelector($('estilos'), refrescarImagenes);
+            mostrarImagen();
+        }
+        async function descargar(tipo) {
+            if (exportando) return;
+            refrescarImagenes();
+            if (!imagenes.length) { msg('Pon al menos un equipo.', '#ff8a8d'); return; }
+            const anterior = seleccion;
+            const indices = tipo ? imagenes.map((im,i)=>im.tipo===tipo?i:-1).filter(i=>i>=0) : [seleccion];
+            exportando = true;
+            const controles = Array.from(cont.querySelectorAll('button,input,select,textarea'));
+            const estados = controles.map(el => el.disabled);
+            controles.forEach(el => el.disabled = true);
+            try {
+                for (const i of indices) {
+                    seleccion = i; mostrarImagen();
+                    msg(`Generando ${imagenes[i].titulo}…`);
+                    await PumasImagenes.descargar(imagenes[i].id, imagenes[i].nombre);
                 }
-            });
-
-            ctx.fillStyle = '#6d6760'; ctx.font = '11px sans-serif';
-            ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic';
-            ctx.fillText('PUMAS GAMING · mismo color = equipos que chocan', CANVAS_W - 12, CANVAS_H - 10);
-
-            try {
-                const a = document.createElement('a');
-                a.download = `Mapas_Caidas_Pumas_${n}_equipos.png`;
-                a.href = canvas.toDataURL('image/png');
-                a.click();
-                msg('✔ Mapas descargados.', '#6ee7a8');
-            } catch (e) { msg('Error al generar: ' + e.message, '#ff8a8d'); }
-        };
-
-        $('imagen').onclick = async () => {
-            if (!filas.some(f => f.equipo.trim())) { msg('Pon al menos un equipo.', '#ff8a8d'); return; }
-            $('previa').innerHTML = imagenHTML(filas, $('titulo').value.trim(), getReglas());
-            if (typeof html2canvas !== 'function') { msg('Vista lista abajo (no se pudo cargar el generador de imágenes).', '#FFD54A'); return; }
-            msg('Generando imagen...');
-            try {
-                const c = await html2canvas(document.getElementById('capturaCaidas'), { scale: 2, useCORS: true, backgroundColor: '#0a0a0a' });
-                const a = document.createElement('a');
-                a.download = `Caidas_Pumas_${n}_equipos.png`; a.href = c.toDataURL('image/png'); a.click();
-                msg('✔ Imagen descargada.', '#6ee7a8');
-            } catch (e) { msg('No se pudo generar la imagen: ' + e.message, '#ff8a8d'); }
-        };
+                msg(`PNG listo${indices.length>1?'s':''}: ${indices.length} ${indices.length>1?'imágenes':'imagen'} de 1080 × 1350 px.`, '#6ee7a8');
+            } catch(e) { msg('No se pudo generar la imagen: '+e.message, '#ff8a8d'); }
+            finally { exportando=false; controles.forEach((el,i)=>el.disabled=estados[i]); seleccion=anterior; mostrarImagen(); }
+        }
+        $('ver').onclick = () => { refrescarImagenes(); $('estilos').scrollIntoView({behavior:'smooth',block:'start'}); };
+        $('imagen').onclick = () => descargar('tabla');
+        $('descargarMapas').onclick = () => descargar('mapa');
+        $('descargarActual').onclick = () => descargar();
+        $('vista').onchange = () => { seleccion=Number($('vista').value); mostrarImagen(); };
+        $('titulo').addEventListener('input', refrescarImagenes);
+        cont.addEventListener('change', refrescarImagenes);
+        new ResizeObserver(ajustarPrevia).observe($('previa'));
         pintarTabla();
-    }
-
-    function imagenHTML(filas, titulo, reglas) {
-        const usadas = filas.filter(f => f.equipo.trim());
-        const clashMaps = calcClashColors(usadas);
-        const td = 'padding:9px 10px;border-top:1px solid rgba(216,195,149,.14);font-size:15px;white-space:nowrap';
-        const reglaItems = [];
-        if (reglas.pelea) reglaItems.push(`⚔️ Pelea de caída: <b>${reglas.pelea === 'SI' ? 'SÍ' : 'NO'}</b>`);
-        if (reglas.zonas) reglaItems.push(`🗺️ Zonas marcadas: <b>${reglas.zonas}</b>`);
-        if (reglas.extra) reglaItems.push(`📌 ${esc(reglas.extra)}`);
-        const reglasBand = reglaItems.length
-            ? `<div style="display:flex;flex-wrap:wrap;gap:16px;padding:10px 18px;background:rgba(216,195,149,.07);border-bottom:1px solid rgba(216,195,149,.2);font-size:13px;color:#F4EEDC">${reglaItems.map(r => `<span>${r}</span>`).join('')}</div>`
-            : '';
-        return `<div id="capturaCaidas" style="width:1280px;background:#0b0b0b;color:#F4EEDC;font-family:'Trebuchet MS',sans-serif;border:1px solid rgba(216,195,149,.3)">
-            <div style="position:relative">
-                <img src="imagenes/caidas-encabezado.jpg" alt="" style="display:block;width:100%">
-                ${titulo ? `<div style="position:absolute;right:40px;bottom:22px;font-family:Michroma,sans-serif;font-size:20px;color:#D8C395;letter-spacing:2px;text-shadow:0 2px 6px #000">${esc(titulo.toUpperCase())}</div>` : ''}
-            </div>
-            ${reglasBand}
-            <table style="width:100%;border-collapse:collapse">
-                <thead><tr style="background:linear-gradient(90deg,#1a1b22,#0e0f14);color:#D8C395;border-bottom:2px solid rgba(216,195,149,.4)">
-                    <th style="padding:12px 10px;width:56px;text-align:center;font-family:Michroma,sans-serif;font-size:12px">NO</th>
-                    <th style="padding:12px 10px;text-align:left;font-family:Michroma,sans-serif;font-size:12px">EQUIPOS</th>
-                    ${MAPAS.map(m => `<th style="padding:8px 10px;text-align:center"><img src="${MAPAS_IMG[m]}" alt="${m}" style="display:block;width:90px;height:56px;object-fit:cover;border-radius:4px;margin:0 auto 5px;border:1px solid rgba(216,195,149,.3)"><span style="font-family:Michroma,sans-serif;font-size:11px;letter-spacing:1px;color:#D8C395">${m}</span></th>`).join('')}
-                </tr></thead>
-                <tbody>${usadas.map((f, i) => {
-                    return `<tr style="background:${i % 2 ? 'rgba(255,255,255,.03)' : 'transparent'}">
-                    <td style="${td};text-align:center;color:#D8C395;font-weight:800">${i + 1}</td>
-                    <td style="${td};font-weight:800">${esc(f.equipo.trim())}</td>
-                    ${f.caidas.map((c, j) => {
-                        const k = norm(c);
-                        const color = k ? clashMaps[j][k] : null;
-                        return `<td style="${td};text-align:center;${color ? `border-left:2px solid ${color}` : ''}${!c.trim() ? ';color:#6b6b6b' : ''}">
-                            ${c.trim() ? esc(c.trim()) : '—'}${color ? `<span style="margin-left:4px;font-size:12px">💀</span>` : ''}
-                        </td>`;
-                    }).join('')}</tr>`;
-                }).join('')}</tbody>
-            </table>
-            <div style="padding:12px 18px;color:#8d877a;font-size:12px;text-align:right">PUMAS GAMING · 💀 mismo color = equipos que chocan</div>
-        </div>`;
     }
 
     window.PumasCaidas = { montar, CATALOGO, MAPAS, COORDENADAS, ARSENALES };

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
 <script>
@@ -10,35 +12,59 @@
 
   gtag('config', 'G-C79JND219Y');
 </script>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Pumas Gaming | Portal Oficial</title>
     <meta name="description" content="Pumas Gaming: entrenamientos oficiales de Free Fire, rankings semanales, estadísticas, jerseys y el creador de resultados.">
     <meta name="theme-color" content="#141414">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="canonical" href="https://pumasgaming.com/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="es_CO">
+    <meta property="og:site_name" content="Pumas Gaming">
+    <meta property="og:title" content="Pumas Gaming | Portal Oficial">
+    <meta property="og:description" content="Entrenamientos oficiales de Free Fire, rankings semanales, estadísticas, jerseys y creador de resultados.">
+    <meta property="og:url" content="https://pumasgaming.com/">
+    <meta property="og:image" content="https://pumasgaming.com/imagenes/LOGO%20PUMAS%20WEB.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="1200">
+    <meta property="og:image:alt" content="Logo de Pumas Gaming">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Pumas Gaming | Portal Oficial">
+    <meta name="twitter:description" content="Entrenamientos de Free Fire, rankings, estadísticas y creador de resultados.">
+    <meta name="twitter:image" content="https://pumasgaming.com/imagenes/LOGO%20PUMAS%20WEB.png">
+    <meta name="twitter:image:alt" content="Logo de Pumas Gaming">
+    <script type="application/ld+json">
+    {"@context":"https://schema.org","@graph":[
+      {"@type":"Organization","@id":"https://pumasgaming.com/#organization","name":"Pumas Gaming","url":"https://pumasgaming.com/","logo":"https://pumasgaming.com/imagenes/LOGO%20PUMAS%20WEB.png","sameAs":["https://www.instagram.com/pumas.gaming.oficial","https://www.tiktok.com/@pumasgg.ofc"]},
+      {"@type":"WebSite","@id":"https://pumasgaming.com/#website","name":"Pumas Gaming","url":"https://pumasgaming.com/","inLanguage":"es","publisher":{"@id":"https://pumasgaming.com/#organization"}}
+    ]}
+    </script>
     <!-- Barlow / Barlow Condensed: portada · Michroma: la imagen que genera el Creador de resultados -->
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;1,700;1,800&family=Barlow:wght@400;500;600;700&family=Michroma&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="preload" href="fonts/barlow-normal-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="fonts/barlow-condensed-italic-800.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="fonts/barlow-condensed-normal-700.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="fonts/inicio-fonts.css">
+    <link rel="preload" href="imagenes/jersey-poster.webp" as="image" fetchpriority="high">
+    <link rel="stylesheet" href="portal-kit/vendor/normalize-8.0.1.min.css">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=20261111a">
     <link rel="stylesheet" href="portal-kit/latam.css?v=20261013e">
-    <link rel="stylesheet" href="inicio.css?v=20261111d">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="portal-kit/portal.js?v=20261111c" data-portal="principal" data-modo="publico"></script>
-    <script src="portal-kit/descargas.js?v=20261103b"></script>
-    <link rel="icon" type="image/x-icon" href="imagenes/LOGO PUMAS WEB.png">
+    <link rel="stylesheet" href="inicio.css?v=20261117a">
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="portal-kit/portal.js?v=20261111c" data-portal="principal" data-modo="publico"></script>
+    <script defer src="portal-kit/descargas.js?v=20261103b"></script>
+    <script defer src="inicio.js?v=20261117a"></script>
+    <link rel="icon" type="image/webp" href="imagenes/logo-pumas-80.webp">
 </head>
 <body class="c-home">
 
 <header class="site-header">
     <a class="logo-container" href="/" aria-label="Pumas Gaming, inicio">
-        <img src="imagenes/LOGO PUMAS WEB.png" alt="" class="logo-img">
+        <img src="imagenes/logo-pumas-80.webp" alt="" width="40" height="40" class="logo-img">
         <span class="logo">Pumas Gaming</span>
     </a>
 
-    <button class="menu-toggle" aria-label="Abrir menú" aria-controls="mainNav" onclick="toggleMenu()">
+    <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mainNav" onclick="toggleMenu()">
         <span class="bar"></span>
         <span class="bar"></span>
         <span class="bar"></span>
@@ -62,7 +88,10 @@
 <!-- Portada: titular, video del jersey con los cortes dorados y las cifras (las llena entrenamientos.js) -->
 <section class="portal-hero" aria-labelledby="hero-title">
     <div class="c-rayo" aria-hidden="true"></div><div class="c-rayo fino" aria-hidden="true"></div>
-    <video class="c-hero-video" src="videos/jersey.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+    <div class="c-hero-media" aria-hidden="true">
+        <img src="imagenes/jersey-poster.webp" alt="" width="960" height="540" fetchpriority="high">
+        <video class="c-hero-video" data-src="videos/jersey.mp4" width="960" height="540" muted loop playsinline preload="none"></video>
+    </div>
     <div class="c-redes" aria-label="Redes de Pumas Gaming">
         <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
         <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
@@ -137,11 +166,11 @@
     <div class="c-tit"><h2 id="tit-jersey" class="c-disp">Jerseys <em>oficiales 2026</em></h2></div>
     <div class="c-jgrid">
         <article class="c-jer">
-            <video src="videos/jersey.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Video del jersey Edición Pumas Elite"></video>
+            <video data-src="videos/jersey.mp4" poster="imagenes/jersey-poster.webp" width="960" height="960" muted loop playsinline preload="none" controls aria-label="Video del jersey Edición Pumas Elite"></video>
             <div><h3 class="c-disp">Edición Pumas Elite</h3><p>Microfibra de alto rendimiento: frescura y comodidad bajo máxima presión en torneos.</p></div>
         </article>
         <article class="c-jer">
-            <video src="videos/jerseyUSA.mp4" autoplay muted loop playsinline preload="metadata" aria-label="Video del jersey Edición Especial USA Pro"></video>
+            <video data-src="videos/jerseyUSA.mp4" poster="imagenes/jerseyUSA-poster.webp" width="960" height="960" muted loop playsinline preload="none" controls aria-label="Video del jersey Edición Especial USA Pro"></video>
             <div><h3 class="c-disp">Edición Especial USA Pro</h3><p>Diseño exclusivo para la competición de alto nivel en el circuito internacional Free Fire USA.</p></div>
         </article>
     </div>
@@ -257,18 +286,18 @@
 
 <footer class="c-pie">
     <div>
-        <a class="logo-container" href="/"><img src="imagenes/LOGO PUMAS WEB.png" alt="" class="logo-img"><span class="logo">Pumas Gaming</span></a>
+        <a class="logo-container" href="/"><img src="imagenes/logo-pumas-80.webp" alt="" width="40" height="40" loading="lazy" class="logo-img"><span class="logo">Pumas Gaming</span></a>
         <p>&copy; 2026 Pumas Gaming. Todos los derechos reservados.</p>
     </div>
     <div>
-        <h4>Secciones</h4>
+        <h2>Secciones</h2>
         <a href="/entrenamientos/">Entrenamientos</a>
         <a href="/entrenamientos/estadisticas.html">Estadísticas</a>
         <a href="/entrenamientos/cupos.html">Apartar cupo</a>
         <a href="/entrenoslatam/">Entrenos LATAM</a>
     </div>
     <div>
-        <h4>Síguenos</h4>
+        <h2>Síguenos</h2>
         <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener">Instagram</a>
         <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener">TikTok</a>
         <a href="https://discord.gg/pqyf7fnQF" target="_blank" rel="noopener">Discord</a>
@@ -293,8 +322,8 @@
             document.querySelectorAll('video[autoplay]').forEach(v => { v.removeAttribute('autoplay'); v.pause(); });
         }
     </script>
-    <script src="script.js?v=20261111a"></script>
-    <script src="entrenamientos.js?v=20261111a"></script>
-    <script src="portal-kit/juegos.js?v=20261014a"></script>
+    <script defer src="script.js?v=20261117a"></script>
+    <script defer src="entrenamientos.js?v=20261111a"></script>
+    <script defer src="portal-kit/juegos.js?v=20261014a"></script>
 </body>
 </html>

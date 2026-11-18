@@ -145,7 +145,7 @@ function renderizarResultados(eqs, tKs, nS) {
     let rWData = window._rWGlobal || [];
 
     let h = `<div id="tablaCaptura" style="width:800px;height:1000px;${fV}position:relative;font-family:'Trebuchet MS',sans-serif;color:${cF};padding:20px;box-sizing:border-box;border:2px solid rgba(220,204,156,0.3);border-radius:12px;">` +
-    `<div style="position:absolute;top:18px;right:30px;"><img src="${lU}" style="width:65px;height:65px;object-fit:contain;border-radius:50%;border:2px solid #DCCC9C;background:rgba(18,19,23,0.8);"></div>` +
+    `<div style="position:absolute;top:18px;right:30px;"><img src="${lU}" alt="Logo del equipo" width="65" height="65" style="width:65px;height:65px;object-fit:contain;border-radius:50%;border:2px solid #DCCC9C;background:rgba(18,19,23,0.8);"></div>` +
     `<div style="text-align:center;position:absolute;top:18px;left:40px;right:40px;"><h1 style="font-family:'Michroma';font-size:1.6rem;color:#DCCC9C;margin:0;text-transform:uppercase;text-shadow:2px 2px 4px rgba(0,0,0,0.8);">${tC}</h1>` +
     `<div style="font-family:'Michroma';font-size:0.9rem;color:${cF};margin-top:3px;font-weight:bold;letter-spacing:1px;">${jC} ${fC ? '— ' + fC : ''} | MODERADOR: ${nM}</div></div>` +
     
@@ -194,6 +194,25 @@ function renderizarResultados(eqs, tKs, nS) {
     document.getElementById('outputTablasLadoALado').innerHTML = wrapperHtml;
 }
 
+let _html2canvasCarga;
+function cargarHtml2canvas() {
+    if (typeof window.html2canvas === 'function') return Promise.resolve();
+    if (!_html2canvasCarga) {
+        _html2canvasCarga = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script.onload = resolve;
+            script.onerror = () => {
+                script.remove();
+                _html2canvasCarga = null;
+                reject(new Error('No se pudo cargar el generador de imágenes.'));
+            };
+            document.head.appendChild(script);
+        });
+    }
+    return _html2canvasCarga;
+}
+
 function descargar() {
     let el = document.getElementById('tablaCaptura');
     if (!el) {
@@ -201,7 +220,7 @@ function descargar() {
         return;
     }
     
-    html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#0a0a0c', logging: false }).then(canvas => {
+    return cargarHtml2canvas().then(() => document.fonts.ready).then(() => html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#0a0a0c', logging: false })).then(canvas => {
         let link = document.createElement('a');
         link.download = 'Tabla_Resultados_Pumas.png';
         link.href = canvas.toDataURL('image/png');

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Caídas · Vista previa Admin Pumas</title>
+<link href="https://fonts.googleapis.com/css2?family=Michroma&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="../entrenamientos/styleadmin.css">
+<style>
+[hidden]{display:none!important}.preview-admin{max-width:1480px;margin:30px auto;padding:0 24px}.preview-admin .section-title{text-align:left;font-size:1.2rem;margin:24px 0}.preview-admin .tool-container{width:100%;max-width:none;margin:0;padding:24px}.demo-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}.demo-tabs button[aria-pressed=true]{background:var(--primary);color:var(--dark)}.demo-note{color:var(--secondary);margin:18px 0;line-height:1.6}.demo-link{color:var(--primary)}.demo-layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:28px}.demo-layout .field{display:grid;gap:6px;margin-bottom:16px}.demo-layout .field input,.demo-layout .field select{background:#0a0b10;color:var(--light);border:1px solid rgba(216,195,149,.2);padding:12px 15px;border-radius:2px;width:100%;min-width:0;color-scheme:dark}.demo-layout .checks label{display:block;margin:12px 0}.demo-layout input[type=checkbox]{width:auto}.demo-gallery{min-width:0}.demo-gallery .tabs,.demo-gallery .actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}.demo-gallery button{padding:8px 12px;border:1px solid rgba(216,195,149,.4);border-radius:6px;background:transparent;color:var(--primary);cursor:pointer}.demo-gallery button[aria-selected=true],.demo-gallery button.primary{background:var(--primary);color:var(--dark)}.demo-gallery .stage{overflow:hidden;width:540px;max-width:100%;background:#141414;border-radius:6px}.demo-gallery .canvas{width:1080px;height:1350px;transform-origin:0 0}.demo-gallery .meta,.demo-gallery .status{font-size:.85rem;color:var(--secondary);margin:12px 0}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--primary);outline-offset:3px}button:disabled{opacity:.55;cursor:wait}@media(max-width:800px){.preview-admin{padding:0 14px}.preview-admin .tool-container{padding:16px}.demo-layout{grid-template-columns:1fr}.site-header{padding:16px}.site-header .logo{font-size:1rem}.demo-tabs>*{flex:1}.preview-admin .section-title{font-size:1rem}}
+</style>
+</head>
+<body>
+<header class="site-header"><div class="logo-container"><img src="../imagenes/personajes/logo-blanco.png" alt="Pumas" class="logo-img"><div class="logo">ADMIN · CAÍDAS</div></div><a class="demo-link" href="diseno-resultados.html">Ver resultados completos</a></header>
+<main class="preview-admin">
+<p class="demo-note">Vista local con el estilo y los componentes del Admin. Datos de ejemplo; las ediciones de asignación se mantienen solo durante esta vista previa.</p>
+<div class="demo-tabs" role="group" aria-label="Tipo de caídas"><button class="btn-mini" data-panel="asignacion" aria-pressed="true">Asignación de caídas</button><button class="btn-mini" data-panel="resultadosDemo" aria-pressed="false">Caídas de los resultados</button></div>
+<section id="asignacion"><h1 class="section-title">Caídas por equipo</h1><div class="tool-container"><div id="caidasPumas"></div></div></section>
+<section id="resultadosDemo" hidden><h2 class="section-title">Caídas de los resultados</h2><div class="tool-container demo-layout">
+<aside aria-label="Datos de ejemplo">
+<label class="field">Salas<select id="salas"><option>4</option><option selected>5</option><option>6</option></select></label>
+<label class="field">Equipos<select id="equipos"><option>12</option><option selected>16</option></select></label>
+<label class="field">Fecha y hora<input id="fecha" type="datetime-local" value="2026-11-17T20:00"></label>
+<label class="field">Moderador<input id="moderador" value="COACH NIKO" maxlength="60"></label>
+<label class="field">Instagram<input id="instagram" value="pumas.gaming.oficial" maxlength="60"></label>
+<div class="checks"><label><input id="largos" type="checkbox"> Probar nombres largos</label><label><input id="sinDano" type="checkbox"> Solo replay</label></div>
+<p class="demo-note">Peleas al aterrizar, hasta que empieza a cerrar la Z1. Los resultados provienen del ejemplo de replay del proyecto.</p><button class="btn-mini" id="recargar">Recargar</button>
+</aside>
+<div class="demo-gallery"><div id="estiloImg"></div><div id="tabs" class="tabs" role="tablist" aria-label="Imágenes de resultados"></div><div class="actions"><button class="primary" id="descargar">Descargar esta imagen</button><button id="descargarTodas">Descargar todas</button><button id="descargarSel">Descargar seleccionadas</button></div><div id="estado" class="status" role="status"></div><div id="stage" class="stage" role="tabpanel"><div id="canvas" class="canvas"></div></div><p id="meta" class="meta"></p></div>
+</div></section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="../portal-kit/completos.js"></script><script src="zonas-demo.js"></script>
+<script src="../portal-kit/imagenes-resultados.js"></script><script src="../entrenamientos/caidas.js"></script><script src="../entrenamientos/caidas-imagenes.js"></script>
+<script src="diseno-resultados.js"></script>
+<script>
+PumasCaidas.montar('caidasPumas',{demo:true});
+document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-panel]').forEach(x=>{const on=x===b;x.setAttribute('aria-pressed',String(on));document.getElementById(x.dataset.panel).hidden=!on;});if(b.dataset.panel==='resultadosDemo'){document.querySelectorAll('#tabs button').forEach(x=>{if(x.textContent==='Caídas')x.click()});}window.dispatchEvent(new Event('resize'));});
+</script>
+</body></html>
