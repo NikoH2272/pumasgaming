@@ -1,5 +1,10 @@
 ﻿let _sP = [], _cN = {}, _eE = new Set(), _sLO = [], _sML = [], _lPB64 = null, _fPB64 = null, _gE = [], _gTK = [], _gNS = 0, _rFD = [];
 
+function alCargarDocumentoPumas(iniciar) {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar, { once: true });
+    else iniciar();
+}
+
 async function prepararRenombradoEquipos() {
     let fI = document.getElementById('fileInput'), fs = fI ? Array.from(fI.files) : [];
     if (!fs.length) return;
@@ -284,8 +289,8 @@ function generarCaptcha() {
     }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    _cTP();
+alCargarDocumentoPumas(() => {
+    if (!document.getElementById('trainMain')) _cTP();
     generarCaptcha();
 });
 
@@ -446,7 +451,7 @@ async function verificarEstadoSorteo() {
     }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+alCargarDocumentoPumas(() => {
     if (typeof generarCaptcha === 'function') generarCaptcha();
     verificarEstadoSorteo();
 });

@@ -1,8 +1,12 @@
 {
   "scripts": {
+    "build:inicio": "node scripts/compilar-inicio.cjs",
     "preview:resultados": "node scripts/vista-local.cjs"
   },
   "dependencies": {
     "motion": "^14.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }

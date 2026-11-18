@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="referrer" content="strict-origin-when-cross-origin">
 <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -42,26 +41,17 @@
     <link rel="preload" href="fonts/barlow-normal-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="fonts/barlow-condensed-italic-800.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="fonts/barlow-condensed-normal-700.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="fonts/inicio-fonts.css">
     <link rel="preload" href="imagenes/jersey-poster.webp" as="image" fetchpriority="high">
-    <link rel="stylesheet" href="portal-kit/vendor/normalize-8.0.1.min.css">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=20261111a">
-    <link rel="stylesheet" href="portal-kit/latam.css?v=20261013e">
-    <link rel="stylesheet" href="inicio.css?v=20261117a">
-    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script defer src="portal-kit/portal.js?v=20261111c" data-portal="principal" data-modo="publico"></script>
-    <script defer src="portal-kit/descargas.js?v=20261103b"></script>
-    <script defer src="inicio.js?v=20261117a"></script>
+    <link rel="stylesheet" href="inicio.min.css?v=20261117b">
+    <script defer src="inicio.js?v=20261117b"></script>
     <link rel="icon" type="image/webp" href="imagenes/logo-pumas-80.webp">
 </head>
 <body class="c-home">
 
 <header class="site-header">
     <a class="logo-container" href="/" aria-label="Pumas Gaming, inicio">
-        <img src="imagenes/logo-pumas-80.webp" alt="" width="40" height="40" class="logo-img">
-        <span class="logo">Pumas Gaming</span>
+        <img src="imagenes/logo-pumas-80.webp" alt="Pumas Gaming" width="40" height="40" class="logo-img">
+        <span class="logo" aria-hidden="true">Pumas Gaming</span>
     </a>
 
     <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="mainNav" onclick="toggleMenu()">
@@ -79,7 +69,7 @@
             <li><a href="#jersey" onclick="closeMenu()">Jerseys</a></li>
             <li><a href="#comunidad" onclick="closeMenu()">Comunidad</a></li>
             <li><a href="#resultados" onclick="closeMenu()">Herramienta</a></li>
-            <li class="nav-admin"><a href="/admin/login.html" onclick="closeMenu()"><i class="fa-solid fa-lock" aria-hidden="true"></i> Admin</a></li>
+            <li class="nav-admin"><a href="/admin/login.html" onclick="closeMenu()"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#lock"></use></svg> Admin</a></li>
         </ul>
     </nav>
 </header>
@@ -88,21 +78,21 @@
 <!-- Portada: titular, video del jersey con los cortes dorados y las cifras (las llena entrenamientos.js) -->
 <section class="portal-hero" aria-labelledby="hero-title">
     <div class="c-rayo" aria-hidden="true"></div><div class="c-rayo fino" aria-hidden="true"></div>
-    <div class="c-hero-media" aria-hidden="true">
-        <img src="imagenes/jersey-poster.webp" alt="" width="960" height="540" fetchpriority="high">
-        <video class="c-hero-video" data-src="videos/jersey.mp4" width="960" height="540" muted loop playsinline preload="none"></video>
+    <div class="c-hero-media">
+        <img src="imagenes/jersey-poster.webp" alt="Jersey oficial de Pumas Gaming con el escudo del equipo" width="960" height="540" fetchpriority="high">
+        <video class="c-hero-video" data-src="videos/jersey.mp4" width="960" height="540" muted loop playsinline preload="none" aria-hidden="true"></video>
     </div>
     <div class="c-redes" aria-label="Redes de Pumas Gaming">
-        <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-        <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
-        <a href="https://discord.gg/pqyf7fnQF" target="_blank" rel="noopener" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
-        <a href="https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd" target="_blank" rel="noopener" aria-label="WhatsApp de entrenamientos"><i class="fa-brands fa-whatsapp"></i></a>
+        <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener" aria-label="Instagram"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#instagram"></use></svg></a>
+        <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener" aria-label="TikTok"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#tiktok"></use></svg></a>
+        <a href="https://discord.gg/pqyf7fnQF" target="_blank" rel="noopener" aria-label="Discord"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#discord"></use></svg></a>
+        <a href="https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd" target="_blank" rel="noopener" aria-label="WhatsApp de entrenamientos"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#whatsapp"></use></svg></a>
     </div>
     <div class="hero-copy">
         <h1 id="hero-title" class="c-disp">Nacidos para<br><em>competir.</em></h1>
         <p>Pumas Gaming reúne a equipos que juegan con carácter. Entrena, sigue la competencia y crea tus resultados desde un solo lugar.</p>
         <div class="hero-actions">
-            <a href="entrenamientos/cupos.html" class="c-btn oro">Apartar cupo <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+            <a href="entrenamientos/cupos.html" class="c-btn oro">Apartar cupo <svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#arrow-right"></use></svg></a>
             <a href="#comunidad" class="c-btn borde">Entrar a la comunidad</a>
         </div>
     </div>
@@ -127,28 +117,28 @@
                 <li>También puedes apartar en los grupos de la comunidad, más abajo.</li>
             </ol>
             <div class="acc">
-                <a href="entrenamientos/cupos.html" class="c-btn tinta"><i class="fa-solid fa-ticket" aria-hidden="true"></i> Apartar mi cupo</a>
+                <a href="entrenamientos/cupos.html" class="c-btn tinta"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#ticket"></use></svg> Apartar mi cupo</a>
                 <a href="entrenamientos/" class="c-btn borde" style="color:var(--tinta);border-color:#8d8878">Ver resultados</a>
             </div>
         </div>
         <div class="b">
-            <a class="c-item" href="entrenamientos/cupos.html"><i class="fa-solid fa-ticket" aria-hidden="true"></i><div><h3 class="c-disp">Cupos</h3><p>Elige un entreno abierto y confirma tu equipo.</p></div></a>
-            <a class="c-item" href="entrenamientos/"><i class="fa-solid fa-ranking-star" aria-hidden="true"></i><div><h3 class="c-disp">Rankings</h3><p>Top 50 semanal e histórico por PR, PG y kills.</p></div></a>
-            <a class="c-item" href="entrenamientos/estadisticas.html"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><div><h3 class="c-disp">Estadísticas</h3><p>Daño, headshots y acumulados por jugador, equipo y mapa.</p></div></a>
-            <a class="c-item" href="entrenamientos/juegos.html"><i class="fa-solid fa-gamepad" aria-hidden="true"></i><div><h3 class="c-disp">Juegos</h3><p>Retos para la comunidad.</p></div></a>
-            <a class="c-item" href="entrenamientos/dinamicas.html"><i class="fa-solid fa-bolt" aria-hidden="true"></i><div><h3 class="c-disp">Dinámicas</h3><p>Eventos, encuestas y premios.</p></div></a>
-            <a class="c-item" href="entrenoslatam/"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i><div><h3 class="c-disp">Entrenos LATAM</h3><p>Resultados de las ligas aliadas en un solo lugar.</p></div></a>
+            <a class="c-item" href="entrenamientos/cupos.html"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#ticket"></use></svg><div><h3 class="c-disp">Cupos</h3><p>Elige un entreno abierto y confirma tu equipo.</p></div></a>
+            <a class="c-item" href="entrenamientos/"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#ranking-star"></use></svg><div><h3 class="c-disp">Rankings</h3><p>Top 50 semanal e histórico por PR, PG y kills.</p></div></a>
+            <a class="c-item" href="entrenamientos/estadisticas.html"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#chart-simple"></use></svg><div><h3 class="c-disp">Estadísticas</h3><p>Daño, headshots y acumulados por jugador, equipo y mapa.</p></div></a>
+            <a class="c-item" href="entrenamientos/juegos.html"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#gamepad"></use></svg><div><h3 class="c-disp">Juegos</h3><p>Retos para la comunidad.</p></div></a>
+            <a class="c-item" href="entrenamientos/dinamicas.html"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#bolt"></use></svg><div><h3 class="c-disp">Dinámicas</h3><p>Eventos, encuestas y premios.</p></div></a>
+            <a class="c-item" href="entrenoslatam/"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#earth-americas"></use></svg><div><h3 class="c-disp">Entrenos LATAM</h3><p>Resultados de las ligas aliadas en un solo lugar.</p></div></a>
         </div>
     </div>
     <div class="c-sec">
         <article id="trainMain" aria-live="polite"><p>Cargando entrenos...</p></article>
-        <p class="c-mas"><a href="entrenamientos/" class="c-btn borde">Ver historial completo <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></p>
+        <p class="c-mas"><a href="entrenamientos/" class="c-btn borde">Ver historial completo <svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#arrow-right"></use></svg></a></p>
     </div>
 </section>
 
 <!-- Rankings de la semana (los llena entrenamientos.js) -->
 <section id="rankings" class="c-sec c-rank" aria-labelledby="tit-rank">
-    <div class="c-tit"><h2 id="tit-rank" class="c-disp">Rankings de la <em>semana</em></h2><a href="entrenamientos/">Top 50 completo <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div>
+    <div class="c-tit"><h2 id="tit-rank" class="c-disp">Rankings de la <em>semana</em></h2><a href="entrenamientos/">Top 50 completo <svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#arrow-right"></use></svg></a></div>
     <div class="c-rank-grid">
         <div class="c-tabla">
             <h3 id="tituloTopEq">Top 10 Equipos · Semana</h3>
@@ -180,17 +170,17 @@
 <section id="comunidad" class="c-sec" aria-labelledby="tit-comunidad">
     <div class="c-tit"><h2 id="tit-comunidad" class="c-disp">La <em>comunidad</em></h2></div>
     <div class="c-cards">
-        <article class="c-card"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><h3 class="c-disp">Entrenos oficiales</h3><p>Horario: 10 AM México en adelante.</p><a href="https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
-        <article class="c-card"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><h3 class="c-disp">Entrenos liga</h3><p>Horario: 10 AM México en adelante.</p><a href="https://chat.whatsapp.com/KSlbKXeU0RZKz4ihnnpJaO" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
-        <article class="c-card"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><h3 class="c-disp">Ascensos</h3><p>Entrena para subir de nivel con el equipo.</p><a href="https://chat.whatsapp.com/Fs2RBVWxTRi3jM2k9qBVP7" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
-        <article class="c-card"><i class="fa-brands fa-discord" aria-hidden="true"></i><h3 class="c-disp">Discord</h3><p>Charla, busca equipo y entérate de todo.</p><a href="https://discord.gg/pqyf7fnQF" target="_blank" rel="noopener">Unirse al Discord</a></article>
-        <article class="c-card"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><h3 class="c-disp">Comunidad y dinámicas</h3><p>Eventos, dinámicas y más actividades.</p><a href="https://chat.whatsapp.com/KSrrkWyeMpX1a1nG8ojrhj" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
+        <article class="c-card"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#whatsapp"></use></svg><h3 class="c-disp">Entrenos oficiales</h3><p>Horario: 10 AM México en adelante.</p><a href="https://chat.whatsapp.com/DW7DWlsOKKDENaW3S8aZCd" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
+        <article class="c-card"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#whatsapp"></use></svg><h3 class="c-disp">Entrenos liga</h3><p>Horario: 10 AM México en adelante.</p><a href="https://chat.whatsapp.com/KSlbKXeU0RZKz4ihnnpJaO" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
+        <article class="c-card"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#whatsapp"></use></svg><h3 class="c-disp">Ascensos</h3><p>Entrena para subir de nivel con el equipo.</p><a href="https://chat.whatsapp.com/Fs2RBVWxTRi3jM2k9qBVP7" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
+        <article class="c-card"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#discord"></use></svg><h3 class="c-disp">Discord</h3><p>Charla, busca equipo y entérate de todo.</p><a href="https://discord.gg/pqyf7fnQF" target="_blank" rel="noopener">Unirse al Discord</a></article>
+        <article class="c-card"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#whatsapp"></use></svg><h3 class="c-disp">Comunidad y dinámicas</h3><p>Eventos, dinámicas y más actividades.</p><a href="https://chat.whatsapp.com/KSrrkWyeMpX1a1nG8ojrhj" target="_blank" rel="noopener">Unirse al WhatsApp</a></article>
     </div>
     <div class="c-redes-fila" aria-label="Redes oficiales">
-        <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener"><i class="fa-brands fa-instagram" aria-hidden="true"></i>Oficial</a>
-        <a href="https://www.instagram.com/pumas_e7_gaming" target="_blank" rel="noopener"><i class="fa-brands fa-square-instagram" aria-hidden="true"></i>USA Pro</a>
-        <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok" aria-hidden="true"></i>TikTok</a>
-        <a href="https://www.instagram.com/entrenos.pumas.gg/" target="_blank" rel="noopener"><i class="fa-brands fa-instagram" aria-hidden="true"></i>Entrenos</a>
+        <a href="https://www.instagram.com/pumas.gaming.oficial" target="_blank" rel="noopener"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#instagram"></use></svg>Oficial</a>
+        <a href="https://www.instagram.com/pumas_e7_gaming" target="_blank" rel="noopener"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#square-instagram"></use></svg>USA Pro</a>
+        <a href="https://www.tiktok.com/@pumasgg.ofc" target="_blank" rel="noopener"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#tiktok"></use></svg>TikTok</a>
+        <a href="https://www.instagram.com/entrenos.pumas.gg/" target="_blank" rel="noopener"><svg class="c-icon" aria-hidden="true" focusable="false"><use href="portal-kit/iconos-inicio.svg#instagram"></use></svg>Entrenos</a>
     </div>
 </section>
 
@@ -286,7 +276,7 @@
 
 <footer class="c-pie">
     <div>
-        <a class="logo-container" href="/"><img src="imagenes/logo-pumas-80.webp" alt="" width="40" height="40" loading="lazy" class="logo-img"><span class="logo">Pumas Gaming</span></a>
+        <a class="logo-container" href="/"><img src="imagenes/logo-pumas-80.webp" alt="Pumas Gaming" width="40" height="40" loading="lazy" class="logo-img"><span class="logo" aria-hidden="true">Pumas Gaming</span></a>
         <p>&copy; 2026 Pumas Gaming. Todos los derechos reservados.</p>
     </div>
     <div>
@@ -322,8 +312,5 @@
             document.querySelectorAll('video[autoplay]').forEach(v => { v.removeAttribute('autoplay'); v.pause(); });
         }
     </script>
-    <script defer src="script.js?v=20261117a"></script>
-    <script defer src="entrenamientos.js?v=20261111a"></script>
-    <script defer src="portal-kit/juegos.js?v=20261014a"></script>
 </body>
 </html>

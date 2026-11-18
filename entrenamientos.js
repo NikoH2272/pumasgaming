@@ -99,7 +99,7 @@ function semanaObjetivo(parsed){
   return {num:k.split('-')[1],lista,actual:true,rango:rangoSemana(hoy)};
 }
 
-  const set=(id,v)=>{const el=$(id); if(el) el.textContent=v;};
+  const set=(id,v)=>{const el=$(id); if(el) el.textContent=typeof v==='number'?v.toLocaleString('es'):v;};
   // Posición con clase (top1..top3): el color lo pone el estilo de cada página
   function rank(id,arr,val,vacio){const el=$(id); if(el) el.innerHTML=arr.length?arr.map((x,i)=>`<div class="rank-row${i<3?' top'+(i+1):''}"><span><b class="pos">${i+1}</b> ${esc(x.name)}</span><em>${val(x)}</em></div>`).join(''):`<p>${vacio}</p>`;}
   function pintarStats(parsed){const t=agregar(parsed);set('stEntrenos',parsed.length);set('stKills',t.kills);set('stSalas',t.salas);set('stEquipos',t.eq.length);}
@@ -115,7 +115,7 @@ function semanaObjetivo(parsed){
     rank('contenedorTopKillersPublicos',w.pl.slice(0,10),x=>`${x.kda.toFixed(2)} KDA <small>${x.k} kills</small>`,'No tenemos resultados de la semana. Puedes consultar en el calendario los entrenos anteriores o más abajo el histórico.');
   }
 
-  document.addEventListener("DOMContentLoaded",async()=>{
+  async function iniciarEntrenamientos(){
     if(!$("trainMain")) return;
     try{
       const {data,error}=await sb.from("entrenamientos_sesiones").select("*").order("fecha",{ascending:false});
@@ -127,5 +127,7 @@ function semanaObjetivo(parsed){
       }
       pintar(); estadisticas(todas);
     }catch(e){console.error(e); $("trainMain").innerHTML="<p>No se pudieron cargar los entrenamientos.</p>";}
-  });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',iniciarEntrenamientos,{once:true});
+  else iniciarEntrenamientos();
 })();

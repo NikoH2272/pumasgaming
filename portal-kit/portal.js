@@ -922,6 +922,7 @@ html.pg-verificando body{visibility:hidden}
 
     // Animaciones (Motion): solo si el sistema no pide reducir movimiento
     function montarAnimaciones() {
+        if (script && script.dataset.sinAnimaciones !== undefined) return;
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         cargarKit('vendor/motion.js').then(() => cargarKit('animaciones.js')).catch(() => { /* sin animaciones */ });
     }

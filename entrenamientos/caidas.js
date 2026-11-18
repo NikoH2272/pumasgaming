@@ -382,6 +382,7 @@
                 <div data-c="estilos"></div>
                 <label class="cd-vista-label">Imagen <select data-c="vista" aria-label="Imagen de caídas"></select></label>
                 <button class="btn-mini" type="button" data-c="descargarActual">Descargar esta imagen</button>
+                <button class="btn-mini" type="button" data-c="descargarTodas">Descargar todo (tabla + 5 mapas)</button>
                 <div class="cd-previa" data-c="previa"><div class="cd-lienzo" data-c="lienzo"></div></div>
             </div>`;
 
@@ -630,6 +631,7 @@
             $('vista').innerHTML = imagenes.length ? imagenes.map((im,i)=>`<option value="${i}">${esc(im.titulo)}</option>`).join('') : '<option>Agrega equipos para ver las imágenes</option>';
             $('vista').disabled = !imagenes.length;
             $('descargarActual').disabled = !imagenes.length;
+            $('descargarTodas').disabled = !imagenes.length;
             $('estilos').innerHTML = PumasImagenes.selectorHTML();
             PumasImagenes.enlazarSelector($('estilos'), refrescarImagenes);
             mostrarImagen();
@@ -639,7 +641,7 @@
             refrescarImagenes();
             if (!imagenes.length) { msg('Pon al menos un equipo.', '#ff8a8d'); return; }
             const anterior = seleccion;
-            const indices = tipo ? imagenes.map((im,i)=>im.tipo===tipo?i:-1).filter(i=>i>=0) : [seleccion];
+            const indices = tipo === 'todas' ? imagenes.map((_,i)=>i) : tipo ? imagenes.map((im,i)=>im.tipo===tipo?i:-1).filter(i=>i>=0) : [seleccion];
             exportando = true;
             const controles = Array.from(cont.querySelectorAll('button,input,select,textarea'));
             const estados = controles.map(el => el.disabled);
@@ -658,6 +660,7 @@
         $('imagen').onclick = () => descargar('tabla');
         $('descargarMapas').onclick = () => descargar('mapa');
         $('descargarActual').onclick = () => descargar();
+        $('descargarTodas').onclick = () => descargar('todas');
         $('vista').onchange = () => { seleccion=Number($('vista').value); mostrarImagen(); };
         $('titulo').addEventListener('input', refrescarImagenes);
         cont.addEventListener('change', refrescarImagenes);

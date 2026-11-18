@@ -1,5 +1,52 @@
 /* La portada muestra posters primero; el video se carga después de interactuar. */
 (() => {
+    // Descargar servicios después de dibujar la portada. async=false conserva
+    // el orden de ejecución sin serializar las descargas.
+    function iniciarServicios() {
+        const icons = document.createElement('link');
+        icons.rel = 'stylesheet';
+        icons.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+        document.head.appendChild(icons);
+        const scripts = [
+            ['script.js?v=20261117b'],
+            ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'],
+            ['portal-kit/portal.js?v=20261117b', {portal:'principal', modo:'publico', sinAnimaciones:''}],
+            ['portal-kit/descargas.js?v=20261103b'],
+            ['entrenamientos.js?v=20261117b'],
+            ['portal-kit/juegos.js?v=20261014a']
+        ];
+        scripts.forEach(([src, data]) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.async = false;
+            if (data) Object.assign(script.dataset, data);
+            script.onerror = () => {
+                const target = document.querySelector('#trainMain > p');
+                if (target) target.textContent = 'No se pudieron cargar los servicios. Recarga la página para volver a intentarlo.';
+            };
+            document.head.appendChild(script);
+        });
+        const analytics = document.createElement('script');
+        analytics.src = 'https://www.googletagmanager.com/gtag/js?id=G-C79JND219Y';
+        analytics.async = true;
+        document.head.appendChild(analytics);
+    }
+    // Un rAF por sí solo puede ejecutarse antes del primer contenido visible.
+    // La entrada Paint confirma que la portada ya llegó a pantalla.
+    if (window.PerformanceObserver && PerformanceObserver.supportedEntryTypes?.includes('paint')) {
+        const painted = new PerformanceObserver(list => {
+            if (list.getEntries().some(entry => entry.name === 'first-contentful-paint')) {
+                painted.disconnect();
+                iniciarServicios();
+            }
+        });
+        painted.observe({ type: 'paint', buffered: true });
+    } else {
+        const start = () => requestAnimationFrame(() => requestAnimationFrame(iniciarServicios));
+        if (document.readyState === 'complete') start();
+        else window.addEventListener('load', start, { once: true });
+    }
+
     const videos = [...document.querySelectorAll('video[data-src]')];
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     const connection = navigator.connection;

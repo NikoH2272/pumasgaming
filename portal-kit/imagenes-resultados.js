@@ -103,7 +103,7 @@
     }
 
     /* Composición editorial para exportar: medidas fijas, datos legibles y marca común.
-       Dos estilos (PumasImagenes.estilo): 'crazy' (Crazy Pumas, por defecto) y 'pumas' (el clásico negro y oro). */
+       Dos estilos (PumasImagenes.estilo): 'pumas' (clásico negro y oro, por defecto) y 'crazy' (Crazy Pumas). */
     const TEMAS = {
         pumas: { nombre: 'Pumas', marca: 'PUMAS GAMING', instagram: 'pumas.gaming.oficial', logo: 'imagenes/personajes/logo-blanco.png', tamLogo: 83,
             logoAgua: 'imagenes/personajes/logo-blanco.png', opAgua: .035,
@@ -122,7 +122,7 @@
     };
     // ¿El usuario de la sesión es superadmin? (solo cambia qué botones de estilo se ven)
     const esSuper = () => { try { const x = window.PumasPortal && PumasPortal.sesion && PumasPortal.sesion(); return !!(x && x.rol === 'superadmin'); } catch (e) { return false; } };
-    let estilo = 'crazy';   // siempre arranca en Crazy Pumas; el botón cambia solo mientras la página esté abierta
+    let estilo = 'pumas';   // arranca en Pumas; el botón cambia solo mientras la página esté abierta
     let T = TEMAS.pumas;   // tema activo mientras se arma el HTML (plantilla() suelta usa el clásico)
     function horarios(fecha) {
         if (!fecha) return [];

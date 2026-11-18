@@ -5,7 +5,7 @@
     const colores = ['#ff8a8d','#8cc8ff','#ffcf88','#dda0ff','#8ce8e1','#ff9ad6','#c8ed86','#ffa967'];
     function generar(filas, opciones = {}) {
         const I = window.PumasImagenes, C = window.PumasCaidas;
-        const estilo = opciones.estilo || I.estilo, T = I.TEMAS[estilo] || I.TEMAS.crazy;
+        const estilo = opciones.estilo || I.estilo, T = I.TEMAS[estilo] || I.TEMAS.pumas;
         const base = opciones.base || '../', reglas = opciones.reglas || {}, logos = opciones.logos || [];
         const usadas = filas.map((f,i) => ({...f, numero:i+1, logo:logos[i]})).filter(f => f.equipo.trim());
         if (!usadas.length) return [];
