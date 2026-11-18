@@ -1,5 +1,36 @@
 # Mediciones locales — portada
 
+## Segunda revisión: LCP móvil persistente
+
+Se comprobó que la primera revisión ya estaba publicada: el dominio devolvía el HTML nuevo, pero seguía alcanzando 69/100 y LCP 5,44 s en una medición móvil simulada. El arranque todavía solicitaba scripts y el CSS completo de iconos antes de confirmar el primer contenido visible.
+
+Cambios de esta revisión:
+
+- `inicio.js` espera la entrada `first-contentful-paint` antes de solicitar los servicios, las herramientas y Analytics. En navegadores sin Paint Timing se usa el evento de carga y dos cuadros. No se espera una interacción ni un temporizador de varios segundos para traer el calendario.
+- Las descargas de scripts se hacen en paralelo, conservando su orden de ejecución. El calendario y los inicializadores de la herramienta funcionan también cuando DOMContentLoaded ya ocurrió.
+- Se elimina la consulta de rankings históricos duplicada en la portada; el ranking semanal sigue a cargo de `entrenamientos.js`.
+- La portada usa un sprite SVG de Font Awesome Free y deja su biblioteca completa para el contenido dinámico posterior. No se esconde contenido ni se detecta al auditor.
+- Una hoja CSS minificada conserva el orden de las cinco originales. Generar con `npm run build:inicio`; comprobar con `node scripts/compilar-inicio.cjs --check`. Los archivos originales siguen siendo la fuente editable.
+- Se evita la animación de entrada de la portada mediante `data-sin-animaciones`; los demás portales conservan su comportamiento.
+
+Comparación antes/después en el mismo equipo, ambos servidos localmente con gzip, usando el estado de HEAD anterior a estos cambios como referencia:
+
+| Perfil | Antes | Después |
+| --- | ---: | ---: |
+| Móvil, simulación estándar: rendimiento | 78/100 | 98/100 |
+| Móvil, simulación estándar: LCP | 5,38 s | 2,33 s |
+| Móvil, red/CPU limitadas realmente: rendimiento | 78/100 | 87/100 |
+| Móvil, red/CPU limitadas realmente: LCP | 3,00 s | 2,11 s |
+| Móvil, CLS, ambos métodos | 0 | 0 |
+| Escritorio: rendimiento | — | 100/100 |
+| Escritorio: LCP | — | 0,21 s |
+
+Accesibilidad y SEO: 100/100 en las mediciones finales. La prueba real móvil aún registró TBT de 413 ms; queda trabajo de ejecución después del primer renderizado. Son mediciones individuales de laboratorio, no una garantía para todos los dispositivos ni una medición del nuevo código en producción.
+
+La prueba funcional confirmó que los servicios empezaban a descargarse a los 385 ms, después del primer contenido visible a los 316 ms; calendario cargado con datos reales, portal `principal` correcto, menú y Escape funcionando, PNG descargado, sin errores JavaScript y sin desbordamientos en los tres tamaños. También se verificó el botón de caídas: seis PNG de 1080 × 1350, selección restaurada y estilo inicial Pumas.
+
+Los resultados siguientes se conservan como historial de la primera revisión.
+
 17 de noviembre de 2026. Chrome 157, Lighthouse local. Mismo equipo, sin publicar cambios. Las cifras son pruebas de laboratorio, no datos de usuarios reales.
 
 ## Escritorio: perfil estándar de Lighthouse

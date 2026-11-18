@@ -1,5 +1,15 @@
 # Revisión de la portada — 17 de noviembre de 2026
 
+## Segunda revisión
+
+El dominio ya devolvía la primera revisión al comprobarlo de nuevo. El auditor interpretaba como ausentes los tres `alt=""` presentes en el HTML. Ahora los dos logos tienen `alt="Pumas Gaming"` y el nombre visual adyacente usa `aria-hidden="true"` para evitar duplicarlo al leer; la foto del jersey tiene una descripción y ya no está oculta para accesibilidad. Lighthouse de la nueva revisión obtiene 100/100 en accesibilidad.
+
+El LCP móvil se corrigió con un arranque posterior al primer contenido visible, iconos SVG y CSS combinado. Los resultados y métodos están en [RENDIMIENTO_PORTADA.md](RENDIMIENTO_PORTADA.md).
+
+Las cabeceras siguen pendientes de infraestructura: una segunda consulta HTTP al dominio confirmó su ausencia; sus servidores DNS son `nsc1` a `nsc4.squarespacedns.com` y el origen responde `Server: GitHub.com`. No hay configuración de un proxy/CDN en este repositorio que permita activarlas publicando HTML. La política meta de referrer continúa funcionando en el navegador, pero no crea una cabecera HTTP. No se considera solucionado el aviso del auditor sobre las cabeceras.
+
+El historial de la primera revisión continúa abajo; el tratamiento de alt descrito en esta sección reemplaza al anterior.
+
 ## Cambios implementados
 
 - Open Graph, Twitter Card, canonical y JSON-LD de Organization y WebSite, con las redes oficiales existentes.
