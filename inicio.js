@@ -10,9 +10,9 @@
         const scripts = [
             ['script.js?v=20261117b'],
             ['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'],
-            ['portal-kit/portal.js?v=20261117b', {portal:'principal', modo:'publico', sinAnimaciones:''}],
+            ['portal-kit/portal.js?v=20261117c', {portal:'principal', modo:'publico', sinAnimaciones:''}],
             ['portal-kit/descargas.js?v=20261103b'],
-            ['entrenamientos.js?v=20261117b'],
+            ['entrenamientos.js?v=20261117c'],
             ['portal-kit/juegos.js?v=20261014a']
         ];
         scripts.forEach(([src, data]) => {

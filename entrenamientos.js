@@ -1,6 +1,15 @@
 ﻿/* Entrenamientos del portal: calendario + listado + estadísticas (Supabase) */
 (function(){
-  const sb=supabase.createClient("https://ejgxcuveubgjbvdlnimr.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZ3hjdXZldWJnamJ2ZGxuaW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0OTI3NDYsImV4cCI6MjEwOTA2ODc0Nn0.aAYCjQxetfnJpoKMvg9IYtU6dpwIU-CkXCA5mc8Zhgo");
+  const _SB_URL="https://ejgxcuveubgjbvdlnimr.supabase.co",_SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZ3hjdXZldWJnamJ2ZGxuaW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0OTI3NDYsImV4cCI6MjEwOTA2ODc0Nn0.aAYCjQxetfnJpoKMvg9IYtU6dpwIU-CkXCA5mc8Zhgo";
+  // Lecturas públicas por la caché compartida de Cloudflare (proyectn.com); si no responde, directo a Supabase.
+  const _kitCache=new URL('portal-kit/',document.currentScript?document.currentScript.src:location.href).href;
+  let _pgCacheMod;
+  const _pgCacheFetch=async(input,init)=>{
+    if(!/(^|\.)pumasgaming\.com$/.test(location.hostname)) return fetch(input,init);
+    let m; try{ m=await(_pgCacheMod||(_pgCacheMod=import(_kitCache+'cache-client.mjs?v=20261117b'))); }catch(e){ _pgCacheMod=null; return fetch(input,init); }
+    return m.fetchPublico(input,init,{supabaseURL:_SB_URL,anonKey:_SB_KEY,origin:'https://proyectn.com'});
+  };
+  const sb=supabase.createClient(_SB_URL,_SB_KEY,{global:{fetch:_pgCacheFetch}});
   const $=id=>document.getElementById(id);
   const MES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
   const ZONA_HORARIA='America/Bogota';

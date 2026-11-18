@@ -25,7 +25,15 @@ function cambiarPestanaPublica(pestana) {
 
 const SUPABASE_URL = "https://ejgxcuveubgjbvdlnimr.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqZ3hjdXZldWJnamJ2ZGxuaW1yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0OTI3NDYsImV4cCI6MjEwOTA2ODc0Nn0.aAYCjQxetfnJpoKMvg9IYtU6dpwIU-CkXCA5mc8Zhgo";
-const supabaseClient = (typeof supabase !== 'undefined' && supabase.createClient) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// Lecturas públicas por la caché compartida de Cloudflare (proyectn.com); si no responde, directo a Supabase.
+const _kitCache = new URL('../portal-kit/', document.currentScript ? document.currentScript.src : location.href).href;
+let _pgCacheMod;
+const _pgCacheFetch = async (input, init) => {
+    if (!/(^|\.)pumasgaming\.com$/.test(location.hostname)) return fetch(input, init);
+    let m; try { m = await (_pgCacheMod || (_pgCacheMod = import(_kitCache + 'cache-client.mjs?v=20261117b'))); } catch (e) { _pgCacheMod = null; return fetch(input, init); }
+    return m.fetchPublico(input, init, { supabaseURL: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY, origin: 'https://proyectn.com' });
+};
+const supabaseClient = (typeof supabase !== 'undefined' && supabase.createClient) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { fetch: _pgCacheFetch } }) : null;
 
 async function cargarSesiones() {
     const contenedor = document.getElementById('calendarContainer');

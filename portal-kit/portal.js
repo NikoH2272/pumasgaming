@@ -90,10 +90,22 @@
     const MODO = script ? (script.dataset.modo || 'publico') : 'publico';
 
     let cliente = null;
+    let cacheTransport;
+    // Lecturas públicas por la caché compartida de Cloudflare (proyectn.com). Solo en producción y en páginas
+    // públicas; el staff, el login y cualquier fallo de la caché van directo a Supabase.
+    const paginaPrivada = MODO !== 'publico' || /(?:^|\/)(?:admin|login|cuenta|registro-vip)(?:[/.]|$)/i.test(location.pathname) || !/(^|\.)pumasgaming\.com$/.test(location.hostname);
+    async function fetchConCache(input, init) {
+        if (paginaPrivada) return fetch(input, init);
+        let module;
+        try { module = await (cacheTransport || (cacheTransport = import(KIT + 'cache-client.mjs?v=20261117b'))); }
+        catch { cacheTransport = null; return fetch(input, init); }
+        return module.fetchPublico(input, init, { supabaseURL: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY, origin: 'https://proyectn.com' });
+    }
     function db() {
         if (!cliente && window.supabase && window.supabase.createClient) {
             cliente = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-                auth: { persistSession: false, autoRefreshToken: false, storageKey: 'pumas-portal-kit' }
+                auth: { persistSession: false, autoRefreshToken: false, storageKey: 'pumas-portal-kit' },
+                global: { fetch: fetchConCache }
             });
         }
         return cliente;
