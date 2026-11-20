@@ -42,11 +42,28 @@
     <link rel="preload" href="fonts/barlow-condensed-italic-800.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="fonts/barlow-condensed-normal-700.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="imagenes/jersey-poster.webp" as="image" fetchpriority="high">
-    <link rel="stylesheet" href="inicio.min.css?v=20261117b">
-    <script defer src="inicio.js?v=20261117c"></script>
+    <link rel="stylesheet" href="inicio.min.css?v=20261119b">
+    <script defer src="inicio.js?v=20261119e"></script>
     <link rel="icon" type="image/webp" href="imagenes/logo-pumas-80.webp">
 </head>
 <body class="c-home">
+
+<dialog id="cartelDiaHombre" class="c-cartel" aria-labelledby="cartelDiaHombreTitulo" data-desde="2026-11-19" data-hasta="2026-11-22">
+    <div class="c-cartel-cabecera">
+        <h2 id="cartelDiaHombreTitulo">Feliz Día del Hombre</h2>
+        <button type="button" class="c-cartel-cerrar" data-cerrar-cartel aria-label="Cerrar cartel">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+    </div>
+    <img class="c-cartel-imagen" data-src="imagenes/campanas/dia-del-hombre-pumas-2026-v5.webp" width="1080" height="1350" alt="Pumas Gaming, 19 de noviembre. Hombres que dejan huella. Retrato de Pinocho con el jersey del equipo, sin fondo. Feliz Día del Hombre. El respeto, la lealtad y el corazón también hacen equipo. @pumas.gaming.oficial. pumasgaming.com.">
+    <div class="c-cartel-acciones">
+        <a href="imagenes/campanas/dia-del-hombre-pumas-2026-v5.png" download="Dia-del-Hombre-Pumas-Pinocho.png" class="c-btn oro" autofocus>
+            <svg class="c-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            Descargar cartel
+        </a>
+        <button type="button" class="c-btn borde" data-cerrar-cartel>Continuar al sitio</button>
+    </div>
+</dialog>
 
 <header class="site-header">
     <a class="logo-container" href="/" aria-label="Pumas Gaming, inicio">
@@ -278,6 +295,7 @@
     <div>
         <a class="logo-container" href="/"><img src="imagenes/logo-pumas-80.webp" alt="Pumas Gaming" width="40" height="40" loading="lazy" class="logo-img"><span class="logo" aria-hidden="true">Pumas Gaming</span></a>
         <p>&copy; 2026 Pumas Gaming. Todos los derechos reservados.</p>
+        <button type="button" class="c-cartel-abrir" data-abrir-cartel aria-haspopup="dialog" aria-controls="cartelDiaHombre">Ver y descargar cartel del Día del Hombre</button>
     </div>
     <div>
         <h2>Secciones</h2>

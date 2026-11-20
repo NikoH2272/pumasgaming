@@ -280,3 +280,41 @@
 .c-home footer.c-pie .pg-creditos a { display: inline-flex; padding: 0; }
 .c-home #resultados #seccionRenombrar { border: 1px solid var(--linea); border-radius: 0 !important; background: var(--s1) !important; }
 .c-home #resultados .input-nombre-editable { border-radius: 0 !important; background: var(--tinta) !important; border-color: var(--linea) !important; }
+
+/* Juegos del inicio: misma tipografía y espacio lateral que la portada. */
+.c-home #pgJuego { --font-display: var(--f-disp); --font-body: var(--f-txt); width: 100%; max-width: none; padding: clamp(40px, 5vw, 64px) var(--pad); }
+.c-home #pgJuego h2 { font-family: var(--f-disp); font-style: italic; font-size: clamp(32px, 4vw, 48px); font-weight: 800; }
+.c-home #pgJuego label, .c-home #pgJuego .pgj-btn { font-family: var(--f-txt); }
+.c-home #pgJuego .pgj-caja { border-top-width: 1px; background: var(--s1); }
+.c-home #pgJuego .pgj-lb th { font-family: var(--f-txt); font-size: 12px; letter-spacing: .08em; }
+.c-home #pgJuego .pgj-controles { font-size: 13px; }
+.c-home #pgJuego .pgj-score-live { font-size: 28px; }
+.c-claro > *, .c-item > div { min-width: 0; }
+@media (max-width: 760px) {
+  .c-claro .a { padding-right: var(--pad); }
+}
+@media (max-width: 380px) {
+  .c-home .site-header { gap: 8px; }
+  .c-claro h2 { font-size: 40px; }
+}
+
+/* Cartel descargable de la celebración. El resto del sitio queda inerte con showModal(). */
+html.c-cartel-abierto { overflow: hidden; }
+.c-cartel { box-sizing: border-box; width: min(620px, calc(100% - 32px)); max-width: none; max-height: calc(100vh - 32px); max-height: calc(100svh - 32px); margin: auto; padding: 0; border: 1px solid #363636; border-radius: 12px; background: #0d0d0d; color: #f2f2f2; overflow: auto; overscroll-behavior: contain; box-shadow: 0 20px 70px #0009; }
+.c-cartel::backdrop { background: rgb(0 0 0 / 82%); }
+.c-cartel-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 12px 8px 20px; }
+.c-cartel-cabecera h2 { margin: 0; font: 600 16px/1.3 var(--f-txt); color: var(--piel); text-transform: none; }
+.c-cartel-cerrar { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; padding: 0; border: 1px solid var(--linea); border-radius: 6px; background: transparent; color: var(--piel); cursor: pointer; }
+.c-cartel-cerrar:hover { color: var(--oro); border-color: var(--oro); }
+.c-home .c-cartel-imagen { display: block; width: 100%; height: auto; max-height: calc(100vh - 176px); max-height: calc(100svh - 176px); margin: 0 auto; object-fit: contain; background: #080808; }
+.c-cartel-acciones { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px; border-top: 1px solid var(--linea); }
+.c-cartel-acciones .c-btn { flex: 1 1 180px; min-width: 0; padding: 12px 14px; font-size: 12px; letter-spacing: .07em; border-radius: 6px; }
+.c-cartel-acciones button { appearance: none; }
+.c-home .c-cartel-abrir { display: block; min-height: 44px; margin-top: 10px; padding: 8px 0; border: 0; border-radius: 0; background: none; color: var(--oro); font: 600 14px/1.4 var(--f-txt); text-align: left; text-decoration: underline; text-underline-offset: 4px; cursor: pointer; }
+@media (max-width: 480px) {
+  .c-cartel-cabecera { padding-left: 14px; }
+  .c-cartel-cabecera h2 { font-size: 15px; }
+  .c-home .c-cartel-imagen { max-height: calc(100vh - 240px); max-height: calc(100svh - 240px); }
+  .c-cartel-acciones { padding: 10px; }
+  .c-cartel-acciones .c-btn { flex-basis: 100%; }
+}

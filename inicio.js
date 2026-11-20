@@ -1,5 +1,36 @@
 /* La portada muestra posters primero; el video se carga después de interactuar. */
 (() => {
+    const cartel = document.getElementById('cartelDiaHombre');
+    if (cartel && typeof cartel.showModal === 'function') {
+        const clave = 'pumas:cartel:dia-hombre-2026-v5:cerrado';
+        const acceso = document.querySelector('[data-abrir-cartel]');
+        const imagen = cartel.querySelector('[data-src]');
+        let volverA = acceso;
+        const abrir = origen => {
+            if (cartel.open) return;
+            volverA = origen || document.querySelector('.hero-actions a') || acceso;
+            if (imagen.dataset.src) {
+                imagen.src = imagen.dataset.src;
+                delete imagen.dataset.src;
+            }
+            cartel.showModal();
+            document.documentElement.classList.add('c-cartel-abierto');
+        };
+        acceso?.addEventListener('click', () => abrir(acceso));
+        cartel.querySelectorAll('[data-cerrar-cartel]').forEach(boton => {
+            boton.addEventListener('click', () => cartel.close());
+        });
+        cartel.addEventListener('close', () => {
+            document.documentElement.classList.remove('c-cartel-abierto');
+            try { sessionStorage.setItem(clave, '1'); } catch (_) { /* almacenamiento opcional */ }
+            volverA?.focus({ preventScroll: true });
+        });
+        const hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+        let cerrado = false;
+        try { cerrado = sessionStorage.getItem(clave) === '1'; } catch (_) { /* mostrar igualmente */ }
+        if (!cerrado && hoy >= cartel.dataset.desde && hoy <= cartel.dataset.hasta) abrir();
+    }
+
     // Descargar servicios después de dibujar la portada. async=false conserva
     // el orden de ejecución sin serializar las descargas.
     function iniciarServicios() {
@@ -13,7 +44,7 @@
             ['portal-kit/portal.js?v=20261117c', {portal:'principal', modo:'publico', sinAnimaciones:''}],
             ['portal-kit/descargas.js?v=20261103b'],
             ['entrenamientos.js?v=20261117c'],
-            ['portal-kit/juegos.js?v=20261014a']
+            ['portal-kit/juegos.js?v=20261119a']
         ];
         scripts.forEach(([src, data]) => {
             const script = document.createElement('script');

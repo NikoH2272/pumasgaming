@@ -16,21 +16,30 @@
         st.textContent = `
 .pgj{width:min(100%,1180px);margin:0 auto;padding:clamp(40px,5vw,64px) clamp(18px,4vw,40px)}
 .pgj+.pgj{padding-top:0}
+.pgj>.pgj{width:100%;margin:0;padding:0}
+.pgj>.pgj+.pgj{margin-top:24px}
 .pgj-caja{padding:clamp(18px,3vw,30px);border:1px solid rgba(var(--primary-rgb,216,195,149),.35);
   border-top:3px solid var(--primary,#D8C395);border-radius:3px;
   background:linear-gradient(145deg,rgba(var(--primary-rgb,216,195,149),.07),transparent 45%),#121212;
   color:var(--light,#F4EEDC)}
 .pgj h2{margin:0 0 6px;color:var(--primary,#D8C395);font:900 clamp(1.2rem,2.6vw,1.8rem)/1.15 var(--font-display,'Michroma',sans-serif);text-transform:uppercase}
 .pgj p.pgj-sub{margin:0 0 18px;color:var(--gray,#B9B2A4);line-height:1.6}
-.pgj-layout{display:grid;grid-template-columns:1fr auto;gap:28px;align-items:start}
-.pgj-canvas-col{display:flex;flex-direction:column;align-items:center}
-.pgj-canvas-col canvas{display:block;border:2px solid rgba(var(--primary-rgb,216,195,149),.35);border-radius:2px;max-width:min(88vw,400px)}
+.pgj-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:28px;align-items:start}
+.pgj-layout>*{min-width:0}
+.pgj-canvas-col{display:flex;flex-direction:column;align-items:center;min-width:0;width:100%}
+.pgj-canvas-col canvas{display:block;border:2px solid rgba(var(--primary-rgb,216,195,149),.35);border-radius:2px;max-width:100%;height:auto}
+.pgj-snake-partida .pgj-layout{grid-template-columns:minmax(0,1fr);gap:12px}
+.pgj-snake-partida .pgj-score-live{margin-top:0;font-variant-numeric:tabular-nums}
+.pgj-snake-partida .pgj-layout>div:first-child{text-align:center}
+.pgj-snake-partida .pgj-canvas-col{max-width:400px;margin-inline:auto}
+.pgj-snake-ayuda{text-align:center;margin-top:12px!important}
 .pgj-score-live{color:var(--primary,#D8C395);font:900 1rem var(--font-display,'Michroma',sans-serif);
   text-align:center;margin:10px 0 0;letter-spacing:.06em}
 .pgj-controles{font-size:.72rem;color:var(--gray,#B9B2A4);margin:6px 0 0;text-align:center;display:none}
 @media(pointer:fine){.pgj-controles{display:block}}
 .pgj-dpad{display:none;flex-direction:column;align-items:center;gap:4px;margin-top:10px;user-select:none}
-@media(pointer:coarse){.pgj-dpad{display:flex}}
+@media(any-pointer:coarse){.pgj-dpad{display:flex}}
+@media(max-width:720px){.pgj-snake-partida .pgj-dpad{display:flex}}
 .pgj-dpad-row{display:flex;gap:4px}
 .pgj-dpad button{width:56px;height:56px;border:1px solid rgba(var(--primary-rgb,216,195,149),.5);border-radius:4px;
   background:rgba(var(--primary-rgb,216,195,149),.12);color:var(--primary,#D8C395);
@@ -55,7 +64,7 @@
 .pgj-dpad-tetris button small{font-size:.55rem;display:block;font-family:var(--font-display,'Michroma',sans-serif);letter-spacing:.05em;opacity:.8}
 .pgj-dpad-tetris button[data-act="rot"]{width:110px;height:74px}
 .pgj-dpad-tetris button[data-act="drp"]{width:260px;height:64px;font-size:.9rem;letter-spacing:.06em}
-.pgj form{display:grid;gap:12px;max-width:320px;margin-bottom:18px}
+.pgj form{display:grid;gap:12px;width:100%;max-width:320px;margin-bottom:18px}
 .pgj label{display:block;margin-bottom:5px;color:var(--primary,#D8C395);
   font:800 .66rem var(--font-display,'Michroma',sans-serif);letter-spacing:.1em;text-transform:uppercase}
 .pgj input{width:100%;min-height:46px;padding:10px 12px;
@@ -72,6 +81,7 @@
 .pgj-lb th{color:var(--primary,#D8C395);font:700 .7rem var(--font-display,'Michroma',sans-serif);
   letter-spacing:.08em;padding:8px;border-bottom:1px solid rgba(var(--primary-rgb,216,195,149),.25);text-align:left}
 .pgj-lb td{padding:8px;border-bottom:1px solid rgba(255,255,255,.06);color:var(--light,#F4EEDC)}
+.pgj-lb td:nth-child(2){overflow-wrap:anywhere}
 .pgj-lb .pos{font:700 .8rem var(--font-display,'Michroma',sans-serif);color:var(--primary,#D8C395);white-space:nowrap}
 .pgj-lb .pts{text-align:right;color:#FFD54A;font-weight:700}
 .pgj-info{font-size:.82rem;color:var(--gray,#B9B2A4);margin:4px 0 0}
@@ -1061,7 +1071,7 @@
 
         function renderJuego(jug) {
             const diffBoost = calcDiffBoost(entradas, jug.nombre);
-            cont.innerHTML = `<div class="pgj-caja"${cfg.config?.fondo ? ` style="background-image:url('${cfg.config.fondo}');background-size:cover;background-blend-mode:overlay"` : ''}>
+            cont.innerHTML = `<div class="pgj-caja pgj-snake-partida"${cfg.config?.fondo ? ` style="background-image:url('${cfg.config.fondo}');background-size:cover;background-blend-mode:overlay"` : ''}>
                 <h2>${titulo}</h2>
                 <p class="pgj-info" style="margin-bottom:14px">
                     Jugador: <b style="color:var(--primary,#D8C395)">${esc(jug.nombre)}</b>
@@ -1071,17 +1081,17 @@
                 <div class="pgj-layout">
                     <div>
                         <p class="pgj-score-live" id="pgjScoreLive">PUNTOS: 0</p>
-                        <p class="pgj-controles" style="text-align:left;margin-top:16px">Flechas · WASD · Desliza</p>
+                        <p class="pgj-controles">Flechas · WASD · Desliza</p>
                     </div>
                     <div class="pgj-canvas-col">
-                        <canvas id="pgjCv" width="${W}" height="${W}"></canvas>
+                        <canvas id="pgjCv" width="${W}" height="${W}" tabindex="0" aria-label="Tablero de Snake. Controla la serpiente con las flechas, WASD o deslizando."></canvas>
                         <p class="pgj-controles">⬆ ⬇ ⬅ ➡ &nbsp;·&nbsp; WASD</p>
                         <div class="pgj-dpad" id="pgjDpad">
-                            <div class="pgj-dpad-row"><button data-dir="u">⬆</button></div>
+                            <div class="pgj-dpad-row"><button type="button" data-dir="u" aria-label="Mover arriba">↑</button></div>
                             <div class="pgj-dpad-row">
-                                <button data-dir="l">⬅</button>
-                                <button data-dir="d">⬇</button>
-                                <button data-dir="r">➡</button>
+                                <button type="button" data-dir="l" aria-label="Mover a la izquierda">←</button>
+                                <button type="button" data-dir="d" aria-label="Mover abajo">↓</button>
+                                <button type="button" data-dir="r" aria-label="Mover a la derecha">→</button>
                             </div>
                         </div>
                     </div>
@@ -1089,7 +1099,7 @@
             </div>`;
             const cv = document.getElementById('pgjCv');
             document.getElementById('pgjSalir').addEventListener('click', () => { _stop(); if (cv?._kclean) cv._kclean(); inicioSnake(); });
-            document.getElementById('pgjDpad')?.addEventListener('pointerdown', e => {
+            const dirigir = e => {
                 const btn = e.target.closest('[data-dir]');
                 if (!btn) return;
                 const v = btn.dataset.dir;
@@ -1098,7 +1108,12 @@
                 if (v === 'l' && _dir.x !== 1)  _nd = { x: -1, y: 0 };
                 if (v === 'r' && _dir.x !== -1) _nd = { x: 1,  y: 0 };
                 e.preventDefault();
-            });
+            };
+            const dpad = document.getElementById('pgjDpad');
+            dpad.addEventListener('pointerdown', dirigir);
+            dpad.addEventListener('click', dirigir);
+            cv.closest('.pgj-canvas-col').scrollIntoView({ block: 'center', behavior: 'instant' });
+            cv.focus({ preventScroll: true });
             iniciarSnake(cv,
                 async (finalPts) => {
                     if (cv?._kclean) cv._kclean();
@@ -1141,13 +1156,26 @@
                         ${lbHTML(entradas)}
                     </div>
                     <div class="pgj-canvas-col">
-                        <canvas id="pgjCv" width="${W}" height="${W}" style="opacity:.25"></canvas>
+                        <canvas id="pgjCv" width="${W}" height="${W}" aria-label="Vista previa del tablero de Snake"></canvas>
+                        <p class="pgj-info pgj-snake-ayuda">${jugador ? 'Pulsa Jugar para comenzar.' : 'Escribe tu nombre para jugar.'}</p>
                         <p class="pgj-controles">⬆ ⬇ ⬅ ➡ &nbsp;·&nbsp; WASD &nbsp;·&nbsp; Desliza</p>
                     </div>
                 </div>
             </div>`;
             const cv = document.getElementById('pgjCv');
-            if (cv) { const cx = cv.getContext('2d'); cx.fillStyle = '#0a0a0a'; cx.fillRect(0, 0, W, W); }
+            if (cv) {
+                const cx = cv.getContext('2d');
+                const color = getComputedStyle(cont).getPropertyValue('--primary').trim() || '#D8C395';
+                cx.fillStyle = '#0a0a0a'; cx.fillRect(0, 0, W, W);
+                cx.strokeStyle = '#202020'; cx.lineWidth = 1;
+                for (let n = CELL; n < W; n += CELL) {
+                    cx.beginPath(); cx.moveTo(n, 0); cx.lineTo(n, W); cx.stroke();
+                    cx.beginPath(); cx.moveTo(0, n); cx.lineTo(W, n); cx.stroke();
+                }
+                cx.fillStyle = color;
+                [[8,10],[9,10],[10,10],[10,9]].forEach(([x,y]) => cx.fillRect(x*CELL+2,y*CELL+2,CELL-4,CELL-4));
+                cx.fillStyle = '#ff6b6b'; cx.beginPath(); cx.arc(14*CELL+10,7*CELL+10,6,0,Math.PI*2); cx.fill();
+            }
             if (cfg.deadline && !cfg.cerrado) relojJuego(cfg.deadline);
             if (cfg.cerrado) { const b = document.getElementById('pgjJugar'); if (b) { b.disabled = true; b.textContent = '⛔ Cerrado'; } }
             document.getElementById('pgjForm')?.addEventListener('submit', e => {
