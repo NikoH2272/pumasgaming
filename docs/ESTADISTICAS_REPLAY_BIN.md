@@ -69,6 +69,66 @@ Es una secuencia de paquetes, uno detrás de otro, hasta el final del archivo:
 `id del clan` de su equipo. Se vota por escuadra → nombre. 241/241. Esto arregla los equipos que el
 `.json` deja como `ESCUADRA 5` (los que nadie eliminó, normalmente el del booyah).
 
+### Daño con granadas
+
+El lector conserva `jugador.danoPorArma[id] = { dano, danoJug, eventos }` para cada ID
+del mensaje 106. `danoJug` solo suma víctimas identificadas como jugadores de otra
+escuadra; `dano` conserva el total registrado, incluidos objetos y daño a compañeros.
+El daño propio se excluye como en el cálculo general. `eventos` no es un conteo de
+granadas lanzadas (una explosión o fuego continuo generan varios mensajes): las lanzadas salen del mensaje 160.
+
+`PumasCompletos.tipoGranada` reconoce 601 (explosiva), 608 (hielo) y nombres de granadas
+aprendidos de los CSV: incendiaria, humo, sonar y otros nombres explícitos. Los
+lanzadores M79 y TROGON no se clasifican como granadas de mano. Un ID desconocido se
+conserva en el desglose sin asignarle un tipo supuesto. Las granadas sin eventos de
+daño no aparecen en este desglose; no se infiere su uso por ausencia de daño.
+
+### Sin .csv: asistencias estimadas y curación
+
+"Cargar con estadísticas" ya no acepta el `.csv`: todo sale del `.log`, el `.json` y el `.bin`.
+
+- **Asistencias (estimadas):** al eliminar a alguien (107), cuentan los compañeros de quien lo eliminó que le hicieron
+  daño (106 con daño > 0) en los 20 s previos. El `.bin` no trae las asistencias oficiales: coincide en 181/241
+  jugadores de la J16 y, cuando falla, cuenta de menos (385 contra 475 en total). Queda en `extra.bin.asistencias`.
+- **Curación:** no está en ningún mensaje legible del `.bin` (sale sobre todo de habilidades pasivas, en los paquetes
+  de estado empaquetados por bits). Se quitó de las imágenes; en Destacados su lugar lo ocupa **Granadas lanzadas**.
+
+### Granadas lanzadas y kills con granada
+
+- **Lanzadas (mensaje 160):** `[n, objeto, nº de lanzamiento, …, PlayerID (10º)]`. Cada granada que explota en
+  esquirlas repite el paquete con `nº de lanzamiento = 0`: solo cuenta el que trae número. Queda en
+  `jugador.lanzadas[objeto]`. Objetos: **601** granada (`grenade_kind` 0), **608** Flash Freeze (kind 1) y
+  **624** granada de dragón (kind 2, columna `dragon_grenade_kill`). Hay otros lanzables (617, 196 = FGL24, 23…)
+  que no son granadas de mano y no se muestran.
+- **Kills con granada:** el arma de la baja (107) es la del último impacto (106) de quien la hizo a esa víctima.
+  Queda en `jugador.killsArma[arma]`. El `.json` no sirve para esto: cuenta derribos como kills (229/241).
+- Comprobado contra `grenade_usages`, `weapon_usages` y `grenade_kill` del `.csv` oficial (J16, 241 jugadores):
+  lanzadas 601/608/624 241/241, daño 601/608 241/241, kills con granada 240/241.
+- **FGL24 (196) y M79 (23)** también se cuentan, como lanzagranadas: usos 241/241 con `weapon_usages.shoots` del
+  `.csv`. Su daño del `.bin` es el registrado en el replay e incluye la quemadura del FGL24 (paquetes con 726/64),
+  que el `.csv` casi no cuenta: sale más alto que el oficial. Kills del M79 239/241.
+- Imagen "Gloo, granadas y armas": tabla con los 5 tipos (usos, daño a rivales, kills y quién más la usó).
+- Se guarda en `extra.bin.lanzadas` y `extra.bin.killsArma` (sin SQL nuevo). Los entrenos guardados antes
+  no lo tienen hasta volver a cargarlos con su `.bin`.
+
+En Estadísticas y Acumulados aparecen tablas por tipo y por jugador. Los CSV del
+generador incluyen daño con granadas, daño a rivales y tipos con su daño para equipos,
+jugadores y detalle por sala. El desglose se conserva en `extra.bin.danoPorArma`
+usando el formato existente; las filas antiguas necesitan volver a procesar su BIN.
+No modifica el daño oficial cuando también se carga un CSV de resultados completos.
+
+La imagen Habilidades, gloo y armas muestra granadas usadas desde `grenade_use` del
+CSV completo. No usa `eventos` del BIN como lanzamientos. MVP y Destacados comparten
+la lectura de asistencias (`assists`) y curación a compañeros (`healing_to_teammates`).
+`extra.datosCSV` conserva qué columnas estaban presentes: cero confirmado se muestra
+como cero; una columna ausente queda sin datos. Esta disponibilidad y las cifras se
+mantienen al combinar CSV + replay + BIN y al recuperar filas guardadas. El lector
+actual no extrae esos tres datos del BIN; se indica que requieren CSV completo.
+
+Pruebas: `node --test tests/replay-granadas.test.cjs` usa paquetes BIN sintéticos,
+comprueba daño propio/aliados/objetos/rivales, tipos, serialización y exportación CSV.
+Estos casos no sustituyen una comparación con un BIN y CSV oficiales de la misma sala.
+
 **Habilidades (250 + 101):** la habilidad activa es la del mensaje 250 y cada `estado = 1` es un uso.
 La ficha 101 trae las **4 habilidades equipadas** como `[8, h1, h2, h3, h4]` (todas terminan en 06; 241/241 contra
 `skill_ids` del `.csv`). Nombres conocidos (tabla `HABILIDADES` en completos.js; el `.csv` enseña los nuevos con `skill_info`):

@@ -6,7 +6,7 @@
         · la repetición ReplayInfo_<id>.bin  → se lee en el navegador (portal-kit/replay-bin.js):
           daño, impactos, headshots, paredes gloo, reanimaciones, derribos, kills y el
           nombre de cada escuadra (no se sube)
-        · los resultados completos <id>.csv  → daño, headshots, revividas, paredes gloo
+        · (el .csv de resultados completos ya no se usa aquí: todo sale del .log, el .json y el .bin)
       Todo se empareja con cada .log por el número de la partida (va en el nombre).
       Genera las imágenes 4:5 (portal-kit/imagenes-resultados.js) y, al "Procesar y guardar",
       se guardan en la base con el id del entreno (si el evento lo tiene habilitado).
@@ -91,7 +91,8 @@
     let turnoBins = 0;
     async function alCambiarArchivos() {
         const turno = ++turnoBins;
-        [csvs, replays] = await Promise.all([leerArchivos('fileCompletos'), leerArchivos('fileReplays')]);
+        // Solo .log + .json + .bin: el .csv de resultados completos ya no se carga aquí (csvs queda vacío)
+        replays = await leerArchivos('fileReplays');
         const files = Array.from(($('fileBins') || {}).files || []);
         bins = files.map(f => ({ nombre: f.name, id: C().idDeArchivo(f.name), mb: f.size / 1048576, datos: null, error: '' }));
         if (window.PumasBin && files.length) {
@@ -171,20 +172,38 @@
         try { await PumasImagenes.descargar(im.id, im.nombre); } finally { caja.hidden = oculto; }
     }
 
+    // Vista previa del módulo ESTADÍSTICAS (TOP · ESTADÍSTICAS · ACUMULADOS) con lo que se va a guardar.
+    // Va en su propio contenedor, después de las imágenes: así no se borra al cambiar de imagen.
+    function pintarModuloPrevio(out, salas) {
+        let caja = $('outputModuloPrevio');
+        if (!salas) { if (caja) caja.remove(); return; }
+        if (!caja) {
+            caja = document.createElement('section');
+            caja.id = 'outputModuloPrevio';
+            caja.style.cssText = 'width:100%;margin:10px 0 30px';
+            out.insertAdjacentElement('afterend', caja);
+        }
+        caja.innerHTML = `<h3 style="color:#D8C395;font-family:'Michroma';font-size:.95rem;margin:0 0 6px;text-align:center"><i class="fa-solid fa-table"></i> VISTA PREVIA · MÓDULO ESTADÍSTICAS</h3>
+            <p class="form-hint" style="text-align:center;margin:0 0 14px">Así se verá en Estadísticas y en "Ver estadísticas" del entreno cuando lo guardes.</p>
+            <div data-modulo></div>`;
+        C().montarLocal(caja.querySelector('[data-modulo]'), salas, typeof globalEquipos !== 'undefined' ? globalEquipos : []);
+    }
+
     function recalcular() {
         const out = $('outputAvanzado');
         if (!out) return;
         pintarChecklist();
+        pintarModuloPrevio(out, null);
         if (!modoStats) { out.innerHTML = ''; ultimo = null; return; }
         const aviso = habilitado === false ? '<br>⚠ Este evento no tiene habilitados los resultados completos (Admin → Resultados completos): se genera la imagen pero las estadísticas no se guardan.' : '';
         if (!csvs.length && !replays.length) {
             out.innerHTML = ''; ultimo = null;
-            info('Sube los replays .json y .bin de cada sala (y si lo tienes, el .csv de resultados completos).' + aviso, habilitado === false ? '#FFD54A' : '');
+            info('Sube los replays .json y .bin de cada sala.' + aviso, habilitado === false ? '#FFD54A' : '');
             return;
         }
         if (typeof globalEquipos === 'undefined' || !globalEquipos.length) {
             out.innerHTML = ''; ultimo = null;
-            info(`${replays.length} .json y ${csvs.length} .csv listos. Sube los .log y confirma los nombres para generar las estadísticas.` + avisoBins() + aviso);
+            info(`${replays.length} .json listos. Sube los .log y confirma los nombres para generar las estadísticas.` + avisoBins() + aviso);
             return;
         }
         let res;
@@ -193,7 +212,7 @@
         const { salas, sobran } = res;
         if (!salas.length) {
             out.innerHTML = ''; ultimo = null;
-            info('⚠ Ningún .json ni .csv coincide con las salas. Revisa que sean de las mismas partidas (el número largo del nombre debe ser igual).' + avisoBins(), '#ff8a8d');
+            info('⚠ Ningún .json coincide con las salas. Revisa que sean de las mismas partidas (el número largo del nombre debe ser igual).' + avisoBins(), '#ff8a8d');
             return;
         }
         const conBin = aplicarBins(salas);
@@ -211,6 +230,7 @@
                 fecha: fInput && fInput.value ? fInput.value.replace('T', ' ') : '',
                 moderador: mod && mod.value.trim() ? mod.value.trim().toUpperCase() : ''
             }, salas);
+            pintarModuloPrevio(out, salas);
             return;
         }
         const meta = {
@@ -264,7 +284,7 @@
         }
     };
 
-    ['fileCompletos', 'fileReplays', 'fileBins'].forEach(id => { const el = $(id); if (el) el.addEventListener('change', alCambiarArchivos); });
+    ['fileReplays', 'fileBins'].forEach(id => { const el = $(id); if (el) el.addEventListener('change', alCambiarArchivos); });
     const fileLogs = $('fileInput');
     if (fileLogs) fileLogs.addEventListener('change', () => setTimeout(recalcular, 0));
     // Cada vez que se genera la tabla de los .log, se recalculan las estadísticas

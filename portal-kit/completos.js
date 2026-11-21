@@ -124,7 +124,9 @@
        el .bin trae la activa de cada jugador y cuántas veces la usó (tipo 250), y las 4 equipadas.
        Imagen: imagenes/personajes/<Nombre>.png (la carpeta queda junto a portal-kit). */
     const HABILIDADES = { 2606: 'Steffie', 3806: 'Chrono', 4006: 'Skyler', 4406: 'Xayne', 5606: 'Iris', 5806: 'Tatsuya',
-        7206: 'Koda', 7306: 'Chrono', 7406: 'Oscar', 7706: 'Morse' };
+        7206: 'Koda', 7306: 'Chrono', 7406: 'Oscar', 7706: 'Morse',
+        // Sacados del skill_info de los 96 .csv oficiales de la liga
+        1906: 'A124', 7006: 'Kassie', 7606: 'Nero' };
     // El .csv oficial nombra la habilidad (skill_name), no al personaje: se traduce para mostrar el personaje y su foto.
     // Tabla de habilidades activas → personaje (ff_mapeo_armas_habilidades_mascotas.csv). El nombre es el de la foto en imagenes/personajes.
     const PERSONAJE_DE_SKILL = { 'Drop the Beat': 'Alok', 'Bushido': 'Hayato', 'Time Turner': 'Chrono', 'Camouflage': 'Wukong', 'Master of All': 'K',
@@ -192,8 +194,12 @@
         botiquines: 'medkit_use', granadas: 'grenade_use', derribado: 'be_knocked_down_count', levantadoCsv: 'revived_times', rescates: 'rescue_times',
         enfrentamientos: 'engage_count', vehiculo: 'vehicle_move_distance', glooRotas: 'icewall_destroyed_times', torso: 'torso_hits', piernas: 'leg_hits' };
     function extrasCSV(r) {
-        const x = {};
+        const x = { datosCSV: { asistencias: r.assists !== undefined && r.assists !== '',
+            curacion: r.healing_to_teammates !== undefined && r.healing_to_teammates !== '',
+            granadas: r.grenade_use !== undefined && r.grenade_use !== '' } };
         Object.entries(EXTRAS_CSV).forEach(([k, col]) => { const v = ent(r[col]); if (v > 0) x[k] = v; });
+        if (x.datosCSV.curacion) x.curacion = ent(r.healing_to_teammates);
+        if (x.datosCSV.granadas) x.granadas = ent(r.grenade_use);
         const dist = String(r.kill_distance || '').match(/\d+(\.\d+)?/g);
         if (dist) x.distancia = Math.round(Math.max(...dist.map(Number)));
         const h = habilidadCSV(r.skill_info);
@@ -459,6 +465,23 @@
         return s;
     }
 
+    // Nombres comprobados del catálogo local. Los IDs nuevos solo se clasifican si
+    // su nombre aprendido del CSV identifica una granada; nunca por parte del cuerpo.
+    function tipoGranada(id) {
+        const n = nombreArma(id).toUpperCase().replace(/_/g, ' ');
+        if (n === 'GRENADE' || n === 'GRANADA') return 'Granada explosiva';
+        if (n === 'FLASH FREEZE' || n === 'ICE GRENADE') return 'Granada de hielo';
+        if (n === 'FLAME GRENADE') return 'Granada incendiaria';
+        if (n === 'SMOKE GRENADE') return 'Granada de humo';
+        if (n === 'SONAR GRENADE') return 'Granada de sonar';
+        // 624: objeto lanzado que el .csv cuenta como grenade_kind 2 (columna dragon_grenade_kill); 241/241 en la J16
+        if (+id === 624) return 'Granada de dragón';
+        // Lanzagranadas que se cuentan con las granadas (usos 241/241 con el .csv; el daño del .bin incluye
+        // la quemadura del FGL24, que el .csv casi no cuenta). TROGON(GRENADE) y los demás siguen en armas.
+        if (+id === 196) return 'FGL24';
+        if (+id === 23) return 'M79';
+        return /^(?:[A-Z0-9 -]+ )?(?:GRENADE|GRANADA)$/.test(n) ? n : '';
+    }
     function aplicarStatsBin(s, b) {
         const porNick = new Map([...b.jugadores.values()].filter(x => x.nick && norm(x.nick).length >= 3).map(x => [norm(x.nick), x]));
         const soloReplay = s.fuente === 'replay';
@@ -470,10 +493,13 @@
             if (!x) return;
             j.extra = Object.assign({}, j.extra, { bin: { kills: x.kills, dano: x.dano, impactos: x.impactos, hs: x.hs, torso: x.torso, piernas: x.piernas,
                 gloo: x.gloo, reanimo: x.reanimo, revivido: x.revivido, derribos: x.derribos, derribado: x.derribado,
-                activa: x.activa || 0, usos: x.usos || 0, habilidades: x.habilidades || [] } });
+                activa: x.activa || 0, usos: x.usos || 0, habilidades: x.habilidades || [],
+                danoPorArma: x.danoPorArma || {}, lanzadas: x.lanzadas || {}, killsArma: x.killsArma || {},
+                asistencias: x.asistencias || 0 } });
             if (!soloReplay) return;
             if (!j.killsLog) j.kills = x.kills;
             j.dano = x.dano; j.headshots = x.hs; j.hits = x.impactos; j.gloo = x.gloo; j.revividos = x.reanimo; j.derribos = x.derribos;
+            j.asistencias = x.asistencias || 0;   // estimadas del .bin (no hay .csv)
             const armas = new Map(j.armas.map(a => [a.n, a]));
             Object.entries(x.armas).forEach(([id, d]) => {
                 const n = nombreArma(+id);
@@ -782,6 +808,50 @@
 
     // Tablas de detalle (página pública): jugadores, equipos, armas y el booyah de cada sala.
     // Usan lo del .bin (derribos, veces derribado/revivido, impactos) y lo del .json (rematados, primera sangre, rival con más bajas).
+    function tablasGranadas(salas) {
+        const tipos = new Map(), jugadores = new Map();
+        salas.forEach((s, i) => s.jugadores.forEach(j => {
+            const b = (j.extra || {}).bin || {};
+            const porArma = b.danoPorArma || {}, lanzadas = b.lanzadas || {}, killsArma = b.killsArma || {};
+            const jugador = String(j.account_id || norm(j.jugador));
+            const fila = id => {
+                const tipo = tipoGranada(id), k = jugador + '|' + norm(j.equipo) + '|' + id;
+                const t = tipos.get(id) || { tipo, dano: 0, rival: 0, lanzadas: 0, kills: 0, jugadores: new Set(), salas: new Set() };
+                const p = jugadores.get(k) || { jugador: j.jugador, equipo: j.equipo, tipo, dano: 0, rival: 0, lanzadas: 0, kills: 0, salas: new Set() };
+                tipos.set(id, t); jugadores.set(k, p);
+                return [t, p];
+            };
+            Object.entries(porArma).forEach(([id, d]) => {
+                if (!tipoGranada(id) || !(d.dano > 0)) return;
+                const [t, p] = fila(id);
+                t.dano += num(d.dano); t.rival += num(d.danoJug); t.jugadores.add(jugador); t.salas.add(i);
+                p.dano += num(d.dano); p.rival += num(d.danoJug); p.salas.add(i);
+            });
+            // Lanzadas y kills (mensajes 160 y 107 del .bin): las filas viejas no los traen y quedan en 0
+            Object.entries(lanzadas).forEach(([id, n]) => {
+                if (!tipoGranada(id) || !(n > 0)) return;
+                const [t, p] = fila(id);
+                t.lanzadas += num(n); t.jugadores.add(jugador); t.salas.add(i); p.lanzadas += num(n); p.salas.add(i);
+            });
+            Object.entries(killsArma).forEach(([id, n]) => {
+                if (!tipoGranada(id) || !(n > 0)) return;
+                const [t, p] = fila(id);
+                t.kills += num(n); p.kills += num(n);
+            });
+        }));
+        const orden = (a, b) => b.rival - a.rival || b.kills - a.kills || b.dano - a.dano || b.lanzadas - a.lanzadas || a.tipo.localeCompare(b.tipo);
+        const conLanz = [...tipos.values()].some(t => t.lanzadas || t.kills);
+        return [
+            { titulo: 'GRANADAS · DAÑO POR TIPO (BIN)', icono: 'fa-bomb',
+                cab: ['TIPO', 'DAÑO A RIVALES', 'DAÑO REGISTRADO · INCLUYE OBJETOS', 'JUGADORES', 'SALAS', ...(conLanz ? ['LANZADAS', 'KILLS', 'DAÑO POR LANZADA'] : [])],
+                filas: [...tipos.values()].sort(orden).map(t => [t.tipo, fmt(t.rival), fmt(t.dano), t.jugadores.size, t.salas.size,
+                    ...(conLanz ? [t.lanzadas, t.kills, t.lanzadas ? fmt(Math.round(t.rival / t.lanzadas)) : '—'] : [])]) },
+            { titulo: 'GRANADAS · JUGADORES CON MÁS DAÑO (BIN)', icono: 'fa-bomb',
+                cab: ['#', 'JUGADOR', 'EQUIPO', 'TIPO', 'DAÑO A RIVALES', 'DAÑO REGISTRADO', 'SALAS', ...(conLanz ? ['LANZADAS', 'KILLS'] : [])],
+                filas: [...jugadores.values()].sort(orden).slice(0, 20).map((j, i) => [i + 1, j.jugador, j.equipo, j.tipo, fmt(j.rival), fmt(j.dano), j.salas.size,
+                    ...(conLanz ? [j.lanzadas, j.kills] : [])]) }
+        ].filter(t => t.filas.length);
+    }
     function tablasDetalle(salas) {
         const dano = salas.some(s => s.fuente !== 'replay');
         const top = o => Object.entries(o || {}).sort((a, b) => b[1] - a[1])[0] || null;
@@ -842,6 +912,7 @@
                 cab: ['#', 'EQUIPO', 'SALAS', 'BOOYAHS', 'EQUIPOS ELIMINADOS', 'KILLS', ...(dano ? ['DAÑO', 'HS', 'GLOO'] : []), 'DERRIBOS', 'VIVO PROM.', 'MÁS BAJAS A'],
                 filas: le.map((e, i) => [i + 1, e.equipo, e.salas, e.booyahs, e.rematados, e.kills, ...(dano ? [fmt(e.dano), e.hs, e.gloo] : []), e.derribos,
                     e.n ? mmss(e.vivo / e.n) : '—', rival(top(e.vs))]) },
+            ...tablasGranadas(salas),
             { titulo: 'ARMAS MÁS USADAS', icono: 'fa-gun',
                 cab: ['#', 'ARMA', 'KILLS', ...(dano ? ['DAÑO'] : []), 'JUGADORES QUE LA USARON'],
                 filas: la.map((a, i) => [i + 1, celdaArma(a.arma), a.kills, ...(dano ? [fmt(a.dano)] : []), a.usos]) },
@@ -928,6 +999,7 @@
                     'EQUIPOS ELIMINADOS', 'VIVO PROM.', 'MEJOR MAPA', 'MÁS BAJAS A'],
                 filas: le.map((e, i) => [i + 1, e.equipo, e.salas, e.booyahs, e.kills, prom(e.kills, e.salas), ...(dano ? [fmt(e.dano), prom(e.dano, e.salas, fmt), e.hs, e.gloo] : []),
                     e.derribos, e.derribado, e.rematados, prom(e.vivo, e.n, mmss), conN(top(e.porMapa)), conN(top(e.vs))]) },
+            ...tablasGranadas(salas),
             { titulo: `ACUMULADO POR MAPA · ${lm.length}`, icono: 'fa-map-location-dot',
                 cab: ['MAPA', 'SALAS', 'KILLS', 'K/SALA', ...(dano ? ['DAÑO', 'HS', 'GLOO'] : []), 'DURACIÓN PROM.', 'MÁS BOOYAHS', 'MÁS KILLS', 'ARMA CON MÁS KILLS'],
                 filas: lm.map(m => [m.mapa, m.salas, m.kills, prom(m.kills, m.salas), ...(dano ? [fmt(m.dano), m.hs, m.gloo] : []), prom(m.duracion, m.salas, mmss),
@@ -1214,7 +1286,26 @@
                 puntosDeSesion(portal, sesion)]);
         } catch (e) { cont.innerHTML = '<p style="color:#9a9a9a;text-align:center;padding:16px">No se pudieron cargar las estadísticas.</p>'; return false; }
         if (!filas.length) { cont.innerHTML = '<p style="color:#9a9a9a;text-align:center;padding:16px">Este entreno no tiene estadísticas (se cargó sin los replays).</p>'; return false; }
-        const salas = salasDesdeBD(filas), r = calcular(salas, puntos);
+        const salas = salasDesdeBD(filas);
+        pintarModulo(cont, salas, calcular(salas, puntos));
+        return true;
+    }
+
+    // Vista previa sin base (Cargar con estadísticas): pasa las salas por lo mismo que al guardar
+    // (filasBD → salasDesdeBD), así se ve exactamente lo que quedará en el módulo público.
+    // puntos: los equipos del .log con sus puntos por sala (globalEquipos del admin)
+    function montarLocal(contId, salasCargadas, puntos) {
+        const cont = typeof contId === 'string' ? document.getElementById(contId) : contId;
+        if (!cont) return false;
+        estilos();
+        const salas = salasDesdeBD(JSON.parse(JSON.stringify(filasBD(salasCargadas, {}))));
+        if (!salas.length) { cont.innerHTML = ''; return false; }
+        pintarModulo(cont, salas, calcular(salas, puntos || []));
+        return true;
+    }
+
+    // Pestañas TOP · ESTADÍSTICAS · ACUMULADOS de un entreno (lo comparten montarSesion y montarLocal)
+    function pintarModulo(cont, salas, r) {
         let vista = 'top', buscar = '', vistaAntes = null;
         const pintar = enfocar => {
             const cuerpo = vista === 'top' ? `<div class="cpl-grid">${destacadosHTML(r)}</div>${escuadraHTML(r.escuadra)}`
@@ -1261,8 +1352,8 @@
 
     window.PumasCompletos = {
         leerCSV, partidaDesdeCSV, partidaDesdeReplay, jugadoresDeLog, nombreArma, combinar, aplicarBin, equiposDelBin, cuentasDelBin, aCSV, emparejar, calcular, filasBD, salasDesdeBD, idDeArchivo,
-        nombreHabilidad, fotoHabilidad, habilidadDe, HABILIDADES, fotoArma, celdaArma, arreglarArma,
-        habilitados, habilitado, destacadosHTML, escuadraHTML, salasHTML, tablasDetalle, tablasAcumulados, tablasHTML, montarSesion, imagenHTML, imagenSalasHTML, listaDestacados, tablasSalas, traerTodo, estilos, montarPublico, MAPAS, GRUPOS,
+        nombreHabilidad, fotoHabilidad, habilidadDe, HABILIDADES, fotoArma, celdaArma, arreglarArma, tipoGranada, tablasGranadas,
+        habilitados, habilitado, destacadosHTML, escuadraHTML, salasHTML, tablasDetalle, tablasAcumulados, tablasHTML, montarSesion, montarLocal, imagenHTML, imagenSalasHTML, listaDestacados, tablasSalas, traerTodo, estilos, montarPublico, MAPAS, GRUPOS,
         guardar: (portal, sesion, filas) => P.stats.guardar(portal, sesion, filas),
         olvidarConfig: () => { cfgCache = null; }
     };

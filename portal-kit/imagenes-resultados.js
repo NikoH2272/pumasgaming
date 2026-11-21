@@ -5,7 +5,7 @@
      2) MVP DETALLADO      · top jugadores: bajas, daño, primeras sangres, equipos rematados y rival con más bajas
      3) CARA A CARA (×sala)· MVP 1 vs MVP 2 de cada sala, con la imagen del personaje
      4) DUELO DE ESCUADRAS · top 5 de equipos que más eliminaron + líderes por equipo
-     5) HABILIDADES, GLOO Y ARMAS · habilidades activas más elegidas, paredes gloo y el arsenal
+     5) GLOO, GRANADAS Y ARMAS · paredes gloo, granadas y el arsenal; habilidades en Booyah
      5b) BOOYAH (×sala)    · equipo campeón, sus jugadores, el MVP y las escuadras que eliminó
      6) ANALÍTICA DE MAPA (×sala) · cierres de zona (del .bin) y zonas calientes de enfrentamientos (del .json)
    Personajes por defecto: imagenes/personajes/mvp1.png y mvp2.png (se cambian en opts.personajes).
@@ -33,6 +33,23 @@
     const F_TIT = "'Barlow Condensed', 'Arial Narrow', sans-serif", F_TXT = "'Inter', Arial, sans-serif";
 
     /* ---------------- Datos ---------------- */
+    function apoyoJugador(j, s) {
+        const x = j.extra || {}, fuenteCSV = s.fuente !== 'bin' && s.fuente !== 'replay';
+        const disponible = (k, col, legado) => x.datosCSV && k in x.datosCSV ? x.datosCSV[k]
+            : j.crudo && col in j.crudo ? j.crudo[col] !== '' : legado;
+        const numero = v => v !== undefined && v !== null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
+        const b = x.bin || {};
+        // Sin .csv: asistencias estimadas y granadas lanzadas del .bin (mensajes 107/106 y 160).
+        // Granadas lanzadas = granada, Flash Freeze, granada de dragón, FGL24 y M79 (los otros lanzables no cuentan).
+        const lanzadasBin = b.lanzadas ? Object.entries(b.lanzadas).reduce((s, [id, c]) => s + (C().tipoGranada(id) ? Number(c) || 0 : 0), 0) : null;
+        const asistCSV = disponible('asistencias', 'assists', fuenteCSV || j.asistencias > 0);
+        const granCSV = disponible('granadas', 'grenade_use', x.granadas !== undefined);
+        return {
+            asistencias: asistCSV ? numero(j.asistencias) : b.asistencias !== undefined ? numero(b.asistencias) : null,
+            curacion: disponible('curacion', 'healing_to_teammates', x.curacion !== undefined) ? numero(x.curacion ?? (j.crudo || {}).healing_to_teammates) : null,
+            granadas: granCSV ? numero(x.granadas ?? (j.crudo || {}).grenade_use) : lanzadasBin
+        };
+    }
     function datos(salas, r, puntosLog) {
         const eq = new Map(), jug = new Map();
         const E = nombre => { const k = norm(nombre); let e = eq.get(k); if (!e) { e = { equipo: nombre, salas: 0, booyahs: 0, kills: 0, dano: 0, hs: 0, derribos: 0, gloo: 0,
@@ -59,8 +76,10 @@
                 e.vivo += j.vivo || 0; e.nVivo++;
                 e.rematados += x.fin || 0;
                 Object.entries(x.vs || {}).forEach(([rv, n]) => { e.vs[rv] = (e.vs[rv] || 0) + n; });
-                const k = norm(j.account_id || j.jugador);
-                const p = jug.get(k) || { jugador: j.jugador, equipo: j.equipo, salas: 0, kills: 0, dano: 0, hs: 0, impactos: 0, derribos: 0, primeras: 0, rematados: 0, vs: {}, vivo: 0, gloo: 0, armas: {} };
+                const k = String(j.account_id || j.jugador).normalize('NFKC').trim().toLocaleLowerCase('es');
+                const p = jug.get(k) || { jugador: j.jugador, equipo: j.equipo, salas: 0, kills: 0, dano: 0, hs: 0, impactos: 0, derribos: 0, primeras: 0, rematados: 0, vs: {}, vivo: 0, gloo: 0, armas: {}, asistencias: null, curacion: null, granadas: null };
+                const apoyo = apoyoJugador(j, s);
+                ['asistencias', 'curacion', 'granadas'].forEach(c => { if (apoyo[c] !== null) p[c] = (p[c] || 0) + apoyo[c]; });
                 p.salas++; p.gloo += j.gloo || 0; p.kills += j.kills || 0; p.dano += j.dano || 0; p.hs += j.headshots || 0; p.impactos += j.hits || 0; p.vivo += j.vivo || 0;
                 p.derribos += b.derribos !== undefined ? b.derribos : (j.derribos || 0);
                 p.primeras += x.primeraSangre ? 1 : 0; p.rematados += x.fin || 0; p.equipo = j.equipo;
@@ -186,13 +205,14 @@
     }
     function imgMvp(d,o) {
         const lista=d.jugadores.slice(0,8), primero=lista[0];
-        const cols=[{t:'#',w:'48px'},{t:'JUGADOR / EQUIPO',w:'2.1fr',al:'left'},{t:'KILLS',w:'68px'},...(d.conDano?[{t:'DAÑO',w:'110px'}]:[]),{t:'1ª S.',w:'60px'},{t:'REM.',w:'78px'},{t:'MÁS BAJAS A',w:'1.6fr',al:'left'}];
-        const filas=lista.map((p,i)=>[String(i+1).padStart(2,'0'),sub(p.jugador,p.equipo),p.kills,...(d.conDano?[fmt(p.dano)]:[]),p.primeras||'—',p.rematados||'—',p.rival?sub(p.rival[0],p.rival[1]+' bajas'):'—']);
+        const cols=[{t:'#',w:'42px'},{t:'JUGADOR / EQUIPO',w:'1.8fr',al:'left'},{t:'KILLS',w:'60px'},...(d.conDano?[{t:'DAÑO',w:'90px'}]:[]),{t:'ASIST.',w:'65px'},{t:'1ª S.',w:'52px'},{t:'REM.',w:'58px'},{t:'MÁS BAJAS A',w:'1.2fr',al:'left'}];
+        const filas=lista.map((p,i)=>[String(i+1).padStart(2,'0'),sub(p.jugador,p.equipo),p.kills,...(d.conDano?[fmt(p.dano)]:[]),p.asistencias===null?'—':fmt(p.asistencias),p.primeras||'—',p.rematados||'—',p.rival?sub(p.rival[0],p.rival[1]+' bajas'):'—']);
         const sangre=d.porSala.filter(s=>s.primeraSangre).slice(0,6);
-        return lienzo('pgImgMvp',{...o,titulo:'MVP DETALLADO',subtitulo:'Top jugadores · Kills, daño y primeras sangres'},`
+        return lienzo('pgImgMvp',{...o,titulo:'MVP DETALLADO',subtitulo:'Top jugadores · Kills, daño y asistencias'},`
             <div style="display:grid;grid-template-columns:1fr 140px 180px;align-items:center;gap:20px;height:105px;margin-bottom:16px"><div style="min-width:0"><div style="font-size:12px;letter-spacing:2px;color:${T.acento};font-weight:700;margin-bottom:6px">MVP DEL ENTRENO</div><div class="pg-number" style="font-size:51px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(primero?primero.jugador:'—')}</div><div class="pg-small" style="margin-top:5px">${esc(primero?primero.equipo:'')}</div></div><div style="text-align:center"><div class="pg-number" style="font-size:72px;line-height:.95;color:${T.acento}">${primero?primero.kills:0}</div><div style="font-size:12px;color:${T.gris};margin-top:5px">KILLS</div></div><div style="background:${T.acento};padding:16px 15px;text-align:center;color:${T.sobre}"><div class="pg-number" style="font-size:43px;line-height:1">${d.conDano&&primero?fmt(primero.dano):d.porSala.length}</div><div style="font-size:12px;font-weight:700;margin-top:5px">${d.conDano?'DAÑO TOTAL':'SALAS'}</div></div></div>
-            ${tabla(cols,filas,{fila:52,fs:27,destacar:true})}
-            ${sangre.length?`<section style="margin-top:26px">${etiquetaSec('PRIMERA SANGRE POR SALA')}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">${sangre.map(s=>`<div style="background:${T.fila2};padding:12px 15px;min-width:0"><div style="font-size:20px;color:${T.acento};font-weight:700;margin-bottom:6px">${esc(s.etiqueta)} · ${mmss(s.primeraSangre.tiempo)}</div><div style="font-family:${F_TIT};font-size:32px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.primeraSangre.jugador)}</div><div class="pg-small" style="font-size:18px;display:flex;align-items:center;gap:10px;min-width:0">${armaFoto(s.primeraSangre.arma)?`<img src="${esc(armaFoto(s.primeraSangre.arma))}" alt="" onerror="this.remove()" style="width:84px;height:25px;object-fit:contain;max-width:none;flex-shrink:0;filter:drop-shadow(0 0 1px rgba(255,255,255,.4))">`:''}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.primeraSangre.arma||'Primera eliminación')}</span></div></div>`).join('')}</div></section>`:''}`);
+            ${tabla(cols,filas,{fila:52,fs:24,destacar:true})}
+            <p class="pg-small" style="margin-top:10px">ASIST.: asistencias estimadas del replay (daño a la víctima en los 20 s antes de que un compañero la elimine) · 1ª S.: primeras sangres · REM.: equipos rematados.</p>
+            ${sangre.length?`<section style="margin-top:18px">${etiquetaSec('PRIMERA SANGRE POR SALA')}<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">${sangre.map(s=>`<div style="background:${T.fila2};padding:9px 12px;min-width:0;line-height:1.15"><div style="font-size:17px;color:${T.acento};font-weight:700;margin-bottom:4px">${esc(s.etiqueta)} · ${mmss(s.primeraSangre.tiempo)}</div><div style="font-family:${F_TIT};font-size:26px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.primeraSangre.jugador)}</div><div class="pg-small" style="font-size:16px;display:flex;align-items:center;gap:10px;min-width:0">${armaFoto(s.primeraSangre.arma)?`<img src="${esc(armaFoto(s.primeraSangre.arma))}" alt="" onerror="this.remove()" style="width:64px;height:20px;object-fit:contain;max-width:none;flex-shrink:0;filter:drop-shadow(0 0 1px rgba(255,255,255,.4))">`:''}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.primeraSangre.arma||'Primera eliminación')}</span></div></div>`).join('')}</div></section>`:''}`);
     }
     function imgCara(d,s,o) {
         const a=s.mvp1,b=s.mvp2,p=o.personajes||[o.base+'imagenes/personajes/mvp1.png',o.base+'imagenes/personajes/mvp2.png'];
@@ -225,7 +245,7 @@
     const armaFoto = n => { const c = C() || {}; return n && c.fotoArma ? c.fotoArma(n) : ''; };
 
     // HABILIDADES, GLOO Y ARMAS: habilidades activas más elegidas, paredes gloo y el arsenal
-    function imgArmas(d, o) {
+    function habilidadesHTML(d) {
         const habs = {};
         d.salas.forEach(s => s.jugadores.forEach(j => {
             const h = habDe(j); if (!h || !h.activa) return;
@@ -234,18 +254,44 @@
         }));
         const sinNombre = y => /^HABILIDAD #/.test(habNombre(y.id));
         const lh = Object.values(habs).sort((a, b) => sinNombre(a) - sinNombre(b) || b.veces - a.veces || b.usos - a.usos).slice(0, 6);   // las que aún no tienen nombre, al final
-        const totalGloo = d.jugadores.reduce((a, p) => a + (p.gloo || 0), 0);
-        const topGloo = d.jugadores.filter(p => p.gloo).sort((a, b) => b.gloo - a.gloo).slice(0, 5);
-        const eqGloo = d.equipos.slice().sort((a, b) => b.gloo - a.gloo)[0];
-        const armas = d.armas.slice(0, 5), max = Math.max(1, ...armas.map(a => a.kills));
-        const cartaHab = y => { const f = habFoto(y.id); return `<div style="position:relative;height:196px;background:${T.fila1};overflow:hidden;min-width:0">
+        const cartaHab = y => { const f = habFoto(y.id); return `<div style="position:relative;height:184px;background:${T.fila1};overflow:hidden;min-width:0">
             ${f ? `<img src="${esc(f)}" alt="" onerror="this.remove()" style="position:absolute;left:0;top:0;width:100%;height:auto">` : ''}
             <div style="position:absolute;left:0;right:0;bottom:0;background:${T.fila2};padding:8px 10px;line-height:1.1">
                 <div style="font-family:${F_TIT};font-size:22px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(habNombre(y.id))}</div>
-                <div style="font-size:11px;color:${T.gris};margin-top:3px"><b style="color:${T.acento}">${y.veces}</b> elegida · ${y.usos} usos</div></div></div>`; };
-        return lienzo('pgImgArmas', { ...o, titulo: 'HABILIDADES, GLOO Y ARMAS', tamTitulo: 66, subtitulo: 'Habilidades activas, paredes gloo y armas del entrenamiento' }, `
-            ${etiquetaSec('HABILIDADES ACTIVAS MÁS ELEGIDAS')}
-            ${lh.length ? `<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:9px">${lh.map(cartaHab).join('')}</div>` : '<p class="pg-small" style="height:196px">Sin datos de habilidades (vienen del .bin o del .csv de resultados completos).</p>'}
+                <div style="font-size:13px;color:${T.gris};margin-top:3px"><b style="color:${T.acento}">${y.veces}</b> elegida · ${y.usos} usos</div></div></div>`; };
+        return `<section style="margin-top:22px">${etiquetaSec('HABILIDADES ACTIVAS MÁS ELEGIDAS')}
+            ${lh.length ? `<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:9px">${lh.map(cartaHab).join('')}</div>` : '<p class="pg-small">Sin datos de habilidades en los archivos cargados.</p>'}</section>`;
+    }
+    // Granadas y lanzagranadas por tipo, del .bin: usos (mensaje 160), daño a rivales (106) y kills (último impacto).
+    // Siempre los 5 tipos, en este orden; arma = nombre del catálogo para su foto.
+    const TIPOS_GRANADA = [[601, 'GRENADE'], [608, 'FLASH FREEZE'], [624, ''], [196, 'FGL24'], [23, 'M79']];
+    function granadasPorTipo(salas) {
+        let conBin = false;
+        const tipos = TIPOS_GRANADA.map(([id, arma]) => ({ id, arma, tipo: C().tipoGranada(id) || String(id), usos: 0, dano: 0, kills: 0, porJug: new Map() }));
+        salas.forEach(s => s.jugadores.forEach(j => {
+            const b = (j.extra || {}).bin;
+            if (!b || !b.lanzadas) return;
+            conBin = true;
+            tipos.forEach(t => {
+                const u = Number(b.lanzadas[t.id]) || 0, dp = (b.danoPorArma || {})[t.id];
+                t.usos += u; t.dano += dp ? Number(dp.danoJug) || 0 : 0; t.kills += Number((b.killsArma || {})[t.id]) || 0;
+                if (u) { const k = String(j.account_id || j.jugador); const p = t.porJug.get(k) || { jugador: j.jugador, equipo: j.equipo, usos: 0 }; p.usos += u; t.porJug.set(k, p); }
+            });
+        }));
+        tipos.forEach(t => { t.top = [...t.porJug.values()].sort((a, b) => b.usos - a.usos || a.jugador.localeCompare(b.jugador, 'es'))[0] || null; });
+        return { conBin, tipos };
+    }
+    function imgArmas(d, o) {
+        const totalGloo = d.jugadores.reduce((a, p) => a + (p.gloo || 0), 0);
+        const topGloo = d.jugadores.filter(p => p.gloo).sort((a, b) => b.gloo - a.gloo).slice(0, 4);
+        const eqGloo = d.equipos.slice().sort((a, b) => b.gloo - a.gloo)[0];
+        const armas = d.armas.slice(0, 4), max = Math.max(1, ...armas.map(a => a.kills));
+        const gran = granadasPorTipo(d.salas || []);
+        const filasGran = gran.tipos.map(t => [
+            `<span style="display:flex;align-items:center;gap:10px;min-width:0">${armaFoto(t.arma) ? `<img src="${esc(armaFoto(t.arma))}" alt="" onerror="this.remove()" style="width:64px;height:24px;object-fit:contain;max-width:none;flex-shrink:0;filter:drop-shadow(0 0 1px rgba(255,255,255,.4))">` : ''}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.tipo)}</span></span>`,
+            gran.conBin ? fmt(t.usos) : '—', gran.conBin ? fmt(t.dano) : '—', gran.conBin ? (t.kills ? t.kills : '—') : '—',
+            t.top ? sub(t.top.jugador, t.top.usos + (t.top.usos === 1 ? ' uso' : ' usos')) : '—']);
+        return lienzo('pgImgArmas', { ...o, titulo: 'GLOO, GRANADAS Y ARMAS', tamTitulo: 66, subtitulo: 'Paredes gloo, granadas y lanzagranadas, y armas del entrenamiento' }, `
             <section style="margin-top:24px">${etiquetaSec('PAREDES GLOO')}
                 <div style="display:grid;grid-template-columns:250px 1fr;gap:16px">
                     <div style="background:${T.acento};color:${T.sobre};padding:20px 22px;display:flex;flex-direction:column;justify-content:center">
@@ -253,9 +299,13 @@
                         ${eqGloo && eqGloo.gloo ? `<div style="font-size:12px;font-weight:600;margin-top:14px;opacity:.8">Equipo que más puso</div><div style="font-family:${F_TIT};font-size:24px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(eqGloo.equipo)} · ${eqGloo.gloo}</div>` : ''}
                     </div>
                     ${tabla([{ t: '#', w: '44px' }, { t: 'JUGADOR / EQUIPO', w: '1fr', al: 'left' }, { t: 'GLOO', w: '90px', total: true }],
-                        topGloo.map((p, i) => [String(i + 1).padStart(2, '0'), sub(p.jugador, p.equipo), p.gloo]), { fila: 50, fs: 22, destacar: true })}
+                        topGloo.map((p, i) => [String(i + 1).padStart(2, '0'), sub(p.jugador, p.equipo), p.gloo]), { fila: 40, fs: 22, destacar: true })}
                 </div></section>
-            <section style="margin-top:24px">${etiquetaSec('EL ARSENAL DEL ENTRENAMIENTO')}
+            <section style="margin-top:14px">${etiquetaSec('GRANADAS Y LANZAGRANADAS')}
+                ${tabla([{ t: 'TIPO', w: '1.3fr', al: 'left' }, { t: 'USOS', w: '80px' }, { t: 'DAÑO', w: '100px' }, { t: 'KILLS', w: '76px' }, { t: 'QUIEN MÁS LA USÓ', w: '1.2fr', al: 'left' }],
+                    filasGran, { fila: 38, fs: 21 })}
+                <p class="pg-small" style="margin-top:6px">${gran.conBin ? 'Usos: lanzamientos y disparos · Daño a rivales registrado en el replay (incluye la quemadura del FGL24) · Kills: el último impacto fue de ese tipo.' : 'Estas salas se cargaron sin el .bin: vuelve a cargarlas con sus replays.'}</p></section>
+            <section style="margin-top:14px">${etiquetaSec('EL ARSENAL DEL ENTRENAMIENTO')}
                 ${armas.map((a, i) => { const f = armaFoto(a.arma); return `<div style="display:grid;grid-template-columns:40px 120px 165px 1fr 80px 135px;gap:12px;align-items:center;height:44px;background:${i % 2 ? T.fila2 : T.fila1};padding:0 16px;margin-bottom:3px"><span class="pg-number" style="font-size:23px;color:${T.acento}">${i + 1}</span><span style="height:38px;display:flex;align-items:center;justify-content:center">${f ? `<img src="${esc(f)}" alt="" onerror="this.remove()" style="width:120px;height:36px;object-fit:contain;max-width:none;filter:drop-shadow(0 0 1px rgba(255,255,255,.4))">` : ''}</span><strong style="font-family:${F_TIT};font-size:27px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.arma)}</strong><div style="height:9px;background:${T.linea}"><div style="height:100%;width:${a.kills / max * 100}%;background:${T.acento}"></div></div><span class="pg-number" style="font-size:30px;text-align:right">${a.kills}<span style="font-size:13px;color:${T.gris}"> K</span></span><span class="pg-number" style="font-size:24px;text-align:right;color:${T.gris}">${d.conDano ? fmt(a.dano) : a.usos + ' usos'}</span></div>`; }).join('') || '<p class="pg-small">Sin datos de armas disponibles.</p>'}
             </section>`);
     }
@@ -328,7 +378,7 @@
     function imgBooyahs(d, o) {
         const salas = d.porSala.filter(s => s.booyah && s.ganadores.length).slice(0, 6);
         if (!salas.length) return '';
-        const h = altoFila(salas.length, 168);
+        const h = Math.min(140, Math.floor((650 - 10 * (salas.length - 1)) / salas.length));
         const fila = (s, i) => {
             const b = s.booyah, jug = s.ganadores.slice().sort((a, c) => (c.kills || 0) - (a.kills || 0) || (c.dano || 0) - (a.dano || 0));
             const mvp = jug[0], hm = mvp ? habDe(mvp) : null, foto = hm && hm.activa ? habFoto(hm.activa) : '';
@@ -350,8 +400,9 @@
                     </div>
                 </div></div>`;
         };
-        return lienzo('pgImgBooyahs', { ...o, titulo: 'BOOYAH', subtitulo: `${salas.length} salas · El equipo campeón de cada sala` }, `
-            <div style="display:flex;flex-direction:column;gap:10px">${salas.map(fila).join('')}</div>`);
+        return lienzo('pgImgBooyahs', { ...o, titulo: 'BOOYAH', subtitulo: `${salas.length} salas · Campeones y habilidades del entrenamiento` }, `
+            <div style="display:flex;flex-direction:column;gap:10px">${salas.map(fila).join('')}</div>
+            ${habilidadesHTML(d)}`);
     }
 
     // ANALÍTICA DE MAPA: los cierres y zonas calientes de cada sala (sin la caída)
@@ -599,6 +650,57 @@
     }
 
     /* ---------------- API ---------------- */
+    function topsDestacados(salas) {
+        const categorias = [
+            // La curación no viene en .log/.json/.bin: en su lugar, granadas lanzadas (mensaje 160 del .bin)
+            ['asistencias', 'ASISTENCIAS', 'estimadas'], ['lanzadas', 'GRANADAS LANZADAS', 'lanzadas'],
+            ['dano', 'DAÑO', 'daño total'], ['distancia', 'TIRO MÁS LARGO', 'metros · eliminación'],
+            ['granadas', 'DAÑO CON GRANADAS', 'daño a rivales'], ['reanimo', 'REANIMACIONES', 'a compañeros'],
+            ['levantado', 'VECES LEVANTADO', 'recibidas']
+        ];
+        const jugadores = new Map(), cobertura = Object.fromEntries(categorias.map(([k]) => [k, new Set()]));
+        const n = v => Number.isFinite(Number(v)) ? Number(v) : 0;
+        salas.forEach((s, i) => s.jugadores.forEach(j => {
+            const x = j.extra || {}, b = x.bin || {}, csv = s.fuente !== 'bin' && s.fuente !== 'replay';
+            const k = String(j.account_id || j.jugador).normalize('NFKC').trim().toLocaleLowerCase('es');
+            if (!k) return;
+            const p = jugadores.get(k) || { jugador: j.jugador, equipo: j.equipo, valores: {} };
+            const agregar = (campo, v, max = false) => {
+                if (v === undefined || v === null || v === '') return;
+                cobertura[campo].add(i);
+                p.valores[campo] = max ? Math.max(p.valores[campo] || 0, n(v)) : (p.valores[campo] || 0) + n(v);
+            };
+            const apoyo = apoyoJugador(j, s);
+            agregar('asistencias', apoyo.asistencias);
+            agregar('lanzadas', apoyo.granadas);
+            if (s.fuente !== 'replay') agregar('dano', j.dano);
+            agregar('distancia', x.distancia, true);
+            if (b.danoPorArma) agregar('granadas', Object.entries(b.danoPorArma).reduce((sum, [id, d]) => sum + (C().tipoGranada(id) ? n(d.danoJug) : 0), 0));
+            agregar('reanimo', b.reanimo ?? (csv ? j.revividos : undefined));
+            agregar('levantado', b.revivido ?? x.levantadoCsv ?? x.levantado);
+            jugadores.set(k, p);
+        }));
+        return categorias.map(([campo, titulo, unidad]) => {
+            const orden = [...jugadores.values()].filter(p => p.valores[campo] > 0)
+                .sort((a, b) => b.valores[campo] - a.valores[campo] || a.jugador.localeCompare(b.jugador, 'es'));
+            const lider = orden[0], valor = lider ? lider.valores[campo] : 0;
+            return { campo, titulo, unidad, jugador: lider ? lider.jugador : '', equipo: lider ? lider.equipo : '',
+                valor, salas: cobertura[campo].size, empates: orden.filter(p => p.valores[campo] === valor).length };
+        });
+    }
+    function imgDestacados(salas, o) {
+        const tops = topsDestacados(salas);
+        return lienzo('pgImgDestacados', { ...o, titulo: 'DESTACADOS DEL ENTRENO', tamTitulo: 78,
+            subtitulo: 'Los líderes de cada categoría · Todas las salas del entrenamiento' }, `
+            <div>${tops.map((t, i) => `<div style="display:grid;grid-template-columns:216px minmax(0,1fr) 230px;gap:20px;align-items:center;min-height:111px;padding:16px 20px;border-bottom:1px solid ${T.linea};background:${i % 2 ? T.fila2 : T.fila1}">
+                <div class="pg-section" style="font-size:27px;line-height:1.1;margin:0;color:${T.acento}">${esc(t.titulo)}</div>
+                <div style="min-width:0"><div class="pg-number" style="font-size:34px;line-height:1.05;overflow-wrap:anywhere">${esc(t.jugador || (t.salas ? 'Sin registros' : 'Sin datos'))}</div>
+                <div style="font-size:15px;line-height:1.3;margin-top:6px;color:${T.gris};overflow-wrap:anywhere">${esc(t.jugador ? t.equipo : t.salas ? 'Sin valores mayores a cero' : 'Vuelve a cargar las salas con su .bin')}${t.empates > 1 ? ' · Empate con ' + (t.empates - 1) + ' más' : ''}</div></div>
+                <div style="text-align:right"><div class="pg-number" style="font-size:54px;line-height:1;color:${T.acento}">${t.jugador ? fmt(t.valor) : '—'}</div>
+                <div style="font-size:14px;margin-top:5px;color:${T.gris}">${esc(t.unidad)}</div></div>
+            </div>`).join('')}</div>
+            <p class="pg-small" style="font-size:17px;line-height:1.5;margin-top:20px">Asistencias: estimadas del replay (daño a la víctima en los 20 s antes de que un compañero la elimine). Granadas lanzadas: granada, Flash Freeze, de dragón, FGL24 y M79. Daño con granadas: a jugadores rivales, con los mismos 5 tipos. Tiro más largo: distancia de eliminación, no de impacto. Se usan solo los datos disponibles; «—» indica que no hay líder registrado.</p>`);
+    }
     function generar(x) {
         fuentes();
         const prev = T;
@@ -611,12 +713,13 @@
         if (m.fecha && !m.fechaCorta) { const f = new Date(m.fecha.replace(' ', 'T')); m.fechaCorta = isNaN(f) ? m.fecha : f.toLocaleDateString('es', { day: '2-digit', month: 'short' }).toUpperCase(); }
         const o = { meta: m, base: x.base || '../', personajes: x.personajes };
         const L = [{ id: 'pgImgTabla', nombre: 'Tabla_General.png', titulo: 'Tabla general', html: imgTabla(d, o) },
-            { id: 'pgImgMvp', nombre: 'MVP_Detallado.png', titulo: 'MVP detallado', html: imgMvp(d, o) }];
+            { id: 'pgImgMvp', nombre: 'MVP_Detallado.png', titulo: 'MVP detallado', html: imgMvp(d, o) },
+            { id: 'pgImgDestacados', nombre: 'Destacados_del_entreno.png', titulo: 'Destacados del entreno', html: imgDestacados(x.salas, o) }];
         // Cara a cara: todas las salas en una imagen
         const caras = imgCaras(d, o);
         if (caras) L.push({ id: 'pgImgCaras', nombre: 'Cara_a_cara.png', titulo: 'Cara a cara', html: caras });
         L.push({ id: 'pgImgEquipos', nombre: 'Duelo_de_escuadras.png', titulo: 'Duelo de escuadras', html: imgEquipos(d, o) },
-            { id: 'pgImgArmas', nombre: 'Habilidades_gloo_y_armas.png', titulo: 'Habilidades y armas', html: imgArmas(d, o) });
+            { id: 'pgImgArmas', nombre: 'Gloo_granadas_y_armas.png', titulo: 'Gloo, granadas y armas', html: imgArmas(d, o) });
         // Booyah: el campeón de cada sala, todas las salas en una imagen
         const booyahs = imgBooyahs(d, o);
         if (booyahs) L.push({ id: 'pgImgBooyahs', nombre: 'Booyah.png', titulo: 'Booyah', html: booyahs });
@@ -698,6 +801,6 @@
         T = TEMAS[o.estilo] || T;
         try { return lienzo(id, o, cuerpo); } finally { T = prev; }
     }
-    window.PumasImagenes = { generar, descargar, datos, horarios, W, H, plantilla, tabla, fuentes, TEMAS, selectorHTML, enlazarSelector, setEstilo, selectorDescargaHTML, enlazarDescarga, paraDescargar,
+    window.PumasImagenes = { generar, descargar, datos, horarios, topsDestacados, apoyoJugador, W, H, plantilla, tabla, fuentes, TEMAS, selectorHTML, enlazarSelector, setEstilo, selectorDescargaHTML, enlazarDescarga, paraDescargar,
         get estilo() { return estilo; } };
 })();

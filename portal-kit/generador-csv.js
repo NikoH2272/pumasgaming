@@ -42,6 +42,35 @@
     const cabBin = (nombre, conCsv) => conCsv ? nombre + ' (.BIN)' : nombre;
     const pctHs = o => o && o.impactos ? (o.hs / o.impactos * 100).toFixed(1) : '';
     const armasBinDe = armas => Object.entries(armas || {}).filter(([, dn]) => dn > 0).sort((a, b) => b[1] - a[1]);
+    const CAB_GRANADAS = ['DAÑO CON GRANADAS', 'DAÑO CON GRANADAS A RIVALES', 'TIPOS DE GRANADA Y DAÑO', 'GRANADAS LANZADAS', 'KILLS CON GRANADA'];
+    function sumarDesglose(destino, origen) {
+        destino.danoPorArma = destino.danoPorArma || {};
+        Object.entries(origen.danoPorArma || {}).forEach(([id, d]) => {
+            const a = destino.danoPorArma[id] || { dano: 0, danoJug: 0 };
+            a.dano += d.dano || 0; a.danoJug += d.danoJug || 0; destino.danoPorArma[id] = a;
+        });
+        ['lanzadas', 'killsArma'].forEach(cmp => {
+            destino[cmp] = destino[cmp] || {};
+            Object.entries(origen[cmp] || {}).forEach(([id, n]) => { destino[cmp][id] = (destino[cmp][id] || 0) + (n || 0); });
+        });
+    }
+    // Lanzadas y kills por tipo de granada ("Granada explosiva: 3 | Granada de hielo: 1")
+    const porTipoGranada = o => {
+        const t = {};
+        Object.entries(o || {}).forEach(([id, n]) => { const tipo = C().tipoGranada(id); if (tipo && n > 0) t[tipo] = (t[tipo] || 0) + n; });
+        return t;
+    };
+    const textoTipos = t => Object.entries(t).sort((a, b) => b[1] - a[1]).map(([n, c]) => `${n}: ${c}`).join(' | ');
+    function celdasGranadas(bin) {
+        if (!bin || !bin.danoPorArma) return ['', '', '', '', ''];
+        const tipos = Object.entries(bin.danoPorArma).map(([id, d]) => ({ tipo: C().tipoGranada(id), ...d })).filter(t => t.tipo && t.dano > 0);
+        const lanz = porTipoGranada(bin.lanzadas), kills = porTipoGranada(bin.killsArma);
+        const total = o => Object.values(o).reduce((s, n) => s + n, 0);
+        return [tipos.reduce((s, t) => s + t.dano, 0), tipos.reduce((s, t) => s + t.danoJug, 0),
+            tipos.sort((a, b) => b.dano - a.dano).map(t => `${t.tipo}: ${t.dano} daño / ${t.danoJug} a rivales`).join(' | '),
+            bin.lanzadas ? `${total(lanz)}${total(lanz) ? ' (' + textoTipos(lanz) + ')' : ''}` : '',
+            bin.killsArma ? total(kills) : ''];
+    }
     const esNum = v => /^-?\d+(\.\d+)?$/.test(String(v).trim());
     const esBool = v => /^(true|false)$/i.test(String(v).trim());
     const fechaNombre = n => (/(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})/.exec(n || '') || [])[1] || '';
@@ -233,6 +262,7 @@
                 if (d.b) {
                     a.salasBin++;
                     BIN_CAMPOS.forEach(([cmp]) => { a.bin[cmp] = (a.bin[cmp] || 0) + (d.b[cmp] || 0); });
+                    sumarDesglose(a.bin, d.b);
                     Object.entries(d.b.armas).forEach(([id, dn]) => { const n2 = C().nombreArma(+id); a.armasBin[n2] = (a.armasBin[n2] || 0) + dn; });
                 }
                 a.salas++; a.kills += d.kills; a.porSala[i] = d.kills; a.vivo += d.vivo; a.equipo = d.equipo;
@@ -261,7 +291,7 @@
                     if (r) { t.rematados += d.rematados || 0; Object.entries(vs).forEach(([rv, nn]) => { t.vs[rv] = (t.vs[rv] || 0) + nn; }); t.recibidas += d.caidas || 0; }
                     if (c) ['damage', 'headshots', 'revive_teammate_times', 'icewall_use', 'assists', 'knock_down', 'healing_to_teammates', 'damage_taken', 'moving_distance']
                         .forEach(col => { if (esNum(c.crudo[col])) t.suma[col] = (t.suma[col] || 0) + Number(c.crudo[col]); });
-                    if (d.b) { t.bin = t.bin || {}; BIN_CAMPOS.forEach(([cmp]) => { t.bin[cmp] = (t.bin[cmp] || 0) + (d.b[cmp] || 0); }); }
+                    if (d.b) { t.bin = t.bin || {}; BIN_CAMPOS.forEach(([cmp]) => { t.bin[cmp] = (t.bin[cmp] || 0) + (d.b[cmp] || 0); }); sumarDesglose(t.bin, d.b); }
                     t.vivo += d.vivo; t.nVivo++;
                 }
             });
@@ -292,7 +322,7 @@
 
     // Vista previa: las 3 tablas que se descargan, con las columnas del .bin resaltadas
     let vistaTipo = 'equipos', vistaSoloBin = false;
-    const CAB_BIN_EXTRA = ['% HEADSHOT', 'DAÑO PROMEDIO POR SALA', 'ARMA CON MÁS DAÑO', 'DAÑO POR ARMA'];
+    const CAB_BIN_EXTRA = ['% HEADSHOT', 'DAÑO PROMEDIO POR SALA', 'ARMA CON MÁS DAÑO', 'DAÑO POR ARMA', ...CAB_GRANADAS];
     const CAB_HAB = ['HABILIDAD ACTIVA', 'USOS DE LA HABILIDAD', 'USOS POR SALA', 'HABILIDADES EQUIPADAS'];
     const CAB_BASE = /^(POS|EQUIPO|JUGADOR|ID|SALAS?|PARTIDA|MAPA)$/;
     function pintarVista() {
@@ -322,7 +352,7 @@
             cab: ['POS', 'EQUIPO', 'REGISTRADO', 'SALAS', 'BOOYAHS', 'PTS KILLS', 'PTS POSICIÓN', ...s.map(i => 'PTS S' + (i + 1)), ...s.map(i => 'POS S' + (i + 1)), 'TOTAL', 'FUENTE PUNTOS',
                 'TIEMPO VIVO PROMEDIO',
                 ...(gen.conReplay ? ['EQUIPOS ELIMINADOS', 'RIVAL CON MÁS BAJAS', 'BAJAS A ESE RIVAL', 'CAÍDAS SUFRIDAS'] : []),
-                ...(gen.conBin ? [...BIN_EQUIPO.map(cmp => cabBin(BIN_CAMPOS.find(c => c[0] === cmp)[1], gen.conCsv)), cabBin('% HEADSHOT', gen.conCsv)] : []),
+                ...(gen.conBin ? [...BIN_EQUIPO.map(cmp => cabBin(BIN_CAMPOS.find(c => c[0] === cmp)[1], gen.conCsv)), cabBin('% HEADSHOT', gen.conCsv), ...CAB_GRANADAS.map(c => cabBin(c, gen.conCsv))] : []),
                 ...(gen.conCsv ? csvCols.map(c => c[1]) : [])],
             filas: gen.equipos.map((e, k) => {
                 const t = top(e.vs);
@@ -330,7 +360,7 @@
                     ...s.map(i => e.porSala[i] ?? ''), ...s.map(i => e.posSala[i] ?? ''), e.total, [...e.fuentes].join(' + '),
                     e.nVivo ? mmss(e.vivo / e.nVivo) : '',
                     ...(gen.conReplay ? [e.rematados, t ? t[0] : '', t ? t[1] : '', e.recibidas] : []),
-                    ...(gen.conBin ? [...BIN_EQUIPO.map(cmp => e.bin ? e.bin[cmp] || 0 : ''), pctHs(e.bin)] : []),
+                    ...(gen.conBin ? [...BIN_EQUIPO.map(cmp => e.bin ? e.bin[cmp] || 0 : ''), pctHs(e.bin), ...celdasGranadas(e.bin)] : []),
                     ...(gen.conCsv ? csvCols.map(c => e.suma[c[0]] !== undefined ? Math.round(e.suma[c[0]]) : '') : [])];
             })
         };
@@ -343,7 +373,7 @@
         cab.push('KILL MÁS LEJANA (m)');
         if (gen.conHab) cab.push('HABILIDAD ACTIVA', 'USOS DE LA HABILIDAD', 'USOS POR SALA');
         if (gen.conBin) cab.push(...BIN_CAMPOS.map(c => cabBin(c[1], gen.conCsv)), cabBin('% HEADSHOT', gen.conCsv), cabBin('DAÑO PROMEDIO POR SALA', gen.conCsv),
-            cabBin('ARMA CON MÁS DAÑO', gen.conCsv), cabBin('DAÑO POR ARMA', gen.conCsv));
+            cabBin('ARMA CON MÁS DAÑO', gen.conCsv), cabBin('DAÑO POR ARMA', gen.conCsv), ...CAB_GRANADAS.map(c => cabBin(c, gen.conCsv)));
         const csvBase = [['dano', 'DAÑO'], ['hs', 'HEADSHOTS'], ['hits', 'IMPACTOS'], ['disparos', 'DISPAROS'], ['revividas', 'REVIVIDAS'], ['gloo', 'PAREDES GLOO'], ['asistencias', 'ASISTENCIAS'], ['derribos', 'DERRIBOS']];
         if (gen.conCsv) cab.push(...csvBase.map(c => c[1]), '% HEADSHOT', 'PRECISIÓN %', 'ARMA PRINCIPAL', 'DAÑO POR ARMA', ...gen.colsCsvSumables.map(etiqueta));
         const filas = gen.jugadores.map((j, k) => {
@@ -356,7 +386,7 @@
             if (gen.conBin) {
                 const bn = j.salasBin > 0, ab = armasBinDe(j.armasBin);
                 f.push(...BIN_CAMPOS.map(c => bn ? j.bin[c[0]] || 0 : ''), bn ? pctHs(j.bin) : '', bn ? Math.round((j.bin.dano || 0) / j.salasBin) : '',
-                    bn && ab.length ? ab[0][0] : '', bn ? ab.map(([n, dn]) => `${n}: ${dn}`).join(' | ') : '');
+                    bn && ab.length ? ab[0][0] : '', bn ? ab.map(([n, dn]) => `${n}: ${dn}`).join(' | ') : '', ...celdasGranadas(bn ? j.bin : null));
             }
             if (gen.conCsv) {
                 const v = col => csv && j.csv[col] !== undefined ? Math.round(j.csv[col] * 100) / 100 : '';
@@ -376,7 +406,7 @@
         const cab = ['SALA', 'PARTIDA', 'FECHA', 'MAPA', 'MODO', '.BIN', 'EQUIPO', 'JUGADOR', 'ID', 'KILLS', 'FUENTE KILLS', 'BOOYAH', 'TIEMPO VIVO', 'KILL MÁS LEJANA (m)'];
         if (gen.conReplay) cab.push('BAJAS (REPLAY)', 'CAÍDAS', 'VECES LEVANTADO', 'PRIMERA SANGRE', 'EQUIPOS REMATADOS', 'BAJAS POR RIVAL', 'ARMAS DE LAS KILLS');
         if (gen.conHab) cab.push('HABILIDAD ACTIVA', 'USOS DE LA HABILIDAD', 'HABILIDADES EQUIPADAS');
-        if (gen.conBin) cab.push(...BIN_CAMPOS.map(c => cabBin(c[1], gen.conCsv)), cabBin('% HEADSHOT', gen.conCsv), cabBin('DAÑO POR ARMA', gen.conCsv));
+        if (gen.conBin) cab.push(...BIN_CAMPOS.map(c => cabBin(c[1], gen.conCsv)), cabBin('% HEADSHOT', gen.conCsv), cabBin('DAÑO POR ARMA', gen.conCsv), ...CAB_GRANADAS.map(c => cabBin(c, gen.conCsv)));
         if (gen.conCsv) cab.push('DAÑO', 'HEADSHOTS', 'IMPACTOS', 'DISPAROS', '% HEADSHOT', 'PRECISIÓN %', 'REVIVIDAS', 'PAREDES GLOO', 'ASISTENCIAS', 'DERRIBOS', 'DAÑO POR ARMA',
             ...gen.colsCsv.map(c => 'CSV · ' + etiqueta(c)));
         const filas = gen.detalle.map(d => {
@@ -385,7 +415,7 @@
             if (gen.conHab) f.push(d.hab ? C().nombreHabilidad(d.hab.activa) : '', d.hab ? d.hab.usos : '',
                 d.hab ? d.hab.equipadas.map(h => h === d.hab.activa ? C().nombreHabilidad(h) : h).join(' | ') : '');
             if (gen.conBin) f.push(...BIN_CAMPOS.map(c => d.b ? d.b[c[0]] || 0 : ''), d.b ? pctHs(d.b) : '',
-                d.b ? armasBinDe(d.b.armas).map(([id, dn]) => `${C().nombreArma(+id)}: ${dn}`).join(' | ') : '');
+                d.b ? armasBinDe(d.b.armas).map(([id, dn]) => `${C().nombreArma(+id)}: ${dn}`).join(' | ') : '', ...celdasGranadas(d.b));
             if (gen.conCsv) {
                 const c = d.c;
                 f.push(...(c ? [c.dano, c.headshots, c.hits, c.disparos, c.hits ? (c.headshots / c.hits * 100).toFixed(1) : '', c.disparos ? (c.hits / c.disparos * 100).toFixed(1) : '',

@@ -13,12 +13,15 @@
    Comprobado contra los .csv de resultados completos (6 salas, 241 jugadores):
      paredes gloo, veces revivido, veces derribado, impactos a las piernas: exactos; headshots 240/241;
      daño por arma 1181/1202 (el total puede variar unos puntos del oficial);
-     habilidades equipadas y habilidad activa 241/241; veces que usó la activa 237/241.
+     habilidades equipadas y habilidad activa 241/241; veces que usó la activa 237/241;
+     granadas lanzadas (160): 601 granada, 608 Flash Freeze y 624 (tipo 2 del CSV) 241/241;
+     daño con granada y Flash Freeze 241/241; kills con granada (arma del último impacto) 240/241.
    Uso: PumasBin.leer(arrayBuffer) → { jugadores: Map(PlayerID → stats), cuentas: Map(account_id → PlayerID) }
    ===================================================================== */
 (function (raiz) {
-    const T_JUGADOR = 101, T_IMPACTO = 106, T_KILL = 107, T_ZONA = 117, T_DERRIBO = 139, T_GLOO = 221, T_EQUIPOS = 306, T_REANIMA = 393, T_HABILIDAD = 250;
-    const QUIERO = new Set([T_JUGADOR, T_IMPACTO, T_KILL, T_ZONA, T_DERRIBO, T_GLOO, T_EQUIPOS, T_REANIMA, T_HABILIDAD]);
+    const T_JUGADOR = 101, T_IMPACTO = 106, T_KILL = 107, T_ZONA = 117, T_DERRIBO = 139, T_GLOO = 221, T_EQUIPOS = 306, T_REANIMA = 393, T_HABILIDAD = 250,
+        T_LANZA = 160;
+    const QUIERO = new Set([T_JUGADOR, T_IMPACTO, T_KILL, T_ZONA, T_DERRIBO, T_GLOO, T_EQUIPOS, T_REANIMA, T_HABILIDAD, T_LANZA]);
     const zz = n => n % 2 ? -(n + 1) / 2 : n / 2;
 
     // Mensajes 117 → { inicial: {x, z, r}, fases: [{ fase, anuncia, inicio, fin, x, z, r, movil }] } (coordenadas del mundo, metros)
@@ -55,8 +58,11 @@
 
     function nuevo(pid) {
         return { pid, account_id: '', nick: '', equipo: '', tag: '', kills: 0, dano: 0, danoJug: 0, impactos: 0, hs: 0, torso: 0, piernas: 0,
-            gloo: 0, reanimo: 0, revivido: 0, derribos: 0, derribado: 0, armas: {},
-            activa: 0, usos: 0, usosPor: {}, habilidades: [] };
+            gloo: 0, reanimo: 0, revivido: 0, derribos: 0, derribado: 0, armas: {}, danoPorArma: {},
+            activa: 0, usos: 0, usosPor: {}, habilidades: [],
+            lanzadas: {},    // objeto lanzado → veces (601 granada · 608 Flash Freeze · 624 granada tipo 2…)
+            killsArma: {},   // arma del último impacto a la víctima antes de su baja → kills
+            asistencias: 0 }; // estimadas (ver T_KILL)
     }
 
     function leer(buffer) {
@@ -64,7 +70,8 @@
         const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
         const jug = new Map(), cuentas = new Map(), nombres = new Map(), clanes = new Map(), fichas = [];
         const J = pid => { let j = jug.get(pid); if (!j) { j = nuevo(pid); jug.set(pid, j); } return j; };
-        const impactos = [], zonaMsgs = [];
+        const impactos = [], zonaMsgs = [], ultimoGolpe = new Map();   // 'atacante|víctima' → arma
+        const golpesA = new Map();   // víctima → [[tiempo, atacante]] con daño, hasta su baja (para las asistencias)
         let p = 0, paquetes = 0, ultimo = 0;
         while (p + 10 <= u8.length) {
             const tipo = dv.getUint16(p + 6, true), largo = dv.getUint16(p + 8, true);
@@ -102,11 +109,33 @@
                     if (f.length >= 10 && t >= 1) zonaMsgs.push({ t, fase: f[0], estado: f[7], dur: (zz(f[9]) - zz(f[8])) / 500,
                         act: { x: zz(f[1]) / 1000, z: zz(f[2]) / 1000, r: f[3] }, sig: { x: zz(f[4]) / 1000, z: zz(f[5]) / 1000, r: f[6] } });
                 } else if (tipo === T_IMPACTO) {
-                    impactos.push(varints(u8, ini, fin, 8));
+                    const v = varints(u8, ini, fin, 8);
+                    impactos.push(v);
+                    if (v.length >= 5) {
+                        ultimoGolpe.set(v[0] + '|' + v[1], Math.floor(v[4] / 2));
+                        if (v[0] !== v[1] && v[0] >= 16777216 && v[2] + v[3] > 0) {
+                            const l = golpesA.get(v[1]) || []; l.push([ultimo, v[0]]); golpesA.set(v[1], l);
+                        }
+                    }
                 } else if (tipo === T_KILL) {
-                    // eliminación: víctima, quien la hizo (las kills del .bin cuadran con el .csv en 227/241 jugadores)
+                    // eliminación: víctima, quien la hizo (las kills del .bin cuadran con el .csv en 227/241 jugadores).
+                    // El arma de la baja es la del último impacto de quien la hizo a esa víctima.
                     const v = varints(u8, ini, fin, 2);
-                    if (v.length === 2 && v[1] !== v[0] && v[1] >= 16777216) J(v[1]).kills++;
+                    if (v.length === 2 && v[1] !== v[0] && v[1] >= 16777216) {
+                        const j = J(v[1]), arma = ultimoGolpe.get(v[1] + '|' + v[0]);
+                        j.kills++;
+                        if (arma !== undefined) j.killsArma[arma] = (j.killsArma[arma] || 0) + 1;
+                        // Asistencias ESTIMADAS: compañeros de quien la eliminó que le hicieron daño en los 20 s previos.
+                        // El .bin no trae las asistencias oficiales: así coincide en 181/241 jugadores (cuando falla, cuenta de menos).
+                        new Set((golpesA.get(v[0]) || []).filter(([t, a]) => ultimo - t <= 20 && a !== v[1] && escuadra(a) === escuadra(v[1])).map(g => g[1]))
+                            .forEach(a => { J(a).asistencias++; });
+                    }
+                    if (v.length === 2) golpesA.delete(v[0]);
+                } else if (tipo === T_LANZA) {
+                    // Objeto lanzado: [n, objeto, nº de lanzamiento, …, PlayerID (10º)]. Las esquirlas de la
+                    // misma granada repiten el paquete con nº de lanzamiento 0: solo cuenta el que lo trae.
+                    const v = varints(u8, ini, fin, 10);
+                    if (v.length === 10 && v[2] > 0 && v[9] >= 16777216) { const l = J(v[9]).lanzadas; l[v[1]] = (l[v[1]] || 0) + 1; }
                 } else if (tipo === T_DERRIBO) {
                     const v = varints(u8, ini, fin, 2);
                     if (v.length === 2) { J(v[0]).derribado++; if (v[1] !== v[0]) J(v[1]).derribos++; }
@@ -142,6 +171,12 @@
             if (parte === 1) j.hs++; else if (parte === 2) j.torso++; else if (parte === 3) j.piernas++;
             const arma = Math.floor(w / 2);
             j.armas[arma] = (j.armas[arma] || 0) + dano;
+            // Conservar TODOS los IDs: el CSV puede enseñar nombres de granadas nuevos.
+            // Un evento de daño no equivale a una granada lanzada (explosión/daño continuo).
+            const desglose = j.danoPorArma[arma] || { dano: 0, danoJug: 0, eventos: 0 };
+            desglose.dano += dano; desglose.eventos++;
+            if (jugadores.has(vi) && escuadra(vi) !== escuadra(a)) desglose.danoJug += dano;
+            j.danoPorArma[arma] = desglose;
         });
         // Escuadra → nombre del equipo: la ficha de cada jugador (101) lleva el id de su clan (306). Se vota por escuadra.
         const votos = new Map();
