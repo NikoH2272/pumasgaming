@@ -20,7 +20,8 @@
     };
 
     const CLASH_COLORS = ['#ff4d4d','#4da6ff','#ffb84d','#d94dff','#4dfff0','#ff4dbb','#c8ff4d','#ff8c00'];
-    const ARSENAL_COLOR = '#4dff91'; // verde para caídas con arsenal
+    // Un color por spot ocupado (el del primer equipo que cae ahí): pin y arsenal lo comparten.
+    const COLORES_SPOT = ['#ff4d4d','#4da6ff','#ffb84d','#d94dff','#4dfff0','#ff4dbb','#c8ff4d','#ff8c00','#4dff91','#ffe94d','#8c8cff','#ffffff','#d2996b','#ffb3b3','#7fb800'];
 
     // Coordenadas calibradas manualmente (% x, % y desde esquina superior-izquierda del mapa)
     const COORDENADAS = {
@@ -274,7 +275,7 @@
 .cd-pin:hover .cd-pin-tip{display:block}
 .cd-pin-tip{display:none;position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);background:#1a1b22;color:#F4EEDC;font-size:10px;white-space:nowrap;padding:3px 7px;border-radius:3px;border:1px solid rgba(216,195,149,.3);pointer-events:none;z-index:10}
 .cd-pin-logo{background-size:cover;background-position:center;background-repeat:no-repeat;color:transparent}
-.cd-arsenal{position:absolute;transform:translate(-50%,-50%);font-size:15px;line-height:1;cursor:default;z-index:3}
+.cd-arsenal{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:2px;padding:2px 4px;border:2px solid #000;border-radius:4px;color:#000;font-size:10px;font-weight:800;line-height:1;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.7);cursor:default;z-index:3}
 .cd-arsenal:hover .cd-pin-tip{display:block}
 .cd-eq-wrap{display:flex;align-items:center;gap:4px}
 .cd-logo-eq-btn{flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:rgba(216,195,149,.07);border:1px solid rgba(216,195,149,.18);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;transition:border-color .15s}
@@ -453,7 +454,6 @@
         }
 
         function actualizarMapas() {
-            const clashMaps = calcClashColors(filas);
             const mostrarArsenales = getReglas().pelea === 'NO';
             $('mapaGrid').innerHTML = MAPAS.map((mapa, j) => {
                 const porCaida = {};
@@ -465,13 +465,11 @@
                     if (!porCaida[caida]) porCaida[caida] = [];
                     porCaida[caida].push({ idx: i, equipo: f.equipo, caida: f.caidas[j], coords });
                 });
-                // Arsenal map for quick lookup
                 const arsenMapa = ARSENALES[mapa] || {};
-                const arsenNorms = mostrarArsenales ? new Set(Object.keys(arsenMapa).map(k => norm(k))) : new Set();
+                const colorSpot = grupo => COLORES_SPOT[grupo[0].idx % COLORES_SPOT.length];
                 const pinsHTML = Object.entries(porCaida).map(([caida, grupo]) => {
                     const isClash = grupo.length > 1;
-                    const hasArsenal = arsenNorms.has(caida);
-                    const color = hasArsenal ? ARSENAL_COLOR : (isClash ? (clashMaps[j][caida] || CLASH_COLORS[0]) : '#D8C395');
+                    const color = colorSpot(grupo);
                     return grupo.map((item, gi) => {
                         let [bx, by] = item.coords;
                         if (isClash) {
@@ -489,10 +487,10 @@
                 }).join('');
                 // Arsenal markers — only when pelea=NO, only for drops with a team assigned
                 const arsenalHTML = mostrarArsenales ? Object.entries(arsenMapa).map(([caida, [ax, ay]]) => {
-                    const cn = norm(caida);
-                    const teams = filas.filter(f => f.equipo.trim() && norm(f.caidas[j]) === cn);
-                    if (!teams.length) return '';
-                    return `<span class="cd-arsenal" style="left:${ax}%;top:${ay}%;color:${ARSENAL_COLOR};text-shadow:0 1px 5px rgba(0,0,0,.9),0 0 6px ${ARSENAL_COLOR}40"><i class="fa-solid fa-chess-rook"></i><span class="cd-pin-tip">🏰 Arsenal: ${esc(caida)}</span></span>`;
+                    const grupo = porCaida[norm(caida)];
+                    if (!grupo) return '';
+                    const dueños = grupo.map(t => `${t.idx + 1}. ${esc(t.equipo)}`).join('<br>');
+                    return `<span class="cd-arsenal" style="left:${ax}%;top:${ay}%;background:${colorSpot(grupo)}"><i class="fa-solid fa-chess-rook"></i>${grupo.map(t => t.idx + 1).join('·')}<span class="cd-pin-tip">🏰 Arsenal: ${esc(caida)}<br>${dueños}</span></span>`;
                 }).join('') : '';
                 return `<div class="cd-mapa-item"><div class="cd-mapa-nombre">${mapa}</div><div class="cd-mapa-img-wrap" style="position:relative"><img src="${MAPAS_IMG[mapa]}" alt="${mapa}" loading="lazy">${pinsHTML}${arsenalHTML}</div></div>`;
             }).join('');
@@ -668,5 +666,5 @@
         pintarTabla();
     }
 
-    window.PumasCaidas = { montar, CATALOGO, MAPAS, COORDENADAS, ARSENALES };
+    window.PumasCaidas = { montar, CATALOGO, MAPAS, COORDENADAS, ARSENALES, COLORES_SPOT };
 })();

@@ -4,6 +4,7 @@ Cómo sacar estadísticas completas de cada jugador **solo con los replays de la
 (`ReplayInfo_<partida>_<fecha>.json` + `.bin`), sin necesitar el `.csv` de resultados completos,
 guardarlas en Supabase y mostrarlas. Sirve para este proyecto y para llevarlo a otro.
 **Solo el generador de CSV, sin base de datos: ver la sección 7.**
+**Para hacerlo en otra página o con otra IA: prompt autocontenido en `docs/PROMPT_ESTADISTICAS_FREEFIRE.md`.**
 
 ---
 
