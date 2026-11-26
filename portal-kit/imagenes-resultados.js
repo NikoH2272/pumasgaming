@@ -688,18 +688,78 @@
                 valor, salas: cobertura[campo].size, empates: orden.filter(p => p.valores[campo] === valor).length };
         });
     }
-    function imgDestacados(salas, o) {
-        const tops = topsDestacados(salas);
+    // DESTACADOS: todos los datos del TOP en banners (totales · MVP · jugadores · armas · equipos)
+    function imgDestacados(salas, o, r, puntosLog) {
+        const res = r && r.destacados ? r : C().calcular(salas, puntosLog || []);
+        const d = res.destacados;
+        const corta = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+        // [título, dato, nombre, equipo o detalle, valor, unidad, foto]
+        const B = (titulo, p, f) => p ? [{ titulo, ...f(p) }] : [];
+        const jug = (titulo, p, valor, unidad, arma) => B(titulo, p, x => ({ nombre: x.jugador, detalle: x.equipo, valor: valor(x), unidad, foto: arma ? armaFoto(x.arma) : '' }));
+        const jugadores = [].concat(
+            jug('MÁS DAÑO', d.masDano, p => fmt(p.dano), 'daño', true),
+            jug('% A LA CABEZA', d.mejorHs, p => p.pctHs.toFixed(1) + '%', 'headshots', true),
+            jug('MÁS DERRIBOS', d.masDerribos, p => fmt(p.derribos), 'derribos'),
+            jug('MÁS ASISTENCIAS', d.masAsistencias, p => fmt(p.asistencias), 'asistencias'),
+            jug('GRANADAS LANZADAS', d.masGranadas, p => fmt(p.granadas), 'granadas'),
+            jug('DAÑO CON GRANADAS', d.masDanoGranadas, p => fmt(p.danoGranadas), 'a rivales'),
+            jug('MÁS REVIVIÓ', d.masRevivio, p => fmt(p.revividos), 'revividas'),
+            jug('VECES LEVANTADO', d.masLevantado, p => fmt(p.levantado), 'veces'),
+            jug('MÁS TIEMPO VIVO', d.masVivo, p => mmss(p.vivoProm), 'por sala'),
+            jug('KILL MÁS LEJANA', d.killLejana, p => p.metros + ' m', 'distancia', true),
+            jug('PRIMERA SANGRE', d.primeraSangre, p => p.veces, ''));
+        jugadores.forEach(b => { if (b.titulo === 'PRIMERA SANGRE') b.unidad = b.valor === 1 ? 'sala' : 'salas'; });
+        const armas = [].concat(
+            B('ARMA MÁS USADA', d.armaMasUsada, a => ({ nombre: a.arma, detalle: fmt(a.kills) + ' kills', valor: fmt(a.usos), unidad: 'usos', foto: armaFoto(a.arma) })),
+            B('ARMA CON MÁS KILLS', d.armaMasLetal && d.armaMasLetal.kills > 0 ? d.armaMasLetal : null, a => ({ nombre: a.arma, detalle: fmt(a.dano) + ' de daño', valor: fmt(a.kills), unidad: 'kills', foto: armaFoto(a.arma) })),
+            B('HABILIDAD MÁS USADA', d.habilidadMasUsada, h => ({ nombre: h.nombre, detalle: fmt(h.usos) + ' usos', valor: fmt(h.jugadores), unidad: 'elegida', cara: habFoto(h.id) })));
+        const eq = (titulo, p, valor, unidad, detalle) => B(titulo, p, x => ({ nombre: x.equipo, detalle: detalle ? detalle(x) : '', valor: valor(x), unidad }));
+        const equipos = [].concat(
+            eq('MÁS KILLS', d.equipoMasKills, e => fmt(e.kills), 'kills'),
+            eq('MÁS DAÑO', d.equipoMasDano, e => fmt(e.dano), 'daño'),
+            eq('MÁS BOOYAHS', d.equipoMasBooyahs, e => e.booyahs, 'booyahs'),
+            eq('MÁS EQUIPOS ELIMINADOS', d.masEliminoEquipos, e => e.equipos, 'rematados'),
+            eq('MAYOR RIVALIDAD', d.rivalidad, e => e.veces, 'bajas', e => 'contra ' + e.contra));
+        const totales = [[fmt(d.killsTotal), 'KILLS'], ...(d.danoTotal !== null ? [[fmt(d.danoTotal), 'DAÑO TOTAL']] : []),
+            ...(d.gloo !== null ? [[fmt(d.gloo), 'PAREDES GLOO']] : []), [mmss(d.vivoPromedio), 'VIVO PROMEDIO']];
+
+        const banner = (b, alto, span) => `<div data-banner style="position:relative;grid-column:span ${span};height:${alto}px;min-width:0;overflow:hidden;background:linear-gradient(100deg,${T.fila2} 0%,${T.fila1} 100%);border-left:5px solid ${T.acento};display:flex;align-items:center;gap:8px;padding:0 12px">
+            ${b.cara ? `<div style="position:relative;flex:0 0 52px;height:52px;overflow:hidden;background:${T.fondo}"><img src="${esc(b.cara)}" alt="" onerror="this.parentNode.remove()" style="position:absolute;left:0;top:0;width:52px;height:auto"></div>` : ''}
+            <div style="flex:1;min-width:0">
+                <div style="font-size:10px;font-weight:800;letter-spacing:.6px;color:${T.acento};${corta}">${esc(b.titulo)}</div>
+                <div style="font-family:${F_TIT};font-size:24px;font-weight:800;line-height:1.2;${corta}">${esc(b.nombre)}</div>
+                <div style="font-size:11px;line-height:1.3;color:${T.gris};${corta}">${esc(b.detalle || '')}</div>
+            </div>
+            <div style="flex-shrink:0;text-align:right">
+                ${b.foto ? `<img src="${esc(b.foto)}" alt="" onerror="this.remove()" style="display:block;margin-left:auto;width:64px;height:20px;max-width:none;object-fit:contain;filter:drop-shadow(0 0 1px rgba(255,255,255,.4))">` : ''}
+                <div class="pg-number" style="font-size:32px;line-height:1;color:${T.acento}">${esc(b.valor)}</div>
+                <div style="font-size:10px;font-weight:700;color:${T.gris};margin-top:2px">${esc(String(b.unidad).toUpperCase())}</div>
+            </div></div>`;
+        // 6 columnas: de a 3 por fila; si sobran 2, ocupan media fila cada uno (y si sobra 1, la fila entera)
+        const rejilla = (lista, alto) => { const resto = lista.length % 3; return `<div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px">${lista.map((b, i) => banner(b, alto, resto && i >= lista.length - resto ? 6 / resto : 2)).join('')}</div>`; };
+        const seccion = (titulo, lista, alto) => lista.length ? `<div style="margin-top:12px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:7px"><span style="font-family:${F_TIT};font-size:21px;font-weight:800;line-height:1">${titulo}</span><span style="flex:1;height:2px;background:${T.linea}"></span></div>${rejilla(lista, alto)}</div>` : '';
+
+        const m = d.mvp, o_ = o.base || '../';
+        const cara = (o.personajes || [])[0] || o_ + 'imagenes/personajes/mvp1.png';
+        const heroe = m ? `<div data-banner style="position:relative;height:138px;margin-top:10px;overflow:hidden;background:${T.acento};color:${T.sobre}">
+            <img src="${esc(cara)}" alt="" onerror="this.remove()" style="position:absolute;right:20px;top:-8px;height:210px;width:auto;max-width:none">
+            <div style="position:absolute;left:22px;top:14px;width:430px">
+                <div style="font-size:12px;font-weight:800;letter-spacing:3px">MVP DEL ENTRENO</div>
+                <div class="pg-number" style="font-size:54px;line-height:1.1;${corta}">${esc(m.jugador)}</div>
+                <div style="font-size:15px;font-weight:700;${corta}">${esc(m.equipo)}${m.arma ? ' · ' + esc(m.arma) : ''}</div>
+            </div>
+            <div style="position:absolute;left:480px;top:34px;display:flex;gap:28px">${[[fmt(m.kills), 'KILLS'], ...(m.dano ? [[fmt(m.dano), 'DAÑO'], [fmt(m.headshots), 'HEADSHOTS']] : [])]
+                .map(([v, t]) => `<div><div class="pg-number" style="font-size:44px;line-height:1">${v}</div><div style="font-size:11px;font-weight:800;margin-top:5px">${t}</div></div>`).join('')}</div>
+        </div>` : '';
         return lienzo('pgImgDestacados', { ...o, titulo: 'DESTACADOS DEL ENTRENO', tamTitulo: 78,
-            subtitulo: 'Los líderes de cada categoría · Todas las salas del entrenamiento' }, `
-            <div>${tops.map((t, i) => `<div style="display:grid;grid-template-columns:216px minmax(0,1fr) 230px;gap:20px;align-items:center;min-height:111px;padding:16px 20px;border-bottom:1px solid ${T.linea};background:${i % 2 ? T.fila2 : T.fila1}">
-                <div class="pg-section" style="font-size:27px;line-height:1.1;margin:0;color:${T.acento}">${esc(t.titulo)}</div>
-                <div style="min-width:0"><div class="pg-number" style="font-size:34px;line-height:1.05;overflow-wrap:anywhere">${esc(t.jugador || (t.salas ? 'Sin registros' : 'Sin datos'))}</div>
-                <div style="font-size:15px;line-height:1.3;margin-top:6px;color:${T.gris};overflow-wrap:anywhere">${esc(t.jugador ? t.equipo : t.salas ? 'Sin valores mayores a cero' : 'Vuelve a cargar las salas con su .bin')}${t.empates > 1 ? ' · Empate con ' + (t.empates - 1) + ' más' : ''}</div></div>
-                <div style="text-align:right"><div class="pg-number" style="font-size:54px;line-height:1;color:${T.acento}">${t.jugador ? fmt(t.valor) : '—'}</div>
-                <div style="font-size:14px;margin-top:5px;color:${T.gris}">${esc(t.unidad)}</div></div>
-            </div>`).join('')}</div>
-            <p class="pg-small" style="font-size:17px;line-height:1.5;margin-top:20px">Asistencias: estimadas del replay (daño a la víctima en los 20 s antes de que un compañero la elimine). Granadas lanzadas: granada, Flash Freeze, de dragón, FGL24 y M79. Daño con granadas: a jugadores rivales, con los mismos 5 tipos. Tiro más largo: distancia de eliminación, no de impacto. Se usan solo los datos disponibles; «—» indica que no hay líder registrado.</p>`);
+            subtitulo: `${salas.length} salas · Los líderes del entrenamiento` }, `
+            <div style="display:grid;grid-template-columns:repeat(${totales.length},1fr);gap:8px">${totales.map(([v, t]) => `<div style="height:58px;background:${T.fila2};border-bottom:3px solid ${T.acento};text-align:center;display:flex;flex-direction:column;justify-content:center">
+                <div class="pg-number" style="font-size:30px;line-height:1">${v}</div><div style="font-size:10px;font-weight:800;color:${T.gris};margin-top:4px">${t}</div></div>`).join('')}</div>
+            ${heroe}
+            <div style="margin-top:10px">${rejilla(jugadores, 78)}</div>
+            ${seccion('ARMAS Y HABILIDAD', armas, 74)}
+            ${seccion('ESCUADRAS', equipos, 70)}
+            <p class="pg-small" data-nota style="font-size:11px;line-height:1.35;margin:8px 0 0">Asistencias estimadas del replay. Granadas: granada, Flash Freeze, de dragón, FGL24 y M79; su daño cuenta solo a rivales.</p>`);
     }
     function generar(x) {
         fuentes();
@@ -714,7 +774,7 @@
         const o = { meta: m, base: x.base || '../', personajes: x.personajes };
         const L = [{ id: 'pgImgTabla', nombre: 'Tabla_General.png', titulo: 'Tabla general', html: imgTabla(d, o) },
             { id: 'pgImgMvp', nombre: 'MVP_Detallado.png', titulo: 'MVP detallado', html: imgMvp(d, o) },
-            { id: 'pgImgDestacados', nombre: 'Destacados_del_entreno.png', titulo: 'Destacados del entreno', html: imgDestacados(x.salas, o) }];
+            { id: 'pgImgDestacados', nombre: 'Destacados_del_entreno.png', titulo: 'Destacados del entreno', html: imgDestacados(x.salas, o, x.r, x.puntosLog) }];
         // Cara a cara: todas las salas en una imagen
         const caras = imgCaras(d, o);
         if (caras) L.push({ id: 'pgImgCaras', nombre: 'Cara_a_cara.png', titulo: 'Cara a cara', html: caras });

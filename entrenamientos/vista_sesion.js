@@ -26,7 +26,7 @@ function capturaHTML(d,meta){
   const cF='#ffffff',nS=d.salas,eqO=d.eqs,tKL=d.tks.slice(0,15),rW=d.rw;
   const nM=(meta.moderador||'').trim()?meta.moderador.trim().toUpperCase():'PUMAS ZEE';
   const totK=d.tks.reduce((a,c)=>a+c.kills,0);
-  const cols=Array.from({length:Math.min(nS,5)});
+  const cols=Array.from({length:Math.min(nS,6)});
   return `<div id="tablaCaptura" style="background-image:url('imagenes/FONDOS.png');background-size:cover;background-position:center;">
     <div class="captura-header"><h1 class="captura-titulo"></h1>
       <div class="captura-subtitulo" style="color:${cF};">TIPO: [${esc(meta.jornada||'NORMAL')}] | FECHA: ${meta.fechaTxt} | MOD: ${esc(nM)}</div></div>
@@ -36,7 +36,7 @@ function capturaHTML(d,meta){
       </tbody></table></div>
     <div class="captura-card card-equipos-destacados"><div class="card-titulo">RESUMEN DE EQUIPOS DESTACADOS (TOP 6)</div><div class="grid-equipos-destacados">
       ${eqO.slice(0,6).map((eq,i)=>`<div class="item-equipo-destacado"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1px;"><span style="color:${i===0?'#D8C395':cF};font-weight:bold;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">#${i+1}${esc(eq.name)}</span><span style="color:#D8C395;font-weight:bold;">👑 ${eq.booyahsCount||0}</span></div><div style="display:flex;justify-content:space-between;color:var(--gray);font-size:0.62rem;"><span>Pts: <strong style="color:${cF};">${eq.totalScore}</strong></span><span>Kills: <strong style="color:#D8C395;">${eq.killScore||0}</strong></span></div></div>`).join('')}</div></div>
-    <div class="captura-card card-booyah-sala"><div class="card-titulo">BOOYAH POR SALA (VICTORIAS)</div><div class="grid-booyah-salas" style="grid-template-columns:repeat(${Math.min(Math.max(rW.length,1),5)},1fr);">
+    <div class="captura-card card-booyah-sala"><div class="card-titulo">BOOYAH POR SALA (VICTORIAS)</div><div class="grid-booyah-salas" style="grid-template-columns:repeat(${Math.min(Math.max(rW.length,1),6)},1fr);">
       ${rW.length?rW.map(rw=>`<div class="item-booyah-sala"><div style="color:#D8C395;font-family:'Michroma';font-weight:bold;margin-bottom:1px;">SALA ${rw.sala} 👑</div><div style="color:${cF};font-weight:bold;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 auto;">${esc(rw.team)}</div><div style="color:var(--gray);font-size:0.6rem;margin-top:1px;">Pts: <strong style="color:#D8C395;">${rw.points}</strong> | K: <strong style="color:#D8C395;">${rw.kills}</strong></div></div>`).join(''):'<div style="color:var(--gray);font-size:0.72rem;text-align:center;padding:4px;">No hay datos de Booyah registrados.</div>'}</div></div>
     <div class="captura-card card-top-killers"><div class="card-titulo">TOP 15 KILLERS MÁS LETALES</div><div class="grid-top-killers">
       ${tKL.map((tk,i)=>`<div class="item-top-killer"><div style="overflow:hidden;"><span style="color:${i===0?'#D8C395':cF};font-weight:bold;margin-right:2px;">#${i+1}</span><span style="color:${cF};font-weight:bold;max-width:75px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;">${esc(tk.name)}</span></div><span style="color:#D8C395;font-weight:bold;font-size:0.7rem;">${tk.kills}</span></div>`).join('')}</div></div>

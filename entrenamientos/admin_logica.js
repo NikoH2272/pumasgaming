@@ -251,7 +251,7 @@ function renderizarResultados(eqs, tKs, nS) {
                             <tr>
                                 <th style="text-align:left;">#</th>
                                 <th style="text-align:left;">EQUIPO</th>
-                                ${Array.from({length: Math.min(nS, 5)}).map((_, i) => `<th style="text-align:center;">S${i+1}</th>`).join('')}
+                                ${Array.from({length: Math.min(nS, 6)}).map((_, i) => `<th style="text-align:center;">S${i+1}</th>`).join('')}
                                 <th style="text-align:center;">KILL</th>
                                 <th style="text-align:center;">TOTAL</th>
                             </tr>
@@ -264,7 +264,7 @@ function renderizarResultados(eqs, tKs, nS) {
                                 return `
                                 <tr>
                                     <td style="font-weight: bold; color:${cFila};">#${i+1}</td>
-                                    <td style="font-weight: bold; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><span style="color:${cF};">${eq.name}</span></td>${Array.from({length: Math.min(nS, 5)}).map((_, s) => {
+                                    <td style="font-weight: bold; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><span style="color:${cF};">${eq.name}</span></td>${Array.from({length: Math.min(nS, 6)}).map((_, s) => {
                                         let pS = eq.salasPuntos[s];
                                         if (mC === '2') pS = eq.salasRank[s];
                                         else if (mC === '3') pS = eq.salasKills[s];
@@ -304,7 +304,7 @@ function renderizarResultados(eqs, tKs, nS) {
 
                 <div class="captura-card card-booyah-sala">
                     <div class="card-titulo">BOOYAH POR SALA (VICTORIAS)</div>
-                    <div class="grid-booyah-salas" style="grid-template-columns: repeat(${Math.min(Math.max(rWData.length, 1), 5)}, 1fr);">
+                    <div class="grid-booyah-salas" style="grid-template-columns: repeat(${Math.min(Math.max(rWData.length, 1), 6)}, 1fr);">
                         ${rWData.length ? rWData.map(rw => `
                             <div class="item-booyah-sala">
                                 <div style="color: #D8C395; font-family: 'Michroma'; font-weight: bold; margin-bottom: 1px;">SALA ${rw.sala} 👑</div>
