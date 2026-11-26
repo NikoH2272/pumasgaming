@@ -934,29 +934,9 @@
     }
 
     /* ---------------- HTML: tarjetas y tablas (página pública) ---------------- */
-    // TOP en tablas: jugadores (con su equipo) · armas y habilidad · equipos · totales del entreno
+    const D = (icono, titulo, valor, detalle, img) => `<div class="cpl-dest${img ? ' cpl-dest-con-arma' : ''}"><i class="fa-solid ${icono}" aria-hidden="true"></i><div><small>${titulo}</small><b>${valor}</b>${detalle ? `<span>${detalle}</span>` : ''}</div>${img ? `<img class="cpl-dest-arma" src="${img}" alt="" loading="lazy" onerror="this.remove()">` : ''}</div>`;
     function destacadosHTML(r) {
-        const L = listaDestacados(r), d = r.destacados;
-        const equipoDe = new Map((r.jugadores || []).map(j => [esc(j.jugador), j.equipo]));
-        const cat = x => ({ html: `<i class="fa-solid ${x.i}" aria-hidden="true"></i> ${x.t}` });
-        const html = h => ({ html: h });
-        const foto = x => html(x.img ? `<img class="cpl-top-arma" src="${x.img}" alt="" loading="lazy" onerror="this.remove()">` : '');
-        const deArmas = x => /^(Arma|Habilidad)/.test(x.t);
-        const jug = L.filter(x => x.grupo === 'jug' && !deArmas(x)), armas = L.filter(x => x.grupo === 'jug' && deArmas(x));
-        const eq = L.filter(x => x.grupo === 'eq'), tot = L.filter(x => x.grupo === 'total');
-        return tablasHTML([
-            { titulo: 'JUGADORES DESTACADOS', icono: 'fa-user', cab: ['CATEGORÍA', 'JUGADOR', 'EQUIPO', 'DATO', ''],
-                filas: jug.map(x => {
-                    const e = equipoDe.get(x.v) || (x.t === 'Kill más lejana' && d.killLejana ? d.killLejana.equipo : '');
-                    return [cat(x), html(x.v), e || '—', html(x.s.split(' · ' + esc(e)).join('')), foto(x)];
-                }) },
-            { titulo: 'ARMAS Y HABILIDAD', icono: 'fa-gun', cab: ['CATEGORÍA', 'NOMBRE', 'DATO', ''],
-                filas: armas.map(x => [cat(x), html(x.v), html(x.s), foto(x)]) },
-            { titulo: 'EQUIPOS DESTACADOS', icono: 'fa-people-group', cab: ['CATEGORÍA', 'EQUIPO', 'DATO'],
-                filas: eq.map(x => [cat(x), html(x.v), html(x.s)]) },
-            { titulo: 'TOTALES DEL ENTRENO', icono: 'fa-chart-simple', cab: tot.map(x => x.t.toUpperCase()),
-                filas: tot.length ? [tot.map(x => x.v)] : [] }
-        ].filter(t => t.filas.length), 'cpl-top');
+        return listaDestacados(r).map(x => D(x.i, x.t, x.v, x.s, x.img)).join('');
     }
     function escuadraHTML(e) {
         if (!e) return '';
@@ -1095,24 +1075,31 @@
         const st = document.createElement('style');
         st.id = 'pgCompletosCss';
         st.textContent = `
+.cpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),1fr));gap:10px}
+.cpl-dest{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid rgba(216,195,149,.32);border-radius:6px;background:linear-gradient(135deg,rgba(216,195,149,.13),#101116 62%);min-width:0}
+.cpl-dest>i{flex-shrink:0;display:grid;place-items:center;width:34px;height:34px;border-radius:6px;background:rgba(216,195,149,.14);color:#EBD9AE;font-size:1.05rem}
+.cpl-dest>div{min-width:0}
+.cpl-dest small{display:block;color:#BDB6A6;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em}
+.cpl-dest b{display:block;color:#fff;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cpl-dest span{display:block;color:#EBD9AE;font-size:.78rem}
+.cpl-dest-con-arma{position:relative;overflow:hidden}.cpl-dest-con-arma>div{position:relative;z-index:1;text-shadow:0 1px 4px #000}
+.cpl-dest-arma{position:absolute;right:-6px;bottom:4px;width:118px;height:auto;opacity:.75;filter:brightness(1.5);pointer-events:none}
 .cpl-escuadra{margin-top:12px;padding:14px;border:1px solid #D8C395;border-radius:6px;background:linear-gradient(135deg,rgba(216,195,149,.16),rgba(0,0,0,.4))}
 .cpl-escuadra small{display:block;color:#D8C395;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
 .cpl-escuadra>b{display:block;margin:4px 0 8px;color:#fff;font-size:1.25rem}
 .cpl-esc-nums{display:flex;flex-wrap:wrap;gap:14px}.cpl-esc-nums span{color:#9a9a9a;font-size:.72rem}.cpl-esc-nums span b{display:block;color:#D8C395;font-size:1.05rem}
-.cpl-tabla{margin-top:14px;padding:12px;border:1px solid rgba(216,195,149,.2);border-radius:6px;background:rgba(0,0,0,.35)}
+.cpl-tabla{margin-top:14px;padding:12px;border:1px solid rgba(216,195,149,.32);border-radius:6px;background:#101116}
 .cpl-tabla h4{margin:0 0 8px;color:#D8C395;font-size:.8rem;letter-spacing:.06em}
 .cpl-tabla-scroll{overflow-x:auto;scrollbar-color:#D8C395 #121317;scrollbar-width:thin}
 .cpl-tabla table{width:100%;border-collapse:collapse;font-size:.85rem}
-.cpl-tabla th{padding:6px 8px;color:#9a9a9a;font-size:.66rem;text-align:left;white-space:nowrap;border-bottom:1px solid rgba(216,195,149,.25)}
+.cpl-tabla th{padding:7px 8px;color:#EBD9AE;background:#221F18;font-size:.66rem;text-align:left;white-space:nowrap;border-bottom:1px solid rgba(216,195,149,.4)}
+.cpl-tabla tbody tr:nth-child(even){background:rgba(255,255,255,.035)}
 .cpl-tabla td{padding:7px 8px;color:#eee;white-space:nowrap;border-top:1px solid rgba(255,255,255,.06);font-variant-numeric:tabular-nums}
 .cpl-tabla tbody tr{transition:background-color .15s ease}
 .cpl-tabla tbody tr:hover{background:rgba(216,195,149,.06)}
 .cpl-tabla ::selection,.cpl-dest ::selection{background:#D8C395;color:#0a0b10}
 .cpl-tabla td.cpl-s{color:#D8C395;font-weight:bold}
 .cpl-arma{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}.cpl-arma img{width:64px;height:19px;object-fit:contain;flex-shrink:0}
-.cpl-top td:first-child i{width:20px;text-align:center}
-.cpl-top td:nth-child(2){color:#fff;font-weight:bold}
-.cpl-top-arma{display:block;width:72px;height:22px;object-fit:contain;margin-left:auto}
 .cpl-hab{display:inline-flex;align-items:center;gap:8px}.cpl-hab img{width:30px;height:30px;object-fit:cover;object-position:top;border-radius:50%;background:#1D1D1D;border:1px solid rgba(216,195,149,.35)}
 .cpl-sel{min-height:38px;padding:6px 10px;border:1px solid rgba(216,195,149,.3);border-radius:4px;background:#0a0b10;color:#fff}
 .cpl-filtros{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
@@ -1284,7 +1271,7 @@
                 calc = { clave, salas, r: calcular(salas, puntos), resumen };
             }
             const { salas, r, resumen } = calc;
-            const cuerpo = estado.vista === 'top' ? `${destacadosHTML(r)}${escuadraHTML(r.escuadra)}`
+            const cuerpo = estado.vista === 'top' ? `<div class="cpl-grid">${destacadosHTML(r)}</div>${escuadraHTML(r.escuadra)}`
                 : estado.vista === 'stats' ? salasHTML(r, tablasDetalle(salas))
                 : `${buscadorHTML(estado.buscar)}${tablasHTML(tablasAcumulados(salas), 'cpl-larga')}`;
             cont.lastElementChild.outerHTML = `<div class="cpl-cuerpo"><p class="cpl-resumen">${esc(resumen)}</p>${cuerpo}</div>`;
@@ -1330,7 +1317,7 @@
     function pintarModulo(cont, salas, r) {
         let vista = 'top', buscar = '', vistaAntes = null;
         const pintar = enfocar => {
-            const cuerpo = vista === 'top' ? `${destacadosHTML(r)}${escuadraHTML(r.escuadra)}`
+            const cuerpo = vista === 'top' ? `<div class="cpl-grid">${destacadosHTML(r)}</div>${escuadraHTML(r.escuadra)}`
                 : vista === 'stats' ? salasHTML(r, tablasDetalle(salas))
                 : `${buscadorHTML(buscar)}${tablasHTML(tablasAcumulados(salas), 'cpl-larga')}`;
             cont.innerHTML = `${pestanasHTML(vista)}<div class="cpl-cuerpo">

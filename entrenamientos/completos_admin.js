@@ -172,28 +172,10 @@
         try { await PumasImagenes.descargar(im.id, im.nombre); } finally { caja.hidden = oculto; }
     }
 
-    // Vista previa del módulo ESTADÍSTICAS (TOP · ESTADÍSTICAS · ACUMULADOS) con lo que se va a guardar.
-    // Va en su propio contenedor, después de las imágenes: así no se borra al cambiar de imagen.
-    function pintarModuloPrevio(out, salas) {
-        let caja = $('outputModuloPrevio');
-        if (!salas) { if (caja) caja.remove(); return; }
-        if (!caja) {
-            caja = document.createElement('section');
-            caja.id = 'outputModuloPrevio';
-            caja.style.cssText = 'width:100%;margin:10px 0 30px';
-            out.insertAdjacentElement('afterend', caja);
-        }
-        caja.innerHTML = `<h3 style="color:#D8C395;font-family:'Michroma';font-size:.95rem;margin:0 0 6px;text-align:center"><i class="fa-solid fa-table"></i> VISTA PREVIA · MÓDULO ESTADÍSTICAS</h3>
-            <p class="form-hint" style="text-align:center;margin:0 0 14px">Así se verá en Estadísticas y en "Ver estadísticas" del entreno cuando lo guardes.</p>
-            <div data-modulo></div>`;
-        C().montarLocal(caja.querySelector('[data-modulo]'), salas, typeof globalEquipos !== 'undefined' ? globalEquipos : []);
-    }
-
     function recalcular() {
         const out = $('outputAvanzado');
         if (!out) return;
         pintarChecklist();
-        pintarModuloPrevio(out, null);
         if (!modoStats) { out.innerHTML = ''; ultimo = null; return; }
         const aviso = habilitado === false ? '<br>⚠ Este evento no tiene habilitados los resultados completos (Admin → Resultados completos): se genera la imagen pero las estadísticas no se guardan.' : '';
         if (!csvs.length && !replays.length) {
@@ -230,7 +212,6 @@
                 fecha: fInput && fInput.value ? fInput.value.replace('T', ' ') : '',
                 moderador: mod && mod.value.trim() ? mod.value.trim().toUpperCase() : ''
             }, salas);
-            pintarModuloPrevio(out, salas);
             return;
         }
         const meta = {
