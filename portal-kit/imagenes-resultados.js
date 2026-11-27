@@ -53,7 +53,7 @@
     function datos(salas, r, puntosLog) {
         const eq = new Map(), jug = new Map();
         const E = nombre => { const k = norm(nombre); let e = eq.get(k); if (!e) { e = { equipo: nombre, salas: 0, booyahs: 0, kills: 0, dano: 0, hs: 0, derribos: 0, gloo: 0,
-            vivo: 0, nVivo: 0, rematados: 0, vs: {}, pts: 0, rankPts: 0, porSala: {} }; eq.set(k, e); } return e; };
+            vivo: 0, nVivo: 0, rematados: 0, vs: {}, pts: 0, rankPts: 0, killPts: 0, porSala: {} }; eq.set(k, e); } return e; };
         const conLog = puntosLog && puntosLog.length;
         salas.forEach((s, i) => {
             // Posición de cada equipo en la sala: booyah primero, luego al revés del orden en que los eliminaron
@@ -66,7 +66,10 @@
             orden.forEach(([k, x], pos) => {
                 const e = x.e, log = conLog ? puntosLog.find(p => norm(p.name) === k) : null;
                 const ns = (s.sala || i + 1) - 1, pts = log && log.salasPuntos[ns] !== undefined ? log.salasPuntos[ns] : (PTS_POSICION[pos + 1] || 0) + x.kills;
-                e.pts += pts; e.porSala[i] = { pos: pos + 1, pts };
+                // Posición y kills por separado: lo oficial del .log (RankScore / KillScore) y, sin él, lo calculado
+                const parte = (campo, calculado) => log && log[campo] && log[campo][ns] !== undefined ? log[campo][ns] : calculado;
+                const rank = parte('salasRank', PTS_POSICION[pos + 1] || 0), kill = parte('salasKills', x.kills);
+                e.pts += pts; e.rankPts += rank; e.killPts += kill; e.porSala[i] = { pos: pos + 1, pts, rank, kill };
                 if (x.booyah) e.booyahs++;
             });
             s.jugadores.forEach(j => {
@@ -194,14 +197,22 @@
     }
     const resumen = items => `<div class="pg-summary">${items.map(([v,t])=>`<div><strong>${esc(v)}</strong><span>${esc(t)}</span></div>`).join('')}</div>`;
 
-    function imgTabla(d,o) {
-        const n=d.porSala.length, lista=d.equipos.slice(0,16);
-        const cols=[{t:'#',w:'56px'},{t:'EQUIPO',w:'minmax(180px,1fr)',al:'left'},...d.porSala.map((s,i)=>({t:'S'+(i+1),w:n>5?'57px':'65px'})),{t:'BOO',w:'56px'},{t:'KILLS',w:'65px'},{t:'TOTAL',w:'82px',total:true}];
-        const filas=lista.map((e,i)=>[String(i+1).padStart(2,'0'),esc(e.equipo),...d.porSala.map((_,k)=>e.porSala[k] ? e.porSala[k].pts : '—'),e.booyahs,e.kills,e.pts]);
-        return lienzo('pgImgTabla',{...o,titulo:'TABLA GENERAL',subtitulo:`${n} salas · Puntos por sala y clasificación final`},`
+    // Tres tablas: general (posición + kills), solo puntos de posición y solo puntos de kills
+    const TABLAS = {
+        general: { id:'pgImgTabla', titulo:'TABLA GENERAL', sub:'Puntos por sala y clasificación final', campo:'pts', total:'pts', extra:['booyahs','kills'], nota:'puntos por sala · BOO: booyahs · Total: puntos acumulados.' },
+        posicion: { id:'pgImgTablaPos', titulo:'TOP POSICIÓN', sub:'Solo puntos de posición', campo:'rank', total:'rankPts', extra:['booyahs'], nota:'puntos de posición por sala · BOO: booyahs · Total: solo puntos de posición.' },
+        kills: { id:'pgImgTablaKills', titulo:'TOP KILLS', sub:'Solo puntos de kills', campo:'kill', total:'killPts', extra:[], nota:'puntos de kills por sala · Total: solo puntos de kills.' }
+    };
+    function imgTabla(d,o,tipo='general') {
+        const t=TABLAS[tipo], n=d.porSala.length;
+        const lista=d.equipos.slice().sort((a,b)=>b[t.total]-a[t.total]||b.booyahs-a.booyahs||b.kills-a.kills||b.pts-a.pts).slice(0,16);
+        const EXTRA={booyahs:{t:'BOO',w:'56px'},kills:{t:'KILLS',w:'65px'}};
+        const cols=[{t:'#',w:'56px'},{t:'EQUIPO',w:'minmax(180px,1fr)',al:'left'},...d.porSala.map((s,i)=>({t:'S'+(i+1),w:n>5?'57px':'65px'})),...t.extra.map(c=>EXTRA[c]),{t:'TOTAL',w:'82px',total:true}];
+        const filas=lista.map((e,i)=>[String(i+1).padStart(2,'0'),esc(e.equipo),...d.porSala.map((_,k)=>e.porSala[k] ? e.porSala[k][t.campo] : '—'),...t.extra.map(c=>e[c]),e[t.total]]);
+        return lienzo(t.id,{...o,titulo:t.titulo,subtitulo:`${n} salas · ${t.sub}`},`
             ${resumen([[d.equipos.length,'EQUIPOS'],[n,'SALAS JUGADAS'],[fmt(d.equipos.reduce((a,e)=>a+e.kills,0)),'KILLS TOTALES']])}
             ${tabla(cols,filas,{fila:lista.length>14?43:52,fs:n>5?25:28,destacar:true})}
-            <p class="pg-small" style="margin-top:16px">S1–S${n}: puntos por sala · BOO: booyahs · Total: puntos acumulados.</p>`);
+            <p class="pg-small" style="margin-top:16px">S1–S${n}: ${t.nota}</p>`);
     }
     function imgMvp(d,o) {
         const lista=d.jugadores.slice(0,8), primero=lista[0];
@@ -773,6 +784,8 @@
         if (m.fecha && !m.fechaCorta) { const f = new Date(m.fecha.replace(' ', 'T')); m.fechaCorta = isNaN(f) ? m.fecha : f.toLocaleDateString('es', { day: '2-digit', month: 'short' }).toUpperCase(); }
         const o = { meta: m, base: x.base || '../', personajes: x.personajes };
         const L = [{ id: 'pgImgTabla', nombre: 'Tabla_General.png', titulo: 'Tabla general', html: imgTabla(d, o) },
+            { id: 'pgImgTablaPos', nombre: 'Top_posicion.png', titulo: 'Top posición', html: imgTabla(d, o, 'posicion') },
+            { id: 'pgImgTablaKills', nombre: 'Top_kills.png', titulo: 'Top kills', html: imgTabla(d, o, 'kills') },
             { id: 'pgImgMvp', nombre: 'MVP_Detallado.png', titulo: 'MVP detallado', html: imgMvp(d, o) },
             { id: 'pgImgDestacados', nombre: 'Destacados_del_entreno.png', titulo: 'Destacados del entreno', html: imgDestacados(x.salas, o, x.r, x.puntosLog) }];
         // Cara a cara: todas las salas en una imagen
