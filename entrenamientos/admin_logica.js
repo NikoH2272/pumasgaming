@@ -19,6 +19,8 @@ async function prepararRenombradoEquipos() {
     if (files.length === 0) return;
 
     rawFilesData = [];
+    processedFilesTexts = [];
+    equiposBorrados.clear();
     let equiposEnLogs = new Set();
 
     for (let file of files) {
@@ -71,13 +73,23 @@ async function prepararRenombradoEquipos() {
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <input type="text" class="input-nombre-editable" data-original="${eqOriginal}" value="${sugerenciaNombre}" style="flex: 2; padding: 7px; background: #0a0b10; border: 1px solid rgba(216,195,149,0.3); color: #fff; border-radius: 4px; font-family:'Trebuchet MS'; font-weight:bold; font-size: 0.9rem;">
-                    <button onclick="this.closest('div').parentElement.remove()" style="background:#ff3333; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                    <button type="button" onclick="quitarEquipo(this)" style="background:#ff3333; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
         `;
     });
     
     document.getElementById('seccionRenombrar').style.display = 'block';
+}
+
+// Equipos quitados con la papelera: no salen en tablas ni imágenes y no se guardan.
+// Se vuelven a incluir al elegir otra vez los archivos .log.
+const equiposBorrados = new Set();
+function quitarEquipo(boton) {
+    const fila = boton.parentElement;
+    equiposBorrados.add(fila.querySelector('.input-nombre-editable').dataset.original);
+    fila.parentElement.remove();
+    if (processedFilesTexts.length) procesarConNombresPersonalizados();   // ya había tabla: se actualiza
 }
 
 async function procesarConNombresPersonalizados() {
@@ -130,9 +142,12 @@ function procesarLogs(textsArray, renombresMap) {
         let salaBooyahEquipo = null;
         let salaBooyahPts = 0;
         let salaBooyahKills = 0;
+        let quitado = false;   // dentro del bloque de un equipo borrado: ni él ni sus jugadores cuentan
 
         lines.forEach(line => {
             const teamMatch = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
+            if (teamMatch) quitado = equiposBorrados.has(teamMatch[1].trim());
+            if (quitado) return;
             if (teamMatch) {
                 let name = teamMatch[1].trim();
                 if (!equiposMap[name]) {
@@ -437,6 +452,7 @@ async function guardarEntrenamientoEnSupabase() {
             let currentTeam = null;
             text.split('\n').forEach(line => {
                 const team = line.match(/TeamName:\s*(.+?)\s+Rank:\s*(\d+)\s+KillScore:\s*(\d+)\s+RankScore:\s*(\d+)\s+TotalScore:\s*(\d+)/i);
+                if (team && equiposBorrados.has(team[1].trim())) { currentTeam = null; return; }
                 if (team) {
                     currentTeam = team[1].trim();
                     salasRows.push({numero_sala:i+1, equipo_nombre:currentTeam, rank:+team[2],

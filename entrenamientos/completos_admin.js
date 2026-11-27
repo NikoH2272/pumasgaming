@@ -130,6 +130,34 @@
         return n;
     }
 
+    // Nombres cambiados y equipos borrados en "Verificar equipos". Va después del .bin, que pone
+    // con su nombre original a las escuadras que el .json dejó sin nombre.
+    function ajustarEquipos(salas) {
+        const ren = renombres();
+        const fuera = typeof equiposBorrados !== 'undefined' ? equiposBorrados : new Set();
+        const R = n => ren[n] || n;
+        const queda = n => !fuera.has(n);
+        salas.forEach(s => {
+            s.jugadores = s.jugadores.filter(j => queda(j.equipo));
+            s.jugadores.forEach(j => {
+                j.equipo = R(j.equipo);
+                if (j.extra && j.extra.vs) {
+                    const vs = {};
+                    Object.entries(j.extra.vs).forEach(([k, v]) => { if (queda(k)) vs[R(k)] = (vs[R(k)] || 0) + v; });
+                    j.extra.vs = vs;
+                }
+            });
+            if (s.eliminados) {
+                s.eliminados = s.eliminados.filter(e => queda(e.equipo));
+                s.eliminados.forEach(e => { e.equipo = R(e.equipo); e.por = queda(e.por) ? R(e.por) : ''; });
+            }
+            ['primeraSangre', 'killLejana'].forEach(k => {
+                if (!s[k]) return;
+                if (queda(s[k].equipo)) s[k].equipo = R(s[k].equipo); else s[k] = null;
+            });
+        });
+    }
+
     /* Imágenes 4:5 (1080×1350): una pestaña por imagen, vista previa al 50 % */
     let imagenes = [], vista = 0;
     const CSS_IMG = `.cpl-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
@@ -198,6 +226,7 @@
             return;
         }
         const conBin = aplicarBins(salas);
+        ajustarEquipos(salas);
         const r = C().calcular(salas, globalEquipos);
         ultimo = { salas, resultado: r };
         const faltan = globalNumSalas - salas.length;
